@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package reflect
 
@@ -11,24 +11,24 @@ import (
 	"unsafe"
 )
 
-// MakeRO returns a copy of v with the read-only flag set.
+// MakeRO 返回 v 的副本，并设置只读标志。
 func MakeRO(v Value) Value {
 	v.flag |= flagStickyRO
 	return v
 }
 
-// IsRO reports whether v's read-only flag is set.
+// IsRO 报告 v 的只读标志是否已设置。
 func IsRO(v Value) bool {
 	return v.flag&flagStickyRO != 0
 }
 
 var CallGC = &callGC
 
-// FuncLayout calls funcLayout and returns a subset of the results for testing.
+// FuncLayout 调用 funcLayout 并返回用于测试的结果子集。
 //
-// Bitmaps like stack, gc, inReg, and outReg are expanded such that each bit
-// takes up one byte, so that writing out test cases is a little clearer.
-// If ptrs is false, gc will be nil.
+// stack、gc、inReg 和 outReg 等位图被扩展，使得每个位占用一个字节，
+// 这样编写测试用例会更清晰一些。
+// 如果 ptrs 为 false，gc 将为 nil。
 func FuncLayout(t Type, rcvr Type) (frametype Type, argSize, retOffset uintptr, stack, gc, inReg, outReg []byte, ptrs bool) {
 	var ft *abi.Type
 	var abid abiDesc
@@ -37,17 +37,17 @@ func FuncLayout(t Type, rcvr Type) (frametype Type, argSize, retOffset uintptr, 
 	} else {
 		ft, _, abid = funcLayout((*funcType)(unsafe.Pointer(t.(*rtype))), nil)
 	}
-	// Extract size information.
+	// 提取大小信息。
 	argSize = abid.stackCallArgsSize
 	retOffset = abid.retOffset
 	frametype = toType(ft)
 
-	// Expand stack pointer bitmap into byte-map.
+	// 将栈指针位图扩展为字节映射。
 	for i := uint32(0); i < abid.stackPtrs.n; i++ {
 		stack = append(stack, abid.stackPtrs.data[i/8]>>(i%8)&1)
 	}
 
-	// Expand register pointer bitmaps into byte-maps.
+	// 将寄存器指针位图扩展为字节映射。
 	bool2byte := func(b bool) byte {
 		if b {
 			return 1
@@ -59,7 +59,7 @@ func FuncLayout(t Type, rcvr Type) (frametype Type, argSize, retOffset uintptr, 
 		outReg = append(outReg, bool2byte(abid.outRegPtrs.Get(i)))
 	}
 
-	// Expand frame type's GC bitmap into byte-map.
+	// 将帧类型的 GC 位图扩展为字节映射。
 	ptrs = ft.Pointers()
 	if ptrs {
 		nptrs := ft.PtrBytes / goarch.PtrSize
@@ -86,7 +86,7 @@ func TypeLinks() []string {
 
 var GCBits = gcbits
 
-func gcbits(any) []byte // provided by runtime
+func gcbits(any) []byte // 由 runtime 提供
 
 type EmbedWithUnexpMeth struct{}
 

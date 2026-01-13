@@ -1,6 +1,6 @@
-// Copyright 2014 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2014 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
@@ -15,7 +15,7 @@ import (
 
 func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token.Pos) {
 	// spec: "The blank identifier, represented by the underscore
-	// character _, may be used in a declaration like any other
+	// character _, 可能是 used in a declaration like any other
 	// identifier but the declaration does not introduce a new
 	// binding."
 	if obj.Name() != "_" {
@@ -33,7 +33,7 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 	}
 }
 
-// pathString returns a string of the form a->b-> ... ->g for a path [a, b, ... g].
+// pathString 返回a string of the form a->b-> ... ->g for a path [a, b, ... g].
 func pathString(path []Object) string {
 	var s string
 	for i, p := range path {
@@ -72,7 +72,7 @@ func (check *Checker) objDecl(obj Object) {
 
 	// Checking the declaration of an object means determining its type
 	// (and also its value for constants). An object (and thus its type)
-	// may be in 1 of 3 states:
+	// 可能是 in 1 of 3 states:
 	//
 	// - not in Checker.objPathIdx and type == nil : type is not yet known (white)
 	// -     in Checker.objPathIdx                 : type is pending       (grey)
@@ -81,7 +81,7 @@ func (check *Checker) objDecl(obj Object) {
 	// During type-checking, an object changes from white to grey to black.
 	// Predeclared objects start as black (their type is known without checking).
 	//
-	// A black object may only depend on (refer to) to other black objects. White
+	// 一个black object may only depend on (refer to) to other black objects. White
 	// and grey objects may depend on white or black objects. A dependency on a
 	// grey object indicates a (possibly invalid) cycle.
 	//
@@ -91,11 +91,11 @@ func (check *Checker) objDecl(obj Object) {
 
 	// If this object is grey, we have a (possibly invalid) cycle. This is signaled
 	// by a non-nil type for the object, except for constants and variables whose
-	// type may be non-nil (known), or nil if it depends on a not-yet known
+	// type 可能是 non-nil (known), or nil if it depends on a not-yet known
 	// initialization value.
 	//
 	// In the former case, set the type to Typ[Invalid] because we have an
-	// initialization cycle. The cycle error will be reported later, when
+	// initialization cycle. The cycle error 将是 reported later, when
 	// determining initialization order.
 	//
 	// TODO(gri) Report cycle here and simplify initialization order code.
@@ -113,7 +113,7 @@ func (check *Checker) objDecl(obj Object) {
 			if !check.validCycle(obj) {
 				// Don't set type to Typ[Invalid]; plenty of code asserts that
 				// functions have a *Signature type. Instead, leave the type
-				// as an empty signature, which makes it impossible to
+				// as an empty signature, which 使 it impossible to
 				// initialize a variable with the function.
 			}
 		default:
@@ -128,7 +128,7 @@ func (check *Checker) objDecl(obj Object) {
 		return
 	}
 
-	// white, meaning it must be type-checked
+	// white, meaning it 必须是 type-checked
 
 	check.push(obj) // mark as grey
 	defer check.pop()
@@ -159,17 +159,17 @@ func (check *Checker) objDecl(obj Object) {
 		check.typeDecl(obj, d.tdecl)
 		check.collectMethods(obj) // methods can only be added to top-level types
 	case *Func:
-		// functions may be recursive - no need to track dependencies
+		// functions 可能是 recursive - no need to track dependencies
 		check.funcDecl(obj, d)
 	default:
 		panic("unreachable")
 	}
 }
 
-// validCycle checks if the cycle starting with obj is valid and
-// reports an error if it is not.
+// validCycle 检查 the cycle starting with obj is valid and
+// 报告一个 error if it is not.
 func (check *Checker) validCycle(obj Object) (valid bool) {
-	// The object map contains the package scope objects and the non-interface methods.
+	// The object map 包含 the package scope objects and the non-interface methods.
 	if debug {
 		info := check.objMap[obj]
 		inObjMap := info != nil && (info.fdecl == nil || info.fdecl.Recv == nil) // exclude methods
@@ -201,7 +201,7 @@ loop:
 				break loop
 			}
 
-			// Determine if the type name is an alias or not. For
+			// Determine 如果 type name 是一个n alias or not. For
 			// package-level objects, use the object map which
 			// provides syntactic information (which doesn't rely
 			// on the order in which the objects are set up). For
@@ -233,9 +233,9 @@ loop:
 	if check.conf._Trace {
 		check.trace(obj.Pos(), "## cycle detected: objPath = %s->%s (len = %d)", pathString(cycle), obj.Name(), len(cycle))
 		if tparCycle {
-			check.trace(obj.Pos(), "## cycle contains: generic type in a type parameter list")
+			check.trace(obj.Pos(), "## cycle 包含: generic type in a type parameter list")
 		} else {
-			check.trace(obj.Pos(), "## cycle contains: %d values, %d type definitions", nval, ndef)
+			check.trace(obj.Pos(), "## cycle 包含: %d values, %d type definitions", nval, ndef)
 		}
 		defer func() {
 			if valid {
@@ -251,14 +251,14 @@ loop:
 		return true
 	}
 
-	// A cycle involving only constants and variables is invalid but we
+	// 一个cycle involving only constants and variables is invalid but we
 	// ignore them here because they are reported via the initialization
 	// cycle check.
 	if nval == len(cycle) {
 		return true
 	}
 
-	// A cycle involving only types (and possibly functions) must have at least
+	// 一个cycle involving only types (and possibly functions) must have at least
 	// one type definition to be permitted: If there is no type definition, we
 	// have a sequence of alias type names which will expand ad infinitum.
 	if nval == 0 && ndef > 0 {
@@ -269,9 +269,9 @@ loop:
 	return false
 }
 
-// cycleError reports a declaration cycle starting with the object at cycle[start].
+// cycleError 报告a declaration cycle starting with the object at cycle[start].
 func (check *Checker) cycleError(cycle []Object, start int) {
-	// name returns the (possibly qualified) object name.
+	// name 返回 (possibly qualified) object name.
 	// This is needed because with generic types, cycles
 	// may refer to imported types. See go.dev/issue/50788.
 	// TODO(gri) This functionality is used elsewhere. Factor it out.
@@ -279,7 +279,7 @@ func (check *Checker) cycleError(cycle []Object, start int) {
 		return packagePrefix(obj.Pkg(), check.qualifier) + obj.Name()
 	}
 
-	// If obj is a type alias, mark it as valid (not broken) in order to avoid follow-on errors.
+	// If obj 是一个 type alias, mark it as valid (not broken) in order to avoid follow-on errors.
 	obj := cycle[start]
 	tname, _ := obj.(*TypeName)
 	if tname != nil {
@@ -319,7 +319,7 @@ func (check *Checker) cycleError(cycle []Object, start int) {
 	err.report()
 }
 
-// firstInSrc reports the index of the object with the "smallest"
+// firstInSrc 报告the index of the object with the "smallest"
 // source position in path. path must not be empty.
 func firstInSrc(path []Object) int {
 	fst, pos := 0, path[0].Pos()
@@ -423,7 +423,7 @@ func (check *Checker) constDecl(obj *Const, typ, init ast.Expr, inherited bool) 
 	if typ != nil {
 		t := check.typ(typ)
 		if !isConstType(t) {
-			// don't report an error if the type is an invalid C (defined) type
+			// don't report an error 如果 type 是一个n invalid C (defined) type
 			// (go.dev/issue/22090)
 			if isValid(t.Underlying()) {
 				check.errorf(typ, InvalidConstType, "invalid constant type %s", t)
@@ -442,7 +442,7 @@ func (check *Checker) constDecl(obj *Const, typ, init ast.Expr, inherited bool) 
 			// constant declaration, and (error) positions refer to that
 			// expression and not the current constant declaration. Use
 			// the constant identifier position for any errors during
-			// init expression evaluation since that is all we have
+			// init expression evaluation since that 是一个ll we have
 			// (see issues go.dev/issue/42991, go.dev/issue/42992).
 			check.errpos = atPos(obj.pos)
 		}
@@ -463,7 +463,7 @@ func (check *Checker) varDecl(obj *Var, lhs []*Var, typ, init ast.Expr) {
 		// if any, would not be checked.
 		//
 		// TODO(gri) If we have no init expr, we should distribute
-		// a given type otherwise we need to re-evaluate the type
+		// a given type 否则 we need to re-evaluate the type
 		// expr for each lhs variable, leading to duplicate work.
 	}
 
@@ -485,15 +485,15 @@ func (check *Checker) varDecl(obj *Var, lhs []*Var, typ, init ast.Expr) {
 	}
 
 	if debug {
-		// obj must be one of lhs
-		if !slices.Contains(lhs, obj) {
+		// obj 必须是 one of lhs
+		if !slices.包含(lhs, obj) {
 			panic("inconsistent lhs")
 		}
 	}
 
 	// We have multiple variables on the lhs and one init expr.
 	// Make sure all variables have been given the same type if
-	// one was specified, otherwise they assume the type of the
+	// one was specified, 否则 they assume the type of the
 	// init expression values (was go.dev/issue/15755).
 	if typ != nil {
 		for _, lhs := range lhs {
@@ -504,7 +504,7 @@ func (check *Checker) varDecl(obj *Var, lhs []*Var, typ, init ast.Expr) {
 	check.initVars(lhs, []ast.Expr{init}, nil)
 }
 
-// isImportedConstraint reports whether typ is an imported type constraint.
+// isImportedConstraint 报告whether typ 是一个n imported type constraint.
 func (check *Checker) isImportedConstraint(typ Type) bool {
 	named := asNamed(typ)
 	if named == nil || named.obj.pkg == check.pkg || named.obj.pkg == nil {
@@ -635,7 +635,7 @@ func (check *Checker) typeDecl(obj *TypeName, tdecl *ast.TypeSpec) {
 func (check *Checker) collectTypeParams(dst **TypeParamList, list *ast.FieldList) {
 	var tparams []*TypeParam
 	// Declare type parameters up-front, with empty interface as type bound.
-	// The scope of type parameters starts at the beginning of the type parameter
+	// The scope 类型为 parameters starts at the beginning 的类型 parameter
 	// list (so we can have mutually recursive parameterized interfaces).
 	scopePos := list.Pos()
 	for _, f := range list.List {
@@ -645,7 +645,7 @@ func (check *Checker) collectTypeParams(dst **TypeParamList, list *ast.FieldList
 	}
 
 	// Set the type parameters before collecting the type constraints because
-	// the parameterized type may be used by the constraints (go.dev/issue/47887).
+	// the parameterized type 可能是 used by the constraints (go.dev/issue/47887).
 	// Example: type T[P T[P]] interface{}
 	*dst = bindTParams(tparams)
 
@@ -665,12 +665,12 @@ func (check *Checker) collectTypeParams(dst **TypeParamList, list *ast.FieldList
 	index := 0
 	for _, f := range list.List {
 		var bound Type
-		// NOTE: we may be able to assert that f.Type != nil here, but this is not
+		// NOTE: we 可能是 able to assert that f.Type != nil here, but this is not
 		// an invariant of the AST, so we are cautious.
 		if f.Type != nil {
 			bound = check.bound(f.Type)
 			if isTypeParam(bound) {
-				// We may be able to allow this since it is now well-defined what
+				// We 可能是 able to allow this since it is now well-defined what
 				// the underlying type and thus type set of a type parameter is.
 				// But we may need some additional form of cycle detection within
 				// type parameter lists.
@@ -688,7 +688,7 @@ func (check *Checker) collectTypeParams(dst **TypeParamList, list *ast.FieldList
 }
 
 func (check *Checker) bound(x ast.Expr) Type {
-	// A type set literal of the form ~T and A|B may only appear as constraint;
+	// 一个type set literal of the form ~T and A|B may only appear as constraint;
 	// embed it in an implicit interface so that only interface type-checking
 	// needs to take care of such type expressions.
 	wrap := false
@@ -712,9 +712,9 @@ func (check *Checker) bound(x ast.Expr) Type {
 
 func (check *Checker) declareTypeParam(name *ast.Ident, scopePos token.Pos) *TypeParam {
 	// Use Typ[Invalid] for the type constraint to ensure that a type
-	// is present even if the actual constraint has not been assigned
+	// is present even 如果 actual constraint has not been assigned
 	// yet.
-	// TODO(gri) Need to systematically review all uses of type parameter
+	// TODO(gri) Need to systematically review all uses 类型为 parameter
 	//           constraints to make sure we don't rely on them if they
 	//           are not properly set yet.
 	tname := NewTypeName(name.Pos(), check.pkg, name.Name, nil)
@@ -738,8 +738,8 @@ func (check *Checker) collectMethods(obj *TypeName) {
 	// use an objset to check for name conflicts
 	var mset objset
 
-	// spec: "If the base type is a struct type, the non-blank method
-	// and field names must be distinct."
+	// spec: "If the base type 是一个 struct type, the non-blank method
+	// and field names 必须是 distinct."
 	base := asNamed(obj.typ) // shouldn't fail but be conservative
 	if base != nil {
 		assert(base.TypeArgs().Len() == 0) // collectMethods should not be called on an instantiated type
@@ -750,7 +750,7 @@ func (check *Checker) collectMethods(obj *TypeName) {
 			check.checkFieldUniqueness(base)
 		}).describef(obj, "verifying field uniqueness for %v", base)
 
-		// Checker.Files may be called multiple times; additional package files
+		// Checker.Files 可能是 called multiple times; additional package files
 		// may add methods to already type-checked types. Add pre-existing methods
 		// so that we can detect redeclarations.
 		for i := 0; i < base.NumMethods(); i++ {
@@ -763,7 +763,7 @@ func (check *Checker) collectMethods(obj *TypeName) {
 	// add valid methods
 	for _, m := range methods {
 		// spec: "For a base type, the non-blank names of methods bound
-		// to it must be unique."
+		// to it 必须是 unique."
 		assert(m.name != "_")
 		if alt := mset.insert(m); alt != nil {
 			if alt.Pos().IsValid() {
@@ -831,7 +831,7 @@ func (check *Checker) funcDecl(obj *Func, decl *declInfo) {
 		check.softErrorf(fdecl.Name, BadDecl, "generic function is missing function body")
 	}
 
-	// function body must be type-checked after global declarations
+	// function body 必须是 type-checked after global declarations
 	// (functions implemented elsewhere have no body)
 	if !check.conf.IgnoreFuncBodies && fdecl.Body != nil {
 		check.later(func() {
@@ -902,7 +902,7 @@ func (check *Checker) declStmt(d ast.Decl) {
 				check.varDecl(obj, lhs, d.spec.Type, init)
 				if len(d.spec.Values) == 1 {
 					// If we have a single lhs variable we are done either way.
-					// If we have a single rhs expression, it must be a multi-
+					// If we have a single rhs expression, it 必须是 a multi-
 					// valued expression, in which case handling the first lhs
 					// variable will cause all lhs variables to have a type
 					// assigned, and we are done as well.

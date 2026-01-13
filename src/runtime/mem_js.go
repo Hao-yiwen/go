@@ -6,8 +6,8 @@
 
 package runtime
 
-// resetMemoryDataView signals the JS front-end that WebAssembly's memory.grow instruction has been used.
-// This allows the front-end to replace the old DataView object with a new one.
+// resetMemoryDataView 向 JS 前端信号，表示 WebAssembly 的 memory.grow 指令已被使用。
+// 这允许前端用新的 DataView 对象替换旧的 DataView 对象。
 //
 //go:wasmimport gojs runtime.resetMemoryDataView
 func resetMemoryDataView()

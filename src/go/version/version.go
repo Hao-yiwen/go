@@ -1,8 +1,8 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package version provides operations on [Go versions]
+// version 包提供 operations on [Go versions]
 // in [Go toolchain name syntax]: strings like
 // "go1.20", "go1.21.0", "go1.22rc2", and "go1.23.4-custom".
 //
@@ -16,7 +16,7 @@ import (
 )
 
 // stripGo converts from a "go1.21-custom" version to a "1.21" version.
-// If v does not start with "go", stripGo returns the empty string (a known invalid version).
+// If v does not start with "go", stripGo 返回 empty string (a known invalid version).
 func stripGo(v string) string {
 	v, _, _ = strings.Cut(v, "-") // strip -custom suffix.
 	if len(v) < 2 || v[:2] != "go" {
@@ -25,8 +25,8 @@ func stripGo(v string) string {
 	return v[2:]
 }
 
-// Lang returns the Go language version for version x.
-// If x is not a valid version, Lang returns the empty string.
+// Lang 返回the Go language version for version x.
+// If x is not a valid version, Lang 返回 empty string.
 // For example:
 //
 //	Lang("go1.21rc2") = "go1.21"
@@ -47,7 +47,7 @@ func Lang(x string) string {
 	}
 }
 
-// Compare returns -1, 0, or +1 depending on whether
+// Compare 返回-1, 0, or +1 depending on whether
 // x < y, x == y, or x > y, interpreted as Go versions.
 // The versions x and y must begin with a "go" prefix: "go1.21" not "1.21".
 // Invalid versions, including the empty string, compare less than
@@ -58,7 +58,7 @@ func Compare(x, y string) int {
 	return gover.Compare(stripGo(x), stripGo(y))
 }
 
-// IsValid reports whether the version x is valid.
+// IsValid 报告whether the version x is valid.
 func IsValid(x string) bool {
 	return gover.IsValid(stripGo(x))
 }

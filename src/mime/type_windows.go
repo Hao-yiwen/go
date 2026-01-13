@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package mime
 
@@ -18,7 +18,7 @@ func initMimeWindows() {
 		return
 	}
 	for _, name := range names {
-		if len(name) < 2 || name[0] != '.' { // looking for extensions only
+		if len(name) < 2 || name[0] != '.' { // 只查找扩展名
 			continue
 		}
 		k, err := registry.OpenKey(registry.CLASSES_ROOT, name, registry.READ)
@@ -31,12 +31,10 @@ func initMimeWindows() {
 			continue
 		}
 
-		// There is a long-standing problem on Windows: the
-		// registry sometimes records that the ".js" extension
-		// should be "text/plain". See issue #32350. While
-		// normally local configuration should override
-		// defaults, this problem is common enough that we
-		// handle it here by ignoring that registry setting.
+		// Windows 上有一个长期存在的问题：注册表有时会记录
+		// ".js" 扩展名应该是 "text/plain"。参见 issue #32350。
+		// 虽然通常本地配置应该覆盖默认值，但这个问题足够常见，
+		// 我们在这里通过忽略该注册表设置来处理它。
 		if name == ".js" && (v == "text/plain" || v == "text/plain; charset=utf-8") {
 			continue
 		}

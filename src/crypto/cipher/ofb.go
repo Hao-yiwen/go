@@ -1,8 +1,8 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// OFB (Output Feedback) Mode.
+// OFB（输出反馈）模式。
 
 package cipher
 
@@ -19,15 +19,13 @@ type ofb struct {
 	outUsed int
 }
 
-// NewOFB returns a [Stream] that encrypts or decrypts using the block cipher b
-// in output feedback mode. The initialization vector iv's length must be equal
-// to b's block size.
+// NewOFB 返回一个使用块密码 b 在输出反馈模式下加密或解密的 [Stream]。
+// 初始化向量 iv 的长度必须等于 b 的块大小。
 //
-// Deprecated: OFB mode is not authenticated, which generally enables active
-// attacks to manipulate and recover the plaintext. It is recommended that
-// applications use [AEAD] modes instead. The standard library implementation of
-// OFB is also unoptimized and not validated as part of the FIPS 140-3 module.
-// If an unauthenticated [Stream] mode is required, use [NewCTR] instead.
+// 已弃用：OFB 模式未经认证，这通常使主动攻击能够操纵和恢复明文。
+// 建议应用程序改用 [AEAD] 模式。标准库的 OFB 实现也未经优化，
+// 且未作为 FIPS 140-3 模块的一部分进行验证。
+// 如果需要未经认证的 [Stream] 模式，请改用 [NewCTR]。
 func NewOFB(b Block, iv []byte) Stream {
 	if fips140only.Enforced() {
 		panic("crypto/cipher: use of OFB is not allowed in FIPS 140-only mode")

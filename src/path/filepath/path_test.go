@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package filepath_test
 
@@ -24,7 +24,7 @@ type PathTest struct {
 }
 
 var cleantests = []PathTest{
-	// Already clean
+	// 已经是干净的
 	{"abc", "abc"},
 	{"abc/def", "abc/def"},
 	{"a/b/c", "a/b/c"},
@@ -35,10 +35,10 @@ var cleantests = []PathTest{
 	{"/abc", "/abc"},
 	{"/", "/"},
 
-	// Empty is current dir
+	// 空是当前目录
 	{"", "."},
 
-	// Remove trailing slash
+	// 移除尾部斜杠
 	{"abc/", "abc"},
 	{"abc/def/", "abc/def"},
 	{"a/b/c/", "a/b/c"},
@@ -47,16 +47,16 @@ var cleantests = []PathTest{
 	{"../../", "../.."},
 	{"/abc/", "/abc"},
 
-	// Remove doubled slash
+	// 移除重复斜杠
 	{"abc//def//ghi", "abc/def/ghi"},
 	{"abc//", "abc"},
 
-	// Remove . elements
+	// 移除 . 元素
 	{"abc/./def", "abc/def"},
 	{"/./abc/def", "/abc/def"},
 	{"abc/.", "abc"},
 
-	// Remove .. elements
+	// 移除 .. 元素
 	{"abc/def/ghi/../jkl", "abc/def/jkl"},
 	{"abc/def/../ghi/../jkl", "abc/jkl"},
 	{"abc/def/..", "abc"},
@@ -68,14 +68,14 @@ var cleantests = []PathTest{
 	{"/../abc", "/abc"},
 	{"a/../b:/../../c", `../c`},
 
-	// Combinations
+	// 组合
 	{"abc/./../def", "def"},
 	{"abc//./../def", "def"},
 	{"abc/../../././../def", "../../def"},
 }
 
 var nonwincleantests = []PathTest{
-	// Remove leading doubled slash
+	// 移除开头的重复斜杠
 	{"//abc", "/abc"},
 	{"///abc", "/abc"},
 	{"//abc//", "/abc"},
@@ -111,14 +111,14 @@ var wincleantests = []PathTest{
 	{`\\?\C:\`, `\\?\C:\`},
 	{`\\?\C:\a`, `\\?\C:\a`},
 
-	// Don't allow cleaning to move an element with a colon to the start of the path.
+	// 不允许清理操作将带有冒号的元素移动到路径开头。
 	{`a/../c:`, `.\c:`},
 	{`a\..\c:`, `.\c:`},
 	{`a/../c:/a`, `.\c:\a`},
 	{`a/../../c:`, `..\c:`},
 	{`foo:bar`, `foo:bar`},
 
-	// Don't allow cleaning to create a Root Local Device path like \??\a.
+	// 不允许清理操作创建像 \??\a 这样的根本地设备路径。
 	{`/a/../??/a`, `\.\??\a`},
 }
 
@@ -214,7 +214,7 @@ var winislocaltests = []IsLocalTest{
 	{`conin$`, false},
 	{`CONOUT$`, false},
 	{`conout$`, false},
-	{`dollar$`, true}, // not a special file name
+	{`dollar$`, true}, // 不是特殊文件名
 }
 
 var plan9islocaltests = []IsLocalTest{
@@ -337,16 +337,16 @@ var splitlisttests = []SplitListTest{
 }
 
 var winsplitlisttests = []SplitListTest{
-	// quoted
+	// 带引号的
 	{`"a"`, []string{`a`}},
 
-	// semicolon
+	// 分号
 	{`";"`, []string{`;`}},
 	{`"a;b"`, []string{`a;b`}},
 	{`";";`, []string{`;`, ``}},
 	{`;";"`, []string{``, `;`}},
 
-	// partially quoted
+	// 部分带引号的
 	{`a";"b`, []string{`a;b`}},
 	{`a; ""b`, []string{`a`, ` b`}},
 	{`"a;b`, []string{`a;b`}},
@@ -414,15 +414,15 @@ type JoinTest struct {
 }
 
 var jointests = []JoinTest{
-	// zero parameters
+	// 零个参数
 	{[]string{}, ""},
 
-	// one parameter
+	// 一个参数
 	{[]string{""}, ""},
 	{[]string{"/"}, "/"},
 	{[]string{"a"}, "a"},
 
-	// two parameters
+	// 两个参数
 	{[]string{"a", "b"}, "a/b"},
 	{[]string{"a", ""}, "a"},
 	{[]string{"", "b"}, "b"},
@@ -436,7 +436,7 @@ var jointests = []JoinTest{
 	{[]string{"a/", ""}, "a"},
 	{[]string{"", ""}, ""},
 
-	// three parameters
+	// 三个参数
 	{[]string{"/", "a", "b"}, "/a/b"},
 }
 
@@ -514,7 +514,7 @@ func TestExt(t *testing.T) {
 
 type Node struct {
 	name    string
-	entries []*Node // nil if the entry is a file
+	entries []*Node // 如果条目是文件则为 nil
 	mark    int
 }
 
@@ -577,9 +577,9 @@ func checkMarks(t *testing.T, report bool) {
 	})
 }
 
-// Assumes that each node name is unique. Good enough for a test.
-// If clear is true, any incoming error is cleared before return. The errors
-// are always accumulated, though.
+// 假设每个节点名称都是唯一的。对于测试来说足够了。
+// 如果 clear 为 true，任何传入的错误在返回前都会被清除。但是，
+// 错误始终会被累积。
 func mark(d fs.DirEntry, err error, errors *[]error, clear bool) error {
 	name := d.Name()
 	walkTree(tree, tree.name, func(path string, n *Node) {
@@ -597,8 +597,8 @@ func mark(d fs.DirEntry, err error, errors *[]error, clear bool) error {
 	return nil
 }
 
-// tempDirCanonical returns a temporary directory for the test to use, ensuring
-// that the returned path does not contain symlinks.
+// tempDirCanonical 返回一个供测试使用的临时目录，确保
+// 返回的路径不包含符号链接。
 func tempDirCanonical(t *testing.T) string {
 	dir := t.TempDir()
 

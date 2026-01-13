@@ -1,13 +1,13 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package csv reads and writes comma-separated values (CSV) files.
+// csv 包读写逗号分隔值（CSV）文件。
 // There are many kinds of CSV files; this package supports the format
 // described in RFC 4180, except that [Writer] uses LF
 // instead of CRLF as newline character by default.
 //
-// A csv file contains zero or more records of one or more fields per record.
+// csv 文件包含零个或多个记录，每个记录有一个或多个字段。
 // Each record is separated by the newline character. The final record may
 // optionally be followed by a newline character.
 //
@@ -15,7 +15,7 @@
 //
 // White space is considered part of a field.
 //
-// Carriage returns before newline characters are silently removed.
+// Carriage 返回before newline characters are silently removed.
 //
 // Blank lines are ignored. A line with only whitespace characters (excluding
 // the ending newline character) is not considered a blank line.
@@ -35,13 +35,13 @@
 // Within a quoted-field a quote character followed by a second quote
 // character is considered a single quote.
 //
-//	"the ""word"" is true","a ""quoted-field"""
+//	"the ""word"" 为真","a ""quoted-field"""
 //
 // results in
 //
-//	{`the "word" is true`, `a "quoted-field"`}
+//	{`the "word" 为真`, `a "quoted-field"`}
 //
-// Newlines and commas may be included in a quoted-field
+// Newlines and commas 可能是 included in a quoted-field
 //
 //	"Multi-line
 //	field","comma is ,"
@@ -62,7 +62,7 @@ import (
 	"unicode/utf8"
 )
 
-// A ParseError is returned for parsing errors.
+// 一个ParseError is returned for parsing errors.
 // Line and column numbers are 1-indexed.
 type ParseError struct {
 	StartLine int   // Line where the record starts
@@ -99,7 +99,7 @@ func validDelim(r rune) bool {
 	return r != 0 && r != '"' && r != '\r' && r != '\n' && utf8.ValidRune(r) && r != utf8.RuneError
 }
 
-// A Reader reads records from a CSV-encoded file.
+// 一个Reader reads records from a CSV-encoded file.
 //
 // As returned by [NewReader], a Reader expects input conforming to RFC 4180.
 // The exported fields can be changed to customize the details before the
@@ -109,22 +109,22 @@ func validDelim(r rune) bool {
 // including in multiline field values, so that the returned data does
 // not depend on which line-ending convention an input file uses.
 type Reader struct {
-	// Comma is the field delimiter.
+	// Comma 是 field delimiter.
 	// It is set to comma (',') by NewReader.
-	// Comma must be a valid rune and must not be \r, \n,
+	// Comma 必须是 a valid rune and must not be \r, \n,
 	// or the Unicode replacement character (0xFFFD).
 	Comma rune
 
-	// Comment, if not 0, is the comment character. Lines beginning with the
+	// Comment, if not 0, 是 comment character. Lines beginning with the
 	// Comment character without preceding whitespace are ignored.
 	// With leading whitespace the Comment character becomes part of the
-	// field, even if TrimLeadingSpace is true.
-	// Comment must be a valid rune and must not be \r, \n,
+	// field, even if TrimLeadingSpace 为真.
+	// Comment 必须是 a valid rune and must not be \r, \n,
 	// or the Unicode replacement character (0xFFFD).
 	// It must also not be equal to Comma.
 	Comment rune
 
-	// FieldsPerRecord is the number of expected fields per record.
+	// FieldsPerRecord 是 number of expected fields per record.
 	// If FieldsPerRecord is positive, Read requires each record to
 	// have the given number of fields. If FieldsPerRecord is 0, Read sets it to
 	// the number of fields in the first record, so that future records must
@@ -132,15 +132,15 @@ type Reader struct {
 	// made and records may have a variable number of fields.
 	FieldsPerRecord int
 
-	// If LazyQuotes is true, a quote may appear in an unquoted field and a
+	// If LazyQuotes 为真, a quote may appear in an unquoted field and a
 	// non-doubled quote may appear in a quoted field.
 	LazyQuotes bool
 
-	// If TrimLeadingSpace is true, leading white space in a field is ignored.
-	// This is done even if the field delimiter, Comma, is white space.
+	// If TrimLeadingSpace 为真, leading white space in a field is ignored.
+	// This is done even 如果 field delimiter, Comma, is white space.
 	TrimLeadingSpace bool
 
-	// ReuseRecord controls whether calls to Read may return a slice sharing
+	// ReuseRecord controls whether calls to Read 可能返回 a slice sharing
 	// the backing array of the previous call's returned slice for performance.
 	// By default, each call to Read returns newly allocated memory owned by the caller.
 	ReuseRecord bool
@@ -150,34 +150,34 @@ type Reader struct {
 
 	r *bufio.Reader
 
-	// numLine is the current line being read in the CSV file.
+	// numLine 是 current line being read in the CSV file.
 	numLine int
 
-	// offset is the input stream byte offset of the current reader position.
+	// offset 是 input stream byte offset of the current reader position.
 	offset int64
 
-	// rawBuffer is a line buffer only used by the readLine method.
+	// rawBuffer 是一个 line buffer only used by the readLine method.
 	rawBuffer []byte
 
-	// recordBuffer holds the unescaped fields, one after another.
+	// recordBuffer 保存 unescaped fields, one after another.
 	// The fields can be accessed by using the indexes in fieldIndexes.
 	// E.g., For the row `a,"b","c""d",e`, recordBuffer will contain `abc"de`
 	// and fieldIndexes will contain the indexes [1, 2, 5, 6].
 	recordBuffer []byte
 
-	// fieldIndexes is an index of fields inside recordBuffer.
+	// fieldIndexes 是一个n index of fields inside recordBuffer.
 	// The i'th field ends at offset fieldIndexes[i] in recordBuffer.
 	fieldIndexes []int
 
-	// fieldPositions is an index of field positions for the
+	// fieldPositions 是一个n index of field positions for the
 	// last record returned by Read.
 	fieldPositions []position
 
-	// lastRecord is a record cache and only used when ReuseRecord == true.
+	// lastRecord 是一个 record cache and only used when ReuseRecord == true.
 	lastRecord []string
 }
 
-// NewReader returns a new Reader that reads from r.
+// NewReader 返回a new Reader that reads from r.
 func NewReader(r io.Reader) *Reader {
 	return &Reader{
 		Comma: ',',
@@ -187,12 +187,12 @@ func NewReader(r io.Reader) *Reader {
 
 // Read reads one record (a slice of fields) from r.
 // If the record has an unexpected number of fields,
-// Read returns the record along with the error [ErrFieldCount].
-// If the record contains a field that cannot be parsed,
-// Read returns a partial record along with the parse error.
-// The partial record contains all fields read before the error.
+// Read 返回the record along with the error [ErrFieldCount].
+// If the record 包含 a field that cannot be parsed,
+// Read 返回a partial record along with the parse error.
+// The partial record 包含 all fields read before the error.
 // If there is no data left to be read, Read returns nil, [io.EOF].
-// If [Reader.ReuseRecord] is true, the returned slice may be shared
+// If [Reader.ReuseRecord] 为真, the returned slice 可能是 shared
 // between multiple calls to Read.
 func (r *Reader) Read() (record []string, err error) {
 	if r.ReuseRecord {
@@ -204,7 +204,7 @@ func (r *Reader) Read() (record []string, err error) {
 	return record, err
 }
 
-// FieldPos returns the line and column corresponding to
+// FieldPos 返回the line and column corresponding to
 // the start of the field with the given index in the slice most recently
 // returned by [Reader.Read]. Numbering of lines and columns starts at 1;
 // columns are counted in bytes, not runes.
@@ -218,21 +218,21 @@ func (r *Reader) FieldPos(field int) (line, column int) {
 	return p.line, p.col
 }
 
-// InputOffset returns the input stream byte offset of the current reader
+// InputOffset 返回the input stream byte offset of the current reader
 // position. The offset gives the location of the end of the most recently
 // read row and the beginning of the next row.
 func (r *Reader) InputOffset() int64 {
 	return r.offset
 }
 
-// pos holds the position of a field in the current line.
+// pos 保存the position of a field in the current line.
 type position struct {
 	line, col int
 }
 
 // ReadAll reads all the remaining records from r.
-// Each record is a slice of fields.
-// A successful call returns err == nil, not err == [io.EOF]. Because ReadAll is
+// Each record 是一个 slice of fields.
+// 一个successful call returns err == nil, not err == [io.EOF]. Because ReadAll is
 // defined to read until EOF, it does not treat end of file as an error to be
 // reported.
 func (r *Reader) ReadAll() (records [][]string, err error) {
@@ -249,7 +249,7 @@ func (r *Reader) ReadAll() (records [][]string, err error) {
 }
 
 // readLine reads the next line (with the trailing endline).
-// If EOF is hit without a trailing endline, it will be omitted.
+// If EOF is hit without a trailing endline, it 将是 omitted.
 // If some bytes were read, then the error is never [io.EOF].
 // The result is only valid until the next call to readLine.
 func (r *Reader) readLine() ([]byte, error) {
@@ -280,7 +280,7 @@ func (r *Reader) readLine() ([]byte, error) {
 	return line, err
 }
 
-// lengthNL reports the number of bytes for the trailing \n.
+// lengthNL 报告the number of bytes for the trailing \n.
 func lengthNL(b []byte) int {
 	if len(b) > 0 && b[len(b)-1] == '\n' {
 		return 1
@@ -288,7 +288,7 @@ func lengthNL(b []byte) int {
 	return 0
 }
 
-// nextRune returns the next rune in b or utf8.RuneError.
+// nextRune 返回the next rune in b or utf8.RuneError.
 func nextRune(b []byte) rune {
 	r, _ := utf8.DecodeRune(b)
 	return r

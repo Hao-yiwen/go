@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package abi_test
 
@@ -13,16 +13,16 @@ import (
 )
 
 func TestFuncPC(t *testing.T) {
-	// Test that FuncPC* can get correct function PC.
+	// 测试 FuncPC* 能否获取正确的函数 PC。
 	pcFromAsm := abi.FuncPCTestFnAddr
 
-	// Test FuncPC for locally defined function
+	// 测试本地定义函数的 FuncPC
 	pcFromGo := abi.FuncPCTest()
 	if pcFromGo != pcFromAsm {
 		t.Errorf("FuncPC returns wrong PC, want %x, got %x", pcFromAsm, pcFromGo)
 	}
 
-	// Test FuncPC for imported function
+	// 测试导入函数的 FuncPC
 	pcFromGo = abi.FuncPCABI0(abi.FuncPCTestFn)
 	if pcFromGo != pcFromAsm {
 		t.Errorf("FuncPC returns wrong PC, want %x, got %x", pcFromAsm, pcFromGo)
@@ -30,40 +30,40 @@ func TestFuncPC(t *testing.T) {
 }
 
 func TestFuncPCCompileError(t *testing.T) {
-	// Test that FuncPC* on a function of a mismatched ABI is rejected.
+	// 测试对 ABI 不匹配的函数调用 FuncPC* 会被拒绝。
 	testenv.MustHaveGoBuild(t)
 
-	// We want to test internal package, which we cannot normally import.
-	// Run the assembler and compiler manually.
+	// 我们想测试 internal 包，但通常无法导入它。
+	// 手动运行汇编器和编译器。
 	tmpdir := t.TempDir()
 	asmSrc := filepath.Join("testdata", "x.s")
 	goSrc := filepath.Join("testdata", "x.go")
 	symabi := filepath.Join(tmpdir, "symabi")
 	obj := filepath.Join(tmpdir, "x.o")
 
-	// Write an importcfg file for the dependencies of the package.
+	// 为包的依赖项编写 importcfg 文件。
 	importcfgfile := filepath.Join(tmpdir, "hello.importcfg")
 	testenv.WriteImportcfg(t, importcfgfile, nil, "internal/abi")
 
-	// parse assembly code for symabi.
+	// 解析汇编代码以获取 symabi。
 	cmd := testenv.Command(t, testenv.GoToolPath(t), "tool", "asm", "-p=p", "-gensymabis", "-o", symabi, asmSrc)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("go tool asm -gensymabis failed: %v\n%s", err, out)
 	}
 
-	// compile go code.
+	// 编译 go 代码。
 	cmd = testenv.Command(t, testenv.GoToolPath(t), "tool", "compile", "-importcfg="+importcfgfile, "-p=p", "-symabis", symabi, "-o", obj, goSrc)
 	out, err = cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("go tool compile did not fail")
 	}
 
-	// Expect errors in line 17, 18, 20, no errors on other lines.
+	// 期望在第 17、18、20 行出错，其他行不应有错误。
 	want := []string{"x.go:17", "x.go:18", "x.go:20"}
 	got := strings.Split(string(out), "\n")
 	if got[len(got)-1] == "" {
-		got = got[:len(got)-1] // remove last empty line
+		got = got[:len(got)-1] // 移除最后的空行
 	}
 	for i, s := range got {
 		if !strings.Contains(s, want[i]) {

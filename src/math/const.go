@@ -1,13 +1,13 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package math provides basic constants and mathematical functions.
+// math 包提供基本的常量和数学函数。
 //
-// This package does not guarantee bit-identical results across architectures.
+// 本包不保证跨架构的位相同结果。
 package math
 
-// Mathematical constants.
+// 数学常量。
 const (
 	E   = 2.71828182845904523536028747135266249775724709369995957496696763 // https://oeis.org/A001113
 	Pi  = 3.14159265358979323846264338327950288419716939937510582097494459 // https://oeis.org/A000796
@@ -24,9 +24,9 @@ const (
 	Log10E = 1 / Ln10
 )
 
-// Floating-point limit values.
-// Max is the largest finite value representable by the type.
-// SmallestNonzero is the smallest positive, non-zero value representable by the type.
+// 浮点数限制值。
+// Max 是该类型可表示的最大有限值。
+// SmallestNonzero 是该类型可表示的最小正非零值。
 const (
 	MaxFloat32             = 0x1p127 * (1 + (1 - 0x1p-23)) // 3.40282346638528859811704183484516925440e+38
 	SmallestNonzeroFloat32 = 0x1p-126 * 0x1p-23            // 1.401298464324817070923729583289916131280e-45
@@ -35,7 +35,7 @@ const (
 	SmallestNonzeroFloat64 = 0x1p-1022 * 0x1p-52            // 4.9406564584124654417656879286822137236505980e-324
 )
 
-// Integer limit values.
+// 整数限制值。
 const (
 	intSize = 32 << (^uint(0) >> 63) // 32 or 64
 

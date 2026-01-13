@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -15,18 +15,18 @@ import (
 	jsonv2 "encoding/json/v2"
 )
 
-// A Decoder reads and decodes JSON values from an input stream.
+// 一个Decoder reads and decodes JSON values from an input stream.
 type Decoder struct {
 	dec  *jsontext.Decoder
 	opts jsonv2.Options
 	err  error
 
-	// hadPeeked reports whether [Decoder.More] was called.
+	// hadPeeked 报告是否 [Decoder.More] was called.
 	// It is reset by [Decoder.Decode] and [Decoder.Token].
 	hadPeeked bool
 }
 
-// NewDecoder returns a new decoder that reads from r.
+// NewDecoder 返回a new decoder that reads from r.
 //
 // The decoder introduces its own buffering and may
 // read data from r beyond the JSON values requested.
@@ -53,7 +53,7 @@ func (dec *Decoder) UseNumber() {
 }
 
 // DisallowUnknownFields causes the Decoder to return an error when the destination
-// is a struct and the input contains object keys which do not match any
+// 是一个 struct and the input 包含 object keys which do not match any
 // non-ignored, exported fields in the destination.
 func (dec *Decoder) DisallowUnknownFields() {
 	if reject, _ := jsonv2.GetOption(dec.opts, jsonv2.RejectUnknownMembers); !reject {
@@ -84,13 +84,13 @@ func (dec *Decoder) Decode(v any) error {
 	return jsonv2.Unmarshal(b, v, dec.opts)
 }
 
-// Buffered returns a reader of the data remaining in the Decoder's
+// Buffered 返回a reader of the data remaining in the Decoder's
 // buffer. The reader is valid until the next call to [Decoder.Decode].
 func (dec *Decoder) Buffered() io.Reader {
 	return bytes.NewReader(dec.dec.UnreadBuffer())
 }
 
-// An Encoder writes JSON values to an output stream.
+// 一个Encoder writes JSON values to an output stream.
 type Encoder struct {
 	w    io.Writer
 	opts jsonv2.Options
@@ -103,7 +103,7 @@ type Encoder struct {
 	indentValue  string
 }
 
-// NewEncoder returns a new encoder that writes to w.
+// NewEncoder 返回a new encoder that writes to w.
 func NewEncoder(w io.Writer) *Encoder {
 	enc := new(Encoder)
 	enc.w = w
@@ -144,31 +144,31 @@ func (enc *Encoder) Encode(v any) error {
 
 // SetIndent instructs the encoder to format each subsequent encoded
 // value as if indented by the package-level function Indent(dst, src, prefix, indent).
-// Calling SetIndent("", "") disables indentation.
+// Calling SetIndent("", "") 禁用 indentation.
 func (enc *Encoder) SetIndent(prefix, indent string) {
 	enc.indentPrefix = prefix
 	enc.indentValue = indent
 }
 
-// SetEscapeHTML specifies whether problematic HTML characters
-// should be escaped inside JSON quoted strings.
+// SetEscapeHTML 指定whether problematic HTML characters
+// 应该是 escaped inside JSON quoted strings.
 // The default behavior is to escape &, <, and > to \u0026, \u003c, and \u003e
 // to avoid certain safety problems that can arise when embedding JSON in HTML.
 //
 // In non-HTML settings where the escaping interferes with the readability
-// of the output, SetEscapeHTML(false) disables this behavior.
+// of the output, SetEscapeHTML(false) 禁用 this behavior.
 func (enc *Encoder) SetEscapeHTML(on bool) {
 	if escape, _ := jsonv2.GetOption(enc.opts, jsontext.EscapeForHTML); escape != on {
 		enc.opts = jsonv2.JoinOptions(enc.opts, jsontext.EscapeForHTML(on))
 	}
 }
 
-// RawMessage is a raw encoded JSON value.
-// It implements [Marshaler] and [Unmarshaler] and can
+// RawMessage 是一个 raw encoded JSON value.
+// It 实现[Marshaler] and [Unmarshaler] and can
 // be used to delay JSON decoding or precompute a JSON encoding.
 type RawMessage = jsontext.Value
 
-// A Token holds a value of one of these types:
+// 一个Token holds a value of one of these types:
 //
 //   - [Delim], for the four JSON delimiters [ ] { }
 //   - bool, for JSON booleans
@@ -178,22 +178,22 @@ type RawMessage = jsontext.Value
 //   - nil, for JSON null
 type Token any
 
-// A Delim is a JSON array or object delimiter, one of [ ] { or }.
+// 一个Delim 是一个 JSON array or object delimiter, one of [ ] { or }.
 type Delim rune
 
 func (d Delim) String() string {
 	return string(d)
 }
 
-// Token returns the next JSON token in the input stream.
+// Token 返回the next JSON token in the input stream.
 // At the end of the input stream, Token returns nil, [io.EOF].
 //
 // Token guarantees that the delimiters [ ] { } it returns are
 // properly nested and matched: if Token encounters an unexpected
-// delimiter in the input, it will return an error.
+// delimiter in the input, it 将返回 an error.
 //
 // The input stream consists of basic JSON values—bool, string,
-// number, and null—along with delimiters [ ] { } of type [Delim]
+// number, and null—along with delimiters [ ] { } 类型为 [Delim]
 // to mark the start and end of arrays and objects.
 // Commas and colons are elided.
 func (dec *Decoder) Token() (Token, error) {
@@ -203,8 +203,8 @@ func (dec *Decoder) Token() (Token, error) {
 	tok, err := dec.dec.ReadToken()
 	if err != nil {
 		// Historically, v1 would report just [io.EOF] if
-		// the stream is a prefix of a valid JSON value.
-		// It reports an unwrapped [io.ErrUnexpectedEOF] if
+		// the stream 是一个 prefix of a valid JSON value.
+		// It 报告一个 unwrapped [io.ErrUnexpectedEOF] if
 		// truncated within a JSON token such as a literal, number, or string.
 		if errors.Is(err, io.ErrUnexpectedEOF) {
 			if len(bytes.Trim(dec.dec.UnreadBuffer(), " \r\n\t,:")) == 0 {
@@ -236,7 +236,7 @@ func (dec *Decoder) Token() (Token, error) {
 	}
 }
 
-// More reports whether there is another element in the
+// More 报告whether there 是一个nother element in the
 // current array or object being parsed.
 func (dec *Decoder) More() bool {
 	dec.hadPeeked = true
@@ -257,7 +257,7 @@ func (dec *Decoder) More() bool {
 	return k != ']' && k != '}'
 }
 
-// InputOffset returns the input stream byte offset of the current decoder position.
+// InputOffset 返回the input stream byte offset of the current decoder position.
 // The offset gives the location of the end of the most recently returned token
 // and the beginning of the next token.
 func (dec *Decoder) InputOffset() int64 {
@@ -265,7 +265,7 @@ func (dec *Decoder) InputOffset() int64 {
 	if dec.hadPeeked {
 		// Historically, InputOffset reported the location of
 		// the end of the most recently returned token
-		// unless [Decoder.More] is called, in which case, it reported
+		// 除非 [Decoder.More] is called, in which case, it reported
 		// the beginning of the next token.
 		unreadBuffer := dec.dec.UnreadBuffer()
 		trailingTokens := bytes.TrimLeft(unreadBuffer, " \n\r\t")

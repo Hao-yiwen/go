@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // Package doc extracts source code documentation from a Go AST.
 package doc
@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// Package is the documentation for an entire package.
+// Package 是 documentation for an entire package.
 type Package struct {
 	Doc        string
 	Name       string
@@ -32,7 +32,7 @@ type Package struct {
 	Vars   []*Value
 	Funcs  []*Func
 
-	// Examples is a sorted list of examples associated with
+	// Examples 是一个 sorted list of examples associated with
 	// the package. Examples are extracted from _test.go files
 	// provided to NewFromFiles.
 	Examples []*Example
@@ -41,7 +41,7 @@ type Package struct {
 	syms         map[string]bool
 }
 
-// Value is the documentation for a (possibly grouped) var or const declaration.
+// Value 是 documentation for a (possibly grouped) var or const declaration.
 type Value struct {
 	Doc   string
 	Names []string // var or const names in declaration order
@@ -50,7 +50,7 @@ type Value struct {
 	order int
 }
 
-// Type is the documentation for a type declaration.
+// Type 是 documentation for a type declaration.
 type Type struct {
 	Doc  string
 	Name string
@@ -62,13 +62,13 @@ type Type struct {
 	Funcs   []*Func  // sorted list of functions returning this type
 	Methods []*Func  // sorted list of methods (including embedded ones) of this type
 
-	// Examples is a sorted list of examples associated with
+	// Examples 是一个 sorted list of examples associated with
 	// this type. Examples are extracted from _test.go files
 	// provided to NewFromFiles.
 	Examples []*Example
 }
 
-// Func is the documentation for a func declaration.
+// Func 是 documentation for a func declaration.
 type Func struct {
 	Doc  string
 	Name string
@@ -80,13 +80,13 @@ type Func struct {
 	Orig  string // original receiver "T" or "*T"
 	Level int    // embedding level; 0 means not embedded
 
-	// Examples is a sorted list of examples associated with this
+	// Examples 是一个 sorted list of examples associated with this
 	// function or method. Examples are extracted from _test.go files
 	// provided to NewFromFiles.
 	Examples []*Example
 }
 
-// A Note represents a marked comment starting with "MARKER(uid): note body".
+// 一个Note represents a marked comment starting with "MARKER(uid): note body".
 // Any note with a marker of 2 or more upper case [A-Z] letters and a uid of
 // at least one character is recognized. The ":" following the uid is optional.
 // Notes are collected in the Package.Notes map indexed by the notes marker.
@@ -190,7 +190,7 @@ func (p *Package) collectFuncs(funcs []*Func) {
 // Note that t.Methods will contain methods of non-interface types, but not interface types.
 // Adding interface methods to t.Methods might make sense, but would cause us to
 // include those methods in the documentation index. Adding interface methods to p.syms
-// here allows us to linkify references like [io.Reader.Read] without making any other
+// here 允许us to linkify references like [io.Reader.Read] without making any other
 // changes to the documentation formatting at this time.
 //
 // If we do start adding interface methods to t.Methods in the future,
@@ -237,7 +237,7 @@ func (p *Package) collectStructFields(t *Type) {
 // file set, which must not be nil.
 //
 // NewFromFiles uses all provided files when computing documentation,
-// so it is the caller's responsibility to provide only the files that
+// so it 是 caller's responsibility to provide only the files that
 // match the desired build context. "go/build".Context.MatchFile can
 // be used for determining whether a file matches a build context with
 // the desired GOOS and GOARCH values, and other build constraints.
@@ -248,11 +248,11 @@ func (p *Package) collectStructFields(t *Type) {
 // If the example has a suffix in its name, it is set in the
 // [Example.Suffix] field. [Examples] with malformed names are skipped.
 //
-// Optionally, a single extra argument of type [Mode] can be provided to
+// Optionally, a single extra argument 类型为 [Mode] can be provided to
 // control low-level aspects of the documentation extraction behavior.
 //
 // NewFromFiles takes ownership of the AST files and may edit them,
-// unless the PreserveAST Mode bit is on.
+// 除非 the PreserveAST Mode bit is on.
 func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opts ...any) (*Package, error) {
 	// Check for invalid API usage.
 	if fset == nil {
@@ -306,12 +306,12 @@ func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opt
 	return p, nil
 }
 
-// lookupSym reports whether the package has a given symbol or method.
+// lookupSym 报告whether the package has a given symbol or method.
 //
-// If recv == "", HasSym reports whether the package has a top-level
+// If recv == "", HasSym 报告是否 the package has a top-level
 // const, func, type, or var named name.
 //
-// If recv != "", HasSym reports whether the package has a type
+// If recv != "", HasSym 报告是否 the package has a type
 // named recv with a method named name.
 func (p *Package) lookupSym(recv, name string) bool {
 	if recv != "" {
@@ -320,11 +320,11 @@ func (p *Package) lookupSym(recv, name string) bool {
 	return p.syms[name]
 }
 
-// lookupPackage returns the import path identified by name
+// lookupPackage 返回the import path identified by name
 // in the given package. If name uniquely identifies a single import,
 // then lookupPackage returns that import.
 // If multiple packages are imported as name, importPath returns "", false.
-// Otherwise, if name is the name of p itself, importPath returns "", true,
+// Otherwise, if name 是 name of p itself, importPath returns "", true,
 // to signal a reference to p.
 // Otherwise, importPath returns "", false.
 func (p *Package) lookupPackage(name string) (importPath string, ok bool) {
@@ -340,9 +340,9 @@ func (p *Package) lookupPackage(name string) (importPath string, ok bool) {
 	return "", false // unknown name
 }
 
-// Parser returns a doc comment parser configured
+// Parser 返回a doc comment parser configured
 // for parsing doc comments from package p.
-// Each call returns a new parser, so that the caller may
+// Each call 返回一个new parser, so that the caller may
 // customize it before use.
 func (p *Package) Parser() *comment.Parser {
 	return &comment.Parser{
@@ -351,9 +351,9 @@ func (p *Package) Parser() *comment.Parser {
 	}
 }
 
-// Printer returns a doc comment printer configured
+// Printer 返回a doc comment printer configured
 // for printing doc comments from package p.
-// Each call returns a new printer, so that the caller may
+// Each call 返回一个new printer, so that the caller may
 // customize it before use.
 func (p *Package) Printer() *comment.Printer {
 	// No customization today, but having p.Printer()
@@ -361,7 +361,7 @@ func (p *Package) Printer() *comment.Printer {
 	return &comment.Printer{}
 }
 
-// HTML returns formatted HTML for the doc comment text.
+// HTML 返回formatted HTML for the doc comment text.
 //
 // To customize details of the HTML, use [Package.Printer]
 // to obtain a [comment.Printer], and configure it
@@ -370,7 +370,7 @@ func (p *Package) HTML(text string) []byte {
 	return p.Printer().HTML(p.Parser().Parse(text))
 }
 
-// Markdown returns formatted Markdown for the doc comment text.
+// Markdown 返回formatted Markdown for the doc comment text.
 //
 // To customize details of the Markdown, use [Package.Printer]
 // to obtain a [comment.Printer], and configure it
@@ -379,7 +379,7 @@ func (p *Package) Markdown(text string) []byte {
 	return p.Printer().Markdown(p.Parser().Parse(text))
 }
 
-// Text returns formatted text for the doc comment text,
+// Text 返回formatted text for the doc comment text,
 // wrapped to 80 Unicode code points and using tabs for
 // code block indentation.
 //

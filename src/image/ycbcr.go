@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package image
 
@@ -8,7 +8,7 @@ import (
 	"image/color"
 )
 
-// YCbCrSubsampleRatio is the chroma subsample ratio used in a YCbCr image.
+// YCbCrSubsampleRatio 是 YCbCr 图像中使用的色度子采样比。
 type YCbCrSubsampleRatio int
 
 const (
@@ -38,20 +38,18 @@ func (s YCbCrSubsampleRatio) String() string {
 	return "YCbCrSubsampleRatioUnknown"
 }
 
-// YCbCr is an in-memory image of Y'CbCr colors. There is one Y sample per
-// pixel, but each Cb and Cr sample can span one or more pixels.
-// YStride is the Y slice index delta between vertically adjacent pixels.
-// CStride is the Cb and Cr slice index delta between vertically adjacent pixels
-// that map to separate chroma samples.
-// It is not an absolute requirement, but YStride and len(Y) are typically
-// multiples of 8, and:
+// YCbCr 是一个内存中的 Y'CbCr 颜色图像。每个像素有一个 Y 样本，
+// 但每个 Cb 和 Cr 样本可以跨越一个或多个像素。
+// YStride 是垂直相邻像素之间 Y 切片索引的差值。
+// CStride 是映射到不同色度样本的垂直相邻像素之间 Cb 和 Cr 切片索引的差值。
+// 这不是绝对要求，但 YStride 和 len(Y) 通常是 8 的倍数，并且：
 //
-//	For 4:4:4, CStride == YStride/1 && len(Cb) == len(Cr) == len(Y)/1.
-//	For 4:2:2, CStride == YStride/2 && len(Cb) == len(Cr) == len(Y)/2.
-//	For 4:2:0, CStride == YStride/2 && len(Cb) == len(Cr) == len(Y)/4.
-//	For 4:4:0, CStride == YStride/1 && len(Cb) == len(Cr) == len(Y)/2.
-//	For 4:1:1, CStride == YStride/4 && len(Cb) == len(Cr) == len(Y)/4.
-//	For 4:1:0, CStride == YStride/4 && len(Cb) == len(Cr) == len(Y)/8.
+//	对于 4:4:4，CStride == YStride/1 && len(Cb) == len(Cr) == len(Y)/1。
+//	对于 4:2:2，CStride == YStride/2 && len(Cb) == len(Cr) == len(Y)/2。
+//	对于 4:2:0，CStride == YStride/2 && len(Cb) == len(Cr) == len(Y)/4。
+//	对于 4:4:0，CStride == YStride/1 && len(Cb) == len(Cr) == len(Y)/2。
+//	对于 4:1:1，CStride == YStride/4 && len(Cb) == len(Cr) == len(Y)/4。
+//	对于 4:1:0，CStride == YStride/4 && len(Cb) == len(Cr) == len(Y)/8。
 type YCbCr struct {
 	Y, Cb, Cr      []uint8
 	YStride        int
@@ -90,14 +88,12 @@ func (p *YCbCr) YCbCrAt(x, y int) color.YCbCr {
 	}
 }
 
-// YOffset returns the index of the first element of Y that corresponds to
-// the pixel at (x, y).
+// YOffset 返回 Y 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *YCbCr) YOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.YStride + (x - p.Rect.Min.X)
 }
 
-// COffset returns the index of the first element of Cb or Cr that corresponds
-// to the pixel at (x, y).
+// COffset 返回 Cb 或 Cr 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *YCbCr) COffset(x, y int) int {
 	switch p.SubsampleRatio {
 	case YCbCrSubsampleRatio422:
@@ -111,17 +107,16 @@ func (p *YCbCr) COffset(x, y int) int {
 	case YCbCrSubsampleRatio410:
 		return (y/2-p.Rect.Min.Y/2)*p.CStride + (x/4 - p.Rect.Min.X/4)
 	}
-	// Default to 4:4:4 subsampling.
+	// 默认为 4:4:4 子采样。
 	return (y-p.Rect.Min.Y)*p.CStride + (x - p.Rect.Min.X)
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *YCbCr) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &YCbCr{
 			SubsampleRatio: p.SubsampleRatio,
@@ -163,19 +158,18 @@ func yCbCrSize(r Rectangle, subsampleRatio YCbCrSubsampleRatio) (w, h, cw, ch in
 		cw = (r.Max.X+3)/4 - r.Min.X/4
 		ch = (r.Max.Y+1)/2 - r.Min.Y/2
 	default:
-		// Default to 4:4:4 subsampling.
+		// 默认为 4:4:4 子采样。
 		cw = w
 		ch = h
 	}
 	return
 }
 
-// NewYCbCr returns a new YCbCr image with the given bounds and subsample
-// ratio.
+// NewYCbCr 返回具有给定边界和子采样比的新 YCbCr 图像。
 func NewYCbCr(r Rectangle, subsampleRatio YCbCrSubsampleRatio) *YCbCr {
 	w, h, cw, ch := yCbCrSize(r, subsampleRatio)
 
-	// totalLength should be the same as i2, below, for a valid Rectangle r.
+	// 对于有效的 Rectangle r，totalLength 应与下面的 i2 相同。
 	totalLength := add2NonNeg(
 		mul3NonNeg(1, w, h),
 		mul3NonNeg(2, cw, ch),
@@ -199,9 +193,8 @@ func NewYCbCr(r Rectangle, subsampleRatio YCbCrSubsampleRatio) *YCbCr {
 	}
 }
 
-// NYCbCrA is an in-memory image of non-alpha-premultiplied Y'CbCr-with-alpha
-// colors. A and AStride are analogous to the Y and YStride fields of the
-// embedded YCbCr.
+// NYCbCrA 是一个内存中的非预乘 alpha 的 Y'CbCr-带-alpha 颜色图像。
+// A 和 AStride 类似于嵌入的 YCbCr 的 Y 和 YStride 字段。
 type NYCbCrA struct {
 	YCbCr
 	A       []uint8
@@ -238,19 +231,17 @@ func (p *NYCbCrA) NYCbCrAAt(x, y int) color.NYCbCrA {
 	}
 }
 
-// AOffset returns the index of the first element of A that corresponds to the
-// pixel at (x, y).
+// AOffset 返回 A 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *NYCbCrA) AOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.AStride + (x - p.Rect.Min.X)
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *NYCbCrA) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &NYCbCrA{
 			YCbCr: YCbCr{
@@ -276,7 +267,7 @@ func (p *NYCbCrA) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *NYCbCrA) Opaque() bool {
 	if p.Rect.Empty() {
 		return true
@@ -294,12 +285,11 @@ func (p *NYCbCrA) Opaque() bool {
 	return true
 }
 
-// NewNYCbCrA returns a new [NYCbCrA] image with the given bounds and subsample
-// ratio.
+// NewNYCbCrA 返回具有给定边界和子采样比的新 [NYCbCrA] 图像。
 func NewNYCbCrA(r Rectangle, subsampleRatio YCbCrSubsampleRatio) *NYCbCrA {
 	w, h, cw, ch := yCbCrSize(r, subsampleRatio)
 
-	// totalLength should be the same as i3, below, for a valid Rectangle r.
+	// 对于有效的 Rectangle r，totalLength 应与下面的 i3 相同。
 	totalLength := add2NonNeg(
 		mul3NonNeg(2, w, h),
 		mul3NonNeg(2, cw, ch),

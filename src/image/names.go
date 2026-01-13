@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package image
 
@@ -9,18 +9,18 @@ import (
 )
 
 var (
-	// Black is an opaque black uniform image.
+	// Black 是不透明的黑色均匀图像。
 	Black = NewUniform(color.Black)
-	// White is an opaque white uniform image.
+	// White 是不透明的白色均匀图像。
 	White = NewUniform(color.White)
-	// Transparent is a fully transparent uniform image.
+	// Transparent 是完全透明的均匀图像。
 	Transparent = NewUniform(color.Transparent)
-	// Opaque is a fully opaque uniform image.
+	// Opaque 是完全不透明的均匀图像。
 	Opaque = NewUniform(color.Opaque)
 )
 
-// Uniform is an infinite-sized [Image] of uniform color.
-// It implements the [color.Color], [color.Model], and [Image] interfaces.
+// Uniform 是一个具有均匀颜色的无限大小的 [Image]。
+// 它实现了 [color.Color]、[color.Model] 和 [Image] 接口。
 type Uniform struct {
 	C color.Color
 }
@@ -46,13 +46,13 @@ func (c *Uniform) RGBA64At(x, y int) color.RGBA64 {
 	return color.RGBA64{uint16(r), uint16(g), uint16(b), uint16(a)}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (c *Uniform) Opaque() bool {
 	_, _, _, a := c.C.RGBA()
 	return a == 0xffff
 }
 
-// NewUniform returns a new [Uniform] image of the given color.
+// NewUniform 返回具有给定颜色的新 [Uniform] 图像。
 func NewUniform(c color.Color) *Uniform {
 	return &Uniform{c}
 }

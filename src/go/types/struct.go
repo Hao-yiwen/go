@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
@@ -14,16 +14,16 @@ import (
 // ----------------------------------------------------------------------------
 // API
 
-// A Struct represents a struct type.
+// 一个Struct represents a struct type.
 type Struct struct {
-	fields []*Var   // fields != nil indicates the struct is set up (possibly with len(fields) == 0)
+	fields []*Var   // fields != nil 指示 struct is set up (possibly with len(fields) == 0)
 	tags   []string // field tags; nil if there are no tags
 }
 
-// NewStruct returns a new struct with the given fields and corresponding field tags.
-// If a field with index i has a tag, tags[i] must be that tag, but len(tags) may be
+// NewStruct 返回a new struct with the given fields and corresponding field tags.
+// If a field with index i has a tag, tags[i] 必须是 that tag, but len(tags) may be
 // only as long as required to hold the tag with the largest index i. Consequently,
-// if no field has a tag, tags may be nil.
+// if no field has a tag, tags 可能是 nil.
 func NewStruct(fields []*Var, tags []string) *Struct {
 	var fset objset
 	for _, f := range fields {
@@ -39,13 +39,13 @@ func NewStruct(fields []*Var, tags []string) *Struct {
 	return s
 }
 
-// NumFields returns the number of fields in the struct (including blank and embedded fields).
+// NumFields 返回the number of fields in the struct (including blank and embedded fields).
 func (s *Struct) NumFields() int { return len(s.fields) }
 
-// Field returns the i'th field for 0 <= i < NumFields().
+// Field 返回the i'th field for 0 <= i < NumFields().
 func (s *Struct) Field(i int) *Var { return s.fields[i] }
 
-// Tag returns the i'th field tag for 0 <= i < NumFields().
+// Tag 返回the i'th field tag for 0 <= i < NumFields().
 func (s *Struct) Tag(i int) string {
 	if i < len(s.tags) {
 		return s.tags[i]
@@ -93,7 +93,7 @@ func (check *Checker) structType(styp *Struct, e *ast.StructType) {
 		pos := ident.Pos()
 		name := ident.Name
 		fld := NewField(pos, check.pkg, name, typ, embedded)
-		// spec: "Within a struct, non-blank field names must be unique."
+		// spec: "Within a struct, non-blank field names 必须是 unique."
 		if name == "_" || check.declareInSet(&fset, pos, fld) {
 			fields = append(fields, fld)
 			check.recordDef(ident, fld)
@@ -120,7 +120,7 @@ func (check *Checker) structType(styp *Struct, e *ast.StructType) {
 			}
 		} else {
 			// embedded field
-			// spec: "An embedded type must be specified as a type name T or as a
+			// spec: "An embedded type 必须是 specified as a type name T or as a
 			// pointer to a non-interface type name *T, and T itself may not be a
 			// pointer type."
 			pos := f.Type.Pos() // position of type, for errors
@@ -134,8 +134,8 @@ func (check *Checker) structType(styp *Struct, e *ast.StructType) {
 			}
 			add(name, true) // struct{p.T} field has position of T
 
-			// Because we have a name, typ must be of the form T or *T, where T is the name
-			// of a (named or alias) type, and t (= deref(typ)) must be the type of T.
+			// Because we have a name, typ 必须是 of the form T or *T, where T 是 name
+			// of a (named or alias) type, and t (= deref(typ)) 必须是 the type of T.
 			// We must delay this check to the end because we don't want to instantiate
 			// (via t.Underlying()) a possibly incomplete type.
 
@@ -160,7 +160,7 @@ func (check *Checker) structType(styp *Struct, e *ast.StructType) {
 				case *Interface:
 					if isTypeParam(t) {
 						// The error code here is inconsistent with other error codes for
-						// invalid embedding, because this restriction may be relaxed in the
+						// invalid embedding, because this restriction 可能是 relaxed in the
 						// future, and so it did not warrant a new error code.
 						check.error(embeddedPos, MisplacedTypeParam, "embedded field type cannot be a (pointer to a) type parameter")
 						break

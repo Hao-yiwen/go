@@ -1,6 +1,6 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package cryptobyte
 
@@ -9,17 +9,16 @@ import (
 	"fmt"
 )
 
-// A Builder builds byte strings from fixed-length and length-prefixed values.
-// Builders either allocate space as needed, or are ‘fixed’, which means that
-// they write into a given buffer and produce an error if it's exhausted.
+// Builder 从固定长度和长度前缀值构建字节字符串。
+// Builder 要么根据需要分配空间，要么是"固定的"，这意味着
+// 它们写入给定的缓冲区，如果缓冲区用尽则产生错误。
 //
-// The zero value is a usable Builder that allocates space as needed.
+// 零值是一个可用的 Builder，根据需要分配空间。
 //
-// Simple values are marshaled and appended to a Builder using methods on the
-// Builder. Length-prefixed values are marshaled by providing a
-// BuilderContinuation, which is a function that writes the inner contents of
-// the value to a given Builder. See the documentation for BuilderContinuation
-// for details.
+// 简单值使用 Builder 上的方法进行编组并追加到 Builder。
+// 长度前缀值通过提供 BuilderContinuation 进行编组，
+// 这是一个将值的内部内容写入给定 Builder 的函数。
+// 有关详细信息，请参阅 BuilderContinuation 的文档。
 type Builder struct {
 	err            error
 	result         []byte
@@ -31,18 +30,17 @@ type Builder struct {
 	inContinuation *bool
 }
 
-// NewBuilder creates a Builder that appends its output to the given buffer.
-// Like append(), the slice will be reallocated if its capacity is exceeded.
-// Use Bytes to get the final buffer.
+// NewBuilder 创建一个将其输出追加到给定缓冲区的 Builder。
+// 与 append() 一样，如果超出其容量，切片将被重新分配。
+// 使用 Bytes 获取最终缓冲区。
 func NewBuilder(buffer []byte) *Builder {
 	return &Builder{
 		result: buffer,
 	}
 }
 
-// NewFixedBuilder creates a Builder that appends its output into the given
-// buffer. This builder does not reallocate the output buffer. Writes that
-// would exceed the buffer's capacity are treated as an error.
+// NewFixedBuilder 创建一个将其输出追加到给定缓冲区的 Builder。
+// 此构建器不会重新分配输出缓冲区。超出缓冲区容量的写入将被视为错误。
 func NewFixedBuilder(buffer []byte) *Builder {
 	return &Builder{
 		result:    buffer,
@@ -50,14 +48,12 @@ func NewFixedBuilder(buffer []byte) *Builder {
 	}
 }
 
-// SetError sets the value to be returned as the error from Bytes. Writes
-// performed after calling SetError are ignored.
+// SetError 设置要从 Bytes 返回的错误值。调用 SetError 后执行的写入将被忽略。
 func (b *Builder) SetError(err error) {
 	b.err = err
 }
 
-// Bytes returns the bytes written by the builder or an error if one has
-// occurred during building.
+// Bytes 返回构建器写入的字节，如果在构建过程中发生错误则返回错误。
 func (b *Builder) Bytes() ([]byte, error) {
 	if b.err != nil {
 		return nil, b.err
@@ -65,8 +61,7 @@ func (b *Builder) Bytes() ([]byte, error) {
 	return b.result[b.offset:], nil
 }
 
-// BytesOrPanic returns the bytes written by the builder or panics if an error
-// has occurred during building.
+// BytesOrPanic 返回构建器写入的字节，如果在构建过程中发生错误则 panic。
 func (b *Builder) BytesOrPanic() []byte {
 	if b.err != nil {
 		panic(b.err)
@@ -74,47 +69,45 @@ func (b *Builder) BytesOrPanic() []byte {
 	return b.result[b.offset:]
 }
 
-// AddUint8 appends an 8-bit value to the byte string.
+// AddUint8 向字节字符串追加一个 8 位值。
 func (b *Builder) AddUint8(v uint8) {
 	b.add(byte(v))
 }
 
-// AddUint16 appends a big-endian, 16-bit value to the byte string.
+// AddUint16 向字节字符串追加一个大端序 16 位值。
 func (b *Builder) AddUint16(v uint16) {
 	b.add(byte(v>>8), byte(v))
 }
 
-// AddUint24 appends a big-endian, 24-bit value to the byte string. The highest
-// byte of the 32-bit input value is silently truncated.
+// AddUint24 向字节字符串追加一个大端序 24 位值。32 位输入值的最高字节被静默截断。
 func (b *Builder) AddUint24(v uint32) {
 	b.add(byte(v>>16), byte(v>>8), byte(v))
 }
 
-// AddUint32 appends a big-endian, 32-bit value to the byte string.
+// AddUint32 向字节字符串追加一个大端序 32 位值。
 func (b *Builder) AddUint32(v uint32) {
 	b.add(byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
 }
 
-// AddUint48 appends a big-endian, 48-bit value to the byte string.
+// AddUint48 向字节字符串追加一个大端序 48 位值。
 func (b *Builder) AddUint48(v uint64) {
 	b.add(byte(v>>40), byte(v>>32), byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
 }
 
-// AddUint64 appends a big-endian, 64-bit value to the byte string.
+// AddUint64 向字节字符串追加一个大端序 64 位值。
 func (b *Builder) AddUint64(v uint64) {
 	b.add(byte(v>>56), byte(v>>48), byte(v>>40), byte(v>>32), byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
 }
 
-// AddBytes appends a sequence of bytes to the byte string.
+// AddBytes 向字节字符串追加一个字节序列。
 func (b *Builder) AddBytes(v []byte) {
 	b.add(v...)
 }
 
-// BuilderContinuation is a continuation-passing interface for building
-// length-prefixed byte sequences. Builder methods for length-prefixed
-// sequences (AddUint8LengthPrefixed etc) will invoke the BuilderContinuation
-// supplied to them. The child builder passed to the continuation can be used
-// to build the content of the length-prefixed sequence. For example:
+// BuilderContinuation 是用于构建长度前缀字节序列的延续传递接口。
+// 用于长度前缀序列的 Builder 方法（AddUint8LengthPrefixed 等）将调用
+// 提供给它们的 BuilderContinuation。传递给延续的子构建器可用于构建
+// 长度前缀序列的内容。例如：
 //
 //	parent := cryptobyte.NewBuilder()
 //	parent.AddUint8LengthPrefixed(func (child *Builder) {
@@ -124,39 +117,36 @@ func (b *Builder) AddBytes(v []byte) {
 //	  })
 //	})
 //
-// It is an error to write more bytes to the child than allowed by the reserved
-// length prefix. After the continuation returns, the child must be considered
-// invalid, i.e. users must not store any copies or references of the child
-// that outlive the continuation.
+// 向子构建器写入超过保留长度前缀允许的字节数是错误的。延续返回后，
+// 子构建器必须被视为无效，即用户不得存储超出延续生命周期的子构建器的
+// 任何副本或引用。
 //
-// If the continuation panics with a value of type BuildError then the inner
-// error will be returned as the error from Bytes. If the child panics
-// otherwise then Bytes will repanic with the same value.
+// 如果延续以 BuildError 类型的值 panic，则内部错误将作为 Bytes 的错误返回。
+// 如果子构建器以其他方式 panic，则 Bytes 将以相同的值重新 panic。
 type BuilderContinuation func(child *Builder)
 
-// BuildError wraps an error. If a BuilderContinuation panics with this value,
-// the panic will be recovered and the inner error will be returned from
-// Builder.Bytes.
+// BuildError 包装一个错误。如果 BuilderContinuation 以此值 panic，
+// panic 将被恢复，内部错误将从 Builder.Bytes 返回。
 type BuildError struct {
 	Err error
 }
 
-// AddUint8LengthPrefixed adds a 8-bit length-prefixed byte sequence.
+// AddUint8LengthPrefixed 添加一个 8 位长度前缀的字节序列。
 func (b *Builder) AddUint8LengthPrefixed(f BuilderContinuation) {
 	b.addLengthPrefixed(1, false, f)
 }
 
-// AddUint16LengthPrefixed adds a big-endian, 16-bit length-prefixed byte sequence.
+// AddUint16LengthPrefixed 添加一个大端序 16 位长度前缀的字节序列。
 func (b *Builder) AddUint16LengthPrefixed(f BuilderContinuation) {
 	b.addLengthPrefixed(2, false, f)
 }
 
-// AddUint24LengthPrefixed adds a big-endian, 24-bit length-prefixed byte sequence.
+// AddUint24LengthPrefixed 添加一个大端序 24 位长度前缀的字节序列。
 func (b *Builder) AddUint24LengthPrefixed(f BuilderContinuation) {
 	b.addLengthPrefixed(3, false, f)
 }
 
-// AddUint32LengthPrefixed adds a big-endian, 32-bit length-prefixed byte sequence.
+// AddUint32LengthPrefixed 添加一个大端序 32 位长度前缀的字节序列。
 func (b *Builder) AddUint32LengthPrefixed(f BuilderContinuation) {
 	b.addLengthPrefixed(4, false, f)
 }
@@ -185,7 +175,7 @@ func (b *Builder) callContinuation(f BuilderContinuation, arg *Builder) {
 }
 
 func (b *Builder) addLengthPrefixed(lenLen int, isASN1 bool, f BuilderContinuation) {
-	// Subsequent writes can be ignored if the builder has encountered an error.
+	// 如果构建器遇到错误，后续写入可以被忽略。
 	if b.err != nil {
 		return
 	}
@@ -229,13 +219,12 @@ func (b *Builder) flushChild() {
 	length := len(child.result) - child.pendingLenLen - child.offset
 
 	if length < 0 {
-		panic("cryptobyte: internal error") // result unexpectedly shrunk
+		panic("cryptobyte: internal error") // result 意外收缩
 	}
 
 	if child.pendingIsASN1 {
-		// For ASN.1, we reserved a single byte for the length. If that turned out
-		// to be incorrect, we have to move the contents along in order to make
-		// space.
+		// 对于 ASN.1，我们为长度保留了一个字节。如果这是错误的，
+		// 我们必须移动内容以腾出空间。
 		if child.pendingLenLen != 1 {
 			panic("cryptobyte: internal error")
 		}
@@ -261,8 +250,7 @@ func (b *Builder) flushChild() {
 			length = 0
 		}
 
-		// Insert the initial length byte, make space for successive length bytes,
-		// and adjust the offset.
+		// 插入初始长度字节，为后续长度字节腾出空间，并调整偏移量。
 		child.result[child.offset] = lenByte
 		extraBytes := int(lenLen - 1)
 		if extraBytes != 0 {
@@ -308,9 +296,8 @@ func (b *Builder) add(bytes ...byte) {
 	b.result = append(b.result, bytes...)
 }
 
-// Unwrite rolls back non-negative n bytes written directly to the Builder.
-// An attempt by a child builder passed to a continuation to unwrite bytes
-// from its parent will panic.
+// Unwrite 回滚直接写入 Builder 的非负 n 个字节。
+// 传递给延续的子构建器尝试从其父构建器撤销写入字节将导致 panic。
 func (b *Builder) Unwrite(n int) {
 	if b.err != nil {
 		return
@@ -331,17 +318,16 @@ func (b *Builder) Unwrite(n int) {
 	b.result = b.result[:len(b.result)-n]
 }
 
-// A MarshalingValue marshals itself into a Builder.
+// MarshalingValue 将自身编组到 Builder 中。
 type MarshalingValue interface {
-	// Marshal is called by Builder.AddValue. It receives a pointer to a builder
-	// to marshal itself into. It may return an error that occurred during
-	// marshaling, such as unset or invalid values.
+	// Marshal 由 Builder.AddValue 调用。它接收一个指向构建器的指针，
+	// 用于将自身编组到其中。它可能返回在编组过程中发生的错误，
+	// 例如未设置或无效的值。
 	Marshal(b *Builder) error
 }
 
-// AddValue calls Marshal on v, passing a pointer to the builder to append to.
-// If Marshal returns an error, it is set on the Builder so that subsequent
-// appends don't have an effect.
+// AddValue 对 v 调用 Marshal，传递一个指向要追加到的构建器的指针。
+// 如果 Marshal 返回错误，它将设置在 Builder 上，以便后续追加不生效。
 func (b *Builder) AddValue(v MarshalingValue) {
 	err := v.Marshal(b)
 	if err != nil {

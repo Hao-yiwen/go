@@ -1,6 +1,6 @@
-// Copyright 2018 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2018 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package server
 
@@ -17,7 +17,7 @@ func (a *A) AMethod(y int) *Server {
 	return nil
 }
 
-// FooServer is a server that provides Foo services
+// FooServer 是一个 server that provides Foo services
 type FooServer Server
 
 func (f *FooServer) WriteEvents(ctx context.Context, x int) error {

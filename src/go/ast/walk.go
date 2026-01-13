@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package ast
 
@@ -9,9 +9,9 @@ import (
 	"iter"
 )
 
-// A Visitor's Visit method is invoked for each node encountered by [Walk].
-// If the result visitor w is not nil, [Walk] visits each of the children
-// of node with the visitor w, followed by a call of w.Visit(nil).
+// Visitor 的 Visit 方法会在 [Walk] 遇到的每个节点上被调用。
+// 如果返回的访问者 w 不为 nil，[Walk] 将使用访问者 w 访问
+// node 的每个子节点，随后调用 w.Visit(nil)。
 type Visitor interface {
 	Visit(node Node) (w Visitor)
 }
@@ -22,26 +22,24 @@ func walkList[N Node](v Visitor, list []N) {
 	}
 }
 
-// TODO(gri): Investigate if providing a closure to Walk leads to
-// simpler use (and may help eliminate Inspect in turn).
+// TODO(gri): 研究向 Walk 提供闭包是否会导致
+// 更简单的使用（并可能有助于消除 Inspect）。
 
-// Walk traverses an AST in depth-first order: It starts by calling
-// v.Visit(node); node must not be nil. If the visitor w returned by
-// v.Visit(node) is not nil, Walk is invoked recursively with visitor
-// w for each of the non-nil children of node, followed by a call of
-// w.Visit(nil).
+// Walk 以深度优先顺序遍历 AST：它首先调用 v.Visit(node)；
+// node 不能为 nil。如果 v.Visit(node) 返回的访问者 w 不为 nil，
+// 则对 node 的每个非 nil 子节点递归调用 Walk（使用访问者 w），
+// 随后调用 w.Visit(nil)。
 func Walk(v Visitor, node Node) {
 	if v = v.Visit(node); v == nil {
 		return
 	}
 
-	// walk children
-	// (the order of the cases matches the order
-	// of the corresponding node types in ast.go)
+	// 遍历子节点
+	// （case 的顺序与 ast.go 中相应节点类型的顺序匹配）
 	switch n := node.(type) {
-	// Comments and fields
+	// 注释和字段
 	case *Comment:
-		// nothing to do
+		// 无需处理
 
 	case *CommentGroup:
 		walkList(v, n.List)
@@ -64,9 +62,9 @@ func Walk(v Visitor, node Node) {
 	case *FieldList:
 		walkList(v, n.List)
 
-	// Expressions
+	// 表达式
 	case *BadExpr, *Ident, *BasicLit:
-		// nothing to do
+		// 无需处理
 
 	case *Ellipsis:
 		if n.Elt != nil {
@@ -134,7 +132,7 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Key)
 		Walk(v, n.Value)
 
-	// Types
+	// 类型
 	case *ArrayType:
 		if n.Len != nil {
 			Walk(v, n.Len)
@@ -165,15 +163,15 @@ func Walk(v Visitor, node Node) {
 	case *ChanType:
 		Walk(v, n.Value)
 
-	// Statements
+	// 语句
 	case *BadStmt:
-		// nothing to do
+		// 无需处理
 
 	case *DeclStmt:
 		Walk(v, n.Decl)
 
 	case *EmptyStmt:
-		// nothing to do
+		// 无需处理
 
 	case *LabeledStmt:
 		Walk(v, n.Label)
@@ -271,7 +269,7 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.X)
 		Walk(v, n.Body)
 
-	// Declarations
+	// 声明
 	case *ImportSpec:
 		if n.Doc != nil {
 			Walk(v, n.Doc)
@@ -311,7 +309,7 @@ func Walk(v Visitor, node Node) {
 		}
 
 	case *BadDecl:
-		// nothing to do
+		// 无需处理
 
 	case *GenDecl:
 		if n.Doc != nil {
@@ -332,16 +330,15 @@ func Walk(v Visitor, node Node) {
 			Walk(v, n.Body)
 		}
 
-	// Files and packages
+	// 文件和包
 	case *File:
 		if n.Doc != nil {
 			Walk(v, n.Doc)
 		}
 		Walk(v, n.Name)
 		walkList(v, n.Decls)
-		// don't walk n.Comments - they have been
-		// visited already through the individual
-		// nodes
+		// 不遍历 n.Comments - 它们已经通过
+		// 各个节点被访问过了
 
 	case *Package:
 		for _, f := range n.Files {
@@ -364,31 +361,27 @@ func (f inspector) Visit(node Node) Visitor {
 	return nil
 }
 
-// Inspect traverses an AST in depth-first order: It starts by calling
-// f(node); node must not be nil. If f returns true, Inspect invokes f
-// recursively for each of the non-nil children of node, followed by a
-// call of f(nil).
+// Inspect 以深度优先顺序遍历 AST：它首先调用 f(node)；
+// node 不能为 nil。如果 f 返回 true，Inspect 对 node 的
+// 每个非 nil 子节点递归调用 f，随后调用 f(nil)。
 //
-// In many cases it may be more convenient to use [Preorder], which
-// returns an iterator over the sequence of nodes, or [PreorderStack],
-// which (like [Inspect]) provides control over descent into subtrees,
-// but additionally reports the stack of enclosing nodes.
+// 在许多情况下，使用 [Preorder] 可能更方便，它返回节点序列的
+// 迭代器；或者使用 [PreorderStack]，它（像 [Inspect] 一样）
+// 提供对子树下降的控制，但还额外报告包围节点的栈。
 func Inspect(node Node, f func(Node) bool) {
 	Walk(inspector(f), node)
 }
 
-// Preorder returns an iterator over all the nodes of the syntax tree
-// beneath (and including) the specified root, in depth-first
-// preorder.
+// Preorder 返回指定 root 下（包括 root）语法树中所有节点的
+// 迭代器，按深度优先前序遍历。
 //
-// For greater control over the traversal of each subtree, use
-// [Inspect] or [PreorderStack].
+// 要对每个子树的遍历有更大的控制，请使用 [Inspect] 或 [PreorderStack]。
 func Preorder(root Node) iter.Seq[Node] {
 	return func(yield func(Node) bool) {
 		ok := true
 		Inspect(root, func(n Node) bool {
 			if n != nil {
-				// yield must not be called once ok is false.
+				// 一旦 ok 为 false，就不能再调用 yield。
 				ok = ok && yield(n)
 			}
 			return ok
@@ -396,29 +389,28 @@ func Preorder(root Node) iter.Seq[Node] {
 	}
 }
 
-// PreorderStack traverses the tree rooted at root,
-// calling f before visiting each node.
+// PreorderStack 遍历以 root 为根的树，
+// 在访问每个节点之前调用 f。
 //
-// Each call to f provides the current node and traversal stack,
-// consisting of the original value of stack appended with all nodes
-// from root to n, excluding n itself. (This design allows calls
-// to PreorderStack to be nested without double counting.)
+// 每次调用 f 都提供当前节点和遍历栈，遍历栈由 stack 的原始值
+// 加上从 root 到 n 的所有节点组成（不包括 n 本身）。
+// （这种设计允许 PreorderStack 的调用嵌套而不会重复计数。）
 //
-// If f returns false, the traversal skips over that subtree. Unlike
-// [Inspect], no second call to f is made after visiting node n.
-// (In practice, the second call is nearly always used only to pop the
-// stack, and it is surprisingly tricky to do this correctly.)
+// 如果 f 返回 false，遍历将跳过该子树。与 [Inspect] 不同，
+// 访问节点 n 后不会第二次调用 f。
+// （实际上，第二次调用几乎总是仅用于弹出栈，
+// 而正确执行此操作出乎意料地棘手。）
 func PreorderStack(root Node, stack []Node, f func(n Node, stack []Node) bool) {
 	before := len(stack)
 	Inspect(root, func(n Node) bool {
 		if n != nil {
 			if !f(n, stack) {
-				// Do not push, as there will be no corresponding pop.
+				// 不压栈，因为不会有相应的弹出操作。
 				return false
 			}
-			stack = append(stack, n) // push
+			stack = append(stack, n) // 压栈
 		} else {
-			stack = stack[:len(stack)-1] // pop
+			stack = stack[:len(stack)-1] // 弹栈
 		}
 		return true
 	})

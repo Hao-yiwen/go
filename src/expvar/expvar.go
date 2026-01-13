@@ -2,22 +2,21 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package expvar provides a standardized interface to public variables, such
-// as operation counters in servers. It exposes these variables via HTTP at
-// /debug/vars in JSON format. As of Go 1.22, the /debug/vars request must
-// use GET.
+// Package expvar 为公共变量提供标准化接口，例如
+// 服务器中的操作计数器。它通过 HTTP 在
+// /debug/vars 以 JSON 格式公开这些变量。从 Go 1.22 起，
+// /debug/vars 请求必须使用 GET。
 //
-// Operations to set or modify these public variables are atomic.
+// 设置或修改这些公共变量的操作是原子的。
 //
-// In addition to adding the HTTP handler, this package registers the
-// following variables:
+// 除了添加 HTTP 处理程序外，此包还注册了
+// 以下变量：
 //
 //	cmdline   os.Args
 //	memstats  runtime.Memstats
 //
-// The package is sometimes only imported for the side effect of
-// registering its HTTP handler and the above variables. To use it
-// this way, link this package into your program:
+// 有时仅出于副作用而导入该包，以注册其 HTTP 处理程序
+// 和上述变量。以这种方式使用它，请将此包链接到您的程序中：
 //
 //	import _ "expvar"
 package expvar
@@ -37,20 +36,20 @@ import (
 	"unicode/utf8"
 )
 
-// Var is an abstract type for all exported variables.
+// Var 是所有导出变量的抽象类型。
 type Var interface {
-	// String returns a valid JSON value for the variable.
-	// Types with String methods that do not return valid JSON
-	// (such as time.Time) must not be used as a Var.
+	// String 返回变量的有效 JSON 值。
+	// 具有不返回有效 JSON 的 String 方法的类型
+	//（如 time.Time）不能用作 Var。
 	String() string
 }
 
 type jsonVar interface {
-	// appendJSON appends the JSON representation of the receiver to b.
+	// appendJSON 将接收者的 JSON 表示追加到 b。
 	appendJSON(b []byte) []byte
 }
 
-// Int is a 64-bit integer variable that satisfies the [Var] interface.
+// Int 是满足 [Var] 接口的 64 位整数变量。
 type Int struct {
 	i atomic.Int64
 }
@@ -75,7 +74,7 @@ func (v *Int) Set(value int64) {
 	v.i.Store(value)
 }
 
-// Float is a 64-bit float variable that satisfies the [Var] interface.
+// Float 是满足 [Var] 接口的 64 位浮点变量。
 type Float struct {
 	f atomic.Uint64
 }
@@ -92,7 +91,7 @@ func (v *Float) appendJSON(b []byte) []byte {
 	return strconv.AppendFloat(b, math.Float64frombits(v.f.Load()), 'g', -1, 64)
 }
 
-// Add adds delta to v.
+// Add 向 v 添加 delta。
 func (v *Float) Add(delta float64) {
 	for {
 		cur := v.f.Load()

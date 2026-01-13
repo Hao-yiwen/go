@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package buildinfo_test
 
@@ -25,10 +25,9 @@ import (
 
 var flagAll = flag.Bool("all", false, "test all supported GOOS/GOARCH platforms, instead of only the current platform")
 
-// TestReadFile confirms that ReadFile can read build information from binaries
-// on supported target platforms. It builds a trivial binary on the current
-// platforms (or all platforms if -all is set) in various configurations and
-// checks that build information can or cannot be read.
+// TestReadFile 确认 ReadFile 能够从支持的目标平台上的二进制文件中读取构建信息。
+// 它在当前平台（如果设置了 -all 则在所有平台上）以各种配置构建一个简单的二进制文件，
+// 并检查是否可以读取构建信息。
 func TestReadFile(t *testing.T) {
 	if testing.Short() {
 		t.Skip("test requires compiling and linking, which may be slow")
@@ -62,7 +61,7 @@ func TestReadFile(t *testing.T) {
 		buildModes = append(buildModes, "c-shared")
 	}
 
-	// Keep in sync with src/cmd/go/internal/work/init.go:buildModeInit.
+	// 与 src/cmd/go/internal/work/init.go:buildModeInit 保持同步。
 	badmode := func(goos, goarch, buildmode string) string {
 		return fmt.Sprintf("-buildmode=%s not supported on %s/%s", buildmode, goos, goarch)
 	}
@@ -145,7 +144,7 @@ func TestReadFile(t *testing.T) {
 			t.Fatal("Go buildinf not found")
 		}
 		verLen := data[i+32:]
-		binary.PutUvarint(verLen, 16<<40) // 16TB ought to be enough for anyone.
+		binary.PutUvarint(verLen, 16<<40) // 16TB 对任何人来说应该足够了。
 		if err := os.WriteFile(name, data, 0666); err != nil {
 			t.Fatal(err)
 		}
@@ -154,10 +153,9 @@ func TestReadFile(t *testing.T) {
 	goVersionRe := regexp.MustCompile("(?m)^go\t.*\n")
 	buildRe := regexp.MustCompile("(?m)^build\t.*\n")
 	cleanOutputForComparison := func(got string) string {
-		// Remove or replace anything that might depend on the test's environment
-		// so we can check the output afterward with a string comparison.
-		// We'll remove all build lines except the compiler, just to make sure
-		// build lines are included.
+		// 删除或替换任何可能依赖于测试环境的内容，
+		// 以便我们之后可以用字符串比较来检查输出。
+		// 我们将删除除编译器之外的所有构建行，只是为了确保包含了构建行。
 		got = goVersionRe.ReplaceAllString(got, "go\tGOVERSION\n")
 		got = buildRe.ReplaceAllStringFunc(got, func(match string) string {
 			if strings.HasPrefix(match, "build\t-compiler=") {
@@ -271,7 +269,7 @@ func TestReadFile(t *testing.T) {
 	}
 }
 
-// Test117 verifies that parsing of the old, pre-1.18 format works.
+// Test117 验证旧的 1.18 之前格式的解析是否正常工作。
 func Test117(t *testing.T) {
 	b, err := obscuretestdata.ReadFile("testdata/go117/go117.base64")
 	if err != nil {
@@ -294,7 +292,7 @@ func Test117(t *testing.T) {
 	}
 }
 
-// TestNotGo verifies that parsing of a non-Go binary returns the proper error.
+// TestNotGo 验证解析非 Go 二进制文件时返回正确的错误。
 func TestNotGo(t *testing.T) {
 	b, err := obscuretestdata.ReadFile("testdata/notgo/notgo.base64")
 	if err != nil {
@@ -306,29 +304,29 @@ func TestNotGo(t *testing.T) {
 		t.Fatalf("Read got nil err, want non-nil")
 	}
 
-	// The precise error text here isn't critical, but we want something
-	// like errNotGoExe rather than e.g., a file read error.
+	// 这里精确的错误文本不是关键，但我们希望得到类似
+	// errNotGoExe 的错误，而不是例如文件读取错误。
 	if !strings.Contains(err.Error(), "not a Go executable") {
 		t.Errorf("ReadFile got err %v want not a Go executable", err)
 	}
 }
 
-// FuzzIssue57002 is a regression test for golang.org/issue/57002.
+// FuzzIssue57002 是 golang.org/issue/57002 的回归测试。
 //
-// The cause of issue 57002 is when pointerSize is not being checked,
-// the read can panic with slice bounds out of range
+// issue 57002 的原因是当 pointerSize 未被检查时，
+// 读取可能会因切片边界越界而 panic
 func FuzzIssue57002(f *testing.F) {
-	// input from issue
+	// 来自 issue 的输入
 	f.Add([]byte{0x4d, 0x5a, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x50, 0x45, 0x0, 0x0, 0x0, 0x0, 0x5, 0x0, 0x20, 0x20, 0x20, 0x20, 0x0, 0x0, 0x0, 0x0, 0x20, 0x3f, 0x0, 0x20, 0x0, 0x0, 0x20, 0x20, 0x20, 0x20, 0x20, 0xff, 0x20, 0x20, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xb, 0x20, 0x20, 0x20, 0xfc, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x9, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x20, 0x20, 0x20, 0x20, 0x20, 0xef, 0x20, 0xff, 0xbf, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf, 0x0, 0x2, 0x0, 0x20, 0x0, 0x0, 0x9, 0x0, 0x4, 0x0, 0x20, 0xf6, 0x0, 0xd3, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x20, 0x1, 0x0, 0x0, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0xa, 0x20, 0xa, 0x20, 0x20, 0x20, 0xff, 0x20, 0x20, 0xff, 0x20, 0x47, 0x6f, 0x20, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x69, 0x6e, 0x66, 0x3a, 0xde, 0xb5, 0xdf, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x6, 0x7f, 0x7f, 0x7f, 0x20, 0xf4, 0xb2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0xb, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x20, 0x20, 0x0, 0x0, 0x0, 0x0, 0x5, 0x0, 0x20, 0x20, 0x20, 0x20, 0x0, 0x0, 0x0, 0x0, 0x20, 0x3f, 0x27, 0x20, 0x0, 0xd, 0x0, 0xa, 0x20, 0x20, 0x20, 0x20, 0x20, 0xff, 0x20, 0x20, 0xff, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x0, 0x20, 0x20, 0x0, 0x0, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5c, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20})
 	f.Fuzz(func(t *testing.T, input []byte) {
 		buildinfo.Read(bytes.NewReader(input))
 	})
 }
 
-// TestIssue54968 is a regression test for golang.org/issue/54968.
+// TestIssue54968 是 golang.org/issue/54968 的回归测试。
 //
-// The cause of issue 54968 is when the first buildInfoMagic is invalid, it
-// enters an infinite loop.
+// issue 54968 的原因是当第一个 buildInfoMagic 无效时，
+// 会进入无限循环。
 func TestIssue54968(t *testing.T) {
 	t.Parallel()
 
@@ -338,12 +336,12 @@ func TestIssue54968(t *testing.T) {
 	)
 	buildInfoMagic := []byte("\xff Go buildinf:")
 
-	// Construct a valid PE header.
+	// 构造一个有效的 PE 头。
 	var buf bytes.Buffer
 
 	buf.Write([]byte{'M', 'Z'})
 	buf.Write(bytes.Repeat([]byte{0}, 0x3c-2))
-	// At location 0x3c, the stub has the file offset to the PE signature.
+	// 在位置 0x3c，存根包含 PE 签名的文件偏移量。
 	binary.Write(&buf, binary.LittleEndian, int32(0x3c+4))
 
 	buf.Write([]byte{'P', 'E', 0, 0})
@@ -367,16 +365,16 @@ func TestIssue54968(t *testing.T) {
 		t.Fatalf("need a valid PE header for the misaligned buildInfoMagic test: %s", err)
 	}
 
-	// Place buildInfoMagic after the header.
+	// 在头部之后放置 buildInfoMagic。
 	for i := 1; i < paddingSize-len(buildInfoMagic); i++ {
-		// Test only misaligned buildInfoMagic.
+		// 只测试未对齐的 buildInfoMagic。
 		if i%buildInfoAlign == 0 {
 			continue
 		}
 
 		t.Run(fmt.Sprintf("start_at_%d", i), func(t *testing.T) {
 			d := data[:start]
-			// Construct intentionally-misaligned buildInfoMagic.
+			// 故意构造未对齐的 buildInfoMagic。
 			d = append(d, bytes.Repeat([]byte{0}, i)...)
 			d = append(d, buildInfoMagic...)
 			d = append(d, bytes.Repeat([]byte{0}, paddingSize-i)...)

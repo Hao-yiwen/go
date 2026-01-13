@@ -1,11 +1,11 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// This file is called cgo_unix.go, but to allow syscalls-to-libc-based
-// implementations to share the code, it does not use cgo directly.
-// Instead of C.foo it uses _C_foo, which is defined in either
-// cgo_unix_cgo.go or cgo_unix_syscall.go
+// 此文件名为 cgo_unix.go，但为了允许基于系统调用到 libc 的
+// 实现共享代码，它不直接使用 cgo。
+// 它使用 _C_foo 而不是 C.foo，这在 cgo_unix_cgo.go
+// 或 cgo_unix_syscall.go 中定义。
 
 //go:build !netgo && ((cgo && unix) || darwin)
 
@@ -23,27 +23,26 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-// cgoAvailable set to true to indicate that the cgo resolver
-// is available on this system.
+// cgoAvailable 设置为 true 表示此系统上
+// cgo 解析器可用。
 const cgoAvailable = true
 
-// An addrinfoErrno represents a getaddrinfo, getnameinfo-specific
-// error number. It's a signed number and a zero value is a non-error
-// by convention.
+// addrinfoErrno 表示 getaddrinfo、getnameinfo 特定的
+// 错误号。它是一个有符号数，按惯例零值表示无错误。
 type addrinfoErrno int
 
 func (eai addrinfoErrno) Error() string   { return _C_gai_strerror(_C_int(eai)) }
 func (eai addrinfoErrno) Temporary() bool { return eai == _C_EAI_AGAIN }
 func (eai addrinfoErrno) Timeout() bool   { return false }
 
-// isAddrinfoErrno is just for testing purposes.
+// isAddrinfoErrno 仅用于测试目的。
 func (eai addrinfoErrno) isAddrinfoErrno() {}
 
-// doBlockingWithCtx executes a blocking function in a separate goroutine when the provided
-// context is cancellable. It is intended for use with calls that don't support context
-// cancellation (cgo, syscalls). blocking func may still be running after this function finishes.
-// For the duration of the execution of the blocking function, the thread is 'acquired' using [acquireThread],
-// blocking might not be executed when the context gets canceled early.
+// doBlockingWithCtx 当提供的上下文可取消时，在单独的 goroutine 中执行阻塞函数。
+// 它用于不支持上下文取消的调用（cgo、系统调用）。
+// 此函数结束后，阻塞函数可能仍在运行。
+// 在阻塞函数执行期间，使用 [acquireThread] "获取" 线程，
+// 当上下文提前取消时，阻塞函数可能不会被执行。
 func doBlockingWithCtx[T any](ctx context.Context, lookupName string, blocking func() (T, error)) (T, error) {
 	if err := acquireThread(ctx); err != nil {
 		var zero T
@@ -91,7 +90,7 @@ func cgoLookupHost(ctx context.Context, name string) (hosts []string, err error)
 func cgoLookupPort(ctx context.Context, network, service string) (port int, err error) {
 	var hints _C_struct_addrinfo
 	switch network {
-	case "ip": // no hints
+	case "ip": // 无提示
 	case "tcp", "tcp4", "tcp6":
 		*_C_ai_socktype(&hints) = _C_SOCK_STREAM
 		*_C_ai_protocol(&hints) = _C_IPPROTO_TCP
@@ -118,7 +117,7 @@ func cgoLookupServicePort(hints *_C_struct_addrinfo, network, service string) (p
 	if err != nil {
 		return 0, &DNSError{Err: err.Error(), Name: network + "/" + service}
 	}
-	// Lowercase the C service name.
+	// 将 C 服务名转换为小写。
 	for i, b := range cservice[:len(service)] {
 		cservice[i] = lowerASCII(b)
 	}
@@ -127,11 +126,11 @@ func cgoLookupServicePort(hints *_C_struct_addrinfo, network, service string) (p
 	if gerrno != 0 {
 		switch gerrno {
 		case _C_EAI_SYSTEM:
-			if err == nil { // see golang.org/issue/6232
+			if err == nil { // 参见 golang.org/issue/6232
 				err = syscall.EMFILE
 			}
 			return 0, newDNSError(err, network+"/"+service, "")
-		case _C_EAI_SERVICE, _C_EAI_NONAME: // Darwin returns EAI_NONAME.
+		case _C_EAI_SERVICE, _C_EAI_NONAME: // Darwin 返回 EAI_NONAME。
 			return 0, newDNSError(errUnknownPort, network+"/"+service, "")
 		default:
 			return 0, newDNSError(addrinfoErrno(gerrno), network+"/"+service, "")
@@ -176,13 +175,13 @@ func cgoLookupHostIP(network, name string) (addrs []IPAddr, err error) {
 		switch gerrno {
 		case _C_EAI_SYSTEM:
 			if err == nil {
-				// err should not be nil, but sometimes getaddrinfo returns
-				// gerrno == _C_EAI_SYSTEM with err == nil on Linux.
-				// The report claims that it happens when we have too many
-				// open files, so use syscall.EMFILE (too many open files in system).
-				// Most system calls would return ENFILE (too many open files),
-				// so at the least EMFILE should be easy to recognize if this
-				// comes up again. golang.org/issue/6232.
+				// err 不应该为 nil，但有时在 Linux 上 getaddrinfo 返回
+				// gerrno == _C_EAI_SYSTEM 且 err == nil。
+				// 报告称这发生在我们打开的文件太多时，
+				// 所以使用 syscall.EMFILE（系统中打开的文件太多）。
+				// 大多数系统调用会返回 ENFILE（打开的文件太多），
+				// 所以至少如果再次出现这种情况，EMFILE 应该容易识别。
+				// golang.org/issue/6232。
 				err = syscall.EMFILE
 			}
 			return nil, newDNSError(err, name, "")
@@ -190,9 +189,9 @@ func cgoLookupHostIP(network, name string) (addrs []IPAddr, err error) {
 			return nil, newDNSError(errNoSuchHost, name, "")
 		case _C_EAI_ADDRFAMILY:
 			if runtime.GOOS == "freebsd" {
-				// FreeBSD began returning EAI_ADDRFAMILY for valid hosts without
-				// an A record in 13.2. We previously returned "no such host" for
-				// this case.
+				// FreeBSD 在 13.2 版本开始对没有 A 记录的有效主机
+				// 返回 EAI_ADDRFAMILY。我们之前对这种情况返回
+				// "no such host"。
 				//
 				// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=273912
 				return nil, newDNSError(errNoSuchHost, name, "")
@@ -206,7 +205,7 @@ func cgoLookupHostIP(network, name string) (addrs []IPAddr, err error) {
 	defer _C_freeaddrinfo(res)
 
 	for r := res; r != nil; r = *_C_ai_next(r) {
-		// We only asked for SOCK_STREAM, but check anyhow.
+		// 我们只请求了 SOCK_STREAM，但还是检查一下。
 		if *_C_ai_socktype(r) != _C_SOCK_STREAM {
 			continue
 		}
@@ -230,14 +229,14 @@ func cgoLookupIP(ctx context.Context, network, name string) (addrs []IPAddr, err
 	})
 }
 
-// These are roughly enough for the following:
+// 这些大致足够用于以下情况：
 //
-//	 Source		Encoding			Maximum length of single name entry
-//	 Unicast DNS		ASCII or			<=253 + a NUL terminator
-//				Unicode in RFC 5892		252 * total number of labels + delimiters + a NUL terminator
-//	 Multicast DNS	UTF-8 in RFC 5198 or		<=253 + a NUL terminator
-//				the same as unicast DNS ASCII	<=253 + a NUL terminator
-//	 Local database	various				depends on implementation
+//	 来源		编码				单个名称条目的最大长度
+//	 单播 DNS		ASCII 或			<=253 + NUL 终止符
+//				RFC 5892 中的 Unicode		252 * 标签总数 + 分隔符 + NUL 终止符
+//	 多播 DNS	RFC 5198 中的 UTF-8 或		<=253 + NUL 终止符
+//				与单播 DNS ASCII 相同		<=253 + NUL 终止符
+//	 本地数据库	各种				取决于实现
 const (
 	nameinfoLen    = 64
 	maxNameinfoLen = 4096
@@ -271,7 +270,7 @@ func cgoLookupAddrPTR(addr string, sa *_C_struct_sockaddr, salen _C_socklen_t) (
 	if gerrno != 0 {
 		switch gerrno {
 		case _C_EAI_SYSTEM:
-			if err == nil { // see golang.org/issue/6232
+			if err == nil { // 参见 golang.org/issue/6232
 				err = syscall.EMFILE
 			}
 			return nil, newDNSError(err, addr, "")
@@ -309,8 +308,8 @@ func cgoLookupCNAME(ctx context.Context, name string) (cname string, err error) 
 	return cname, nil
 }
 
-// resSearch will make a call to the 'res_nsearch' routine in the C library
-// and parse the output as a slice of DNS resources.
+// resSearch 将调用 C 库中的 'res_nsearch' 例程
+// 并将输出解析为 DNS 资源切片。
 func resSearch(ctx context.Context, hostname string, rtype, class int) ([]dnsmessage.Resource, error) {
 	return doBlockingWithCtx(ctx, hostname, func() ([]dnsmessage.Resource, error) {
 		return cgoResSearch(hostname, rtype, class)
@@ -332,14 +331,14 @@ func cgoResSearch(hostname string, rtype, class int) ([]dnsmessage.Resource, err
 	}
 	defer _C_res_nclose(state)
 
-	// Some res_nsearch implementations (like macOS) do not set errno.
-	// They set h_errno, which is not per-thread and useless to us.
-	// res_nsearch returns the size of the DNS response packet.
-	// But if the DNS response packet contains failure-like response codes,
-	// res_search returns -1 even though it has copied the packet into buf,
-	// giving us no way to find out how big the packet is.
-	// For now, we are willing to take res_search's word that there's nothing
-	// useful in the response, even though there *is* a response.
+	// 一些 res_nsearch 实现（如 macOS）不设置 errno。
+	// 它们设置 h_errno，这不是线程特定的，对我们没用。
+	// res_nsearch 返回 DNS 响应包的大小。
+	// 但如果 DNS 响应包包含类似失败的响应代码，
+	// res_search 返回 -1，即使它已将包复制到 buf 中，
+	// 使我们无法知道包有多大。
+	// 目前，我们愿意相信 res_search 的判断，认为响应中没有
+	// 有用的内容，即使确实有响应。
 	bufSize := maxDNSPacketSize
 	buf := (*_C_uchar)(_C_malloc(uintptr(bufSize)))
 	defer _C_free(unsafe.Pointer(buf))
@@ -359,7 +358,7 @@ func cgoResSearch(hostname string, rtype, class int) ([]dnsmessage.Resource, err
 			break
 		}
 
-		// Allocate a bigger buffer to fit the entire msg.
+		// 分配更大的缓冲区以容纳整个消息。
 		_C_free(unsafe.Pointer(buf))
 		bufSize = size
 		buf = (*_C_uchar)(_C_malloc(uintptr(bufSize)))

@@ -8,26 +8,26 @@ package runtime
 
 import "unsafe"
 
-// The number of bits stored in the numeric tag of a taggedPointer
+// taggedPointer 的数字标签中存储的位数
 const taggedPointerBits = 32
 
-// The number of bits allowed in a tag.
+// 标签中允许的位数。
 const tagBits = 32
 
-// On 32-bit systems, taggedPointer has a 32-bit pointer and 32-bit count.
+// 在 32 位系统上，taggedPointer 有一个 32 位指针和 32 位计数。
 
-// taggedPointerPack created a taggedPointer from a pointer and a tag.
-// Tag bits that don't fit in the result are discarded.
+// taggedPointerPack 从指针和标签创建 taggedPointer。
+// 不适合结果的标签位被丢弃。
 func taggedPointerPack(ptr unsafe.Pointer, tag uintptr) taggedPointer {
 	return taggedPointer(uintptr(ptr))<<32 | taggedPointer(tag)
 }
 
-// Pointer returns the pointer from a taggedPointer.
+// Pointer 从 taggedPointer 返回指针。
 func (tp taggedPointer) pointer() unsafe.Pointer {
 	return unsafe.Pointer(uintptr(tp >> 32))
 }
 
-// Tag returns the tag from a taggedPointer.
+// Tag 从 taggedPointer 返回标签。
 func (tp taggedPointer) tag() uintptr {
 	return uintptr(tp)
 }

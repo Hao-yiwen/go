@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements isTerminating.
 
@@ -11,8 +11,8 @@ import (
 	"go/token"
 )
 
-// isTerminating reports if s is a terminating statement.
-// If s is labeled, label is the label name; otherwise s
+// isTerminating 报告if s 是一个 terminating statement.
+// If s is labeled, label 是 label name; 否则 s
 // is "".
 func (check *Checker) isTerminating(s ast.Stmt, label string) bool {
 	switch s := s.(type) {
@@ -104,7 +104,7 @@ func (check *Checker) isTerminatingSwitch(body *ast.BlockStmt, label string) boo
 // will traverse the same subtree repeatedly, once for each label. Replace
 // with a single-pass label/break matching phase.
 
-// hasBreak reports if s is or contains a break statement
+// hasBreak 报告if s is or 包含 a break statement
 // referring to the label-ed statement or implicit-ly the
 // closest outer breakable statement.
 func hasBreak(s ast.Stmt, label string, implicit bool) bool {

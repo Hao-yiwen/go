@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package sync
 
@@ -9,60 +9,53 @@ import (
 	"unsafe"
 )
 
-// Cond implements a condition variable, a rendezvous point
-// for goroutines waiting for or announcing the occurrence
-// of an event.
+// Cond 实现了一个条件变量，它是 goroutine 等待或宣布事件发生的汇合点。
 //
-// Each Cond has an associated Locker L (often a [*Mutex] or [*RWMutex]),
-// which must be held when changing the condition and
-// when calling the [Cond.Wait] method.
+// 每个 Cond 都有一个关联的 Locker L（通常是 [*Mutex] 或 [*RWMutex]），
+// 在更改条件和调用 [Cond.Wait] 方法时必须持有该锁。
 //
-// A Cond must not be copied after first use.
+// Cond 在首次使用后不得被复制。
 //
-// In the terminology of [the Go memory model], Cond arranges that
-// a call to [Cond.Broadcast] or [Cond.Signal] “synchronizes before” any Wait call
-// that it unblocks.
+// 按照 [Go 内存模型] 的术语，Cond 保证对 [Cond.Broadcast] 或 [Cond.Signal]
+// 的调用 "同步先于" 它所唤醒的任何 Wait 调用。
 //
-// For many simple use cases, users will be better off using channels than a
-// Cond (Broadcast corresponds to closing a channel, and Signal corresponds to
-// sending on a channel).
+// 对于许多简单的使用场景，用户使用 channel 会比使用 Cond 更好
+// （Broadcast 对应于关闭 channel，Signal 对应于向 channel 发送）。
 //
-// For more on replacements for [sync.Cond], see [Roberto Clapis's series on
-// advanced concurrency patterns], as well as [Bryan Mills's talk on concurrency
-// patterns].
+// 有关 [sync.Cond] 替代方案的更多信息，请参阅 [Roberto Clapis 的高级并发模式系列文章]
+// 以及 [Bryan Mills 的并发模式演讲]。
 //
-// [the Go memory model]: https://go.dev/ref/mem
-// [Roberto Clapis's series on advanced concurrency patterns]: https://blogtitle.github.io/categories/concurrency/
-// [Bryan Mills's talk on concurrency patterns]: https://drive.google.com/file/d/1nPdvhB0PutEJzdCq5ms6UI58dp50fcAN/view
+// [Go 内存模型]: https://go.dev/ref/mem
+// [Roberto Clapis 的高级并发模式系列文章]: https://blogtitle.github.io/categories/concurrency/
+// [Bryan Mills 的并发模式演讲]: https://drive.google.com/file/d/1nPdvhB0PutEJzdCq5ms6UI58dp50fcAN/view
 type Cond struct {
 	noCopy noCopy
 
-	// L is held while observing or changing the condition
+	// L 在观察或更改条件时被持有
 	L Locker
 
 	notify  notifyList
 	checker copyChecker
 }
 
-// NewCond returns a new Cond with Locker l.
+// NewCond 返回一个使用 Locker l 的新 Cond。
 func NewCond(l Locker) *Cond {
 	return &Cond{L: l}
 }
 
-// Wait atomically unlocks c.L and suspends execution
-// of the calling goroutine. After later resuming execution,
-// Wait locks c.L before returning. Unlike in other systems,
-// Wait cannot return unless awoken by [Cond.Broadcast] or [Cond.Signal].
+// Wait 原子地解锁 c.L 并暂停调用 goroutine 的执行。
+// 在稍后恢复执行后，Wait 在返回前会锁定 c.L。
+// 与其他系统不同，除非被 [Cond.Broadcast] 或 [Cond.Signal] 唤醒，
+// 否则 Wait 不会返回。
 //
-// Because c.L is not locked while Wait is waiting, the caller
-// typically cannot assume that the condition is true when
-// Wait returns. Instead, the caller should Wait in a loop:
+// 因为在 Wait 等待期间 c.L 未被锁定，调用者通常不能假定
+// Wait 返回时条件为真。相反，调用者应该在循环中调用 Wait：
 //
 //	c.L.Lock()
 //	for !condition() {
 //	    c.Wait()
 //	}
-//	... make use of condition ...
+//	... 使用条件 ...
 //	c.L.Unlock()
 func (c *Cond) Wait() {
 	c.checker.check()
@@ -72,35 +65,33 @@ func (c *Cond) Wait() {
 	c.L.Lock()
 }
 
-// Signal wakes one goroutine waiting on c, if there is any.
+// Signal 唤醒一个等待 c 的 goroutine（如果有的话）。
 //
-// It is allowed but not required for the caller to hold c.L
-// during the call.
+// 调用者在调用期间可以持有 c.L，但这不是必需的。
 //
-// Signal() does not affect goroutine scheduling priority; if other goroutines
-// are attempting to lock c.L, they may be awoken before a "waiting" goroutine.
+// Signal() 不影响 goroutine 的调度优先级；如果其他 goroutine
+// 正在尝试锁定 c.L，它们可能会在"等待中"的 goroutine 之前被唤醒。
 func (c *Cond) Signal() {
 	c.checker.check()
 	runtime_notifyListNotifyOne(&c.notify)
 }
 
-// Broadcast wakes all goroutines waiting on c.
+// Broadcast 唤醒所有等待 c 的 goroutine。
 //
-// It is allowed but not required for the caller to hold c.L
-// during the call.
+// 调用者在调用期间可以持有 c.L，但这不是必需的。
 func (c *Cond) Broadcast() {
 	c.checker.check()
 	runtime_notifyListNotifyAll(&c.notify)
 }
 
-// copyChecker holds back pointer to itself to detect object copying.
+// copyChecker 保存指向自身的反向指针以检测对象复制。
 type copyChecker uintptr
 
 func (c *copyChecker) check() {
-	// Check if c has been copied in three steps:
-	// 1. The first comparison is the fast-path. If c has been initialized and not copied, this will return immediately. Otherwise, c is either not initialized, or has been copied.
-	// 2. Ensure c is initialized. If the CAS succeeds, we're done. If it fails, c was either initialized concurrently and we simply lost the race, or c has been copied.
-	// 3. Do step 1 again. Now that c is definitely initialized, if this fails, c was copied.
+	// 通过三个步骤检查 c 是否已被复制：
+	// 1. 第一个比较是快速路径。如果 c 已初始化且未被复制，这将立即返回。否则，c 要么未初始化，要么已被复制。
+	// 2. 确保 c 已初始化。如果 CAS 成功，我们就完成了。如果失败，c 要么是被并发初始化而我们输掉了竞争，要么 c 已被复制。
+	// 3. 再次执行步骤 1。现在 c 肯定已初始化，如果这次失败，说明 c 已被复制。
 	if uintptr(*c) != uintptr(unsafe.Pointer(c)) &&
 		!atomic.CompareAndSwapUintptr((*uintptr)(c), 0, uintptr(unsafe.Pointer(c))) &&
 		uintptr(*c) != uintptr(unsafe.Pointer(c)) {
@@ -108,15 +99,13 @@ func (c *copyChecker) check() {
 	}
 }
 
-// noCopy may be added to structs which must not be copied
-// after the first use.
+// noCopy 可以添加到首次使用后不得复制的结构体中。
 //
-// See https://golang.org/issues/8005#issuecomment-190753527
-// for details.
+// 详情请参阅 https://golang.org/issues/8005#issuecomment-190753527。
 //
-// Note that it must not be embedded, due to the Lock and Unlock methods.
+// 注意，由于 Lock 和 Unlock 方法的存在，它不能被嵌入。
 type noCopy struct{}
 
-// Lock is a no-op used by -copylocks checker from `go vet`.
+// Lock 是一个空操作，被 `go vet` 的 -copylocks 检查器使用。
 func (*noCopy) Lock()   {}
 func (*noCopy) Unlock() {}

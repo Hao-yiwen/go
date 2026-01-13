@@ -1,16 +1,16 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package sync
 
-// Export for testing.
+// 导出以供测试使用。
 var Runtime_Semacquire = runtime_Semacquire
 var Runtime_Semrelease = runtime_Semrelease
 var Runtime_procPin = runtime_procPin
 var Runtime_procUnpin = runtime_procUnpin
 
-// PoolDequeue exports an interface for pollDequeue testing.
+// PoolDequeue 导出一个用于 pollDequeue 测试的接口。
 type PoolDequeue interface {
 	PushHead(val any) bool
 	PopHead() (any, bool)
@@ -21,8 +21,7 @@ func NewPoolDequeue(n int) PoolDequeue {
 	d := &poolDequeue{
 		vals: make([]eface, n),
 	}
-	// For testing purposes, set the head and tail indexes close
-	// to wrapping around.
+	// 为了测试目的，将 head 和 tail 索引设置为接近环绕的位置。
 	d.headTail.Store(d.pack(1<<dequeueBits-500, 1<<dequeueBits-500))
 	return d
 }

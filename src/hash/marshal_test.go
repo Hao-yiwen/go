@@ -1,10 +1,10 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Test that the hashes in the standard library implement
-// BinaryMarshaler, BinaryUnmarshaler,
-// and lock in the current representations.
+// 测试标准库中的哈希是否实现了
+// BinaryMarshaler、BinaryUnmarshaler，
+// 并锁定当前的表示形式。
 
 package hash_test
 

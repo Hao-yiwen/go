@@ -1,15 +1,14 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package sync
 
-// OnceFunc returns a function that invokes f only once. The returned function
-// may be called concurrently.
+// OnceFunc 返回一个只调用 f 一次的函数。返回的函数可以被并发调用。
 //
-// If f panics, the returned function will panic with the same value on every call.
+// 如果 f 发生 panic，返回的函数在每次调用时都会以相同的值 panic。
 func OnceFunc(f func()) func() {
-	// Use a struct so that there's a single heap allocation.
+	// 使用结构体以便只有一次堆分配。
 	d := struct {
 		f     func()
 		once  Once
@@ -21,17 +20,16 @@ func OnceFunc(f func()) func() {
 	return func() {
 		d.once.Do(func() {
 			defer func() {
-				d.f = nil // Do not keep f alive after invoking it.
+				d.f = nil // 调用后不再保持 f 存活。
 				d.p = recover()
 				if !d.valid {
-					// Re-panic immediately so on the first
-					// call the user gets a complete stack
-					// trace into f.
+					// 立即重新 panic，这样在第一次调用时
+					// 用户可以获得进入 f 的完整堆栈跟踪。
 					panic(d.p)
 				}
 			}()
 			d.f()
-			d.valid = true // Set only if f does not panic.
+			d.valid = true // 仅在 f 没有 panic 时设置。
 		})
 		if !d.valid {
 			panic(d.p)
@@ -39,12 +37,12 @@ func OnceFunc(f func()) func() {
 	}
 }
 
-// OnceValue returns a function that invokes f only once and returns the value
-// returned by f. The returned function may be called concurrently.
+// OnceValue 返回一个只调用 f 一次并返回 f 返回值的函数。
+// 返回的函数可以被并发调用。
 //
-// If f panics, the returned function will panic with the same value on every call.
+// 如果 f 发生 panic，返回的函数在每次调用时都会以相同的值 panic。
 func OnceValue[T any](f func() T) func() T {
-	// Use a struct so that there's a single heap allocation.
+	// 使用结构体以便只有一次堆分配。
 	d := struct {
 		f      func() T
 		once   Once
@@ -73,12 +71,12 @@ func OnceValue[T any](f func() T) func() T {
 	}
 }
 
-// OnceValues returns a function that invokes f only once and returns the values
-// returned by f. The returned function may be called concurrently.
+// OnceValues 返回一个只调用 f 一次并返回 f 返回的多个值的函数。
+// 返回的函数可以被并发调用。
 //
-// If f panics, the returned function will panic with the same value on every call.
+// 如果 f 发生 panic，返回的函数在每次调用时都会以相同的值 panic。
 func OnceValues[T1, T2 any](f func() (T1, T2)) func() (T1, T2) {
-	// Use a struct so that there's a single heap allocation.
+	// 使用结构体以便只有一次堆分配。
 	d := struct {
 		f     func() (T1, T2)
 		once  Once

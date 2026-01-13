@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build !purego
 
@@ -26,9 +26,9 @@ func rthash(buf []byte, seed uint64) uint64 {
 		return seed
 	}
 	len := len(buf)
-	// The runtime hasher only works on uintptr. For 64-bit
-	// architectures, we use the hasher directly. Otherwise,
-	// we use two parallel hashers on the lower and upper 32 bits.
+	// 运行时哈希器只能处理 uintptr。对于 64 位
+	// 架构，我们直接使用哈希器。否则，
+	// 我们对低 32 位和高 32 位使用两个并行的哈希器。
 	if maps.Use64BitHash {
 		return uint64(runtime_memhash(unsafe.Pointer(&buf[0]), uintptr(seed), uintptr(len)))
 	}

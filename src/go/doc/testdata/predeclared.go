@@ -1,8 +1,8 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2016 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package predeclared is a go/doc test for handling of
+// Package predeclared 是一个 go/doc test for handling of
 // exported methods on locally-defined predeclared types.
 // See issue 9860.
 package predeclared

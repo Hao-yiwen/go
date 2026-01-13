@@ -1,6 +1,6 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2016 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build !goexperiment.jsonv2
 
@@ -8,7 +8,7 @@ package json
 
 import "unicode/utf8"
 
-// safeSet holds the value true if the ASCII character with the given array
+// safeSet 保存the value true 如果 ASCII character with the given array
 // position can be represented inside a JSON string without any further
 // escaping.
 //
@@ -113,7 +113,7 @@ var safeSet = [utf8.RuneSelf]bool{
 	'\u007f': true,
 }
 
-// htmlSafeSet holds the value true if the ASCII character with the given
+// htmlSafeSet 保存the value true 如果 ASCII character with the given
 // array position can be safely represented inside a JSON string, embedded
 // inside of HTML <script> tags, without any additional escaping.
 //

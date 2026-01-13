@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements typechecking of call and selector expressions.
 
@@ -14,10 +14,10 @@ import (
 )
 
 // funcInst type-checks a function instantiation.
-// The incoming x must be a generic function.
-// If ix != nil, it provides some or all of the type arguments (ix.Indices).
-// If target != nil, it may be used to infer missing type arguments of x, if any.
-// At least one of T or ix must be provided.
+// The incoming x 必须是 a generic function.
+// If ix != nil, it provides some or all 的类型 arguments (ix.Indices).
+// If target != nil, it 可能是 used to infer missing type arguments of x, if any.
+// At least one of T or ix 必须是 provided.
 //
 // There are two modes of operation:
 //
@@ -26,7 +26,7 @@ import (
 //
 //  2. If infer == false and inst provides all type arguments, funcInst
 //     instantiates the function x. The returned results are nil.
-//     If inst doesn't provide enough type arguments, funcInst returns the
+//     If inst doesn't provide enough type arguments, funcInst 返回
 //     available arguments; x remains unchanged.
 //
 // If an error (other than a version error) occurs in any case, it is reported
@@ -56,13 +56,13 @@ func (check *Checker) funcInst(T *target, pos token.Pos, x *operand, ix *indexed
 		assert(len(targs) == len(xlist))
 	}
 
-	// Check the number of type arguments (got) vs number of type parameters (want).
-	// Note that x is a function value, not a type expression, so we don't need to
+	// Check the number 类型为 arguments (got) vs number 类型为 parameters (want).
+	// Note that x 是一个 function value, not a type expression, so we don't need to
 	// call Underlying below.
 	sig := x.typ.(*Signature)
 	got, want := len(targs), sig.TypeParams().Len()
 	if got > want {
-		// Providing too many type arguments is always an error.
+		// Providing too many type arguments 是一个lways an error.
 		check.errorf(ix.indices[got-1], WrongTypeArgCount, "got %d type arguments but want %d", got, want)
 		x.mode = invalid
 		return nil
@@ -96,9 +96,9 @@ func (check *Checker) funcInst(T *target, pos token.Pos, x *operand, ix *indexed
 			}
 			gsig := NewSignatureType(nil, nil, nil, sig.params, sig.results, sig.variadic)
 			params = []*Var{NewParam(x.Pos(), check.pkg, "", gsig)}
-			// The type of the argument operand is tsig, which is the type of the LHS in an assignment
+			// The type of the argument operand is tsig, which 是 type of the LHS in an assignment
 			// or the result type in a return statement. Create a pseudo-expression for that operand
-			// that makes sense when reported in error messages from infer, below.
+			// that 使 sense when reported in error messages from infer, below.
 			expr := ast.NewIdent(T.desc)
 			expr.NamePos = x.Pos() // correct position
 			args = []*operand{{mode: value, expr: expr, typ: T.sig}}
@@ -185,7 +185,7 @@ func (check *Checker) callExpr(x *operand, call *ast.CallExpr) exprKind {
 	} else {
 		check.exprOrType(x, call.Fun, true)
 	}
-	// x.typ may be generic
+	// x.typ 可能是 generic
 
 	switch x.mode {
 	case invalid:
@@ -213,7 +213,7 @@ func (check *Checker) callExpr(x *operand, call *ast.CallExpr) exprKind {
 				}
 				if t, _ := T.Underlying().(*Interface); t != nil && !isTypeParam(T) {
 					if !t.IsMethodSet() {
-						check.errorf(call, MisplacedConstraintIface, "cannot use interface %s in conversion (contains specific type constraints or is comparable)", T)
+						check.errorf(call, MisplacedConstraintIface, "cannot use interface %s in conversion (包含 specific type constraints or is comparable)", T)
 						break
 					}
 				}
@@ -241,11 +241,11 @@ func (check *Checker) callExpr(x *operand, call *ast.CallExpr) exprKind {
 	}
 
 	// ordinary function/method call
-	// signature may be generic
+	// signature 可能是 generic
 	cgocall := x.mode == cgofunc
 
-	// If the operand type is a type parameter, all types in its type set
-	// must have a common underlying type, which must be a signature.
+	// If the operand type 是一个 type parameter, all types in its type set
+	// must have a common underlying type, which 必须是 a signature.
 	u, err := commonUnder(x.typ, func(t, u Type) *typeError {
 		if _, ok := u.(*Signature); u != nil && !ok {
 			return typeErrorf("%s is not a function", t)
@@ -277,7 +277,7 @@ func (check *Checker) callExpr(x *operand, call *ast.CallExpr) exprKind {
 		}
 		assert(len(targs) == len(xlist))
 
-		// check number of type arguments (got) vs number of type parameters (want)
+		// check number 类型为 arguments (got) vs number 类型为 parameters (want)
 		got, want := len(targs), sig.TypeParams().Len()
 		if got > want {
 			check.errorf(xlist[want], WrongTypeArgCount, "got %d type arguments but want %d", got, want)
@@ -290,7 +290,7 @@ func (check *Checker) callExpr(x *operand, call *ast.CallExpr) exprKind {
 		// If sig is generic and all type arguments are provided, preempt function
 		// argument type inference by explicitly instantiating the signature. This
 		// ensures that we record accurate type information for sig, even if there
-		// is an error checking its arguments (for example, if an incorrect number
+		// 是一个n error checking its arguments (for example, if an incorrect number
 		// of arguments is supplied).
 		if got == want && want > 0 {
 			check.verifyVersionf(atPos(ix.lbrack), go1_18, "function instantiation")
@@ -329,7 +329,7 @@ func (check *Checker) callExpr(x *operand, call *ast.CallExpr) exprKind {
 	x.expr = call
 	check.hasCallOrRecv = true
 
-	// if type inference failed, a parameterized result must be invalidated
+	// if type inference failed, a parameterized result 必须是 invalidated
 	// (operands cannot have a parameterized type)
 	if x.mode == value && sig.TypeParams().Len() > 0 && isParameterized(sig.TypeParams().list(), x.typ) {
 		x.mode = invalid
@@ -338,8 +338,8 @@ func (check *Checker) callExpr(x *operand, call *ast.CallExpr) exprKind {
 	return statement
 }
 
-// exprList evaluates a list of expressions and returns the corresponding operands.
-// A single-element expression list may evaluate to multiple operands.
+// exprList evaluates a list of expressions and 返回 corresponding operands.
+// 一个single-element expression list may evaluate to multiple operands.
 func (check *Checker) exprList(elist []ast.Expr) (xlist []*operand) {
 	if n := len(elist); n == 1 {
 		xlist, _ = check.multiExpr(elist[0], false)
@@ -355,7 +355,7 @@ func (check *Checker) exprList(elist []ast.Expr) (xlist []*operand) {
 	return
 }
 
-// genericExprList is like exprList but result operands may be uninstantiated or partially
+// genericExprList is like exprList but result operands 可能是 uninstantiated or partially
 // instantiated generic functions (where constraint information is insufficient to infer
 // the missing type arguments) for Go 1.21 and later.
 // For each non-generic or uninstantiated generic operand, the corresponding targsList and
@@ -369,7 +369,7 @@ func (check *Checker) genericExprList(elist []ast.Expr) (resList []*operand, tar
 			for i, x := range resList {
 				if i < len(targsList) {
 					if n := len(targsList[i]); n > 0 {
-						// x must be a partially instantiated function
+						// x 必须是 a partially instantiated function
 						assert(n < x.typ.(*Signature).TypeParams().Len())
 					}
 				}
@@ -390,7 +390,7 @@ func (check *Checker) genericExprList(elist []ast.Expr) (resList []*operand, tar
 		e := elist[0]
 		var x operand
 		if ix := unpackIndexedExpr(e); ix != nil && check.indexExpr(&x, ix) {
-			// x is a generic function.
+			// x 是一个 generic function.
 			targs := check.funcInst(nil, x.Pos(), &x, ix, infer)
 			if targs != nil {
 				// x was not instantiated: collect the (partial) type arguments.
@@ -408,7 +408,7 @@ func (check *Checker) genericExprList(elist []ast.Expr) (resList []*operand, tar
 			check.rawExpr(nil, &x, e, nil, true)
 			check.exclude(&x, 1<<novalue|1<<builtin|1<<typexpr)
 			if t, ok := x.typ.(*Tuple); ok && x.mode != invalid {
-				// x is a function call returning multiple values; it cannot be generic.
+				// x 是一个 function call returning multiple values; it cannot be generic.
 				resList = make([]*operand, t.Len())
 				for i, v := range t.vars {
 					resList[i] = &operand{mode: value, expr: e, typ: v.typ}
@@ -425,7 +425,7 @@ func (check *Checker) genericExprList(elist []ast.Expr) (resList []*operand, tar
 		for i, e := range elist {
 			var x operand
 			if ix := unpackIndexedExpr(e); ix != nil && check.indexExpr(&x, ix) {
-				// x is a generic function.
+				// x 是一个 generic function.
 				targs := check.funcInst(nil, x.Pos(), &x, ix, infer)
 				if targs != nil {
 					// x was not instantiated: collect the (partial) type arguments.
@@ -449,16 +449,16 @@ func (check *Checker) genericExprList(elist []ast.Expr) (resList []*operand, tar
 }
 
 // arguments type-checks arguments passed to a function call with the given signature.
-// The function and its arguments may be generic, and possibly partially instantiated.
+// The function and its arguments 可能是 generic, and possibly partially instantiated.
 // targs and xlist are the function's type arguments (and corresponding expressions).
-// args are the function arguments. If an argument args[i] is a partially instantiated
+// args are the function arguments. If an argument args[i] 是一个 partially instantiated
 // generic function, atargs[i] are the corresponding type arguments.
 // If the callee is variadic, arguments adjusts its signature to match the provided
 // arguments. The type parameters and arguments of the callee and all its arguments
 // are used together to infer any missing type arguments, and the callee and argument
 // functions are instantiated as necessary.
-// The result signature is the (possibly adjusted and instantiated) function signature.
-// If an error occurred, the result signature is the incoming sig.
+// The result signature 是 (possibly adjusted and instantiated) function signature.
+// If an error occurred, the result signature 是 incoming sig.
 func (check *Checker) arguments(call *ast.CallExpr, sig *Signature, targs []Type, xlist []ast.Expr, args []*operand, atargs [][]Type) (rsig *Signature) {
 	rsig = sig
 
@@ -571,11 +571,11 @@ func (check *Checker) arguments(call *ast.CallExpr, sig *Signature, targs []Type
 		for i, arg := range args {
 			// generic arguments cannot have a defined (*Named) type - no need for underlying type below
 			if asig, _ := arg.typ.(*Signature); asig != nil && asig.TypeParams().Len() > 0 {
-				// The argument type is a generic function signature. This type is
+				// The argument type 是一个 generic function signature. This type is
 				// pointer-identical with (it's copied from) the type of the generic
 				// function argument and thus the function object.
 				// Before we change the type (type parameter renaming, below), make
-				// a clone of it as otherwise we implicitly modify the object's type
+				// a clone of it as 否则 we implicitly modify the object's type
 				// (go.dev/issues/63260).
 				asig = clone(asig)
 				// Rename type parameters for cases like f(g, g); this gives each
@@ -587,7 +587,7 @@ func (check *Checker) arguments(call *ast.CallExpr, sig *Signature, targs []Type
 				asig.tparams = &TypeParamList{atparams} // renameTParams doesn't touch associated type parameters
 				arg.typ = asig                          // new type identity for the function argument
 				tparams = append(tparams, atparams...)
-				// add partial list of type arguments, if any
+				// add partial list 类型为 arguments, if any
 				if i < len(atargs) {
 					targs = append(targs, atargs[i]...)
 				}
@@ -604,7 +604,7 @@ func (check *Checker) arguments(call *ast.CallExpr, sig *Signature, targs []Type
 	// at the moment we only support implicit instantiations of argument functions
 	_ = len(genericArgs) > 0 && check.verifyVersionf(args[genericArgs[0]], go1_21, "implicitly instantiated function as argument")
 
-	// tparams holds the type parameters of the callee and generic function arguments, if any:
+	// tparams 保存 type parameters of the callee and generic function arguments, if any:
 	// the first n type parameters belong to the callee, followed by mi type parameters for each
 	// of the generic function arguments, where mi = args[i].typ.(*Signature).TypeParams().Len().
 
@@ -672,7 +672,7 @@ var cgoPrefixes = [...]string{
 }
 
 func (check *Checker) selector(x *operand, e *ast.SelectorExpr, wantType bool) {
-	// these must be declared before the "goto Error" statements
+	// these 必须是 declared before the "goto Error" statements
 	var (
 		obj      Object
 		index    []int
@@ -795,7 +795,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr, wantType bool) {
 	//   func (fs *S[T]) M(x V.M) {}
 	//
 	// All codepaths below return a non-type expression. If we get here while
-	// expecting a type expression, it is an error.
+	// expecting a type expression, it 是一个n error.
 	//
 	// See go.dev/issue/57522 for more details.
 	//
@@ -808,7 +808,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr, wantType bool) {
 
 	obj, index, indirect = lookupFieldOrMethod(x.typ, x.mode == variable, check.pkg, sel, false)
 	if obj == nil {
-		// Don't report another error if the underlying type was invalid (go.dev/issue/49541).
+		// Don't report another error 如果 underlying type was invalid (go.dev/issue/49541).
 		if !isValid(x.typ.Underlying()) {
 			goto Error
 		}
@@ -913,7 +913,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr, wantType bool) {
 			//           For instance, if we made a copy above when creating a
 			//           custom method for a parameterized received type, the
 			//           method set method doesn't match (no copy there). There
-			///          may be other situations.
+			///          可能是 other situations.
 			disabled := true
 			if !disabled && debug {
 				// Verify that LookupFieldOrMethod and MethodSet.Lookup agree.
@@ -980,12 +980,12 @@ Error:
 // use type-checks each argument.
 // Useful to make sure expressions are evaluated
 // (and variables are "used") in the presence of
-// other errors. Arguments may be nil.
+// other errors. Arguments 可能是 nil.
 // Reports if all arguments evaluated without error.
 func (check *Checker) use(args ...ast.Expr) bool { return check.useN(args, false) }
 
 // useLHS is like use, but doesn't "use" top-level identifiers.
-// It should be called instead of use if the arguments are
+// It 应该是 called instead of use 如果 arguments are
 // expressions on the lhs of an assignment.
 func (check *Checker) useLHS(args ...ast.Expr) bool { return check.useN(args, true) }
 
@@ -1010,7 +1010,7 @@ func (check *Checker) use1(e ast.Expr, lhs bool) bool {
 		if n.Name == "_" {
 			break
 		}
-		// If the lhs is an identifier denoting a variable v, this assignment
+		// If the lhs 是一个n identifier denoting a variable v, th是一个ssignment
 		// is not a 'use' of v. Remember current value of v.used and restore
 		// after evaluating the lhs via check.rawExpr.
 		var v *Var

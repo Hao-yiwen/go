@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package ast
 
@@ -10,39 +10,36 @@ import (
 )
 
 // ----------------------------------------------------------------------------
-// Export filtering
+// 导出过滤
 
-// exportFilter is a special filter function to extract exported nodes.
+// exportFilter 是用于提取导出节点的特殊过滤函数。
 func exportFilter(name string) bool {
 	return IsExported(name)
 }
 
-// FileExports trims the AST for a Go source file in place such that
-// only exported nodes remain: all top-level identifiers which are not exported
-// and their associated information (such as type, initial value, or function
-// body) are removed. Non-exported fields and methods of exported types are
-// stripped. The [File.Comments] list is not changed.
+// FileExports 原地裁剪 Go 源文件的 AST，使得只保留导出的节点：
+// 所有未导出的顶级标识符及其关联信息（如类型、初始值或函数体）
+// 都会被移除。导出类型的非导出字段和方法会被剥离。
+// [File.Comments] 列表不会改变。
 //
-// FileExports reports whether there are exported declarations.
+// FileExports 报告是否存在导出的声明。
 func FileExports(src *File) bool {
 	return filterFile(src, exportFilter, true)
 }
 
-// PackageExports trims the AST for a Go package in place such that
-// only exported nodes remain. The pkg.Files list is not changed, so that
-// file names and top-level package comments don't get lost.
+// PackageExports 原地裁剪 Go 包的 AST，使得只保留导出的节点。
+// pkg.Files 列表不会改变，以便文件名和顶级包注释不会丢失。
 //
-// PackageExports reports whether there are exported declarations;
-// it returns false otherwise.
+// PackageExports 报告是否存在导出的声明；否则返回 false。
 //
-// Deprecated: use the type checker [go/types] instead of [Package];
-// see [Object]. Alternatively, use [FileExports].
+// 已弃用：改用类型检查器 [go/types] 而不是 [Package]；
+// 参见 [Object]。或者使用 [FileExports]。
 func PackageExports(pkg *Package) bool {
 	return filterPackage(pkg, exportFilter, true)
 }
 
 // ----------------------------------------------------------------------------
-// General filtering
+// 通用过滤
 
 type Filter func(string) bool
 
@@ -57,9 +54,8 @@ func filterIdentList(list []*Ident, f Filter) []*Ident {
 	return list[0:j]
 }
 
-// fieldName assumes that x is the type of an anonymous field and
-// returns the corresponding field name. If x is not an acceptable
-// anonymous field, the result is nil.
+// fieldName 假设 x 是匿名字段的类型，并返回相应的字段名。
+// 如果 x 不是可接受的匿名字段，结果为 nil。
 func fieldName(x Expr) *Ident {
 	switch t := x.(type) {
 	case *Ident:
@@ -83,7 +79,7 @@ func filterFieldList(fields *FieldList, filter Filter, export bool) (removedFiel
 	for _, f := range list {
 		keepField := false
 		if len(f.Names) == 0 {
-			// anonymous field
+			// 匿名字段
 			name := fieldName(f.Type)
 			keepField = name != nil && filter(name.Name)
 		} else {
@@ -201,11 +197,10 @@ func filterSpec(spec Spec, f Filter, export bool) bool {
 			return true
 		}
 		if !export {
-			// For general filtering (not just exports),
-			// filter type even if name is not filtered
-			// out.
-			// If the type contains filtered elements,
-			// keep the declaration.
+			// 对于通用过滤（不仅仅是导出），
+			// 即使名称未被过滤掉也要过滤类型。
+			// 如果类型包含过滤后的元素，
+			// 保留该声明。
 			return filterType(s.Type, f, export)
 		}
 	}
@@ -223,12 +218,10 @@ func filterSpecList(list []Spec, f Filter, export bool) []Spec {
 	return list[0:j]
 }
 
-// FilterDecl trims the AST for a Go declaration in place by removing
-// all names (including struct field and interface method names, but
-// not from parameter lists) that don't pass through the filter f.
+// FilterDecl 通过移除未通过过滤器 f 的所有名称（包括结构体字段
+// 和接口方法名称，但不包括参数列表中的名称）来原地裁剪 Go 声明的 AST。
 //
-// FilterDecl reports whether there are any declared names left after
-// filtering.
+// FilterDecl 报告过滤后是否还剩下任何已声明的名称。
 func FilterDecl(decl Decl, f Filter) bool {
 	return filterDecl(decl, f, false)
 }
@@ -244,15 +237,12 @@ func filterDecl(decl Decl, f Filter, export bool) bool {
 	return false
 }
 
-// FilterFile trims the AST for a Go file in place by removing all
-// names from top-level declarations (including struct field and
-// interface method names, but not from parameter lists) that don't
-// pass through the filter f. If the declaration is empty afterwards,
-// the declaration is removed from the AST. Import declarations are
-// always removed. The [File.Comments] list is not changed.
+// FilterFile 通过从顶级声明中移除未通过过滤器 f 的所有名称
+// （包括结构体字段和接口方法名称，但不包括参数列表中的名称）
+// 来原地裁剪 Go 文件的 AST。如果声明随后变为空，则从 AST 中移除该声明。
+// Import 声明总是被移除。[File.Comments] 列表不会改变。
 //
-// FilterFile reports whether there are any top-level declarations
-// left after filtering.
+// FilterFile 报告过滤后是否还剩下任何顶级声明。
 func FilterFile(src *File, f Filter) bool {
 	return filterFile(src, f, false)
 }
@@ -269,19 +259,15 @@ func filterFile(src *File, f Filter, export bool) bool {
 	return j > 0
 }
 
-// FilterPackage trims the AST for a Go package in place by removing
-// all names from top-level declarations (including struct field and
-// interface method names, but not from parameter lists) that don't
-// pass through the filter f. If the declaration is empty afterwards,
-// the declaration is removed from the AST. The pkg.Files list is not
-// changed, so that file names and top-level package comments don't get
-// lost.
+// FilterPackage 通过从顶级声明中移除未通过过滤器 f 的所有名称
+// （包括结构体字段和接口方法名称，但不包括参数列表中的名称）
+// 来原地裁剪 Go 包的 AST。如果声明随后变为空，则从 AST 中移除该声明。
+// pkg.Files 列表不会改变，以便文件名和顶级包注释不会丢失。
 //
-// FilterPackage reports whether there are any top-level declarations
-// left after filtering.
+// FilterPackage 报告过滤后是否还剩下任何顶级声明。
 //
-// Deprecated: use the type checker [go/types] instead of [Package];
-// see [Object]. Alternatively, use [FilterFile].
+// 已弃用：改用类型检查器 [go/types] 而不是 [Package]；
+// 参见 [Object]。或者使用 [FilterFile]。
 func FilterPackage(pkg *Package, f Filter) bool {
 	return filterPackage(pkg, f, false)
 }
@@ -297,59 +283,57 @@ func filterPackage(pkg *Package, f Filter, export bool) bool {
 }
 
 // ----------------------------------------------------------------------------
-// Merging of package files
+// 包文件合并
 
-// The MergeMode flags control the behavior of [MergePackageFiles].
+// MergeMode 标志控制 [MergePackageFiles] 的行为。
 //
-// Deprecated: use the type checker [go/types] instead of [Package];
-// see [Object].
+// 已弃用：改用类型检查器 [go/types] 而不是 [Package]；
+// 参见 [Object]。
 type MergeMode uint
 
-// Deprecated: use the type checker [go/types] instead of [Package];
-// see [Object].
+// 已弃用：改用类型检查器 [go/types] 而不是 [Package]；
+// 参见 [Object]。
 const (
-	// If set, duplicate function declarations are excluded.
+	// 如果设置，则排除重复的函数声明。
 	FilterFuncDuplicates MergeMode = 1 << iota
-	// If set, comments that are not associated with a specific
-	// AST node (as Doc or Comment) are excluded.
+	// 如果设置，则排除未与特定 AST 节点关联的注释
+	// （作为 Doc 或 Comment）。
 	FilterUnassociatedComments
-	// If set, duplicate import declarations are excluded.
+	// 如果设置，则排除重复的 import 声明。
 	FilterImportDuplicates
 )
 
-// nameOf returns the function (foo) or method name (foo.bar) for
-// the given function declaration. If the AST is incorrect for the
-// receiver, it assumes a function instead.
+// nameOf 返回给定函数声明的函数名（foo）或方法名（foo.bar）。
+// 如果接收者的 AST 不正确，则假定它是一个函数。
 func nameOf(f *FuncDecl) string {
 	if r := f.Recv; r != nil && len(r.List) == 1 {
-		// looks like a correct receiver declaration
+		// 看起来像是正确的接收者声明
 		t := r.List[0].Type
-		// dereference pointer receiver types
+		// 解引用指针接收者类型
 		if p, _ := t.(*StarExpr); p != nil {
 			t = p.X
 		}
-		// the receiver type must be a type name
+		// 接收者类型必须是类型名
 		if p, _ := t.(*Ident); p != nil {
 			return p.Name + "." + f.Name.Name
 		}
-		// otherwise assume a function instead
+		// 否则假定是函数
 	}
 	return f.Name.Name
 }
 
-// separator is an empty //-style comment that is interspersed between
-// different comment groups when they are concatenated into a single group
+// separator 是一个空的 // 风格注释，当不同的注释组
+// 连接成单个组时穿插其间
 var separator = &Comment{token.NoPos, "//"}
 
-// MergePackageFiles creates a file AST by merging the ASTs of the
-// files belonging to a package. The mode flags control merging behavior.
+// MergePackageFiles 通过合并属于包的文件的 AST 来创建文件 AST。
+// mode 标志控制合并行为。
 //
-// Deprecated: this function is poorly specified and has unfixable
-// bugs; also [Package] is deprecated.
+// 已弃用：此函数规范不完善且有无法修复的 bug；
+// 另外 [Package] 也已弃用。
 func MergePackageFiles(pkg *Package, mode MergeMode) *File {
-	// Count the number of package docs, comments and declarations across
-	// all package files. Also, compute sorted list of filenames, so that
-	// subsequent iterations can always iterate in the same order.
+	// 计算所有包文件中的包文档、注释和声明的数量。
+	// 同时计算排序后的文件名列表，以便后续迭代可以始终以相同顺序进行。
 	ndocs := 0
 	ncomments := 0
 	ndecls := 0
@@ -360,7 +344,7 @@ func MergePackageFiles(pkg *Package, mode MergeMode) *File {
 		filenames[i] = filename
 		i++
 		if f.Doc != nil {
-			ndocs += len(f.Doc.List) + 1 // +1 for separator
+			ndocs += len(f.Doc.List) + 1 // +1 用于分隔符
 		}
 		ncomments += len(f.Comments)
 		ndecls += len(f.Decls)
@@ -373,20 +357,18 @@ func MergePackageFiles(pkg *Package, mode MergeMode) *File {
 	}
 	slices.Sort(filenames)
 
-	// Collect package comments from all package files into a single
-	// CommentGroup - the collected package documentation. In general
-	// there should be only one file with a package comment; but it's
-	// better to collect extra comments than drop them on the floor.
+	// 将所有包文件的包注释收集到单个 CommentGroup 中 - 收集的包文档。
+	// 通常应该只有一个文件有包注释；但收集额外的注释比丢弃它们更好。
 	var doc *CommentGroup
 	var pos token.Pos
 	if ndocs > 0 {
-		list := make([]*Comment, ndocs-1) // -1: no separator before first group
+		list := make([]*Comment, ndocs-1) // -1：第一组前没有分隔符
 		i := 0
 		for _, filename := range filenames {
 			f := pkg.Files[filename]
 			if f.Doc != nil {
 				if i > 0 {
-					// not the first group - add separator
+					// 不是第一组 - 添加分隔符
 					list[i] = separator
 					i++
 				}
@@ -395,9 +377,8 @@ func MergePackageFiles(pkg *Package, mode MergeMode) *File {
 					i++
 				}
 				if f.Package > pos {
-					// Keep the maximum package clause position as
-					// position for the package clause of the merged
-					// files.
+					// 保留最大的包子句位置作为
+					// 合并文件的包子句位置。
 					pos = f.Package
 				}
 			}
@@ -405,39 +386,36 @@ func MergePackageFiles(pkg *Package, mode MergeMode) *File {
 		doc = &CommentGroup{list}
 	}
 
-	// Collect declarations from all package files.
+	// 从所有包文件收集声明。
 	var decls []Decl
 	if ndecls > 0 {
 		decls = make([]Decl, ndecls)
-		funcs := make(map[string]int) // map of func name -> decls index
-		i := 0                        // current index
-		n := 0                        // number of filtered entries
+		funcs := make(map[string]int) // 函数名 -> decls 索引的映射
+		i := 0                        // 当前索引
+		n := 0                        // 过滤条目的数量
 		for _, filename := range filenames {
 			f := pkg.Files[filename]
 			for _, d := range f.Decls {
 				if mode&FilterFuncDuplicates != 0 {
-					// A language entity may be declared multiple
-					// times in different package files; only at
-					// build time declarations must be unique.
-					// For now, exclude multiple declarations of
-					// functions - keep the one with documentation.
+					// 语言实体可能在不同的包文件中声明多次；
+					// 只有在构建时声明才必须唯一。
+					// 目前，排除函数的多次声明 - 保留有文档的那个。
 					//
-					// TODO(gri): Expand this filtering to other
-					//            entities (const, type, vars) if
-					//            multiple declarations are common.
+					// TODO(gri): 如果多次声明很常见，
+					//            将此过滤扩展到其他实体（const、type、vars）。
 					if f, isFun := d.(*FuncDecl); isFun {
 						name := nameOf(f)
 						if j, exists := funcs[name]; exists {
-							// function declared already
+							// 函数已声明
 							if decls[j] != nil && decls[j].(*FuncDecl).Doc == nil {
-								// existing declaration has no documentation;
-								// ignore the existing declaration
+								// 现有声明没有文档；
+								// 忽略现有声明
 								decls[j] = nil
 							} else {
-								// ignore the new declaration
+								// 忽略新声明
 								d = nil
 							}
-							n++ // filtered an entry
+							n++ // 过滤了一个条目
 						} else {
 							funcs[name] = i
 						}
@@ -448,11 +426,10 @@ func MergePackageFiles(pkg *Package, mode MergeMode) *File {
 			}
 		}
 
-		// Eliminate nil entries from the decls list if entries were
-		// filtered. We do this using a 2nd pass in order to not disturb
-		// the original declaration order in the source (otherwise, this
-		// would also invalidate the monotonically increasing position
-		// info within a single file).
+		// 如果条目被过滤，则从 decls 列表中消除 nil 条目。
+		// 我们使用第二次遍历来做这件事，以避免扰乱源代码中
+		// 原始的声明顺序（否则，这也会使单个文件中
+		// 单调递增的位置信息无效）。
 		if n > 0 {
 			i = 0
 			for _, d := range decls {
@@ -465,7 +442,7 @@ func MergePackageFiles(pkg *Package, mode MergeMode) *File {
 		}
 	}
 
-	// Collect import specs from all package files.
+	// 从所有包文件收集 import spec。
 	var imports []*ImportSpec
 	if mode&FilterImportDuplicates != 0 {
 		seen := make(map[string]bool)
@@ -473,27 +450,25 @@ func MergePackageFiles(pkg *Package, mode MergeMode) *File {
 			f := pkg.Files[filename]
 			for _, imp := range f.Imports {
 				if path := imp.Path.Value; !seen[path] {
-					// TODO: consider handling cases where:
-					// - 2 imports exist with the same import path but
-					//   have different local names (one should probably
-					//   keep both of them)
-					// - 2 imports exist but only one has a comment
-					// - 2 imports exist and they both have (possibly
-					//   different) comments
+					// TODO: 考虑处理以下情况：
+					// - 存在 2 个具有相同导入路径但
+					//   本地名称不同的导入（可能应该保留两个）
+					// - 存在 2 个导入但只有一个有注释
+					// - 存在 2 个导入且都有（可能不同的）注释
 					imports = append(imports, imp)
 					seen[path] = true
 				}
 			}
 		}
 	} else {
-		// Iterate over filenames for deterministic order.
+		// 按文件名迭代以确保确定性顺序。
 		for _, filename := range filenames {
 			f := pkg.Files[filename]
 			imports = append(imports, f.Imports...)
 		}
 	}
 
-	// Collect comments from all package files.
+	// 从所有包文件收集注释。
 	var comments []*CommentGroup
 	if mode&FilterUnassociatedComments == 0 {
 		comments = make([]*CommentGroup, ncomments)
@@ -504,6 +479,6 @@ func MergePackageFiles(pkg *Package, mode MergeMode) *File {
 		}
 	}
 
-	// TODO(gri) need to compute unresolved identifiers!
+	// TODO(gri) 需要计算未解析的标识符！
 	return &File{doc, pos, NewIdent(pkg.Name), decls, minPos, maxPos, pkg.Scope, imports, nil, comments, ""}
 }

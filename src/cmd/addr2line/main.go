@@ -1,21 +1,20 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Addr2line is a minimal simulation of the GNU addr2line tool,
-// just enough to support pprof.
+// Addr2line 是 GNU addr2line 工具的最小模拟实现，
+// 仅提供足够支持 pprof 的功能。
 //
-// Usage:
+// 用法：
 //
 //	go tool addr2line binary
 //
-// Addr2line reads hexadecimal addresses, one per line and with optional 0x prefix,
-// from standard input. For each input address, addr2line prints two output lines,
-// first the name of the function containing the address and second the file:line
-// of the source code corresponding to that address.
+// Addr2line 从标准输入读取十六进制地址，每行一个，可带可选的 0x 前缀。
+// 对于每个输入地址，addr2line 输出两行，
+// 第一行是包含该地址的函数名，第二行是对应源代码的 文件:行号。
 //
-// This tool is intended for use only by pprof; its interface may change or
-// it may be deleted entirely in future releases.
+// 本工具仅供 pprof 使用；其接口可能会更改，
+// 或在未来版本中被完全删除。
 package main
 
 import (
@@ -48,7 +47,7 @@ func main() {
 	log.SetPrefix("addr2line: ")
 	counter.Open()
 
-	// pprof expects this behavior when checking for addr2line
+	// pprof 在检查 addr2line 时期望这种行为
 	if len(os.Args) > 1 && os.Args[1] == "--help" {
 		printUsage(os.Stdout)
 		os.Exit(0)
@@ -79,10 +78,10 @@ func main() {
 	for stdin.Scan() {
 		p := stdin.Text()
 		if strings.Contains(p, ":") {
-			// Reverse translate file:line to pc.
-			// This was an extension in the old C version of 'go tool addr2line'
-			// and is probably not used by anyone, but recognize the syntax.
-			// We don't have an implementation.
+			// 将 文件:行号 反向转换为程序计数器(pc)。
+			// 这是旧版 C 语言实现的 'go tool addr2line' 中的扩展功能，
+			// 可能没有人使用，但我们仍然识别这种语法。
+			// 我们没有实现此功能。
 			fmt.Fprintf(stdout, "!reverse translation not implemented\n")
 			continue
 		}

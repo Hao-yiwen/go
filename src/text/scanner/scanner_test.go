@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package scanner
 
@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 )
 
-// A StringReader delivers its data one string segment at a time via Read.
+// StringReader 通过 Read 每次传递一个字符串段的数据。
 type StringReader struct {
 	data []string
 	step int
@@ -215,7 +215,7 @@ var tokenList = []token{
 	{RawString, "`" + f100 + "`"},
 
 	{Comment, "// individual characters"},
-	// NUL character is not allowed
+	// NUL 字符不允许
 	{'\x01', "\x01"},
 	{' ' - 1, string(' ' - 1)},
 	{'+', "+"},
@@ -244,7 +244,7 @@ func checkTok(t *testing.T, s *Scanner, line int, got, want rune, text string) {
 	if stext != text {
 		t.Errorf("text = %q, want %q", stext, text)
 	} else {
-		// check idempotency of TokenText() call
+		// 检查 TokenText() 调用的幂等性
 		stext = s.TokenText()
 		if stext != text {
 			t.Errorf("text = %q, want %q (idempotency check)", stext, text)
@@ -280,7 +280,7 @@ func testScan(t *testing.T, mode uint) {
 			checkTok(t, s, line, tok, k.tok, k.text)
 			tok = s.Scan()
 		}
-		line += countNewlines(k.text) + 1 // each token is on a new line
+		line += countNewlines(k.text) + 1 // 每个 token 占一行
 	}
 	checkTok(t, s, line, tok, EOF, "")
 }
@@ -327,11 +327,11 @@ func TestPosition(t *testing.T) {
 		if s.Column != pos.Column {
 			t.Errorf("column = %d, want %d for %q", s.Column, pos.Column, k.text)
 		}
-		pos.Offset += 4 + len(k.text) + 1     // 4 tabs + token bytes + newline
-		pos.Line += countNewlines(k.text) + 1 // each token is on a new line
+		pos.Offset += 4 + len(k.text) + 1     // 4 个制表符 + token 字节 + 换行符
+		pos.Line += countNewlines(k.text) + 1 // 每个 token 占一行
 		s.Scan()
 	}
-	// make sure there were no token-internal errors reported by scanner
+	// 确保扫描器没有报告任何 token 内部错误
 	if s.ErrorCount != 0 {
 		t.Errorf("%d errors", s.ErrorCount)
 	}
@@ -341,8 +341,8 @@ func TestScanZeroMode(t *testing.T) {
 	src := makeSource("%s\n")
 	str := src.String()
 	s := new(Scanner).Init(src)
-	s.Mode = 0       // don't recognize any token classes
-	s.Whitespace = 0 // don't skip any whitespace
+	s.Mode = 0       // 不识别任何 token 类别
+	s.Whitespace = 0 // 不跳过任何空白
 	tok := s.Scan()
 	for i, ch := range str {
 		if tok != ch {
@@ -377,9 +377,9 @@ func testScanSelectedMode(t *testing.T, mode uint, class rune) {
 func TestScanSelectedMask(t *testing.T) {
 	testScanSelectedMode(t, 0, 0)
 	testScanSelectedMode(t, ScanIdents, Ident)
-	// Don't test ScanInts and ScanNumbers since some parts of
-	// the floats in the source look like (invalid) octal ints
-	// and ScanNumbers may return either Int or Float.
+	// 不测试 ScanInts 和 ScanNumbers，因为源中的某些浮点数部分
+	// 看起来像（无效的）八进制整数，而 ScanNumbers 可能返回
+	// Int 或 Float。
 	testScanSelectedMode(t, ScanChars, Char)
 	testScanSelectedMode(t, ScanStrings, String)
 	testScanSelectedMode(t, SkipComments, 0)
@@ -391,7 +391,7 @@ func TestScanCustomIdent(t *testing.T) {
 	s := new(Scanner).Init(strings.NewReader(src))
 	// ident = ( 'a' | 'b' ) { digit } .
 	// digit = '0' .. '3' .
-	// with a maximum length of 4
+	// 最大长度为 4
 	s.IsIdentRune = func(ch rune, i int) bool {
 		return i == 0 && (ch == 'a' || ch == 'b') || 0 < i && i < 4 && '0' <= ch && ch <= '3'
 	}
@@ -412,7 +412,7 @@ func TestScanNext(t *testing.T) {
 	const BOM = '\uFEFF'
 	BOMs := string(BOM)
 	s := new(Scanner).Init(strings.NewReader(BOMs + "if a == bcd /* com" + BOMs + "ment */ {\n\ta += c\n}" + BOMs + "// line comment ending in eof"))
-	checkTok(t, s, 1, s.Scan(), Ident, "if") // the first BOM is ignored
+	checkTok(t, s, 1, s.Scan(), Ident, "if") // 第一个 BOM 被忽略
 	checkTok(t, s, 1, s.Scan(), Ident, "a")
 	checkTok(t, s, 1, s.Scan(), '=', "=")
 	checkTok(t, s, 0, s.Next(), '=', "")
@@ -435,7 +435,7 @@ func TestScanNext(t *testing.T) {
 func TestScanWhitespace(t *testing.T) {
 	var buf bytes.Buffer
 	var ws uint64
-	// start at 1, NUL character is not allowed
+	// 从 1 开始，NUL 字符不允许
 	for ch := byte(1); ch < ' '; ch++ {
 		buf.WriteByte(ch)
 		ws |= 1 << ch
@@ -457,7 +457,7 @@ func testError(t *testing.T, src, pos, msg string, tok rune) {
 	errorCalled := false
 	s.Error = func(s *Scanner, m string) {
 		if !errorCalled {
-			// only look at first error
+			// 只查看第一个错误
 			if p := s.Pos().String(); p != pos {
 				t.Errorf("pos = %q, want %q for %q", p, pos, src)
 			}
@@ -517,11 +517,11 @@ func TestError(t *testing.T) {
 	testError(t, `/*/`, "<input>:1:4", "comment not terminated", EOF)
 }
 
-// An errReader returns (0, err) where err is not io.EOF.
+// errReader 返回 (0, err)，其中 err 不是 io.EOF。
 type errReader struct{}
 
 func (errReader) Read(b []byte) (int, error) {
-	return 0, io.ErrNoProgress // some error that is not io.EOF
+	return 0, io.ErrNoProgress // 某个不是 io.EOF 的错误
 }
 
 func TestIOError(t *testing.T) {
@@ -572,17 +572,17 @@ func checkScanPos(t *testing.T, s *Scanner, offset, line, column int, char rune)
 }
 
 func TestPos(t *testing.T) {
-	// corner case: empty source
+	// 边界情况：空源
 	s := new(Scanner).Init(strings.NewReader(""))
 	checkPos(t, s.Pos(), Position{Offset: 0, Line: 1, Column: 1})
-	s.Peek() // peek doesn't affect the position
+	s.Peek() // peek 不影响位置
 	checkPos(t, s.Pos(), Position{Offset: 0, Line: 1, Column: 1})
 
-	// corner case: source with only a newline
+	// 边界情况：只有一个换行符的源
 	s = new(Scanner).Init(strings.NewReader("\n"))
 	checkPos(t, s.Pos(), Position{Offset: 0, Line: 1, Column: 1})
 	checkNextPos(t, s, 1, 2, 1, '\n')
-	// after EOF position doesn't change
+	// EOF 之后位置不再改变
 	for i := 10; i > 0; i-- {
 		checkScanPos(t, s, 1, 2, 1, EOF)
 	}
@@ -590,11 +590,11 @@ func TestPos(t *testing.T) {
 		t.Errorf("%d errors", s.ErrorCount)
 	}
 
-	// corner case: source with only a single character
+	// 边界情况：只有一个字符的源
 	s = new(Scanner).Init(strings.NewReader("本"))
 	checkPos(t, s.Pos(), Position{Offset: 0, Line: 1, Column: 1})
 	checkNextPos(t, s, 3, 1, 2, '本')
-	// after EOF position doesn't change
+	// EOF 之后位置不再改变
 	for i := 10; i > 0; i-- {
 		checkScanPos(t, s, 3, 1, 2, EOF)
 	}
@@ -602,10 +602,10 @@ func TestPos(t *testing.T) {
 		t.Errorf("%d errors", s.ErrorCount)
 	}
 
-	// positions after calling Next
+	// 调用 Next 后的位置
 	s = new(Scanner).Init(strings.NewReader("  foo६४  \n\n本語\n"))
 	checkNextPos(t, s, 1, 1, 2, ' ')
-	s.Peek() // peek doesn't affect the position
+	s.Peek() // peek 不影响位置
 	checkNextPos(t, s, 2, 1, 3, ' ')
 	checkNextPos(t, s, 3, 1, 4, 'f')
 	checkNextPos(t, s, 4, 1, 5, 'o')
@@ -619,7 +619,7 @@ func TestPos(t *testing.T) {
 	checkNextPos(t, s, 18, 3, 2, '本')
 	checkNextPos(t, s, 21, 3, 3, '語')
 	checkNextPos(t, s, 22, 4, 1, '\n')
-	// after EOF position doesn't change
+	// EOF 之后位置不再改变
 	for i := 10; i > 0; i-- {
 		checkScanPos(t, s, 22, 4, 1, EOF)
 	}
@@ -627,12 +627,12 @@ func TestPos(t *testing.T) {
 		t.Errorf("%d errors", s.ErrorCount)
 	}
 
-	// positions after calling Scan
+	// 调用 Scan 后的位置
 	s = new(Scanner).Init(strings.NewReader("abc\n本語\n\nx"))
 	s.Mode = 0
 	s.Whitespace = 0
 	checkScanPos(t, s, 0, 1, 1, 'a')
-	s.Peek() // peek doesn't affect the position
+	s.Peek() // peek 不影响位置
 	checkScanPos(t, s, 1, 1, 2, 'b')
 	checkScanPos(t, s, 2, 1, 3, 'c')
 	checkScanPos(t, s, 3, 1, 4, '\n')
@@ -641,7 +641,7 @@ func TestPos(t *testing.T) {
 	checkScanPos(t, s, 10, 2, 3, '\n')
 	checkScanPos(t, s, 11, 3, 1, '\n')
 	checkScanPos(t, s, 12, 4, 1, 'x')
-	// after EOF position doesn't change
+	// EOF 之后位置不再改变
 	for i := 10; i > 0; i-- {
 		checkScanPos(t, s, 13, 4, 2, EOF)
 	}
@@ -660,7 +660,7 @@ func (r *countReader) Read([]byte) (int, error) {
 func TestNextEOFHandling(t *testing.T) {
 	var r countReader
 
-	// corner case: empty source
+	// 边界情况：空源
 	s := new(Scanner).Init(&r)
 
 	tok := s.Next()
@@ -681,7 +681,7 @@ func TestNextEOFHandling(t *testing.T) {
 func TestScanEOFHandling(t *testing.T) {
 	var r countReader
 
-	// corner case: empty source
+	// 边界情况：空源
 	s := new(Scanner).Init(&r)
 
 	tok := s.Scan()
@@ -702,7 +702,7 @@ func TestScanEOFHandling(t *testing.T) {
 func TestIssue29723(t *testing.T) {
 	s := new(Scanner).Init(strings.NewReader(`x "`))
 	s.Error = func(s *Scanner, _ string) {
-		got := s.TokenText() // this call shouldn't panic
+		got := s.TokenText() // 此调用不应该 panic
 		const want = `"`
 		if got != want {
 			t.Errorf("got %q; want %q", got, want)
@@ -717,23 +717,23 @@ func TestNumbers(t *testing.T) {
 		tok              rune
 		src, tokens, err string
 	}{
-		// binaries
+		// 二进制数
 		{Int, "0b0", "0b0", ""},
 		{Int, "0b1010", "0b1010", ""},
 		{Int, "0B1110", "0B1110", ""},
 
 		{Int, "0b", "0b", "binary literal has no digits"},
 		{Int, "0b0190", "0b0190", "invalid digit '9' in binary literal"},
-		{Int, "0b01a0", "0b01 a0", ""}, // only accept 0-9
+		{Int, "0b01a0", "0b01 a0", ""}, // 只接受 0-9
 
-		// binary floats (invalid)
+		// 二进制浮点数（无效）
 		{Float, "0b.", "0b.", "invalid radix point in binary literal"},
 		{Float, "0b.1", "0b.1", "invalid radix point in binary literal"},
 		{Float, "0b1.0", "0b1.0", "invalid radix point in binary literal"},
 		{Float, "0b1e10", "0b1e10", "'e' exponent requires decimal mantissa"},
 		{Float, "0b1P-1", "0b1P-1", "'P' exponent requires hexadecimal mantissa"},
 
-		// octals
+		// 八进制数
 		{Int, "0o0", "0o0", ""},
 		{Int, "0o1234", "0o1234", ""},
 		{Int, "0O1234", "0O1234", ""},
@@ -741,32 +741,32 @@ func TestNumbers(t *testing.T) {
 		{Int, "0o", "0o", "octal literal has no digits"},
 		{Int, "0o8123", "0o8123", "invalid digit '8' in octal literal"},
 		{Int, "0o1293", "0o1293", "invalid digit '9' in octal literal"},
-		{Int, "0o12a3", "0o12 a3", ""}, // only accept 0-9
+		{Int, "0o12a3", "0o12 a3", ""}, // 只接受 0-9
 
-		// octal floats (invalid)
+		// 八进制浮点数（无效）
 		{Float, "0o.", "0o.", "invalid radix point in octal literal"},
 		{Float, "0o.2", "0o.2", "invalid radix point in octal literal"},
 		{Float, "0o1.2", "0o1.2", "invalid radix point in octal literal"},
 		{Float, "0o1E+2", "0o1E+2", "'E' exponent requires decimal mantissa"},
 		{Float, "0o1p10", "0o1p10", "'p' exponent requires hexadecimal mantissa"},
 
-		// 0-octals
+		// 0-八进制数
 		{Int, "0", "0", ""},
 		{Int, "0123", "0123", ""},
 
 		{Int, "08123", "08123", "invalid digit '8' in octal literal"},
 		{Int, "01293", "01293", "invalid digit '9' in octal literal"},
-		{Int, "0F.", "0 F .", ""}, // only accept 0-9
+		{Int, "0F.", "0 F .", ""}, // 只接受 0-9
 		{Int, "0123F.", "0123 F .", ""},
 		{Int, "0123456x", "0123456 x", ""},
 
-		// decimals
+		// 十进制数
 		{Int, "1", "1", ""},
 		{Int, "1234", "1234", ""},
 
-		{Int, "1f", "1 f", ""}, // only accept 0-9
+		{Int, "1f", "1 f", ""}, // 只接受 0-9
 
-		// decimal floats
+		// 十进制浮点数
 		{Float, "0.", "0.", ""},
 		{Float, "123.", "123.", ""},
 		{Float, "0123.", "0123.", ""},
@@ -801,7 +801,7 @@ func TestNumbers(t *testing.T) {
 		{Float, "0p0", "0p0", "'p' exponent requires hexadecimal mantissa"},
 		{Float, "1.0P-1", "1.0P-1", "'P' exponent requires hexadecimal mantissa"},
 
-		// hexadecimals
+		// 十六进制数
 		{Int, "0x0", "0x0", ""},
 		{Int, "0x1234", "0x1234", ""},
 		{Int, "0xcafef00d", "0xcafef00d", ""},
@@ -810,7 +810,7 @@ func TestNumbers(t *testing.T) {
 		{Int, "0x", "0x", "hexadecimal literal has no digits"},
 		{Int, "0x1g", "0x1 g", ""},
 
-		// hexadecimal floats
+		// 十六进制浮点数
 		{Float, "0x0p0", "0x0p0", ""},
 		{Float, "0x12efp-123", "0x12efp-123", ""},
 		{Float, "0xABCD.p+0", "0xABCD.p+0", ""},
@@ -828,7 +828,7 @@ func TestNumbers(t *testing.T) {
 		{Float, "0x1234PAB", "0x1234P AB", "exponent has no digits"},
 		{Float, "0x1.2p1a", "0x1.2p1 a", ""},
 
-		// separators
+		// 分隔符
 		{Int, "0b_1000_0001", "0b_1000_0001", ""},
 		{Int, "0o_600", "0o_600", ""},
 		{Int, "0_466", "0_466", ""},
@@ -871,7 +871,7 @@ func TestNumbers(t *testing.T) {
 			}
 		}
 
-		// make sure we read all
+		// 确保我们读取了所有内容
 		if tok := s.Scan(); tok != EOF {
 			t.Errorf("%q: got %s; want EOF", test.src, TokenString(tok))
 		}

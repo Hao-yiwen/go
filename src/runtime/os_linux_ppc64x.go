@@ -11,9 +11,9 @@ import "internal/cpu"
 func archauxv(tag, val uintptr) {
 	switch tag {
 	case _AT_HWCAP:
-		// ppc64x doesn't have a 'cpuid' instruction
-		// equivalent and relies on HWCAP/HWCAP2 bits for
-		// hardware capabilities.
+		// ppc64x 没有 'cpuid' 指令等价物，
+		// 并依赖 HWCAP/HWCAP2 位来确定
+		// 硬件功能。
 		cpu.HWCap = uint(val)
 	case _AT_HWCAP2:
 		cpu.HWCap2 = uint(val)

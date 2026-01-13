@@ -1,6 +1,6 @@
-// Copyright 2014 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2014 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -15,15 +15,15 @@ import (
 	"testing"
 )
 
-// TestMain executes the test binary as the addr2line command if
-// GO_ADDR2LINETEST_IS_ADDR2LINE is set, and runs the tests otherwise.
+// TestMain 如果设置了 GO_ADDR2LINETEST_IS_ADDR2LINE 环境变量，
+// 则将测试二进制文件作为 addr2line 命令执行，否则运行测试。
 func TestMain(m *testing.M) {
 	if os.Getenv("GO_ADDR2LINETEST_IS_ADDR2LINE") != "" {
 		main()
 		os.Exit(0)
 	}
 
-	os.Setenv("GO_ADDR2LINETEST_IS_ADDR2LINE", "1") // Set for subprocesses to inherit.
+	os.Setenv("GO_ADDR2LINETEST_IS_ADDR2LINE", "1") // 设置环境变量供子进程继承。
 	os.Exit(m.Run())
 }
 
@@ -63,7 +63,7 @@ func runAddr2Line(t *testing.T, dbgExePath, addr string) (funcname, path, lineno
 	pathAndLineNo := f[1]
 	f = strings.Split(pathAndLineNo, ":")
 	if runtime.GOOS == "windows" && len(f) == 3 {
-		// Reattach drive letter.
+		// 重新附加驱动器盘符。
 		f = []string{f[0] + ":" + f[1], f[2]}
 	}
 	if len(f) != 2 {
@@ -84,7 +84,7 @@ func testAddr2Line(t *testing.T, dbgExePath, addr string) {
 		t.Fatalf("Stat failed: %v", err)
 	}
 
-	// Debug paths are stored slash-separated, so convert to system-native.
+	// 调试路径以斜杠分隔存储，因此需要转换为系统原生格式。
 	srcPath = filepath.FromSlash(srcPath)
 	fi2, err := os.Stat(srcPath)
 	if err != nil {
@@ -98,14 +98,14 @@ func testAddr2Line(t *testing.T, dbgExePath, addr string) {
 	}
 }
 
-// This is line 101. The test depends on that.
+// 这是第 101 行。测试依赖于此行号。
 func TestAddr2Line(t *testing.T) {
 	testenv.MustHaveGoBuild(t)
 
 	tmpDir := t.TempDir()
 
-	// Build copy of test binary with debug symbols,
-	// since the one running now may not have them.
+	// 构建一个带有调试符号的测试二进制文件副本，
+	// 因为当前运行的可能没有调试符号。
 	exepath := filepath.Join(tmpDir, "testaddr2line_test.exe")
 	out, err := testenv.Command(t, testenv.GoToolPath(t), "test", "-c", "-o", exepath, "cmd/addr2line").CombinedOutput()
 	if err != nil {

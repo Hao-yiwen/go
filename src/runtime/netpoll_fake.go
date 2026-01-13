@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Fake network poller for js/wasm.
-// Should never be used, because js/wasm network connections do not honor "SetNonblock".
+// 用于 js/wasm 的虚拟网络轮询器。
+// 不应该被使用，因为 js/wasm 网络连接不遵守 "SetNonblock"。
 
 //go:build js && wasm
 

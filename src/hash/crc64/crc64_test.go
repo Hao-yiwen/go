@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package crc64
 
@@ -20,8 +20,8 @@ type test struct {
 	outISO        uint64
 	outECMA       uint64
 	in            string
-	halfStateISO  string // ISO marshaled hash state after first half of in written, used by TestGoldenMarshal
-	halfStateECMA string // ECMA marshaled hash state after first half of in written, used by TestGoldenMarshal
+	halfStateISO  string // 写入 in 的前半部分后序列化的 ISO 哈希状态，用于 TestGoldenMarshal
+	halfStateECMA string // 写入 in 的前半部分后序列化的 ECMA 哈希状态，用于 TestGoldenMarshal
 }
 
 var golden = []test{

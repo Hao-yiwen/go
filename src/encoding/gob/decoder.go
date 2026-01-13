@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package gob
 
@@ -13,12 +13,12 @@ import (
 	"sync"
 )
 
-// tooBig provides a sanity check for sizes; used in several places. Upper limit
+// tooBig 提供a sanity check for sizes; used in several places. Upper limit
 // of is 1GB on 32-bit systems, 8GB on 64-bit, allowing room to grow a little
 // without overflow.
 const tooBig = (1 << 30) << (^uint(0) >> 62)
 
-// A Decoder manages the receipt of type and data information read from the
+// 一个Decoder manages the receipt 类型为 and data information read from the
 // remote side of a connection.  It is safe for concurrent use by multiple
 // goroutines.
 //
@@ -39,8 +39,8 @@ type Decoder struct {
 	ignoreDepth int
 }
 
-// NewDecoder returns a new decoder that reads from the [io.Reader].
-// If r does not also implement [io.ByteReader], it will be wrapped in a
+// NewDecoder 返回a new decoder that reads from the [io.Reader].
+// If r does not also implement [io.ByteReader], it 将是 wrapped in a
 // [bufio.Reader].
 func NewDecoder(r io.Reader) *Decoder {
 	dec := new(Decoder)
@@ -77,7 +77,7 @@ func (dec *Decoder) recvType(id typeId) {
 
 var errBadCount = errors.New("invalid message length")
 
-// recvMessage reads the next count-delimited item from the input. It is the converse
+// recvMessage reads the next count-delimited item from the input. It 是 converse
 // of Encoder.writeMessage. It returns false on EOF or other error reading the message.
 func (dec *Decoder) recvMessage() bool {
 	// Read a count.
@@ -139,16 +139,16 @@ func (dec *Decoder) nextUint() uint64 {
 //
 //	(TypeDefinition DelimitedTypeDefinition*)?
 //
-// and returns the type id of the next value. It returns -1 at
-// EOF.  Upon return, the remainder of dec.buf is the value to be
-// decoded. If this is an interface value, it can be ignored by
+// and 返回the type id of the next value. It returns -1 at
+// EOF.  Upon return, the remainder of dec.buf 是 value to be
+// decoded. If this 是一个n interface value, it can be ignored by
 // resetting that buffer.
 func (dec *Decoder) decodeTypeSequence(isInterface bool) typeId {
 	firstMessage := true
 	for dec.err == nil {
 		if dec.buf.Len() == 0 {
 			if !dec.recvMessage() {
-				// We can only return io.EOF if the input was empty.
+				// We can only return io.EOF 如果 input was empty.
 				// If we read one or more type spec messages,
 				// require a data item message to follow.
 				// If we hit an EOF before that, then give ErrUnexpectedEOF.
@@ -169,10 +169,10 @@ func (dec *Decoder) decodeTypeSequence(isInterface bool) typeId {
 		if dec.err != nil {
 			break
 		}
-		// When decoding an interface, after a type there may be a
+		// When decoding an interface, after a type there 可能是 a
 		// DelimitedValue still in the buffer. Skip its count.
 		// (Alternatively, the buffer is empty and the byte count
-		// will be absorbed by recvMessage.)
+		// 将是 absorbed by recvMessage.)
 		if dec.buf.Len() > 0 {
 			if !isInterface {
 				dec.err = errors.New("extra data in buffer")
@@ -187,10 +187,10 @@ func (dec *Decoder) decodeTypeSequence(isInterface bool) typeId {
 
 // Decode reads the next value from the input stream and stores
 // it in the data represented by the empty interface value.
-// If e is nil, the value will be discarded. Otherwise,
-// the value underlying e must be a pointer to the
+// If e is nil, the value 将是 discarded. Otherwise,
+// the value underlying e 必须是 a pointer to the
 // correct type for the next data item received.
-// If the input is at EOF, Decode returns [io.EOF] and
+// If the input 是一个t EOF, Decode returns [io.EOF] and
 // does not modify e.
 func (dec *Decoder) Decode(e any) error {
 	if e == nil {
@@ -207,10 +207,10 @@ func (dec *Decoder) Decode(e any) error {
 }
 
 // DecodeValue reads the next value from the input stream.
-// If v is the zero reflect.Value (v.Kind() == Invalid), DecodeValue discards the value.
+// If v 是 zero reflect.Value (v.Kind() == Invalid), DecodeValue discards the value.
 // Otherwise, it stores the value into v. In that case, v must represent
 // a non-nil pointer to data or be an assignable reflect.Value (v.CanSet())
-// If the input is at EOF, DecodeValue returns [io.EOF] and
+// If the input 是一个t EOF, DecodeValue returns [io.EOF] and
 // does not modify v.
 func (dec *Decoder) DecodeValue(v reflect.Value) error {
 	if v.IsValid() {

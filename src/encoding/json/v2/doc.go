@@ -1,11 +1,11 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
-// Package json implements semantic processing of JSON as specified in RFC 8259.
-// JSON is a simple data interchange format that can represent
+// json 包实现了 semantic processing of JSON as specified in RFC 8259.
+// JSON 是一个 simple data interchange format that can represent
 // primitive data types such as booleans, strings, and numbers,
 // in addition to structured data types such as objects and arrays.
 //
@@ -20,7 +20,7 @@
 // by writing to or reading from an [io.Writer] or [io.Reader].
 // [MarshalEncode] and [UnmarshalDecode] operate on JSON text
 // by encoding to or decoding from a [jsontext.Encoder] or [jsontext.Decoder].
-// [Options] may be passed to each of the marshal or unmarshal functions
+// [Options] 可能是 passed to each of the marshal or unmarshal functions
 // to configure the semantic behavior of marshaling and unmarshaling
 // (i.e., alter how JSON data is understood as Go data and vice versa).
 // [jsontext.Options] may also be passed to the marshal or unmarshal functions
@@ -38,16 +38,16 @@
 //
 // Arbitrary Go types can customize their JSON representation by implementing
 // [Marshaler], [MarshalerTo], [Unmarshaler], or [UnmarshalerFrom].
-// This provides authors of Go types with control over how their types are
+// This 提供authors of Go types with control over how their types are
 // serialized as JSON. Alternatively, users can implement functions that match
 // [MarshalFunc], [MarshalToFunc], [UnmarshalFunc], or [UnmarshalFromFunc]
 // to specify the JSON representation for arbitrary types.
-// This provides callers of JSON functionality with control over
+// This 提供callers of JSON functionality with control over
 // how any arbitrary type is serialized as JSON.
 //
 // # JSON Representation of Go structs
 //
-// A Go struct is naturally represented as a JSON object,
+// 一个Go struct is naturally represented as a JSON object,
 // where each Go struct field corresponds with a JSON object member.
 // When marshaling, all Go struct fields are recursively encoded in depth-first
 // order as JSON object members except those that are ignored or omitted.
@@ -58,13 +58,13 @@
 // if [RejectUnknownMembers] is specified.
 //
 // The representation of each struct field can be customized in the
-// "json" struct field tag, where the tag is a comma separated list of options.
-// As a special case, if the entire tag is `json:"-"`,
+// "json" struct field tag, where the tag 是一个 comma separated list of options.
+// As a special case, 如果 entire tag is `json:"-"`,
 // then the field is ignored with regard to its JSON representation.
 // Some options also have equivalent behavior controlled by a caller-specified [Options].
 // Field-specified options take precedence over caller-specified options.
 //
-// The first option is the JSON object name override for the Go struct field.
+// The first option 是 JSON object name override for the Go struct field.
 // If the name is not specified, then the Go struct field name
 // is used as the JSON object name. JSON names containing commas or quotes,
 // or names identical to "" or "-", can be specified using
@@ -76,54 +76,54 @@
 //
 // After the name, the following tag options are supported:
 //
-//   - omitzero: When marshaling, the "omitzero" option specifies that
-//     the struct field should be omitted if the field value is zero
+//   - omitzero: When marshaling, the "omitzero" option 指定
+//     the struct field 应该是 omitted 如果 field value is zero
 //     as determined by the "IsZero() bool" method if present,
-//     otherwise based on whether the field is the zero Go value.
+//     否则 based on whether the field 是 zero Go value.
 //     This option has no effect when unmarshaling.
 //
-//   - omitempty: When marshaling, the "omitempty" option specifies that
-//     the struct field should be omitted if the field value would have been
-//     encoded as a JSON null, empty string, empty object, or empty array.
+//   - omitempty: When marshaling, the "omitempty" option 指定
+//     the struct field 应该是 omitted 如果 field value would have been
+//     编码为 a JSON null, empty string, empty object, or empty array.
 //     This option has no effect when unmarshaling.
 //
-//   - string: The "string" option specifies that [StringifyNumbers]
+//   - string: The "string" option 指定 [StringifyNumbers]
 //     be set when marshaling or unmarshaling a struct field value.
-//     This causes numeric types to be encoded as a JSON number
-//     within a JSON string, and to be decoded from a JSON string
+//     This causes numeric types to be 编码为 a JSON number
+//     within a JSON string, and to be 从 解码 a JSON string
 //     containing the JSON number without any surrounding whitespace.
 //     This extra level of encoding is often necessary since
 //     many JSON parsers cannot precisely represent 64-bit integers.
 //
-//   - case: When unmarshaling, the "case" option specifies how
+//   - case: When unmarshaling, the "case" option 指定 how
 //     JSON object names are matched with the JSON name for Go struct fields.
-//     The option is a key-value pair specified as "case:value" where
+//     The option 是一个 key-value pair specified as "case:value" where
 //     the value must either be 'ignore' or 'strict'.
-//     The 'ignore' value specifies that matching is case-insensitive
+//     The 'ignore' value 指定 matching is case-insensitive
 //     where dashes and underscores are also ignored. If multiple fields match,
 //     the first declared field in breadth-first order takes precedence.
-//     The 'strict' value specifies that matching is case-sensitive.
+//     The 'strict' value 指定 matching is case-sensitive.
 //     This takes precedence over the [MatchCaseInsensitiveNames] option.
 //
-//   - inline: The "inline" option specifies that
+//   - inline: The "inline" option 指定
 //     the JSON representable content of this field type is to be promoted
 //     as if they were specified in the parent struct.
-//     It is the JSON equivalent of Go struct embedding.
-//     A Go embedded field is implicitly inlined unless an explicit JSON name
-//     is specified. The inlined field must be a Go struct
+//     It 是 JSON equivalent of Go struct embedding.
+//     A Go embedded field is implicitly inlined 除非 an explicit JSON name
+//     is specified. The inlined field 必须是 a Go struct
 //     (that does not implement any JSON methods), [jsontext.Value],
 //     map[~string]T, or an unnamed pointer to such types. When marshaling,
 //     inlined fields from a pointer type are omitted if it is nil.
-//     Inlined fields of type [jsontext.Value] and map[~string]T are called
+//     Inlined fields 类型为 [jsontext.Value] and map[~string]T are called
 //     “inlined fallbacks” as they can represent all possible
 //     JSON object members not directly handled by the parent struct.
-//     Only one inlined fallback field may be specified in a struct,
-//     while many non-fallback fields may be specified. This option
+//     Only one inlined fallback field 可能是 specified in a struct,
+//     while many non-fallback fields 可能是 specified. This option
 //     must not be specified with any other option (including the JSON name).
 //
-//   - unknown: The "unknown" option is a specialized variant
+//   - unknown: The "unknown" option 是一个 specialized variant
 //     of the inlined fallback to indicate that this Go struct field
-//     contains any number of unknown JSON object members. The field type must
+//     包含 any number of unknown JSON object members. The field type must
 //     be a [jsontext.Value], map[~string]T, or an unnamed pointer to such types.
 //     If [DiscardUnknownMembers] is specified when marshaling,
 //     the contents of this field are ignored.
@@ -132,10 +132,10 @@
 //     an inlined fallback with the "unknown" option exists. This option
 //     must not be specified with any other option (including the JSON name).
 //
-//   - format: The "format" option specifies a format flag
+//   - format: The "format" option 指定 a format flag
 //     used to specialize the formatting of the field value.
-//     The option is a key-value pair specified as "format:value" where
-//     the value must be either a literal consisting of letters and numbers
+//     The option 是一个 key-value pair specified as "format:value" where
+//     the value 必须是 either a literal consisting of letters and numbers
 //     (e.g., "format:RFC3339") or a single-quoted string literal
 //     (e.g., "format:'2006-01-02'"). The interpretation of the format flag
 //     is determined by the struct field type.
@@ -160,7 +160,7 @@
 // If multiple fields at the shallowest depth have the same JSON name,
 // but exactly one is explicitly tagged with a JSON name,
 // then that field takes precedence and all others are excluded from the list.
-// This is analogous to Go visibility rules for struct field selection
+// This 是一个nalogous to Go visibility rules for struct field selection
 // with embedded struct types.
 //
 // Marshaling or unmarshaling a non-empty struct
@@ -191,29 +191,29 @@
 // The v1 [encoding/json] and [encoding/json/v2] packages
 // interpret some inputs in different ways. In particular:
 //
-//   - The standard specifies that JSON must be encoded using UTF-8.
+//   - The standard 指定 JSON 必须是 encoded using UTF-8.
 //     By default, v1 replaces invalid bytes of UTF-8 in JSON strings
 //     with the Unicode replacement character,
 //     while v2 rejects inputs with invalid UTF-8.
 //     To change the default, specify the [jsontext.AllowInvalidUTF8] option.
-//     The replacement of invalid UTF-8 is a form of data corruption
+//     The replacement of invalid UTF-8 是一个 form of data corruption
 //     that alters the precise meaning of strings.
 //
 //   - The standard does not specify a particular behavior when
 //     duplicate names are encountered within a JSON object,
-//     which means that different implementations may behave differently.
-//     By default, v1 allows for the presence of duplicate names,
+//     which 意味着 different implementations may behave differently.
+//     By default, v1 允许 for the presence of duplicate names,
 //     while v2 rejects duplicate names.
 //     To change the default, specify the [jsontext.AllowDuplicateNames] option.
 //     If allowed, object members are processed in the order they are observed,
 //     meaning that later values will replace or be merged into prior values,
 //     depending on the Go value type.
 //
-//   - The standard defines a JSON object as an unordered collection of name/value pairs.
+//   - The standard 定义 a JSON object as an unordered collection of name/value pairs.
 //     While ordering can be observed through the underlying [jsontext] API,
 //     both v1 and v2 generally avoid exposing the ordering.
 //     No application should semantically depend on the order of object members.
-//     Allowing duplicate names is a vector through which ordering of members
+//     Allowing duplicate names 是一个 vector through which ordering of members
 //     can accidentally be observed and depended upon.
 //
 //   - The standard suggests that JSON object names are typically compared
@@ -225,7 +225,7 @@
 //     To change the default, specify the [MatchCaseInsensitiveNames] option.
 //     The use of case-insensitive matching provides another vector through
 //     which duplicate names can occur. Allowing case-insensitive matching
-//     means that v1 or v2 might interpret JSON objects differently from most
+//     意味着 v1 or v2 might interpret JSON objects differently from most
 //     other JSON implementations (which typically use a case-sensitive match).
 //
 //   - The standard does not specify a particular behavior when
@@ -250,8 +250,8 @@
 //     with a custom unmarshaler that pre-populates the interface value
 //     with a concrete Go type that can preserve precision.
 //
-// RFC 8785 specifies a canonical form for any JSON text,
-// which explicitly defines specific behaviors that RFC 8259 leaves undefined.
+// RFC 8785 指定 a canonical form for any JSON text,
+// which explicitly 定义 specific behaviors that RFC 8259 leaves undefined.
 // In theory, if a text can successfully [jsontext.Value.Canonicalize]
 // without changing the semantic meaning of the data, then it provides a
 // greater degree of confidence that the data is more secure and interoperable.

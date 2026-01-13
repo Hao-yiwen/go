@@ -1,6 +1,6 @@
-// Copyright 2019 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2019 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
@@ -11,7 +11,7 @@ func zero(x uint64) uint64 {
 		return 1
 	}
 	return 0
-	// branchless:
+	// 无分支版本：
 	// return ((x>>1 | x&1) - 1) >> 63
 }
 
@@ -20,7 +20,7 @@ func nonzero(x uint64) uint64 {
 		return 1
 	}
 	return 0
-	// branchless:
+	// 无分支版本：
 	// return 1 - ((x>>1|x&1)-1)>>63
 }
 
@@ -36,15 +36,13 @@ func shr(u1, u2 uint64, n uint) (r1, r2 uint64) {
 	return
 }
 
-// shrcompress compresses the bottom n+1 bits of the two-word
-// value into a single bit. the result is equal to the value
-// shifted to the right by n, except the result's 0th bit is
-// set to the bitwise OR of the bottom n+1 bits.
+// shrcompress 将双字值的低 n+1 位压缩为单个位。
+// 结果等于值右移 n 位，但结果的第 0 位
+// 设置为低 n+1 位的按位或。
 func shrcompress(u1, u2 uint64, n uint) (r1, r2 uint64) {
-	// TODO: Performance here is really sensitive to the
-	// order/placement of these branches. n == 0 is common
-	// enough to be in the fast path. Perhaps more measurement
-	// needs to be done to find the optimal order/placement?
+	// TODO: 这里的性能对这些分支的顺序/位置非常敏感。
+	// n == 0 足够常见，应该在快速路径中。
+	// 也许需要进行更多测量来找到最佳顺序/位置？
 	switch {
 	case n == 0:
 		return u1, u2
@@ -70,94 +68,94 @@ func lz(u1, u2 uint64) (l int32) {
 	return l
 }
 
-// split splits b into sign, biased exponent, and mantissa.
-// It adds the implicit 1 bit to the mantissa for normal values,
-// and normalizes subnormal values.
+// split 将 b 分解为符号、带偏置的指数和尾数。
+// 它为正规值向尾数添加隐含的 1 位，
+// 并规范化次正规值。
 func split(b uint64) (sign uint32, exp int32, mantissa uint64) {
 	sign = uint32(b >> 63)
 	exp = int32(b>>52) & mask
 	mantissa = b & fracMask
 
 	if exp == 0 {
-		// Normalize value if subnormal.
+		// 如果是次正规数，则规范化值。
 		shift := uint(bits.LeadingZeros64(mantissa) - 11)
 		mantissa <<= shift
 		exp = 1 - int32(shift)
 	} else {
-		// Add implicit 1 bit
+		// 添加隐含的 1 位
 		mantissa |= 1 << 52
 	}
 	return
 }
 
-// FMA returns x * y + z, computed with only one rounding.
-// (That is, FMA returns the fused multiply-add of x, y, and z.)
+// FMA 返回 x * y + z，仅进行一次舍入计算。
+// （即 FMA 返回 x、y 和 z 的融合乘加结果。）
 func FMA(x, y, z float64) float64 {
 	bx, by, bz := Float64bits(x), Float64bits(y), Float64bits(z)
 
-	// Inf or NaN or zero involved. At most one rounding will occur.
+	// 涉及 Inf 或 NaN 或零。最多发生一次舍入。
 	if x == 0.0 || y == 0.0 || bx&uvinf == uvinf || by&uvinf == uvinf {
 		return x*y + z
 	}
-	// Handle z == 0.0 separately.
-	// Adding zero usually does not change the original value.
-	// However, there is an exception with negative zero. (e.g. (-0) + (+0) = (+0))
-	// This applies when x * y is negative and underflows.
+	// 单独处理 z == 0.0。
+	// 加零通常不会改变原始值。
+	// 但是，负零是个例外。（例如 (-0) + (+0) = (+0)）
+	// 这适用于 x * y 为负且下溢的情况。
 	if z == 0.0 {
 		return x * y
 	}
-	// Handle non-finite z separately. Evaluating x*y+z where
-	// x and y are finite, but z is infinite, should always result in z.
+	// 单独处理非有限的 z。计算 x*y+z 时，
+	// 如果 x 和 y 是有限的，但 z 是无穷大，结果应始终为 z。
 	if bz&uvinf == uvinf {
 		return z
 	}
 
-	// Inputs are (sub)normal.
-	// Split x, y, z into sign, exponent, mantissa.
+	// 输入是（次）正规数。
+	// 将 x、y、z 分解为符号、指数、尾数。
 	xs, xe, xm := split(bx)
 	ys, ye, ym := split(by)
 	zs, ze, zm := split(bz)
 
-	// Compute product p = x*y as sign, exponent, two-word mantissa.
-	// Start with exponent. "is normal" bit isn't subtracted yet.
+	// 计算乘积 p = x*y，表示为符号、指数、双字尾数。
+	// 从指数开始。"是正规数" 位尚未减去。
 	pe := xe + ye - bias + 1
 
-	// pm1:pm2 is the double-word mantissa for the product p.
-	// Shift left to leave top bit in product. Effectively
-	// shifts the 106-bit product to the left by 21.
+	// pm1:pm2 是乘积 p 的双字尾数。
+	// 左移以在乘积中保留最高位。实际上
+	// 将 106 位乘积左移 21 位。
 	pm1, pm2 := bits.Mul64(xm<<10, ym<<11)
 	zm1, zm2 := zm<<10, uint64(0)
-	ps := xs ^ ys // product sign
+	ps := xs ^ ys // 乘积符号
 
-	// normalize to 62nd bit
+	// 规范化到第 62 位
 	is62zero := uint((^pm1 >> 62) & 1)
 	pm1, pm2 = shl(pm1, pm2, is62zero)
 	pe -= int32(is62zero)
 
-	// Swap addition operands so |p| >= |z|
+	// 交换加法操作数使 |p| >= |z|
 	if pe < ze || pe == ze && pm1 < zm1 {
 		ps, pe, pm1, pm2, zs, ze, zm1, zm2 = zs, ze, zm1, zm2, ps, pe, pm1, pm2
 	}
 
-	// Special case: if p == -z the result is always +0 since neither operand is zero.
+	// 特殊情况：如果 p == -z，由于两个操作数都不为零，结果始终为 +0。
 	if ps != zs && pe == ze && pm1 == zm1 && pm2 == zm2 {
 		return 0
 	}
 
-	// Align significands
+	// 对齐有效数字
 	zm1, zm2 = shrcompress(zm1, zm2, uint(pe-ze))
 
-	// Compute resulting significands, normalizing if necessary.
+	// 计算结果有效数字，必要时规范化。
 	var m, c uint64
 	if ps == zs {
-		// Adding (pm1:pm2) + (zm1:zm2)
+		// 加法 (pm1:pm2) + (zm1:zm2)
 		pm2, c = bits.Add64(pm2, zm2, 0)
 		pm1, _ = bits.Add64(pm1, zm1, c)
 		pe -= int32(^pm1 >> 63)
 		pm1, m = shrcompress(pm1, pm2, uint(64+pm1>>63))
 	} else {
-		// Subtracting (pm1:pm2) - (zm1:zm2)
-		// TODO: should we special-case cancellation?
+		// 减法 (pm1:pm2) - (zm1:zm2)
+		// TODO: 我们应该特殊处理抵消情况吗？
 		pm2, c = bits.Sub64(pm2, zm2, 0)
 		pm1, _ = bits.Sub64(pm1, zm1, c)
 		nz := lz(pm1, pm2)
@@ -166,9 +164,9 @@ func FMA(x, y, z float64) float64 {
 		m |= nonzero(pm2)
 	}
 
-	// Round and break ties to even
+	// 舍入并将平局舍入到偶数
 	if pe > 1022+bias || pe == 1022+bias && (m+1<<9)>>63 == 1 {
-		// rounded value overflows exponent range
+		// 舍入后的值溢出指数范围
 		return Float64frombits(uint64(ps)<<63 | uvinf)
 	}
 	if pe < 0 {

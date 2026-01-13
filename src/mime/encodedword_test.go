@@ -1,6 +1,6 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2015 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package mime
 
@@ -124,7 +124,7 @@ func TestDecodeHeader(t *testing.T) {
 		{"=?UTF-8?Q?A=B?=", "=?UTF-8?Q?A=B?="},
 		{"=?UTF-8?Q?=A?=", "=?UTF-8?Q?=A?="},
 		{"=?UTF-8?A?A?=", "=?UTF-8?A?A?="},
-		// Incomplete words
+		// 不完整的编码字
 		{"=?", "=?"},
 		{"=?UTF-8?", "=?UTF-8?"},
 		{"=?UTF-8?=", "=?UTF-8?="},
@@ -133,7 +133,7 @@ func TestDecodeHeader(t *testing.T) {
 		{"=?UTF-8?Q?=", "=?UTF-8?Q?="},
 		{"=?UTF-8?Q?A", "=?UTF-8?Q?A"},
 		{"=?UTF-8?Q?A?", "=?UTF-8?Q?A?"},
-		// Tests from RFC 2047
+		// 来自 RFC 2047 的测试用例
 		{"=?ISO-8859-1?Q?a?=", "a"},
 		{"=?ISO-8859-1?Q?a?= b", "a b"},
 		{"=?ISO-8859-1?Q?a?= =?ISO-8859-1?Q?b?=", "ab"},

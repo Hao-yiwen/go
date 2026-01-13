@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build !android && cgo && !netgo
 
@@ -11,10 +11,8 @@ package net
 */
 import "C"
 
-// NOTE(rsc): In theory there are approximately balanced
-// arguments for and against including AI_ADDRCONFIG
-// in the flags (it includes IPv4 results only on IPv4 systems,
-// and similarly for IPv6), but in practice setting it causes
-// getaddrinfo to return the wrong canonical name on Linux.
-// So definitely leave it out.
+// 注意(rsc): 理论上，在标志中包含或不包含 AI_ADDRCONFIG
+// 的论据大致平衡（它在 IPv4 系统上只包含 IPv4 结果，
+// IPv6 同理），但实际上设置它会导致 getaddrinfo 在 Linux 上
+// 返回错误的规范名称。所以绝对要排除它。
 const cgoAddrInfoFlags = C.AI_CANONNAME | C.AI_V4MAPPED | C.AI_ALL

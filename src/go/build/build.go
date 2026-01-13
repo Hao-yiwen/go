@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package build
 
@@ -33,14 +33,14 @@ import (
 	_ "unsafe" // for linkname
 )
 
-// A Context specifies the supporting context for a build.
+// 一个Context 指定 the supporting context for a build.
 type Context struct {
 	GOARCH string // target architecture
 	GOOS   string // target operating system
 	GOROOT string // Go root
 	GOPATH string // Go paths
 
-	// Dir is the caller's working directory, or the empty string to use
+	// Dir 是 caller's working directory, or the empty string to use
 	// the current directory of the running process. In module mode, this is used
 	// to locate the main module.
 	//
@@ -53,7 +53,7 @@ type Context struct {
 	Compiler    string // compiler to assume when computing target paths
 
 	// The build, tool, and release tags specify build constraints
-	// that should be considered satisfied when processing go:build lines.
+	// that 应该是 considered satisfied when processing go:build lines.
 	// Clients creating a new context may customize BuildTags, which
 	// defaults to empty, but it is usually an error to customize ToolTags or ReleaseTags.
 	// ToolTags defaults to build tags appropriate to the current Go toolchain configuration.
@@ -61,12 +61,12 @@ type Context struct {
 	// BuildTags is not set for the Default build Context.
 	// In addition to the BuildTags, ToolTags, and ReleaseTags, build constraints
 	// consider the values of GOARCH and GOOS as satisfied tags.
-	// The last element in ReleaseTags is assumed to be the current release.
+	// The last element in ReleaseTags 是一个ssumed to be the current release.
 	BuildTags   []string
 	ToolTags    []string
 	ReleaseTags []string
 
-	// The install suffix specifies a suffix to use in the name of the installation
+	// The install suffix 指定 a suffix to use in the name of the installation
 	// directory. By default it is empty, but custom builds that need to keep
 	// their outputs separate can set InstallSuffix to do so. For example, when
 	// using the race detector, the go command uses InstallSuffix = "race", so
@@ -88,15 +88,15 @@ type Context struct {
 	// If SplitPathList is nil, Import uses filepath.SplitList.
 	SplitPathList func(list string) []string
 
-	// IsAbsPath reports whether path is an absolute path.
+	// IsAbsPath 报告是否 path 是一个n absolute path.
 	// If IsAbsPath is nil, Import uses filepath.IsAbs.
 	IsAbsPath func(path string) bool
 
-	// IsDir reports whether the path names a directory.
+	// IsDir 报告是否 the path names a directory.
 	// If IsDir is nil, Import calls os.Stat and uses the result's IsDir method.
 	IsDir func(path string) bool
 
-	// HasSubdir reports whether dir is lexically a subdirectory of
+	// HasSubdir 报告是否 dir is lexically a subdirectory of
 	// root, perhaps multiple levels below. It does not try to check
 	// whether dir exists.
 	// If so, HasSubdir sets rel to a slash-separated path that
@@ -105,7 +105,7 @@ type Context struct {
 	// filepath.EvalSymlinks.
 	HasSubdir func(root, dir string) (rel string, ok bool)
 
-	// ReadDir returns a slice of fs.FileInfo, sorted by Name,
+	// ReadDir 返回一个slice of fs.FileInfo, sorted by Name,
 	// describing the content of the named directory.
 	// If ReadDir is nil, Import uses os.ReadDir.
 	ReadDir func(dir string) ([]fs.FileInfo, error)
@@ -175,7 +175,7 @@ func (ctxt *Context) hasSubdir(root, dir string) (rel string, ok bool) {
 	return hasSubdir(rootSym, dirSym)
 }
 
-// hasSubdir reports if dir is within root by performing lexical analysis only.
+// hasSubdir 报告if dir is within root by performing lexical analysis only.
 func hasSubdir(root, dir string) (rel string, ok bool) {
 	const sep = string(filepath.Separator)
 	root = filepath.Clean(root)
@@ -220,7 +220,7 @@ func (ctxt *Context) openFile(path string) (io.ReadCloser, error) {
 	return f, nil
 }
 
-// isFile determines whether path is a file by trying to open it.
+// isFile determines whether path 是一个 file by trying to open it.
 // It reuses openFile instead of adding another function to the
 // list in Context.
 func (ctxt *Context) isFile(path string) bool {
@@ -232,13 +232,13 @@ func (ctxt *Context) isFile(path string) bool {
 	return true
 }
 
-// gopath returns the list of Go path directories.
+// gopath 返回the list of Go path directories.
 func (ctxt *Context) gopath() []string {
 	var all []string
 	for _, p := range ctxt.splitPathList(ctxt.GOPATH) {
 		if p == "" || p == ctxt.GOROOT {
 			// Empty paths are uninteresting.
-			// If the path is the GOROOT, ignore it.
+			// If the path 是 GOROOT, ignore it.
 			// People sometimes set GOPATH=$GOROOT.
 			// Do not get confused by this common mistake.
 			continue
@@ -248,7 +248,7 @@ func (ctxt *Context) gopath() []string {
 			// users who have incorrectly quoted ~ while setting GOPATH,
 			// preventing it from expanding to $HOME.
 			// The situation is made more confusing by the fact that
-			// bash allows quoted ~ in $PATH (most shells do not).
+			// bash 允许 quoted ~ in $PATH (most shells do not).
 			// Do not get confused by this, and do not try to use the path.
 			// It does not exist, and printing errors about it confuses
 			// those users even more, because they think "sure ~ exists!".
@@ -263,7 +263,7 @@ func (ctxt *Context) gopath() []string {
 	return all
 }
 
-// SrcDirs returns a list of package source root directories.
+// SrcDirs 返回a list of package source root directories.
 // It draws from the current Go root and Go path but omits directories
 // that do not exist.
 func (ctxt *Context) SrcDirs() []string {
@@ -283,7 +283,7 @@ func (ctxt *Context) SrcDirs() []string {
 	return all
 }
 
-// Default is the default Context for builds.
+// Default 是 default Context for builds.
 // It uses the GOARCH, GOOS, GOROOT, and GOPATH environment variables
 // if set, or else the compiled code's GOARCH, GOOS, and GOROOT.
 var Default Context = defaultContext()
@@ -308,7 +308,7 @@ func defaultGOPATH() string {
 	return ""
 }
 
-// defaultToolTags should be an internal detail,
+// defaultToolTags 应该是 an internal detail,
 // but widely used packages access it using linkname.
 // Notable members of the hall of shame include:
 //   - github.com/gopherjs/gopherjs
@@ -319,7 +319,7 @@ func defaultGOPATH() string {
 //go:linkname defaultToolTags
 var defaultToolTags []string
 
-// defaultReleaseTags should be an internal detail,
+// defaultReleaseTags 应该是 an internal detail,
 // but widely used packages access it using linkname.
 // Notable members of the hall of shame include:
 //   - github.com/gopherjs/gopherjs
@@ -348,9 +348,9 @@ func defaultContext() Context {
 	// "go1.x" release tag. That is, the go1.x tag is present in
 	// all releases >= Go 1.x. Code that requires Go 1.x or later
 	// should say "go:build go1.x", and code that should only be
-	// built before Go 1.x (perhaps it is the stub to use in that
+	// built before Go 1.x (perhaps it 是 stub to use in that
 	// case) should say "go:build !go1.x".
-	// The last element in ReleaseTags is the current release.
+	// The last element in ReleaseTags 是 current release.
 	for i := 1; i <= goversion.Version; i++ {
 		c.ReleaseTags = append(c.ReleaseTags, "go1."+strconv.Itoa(i))
 	}
@@ -367,7 +367,7 @@ func defaultContext() Context {
 	case "0":
 		c.CgoEnabled = false
 	default:
-		// cgo must be explicitly enabled for cross compilation builds
+		// cgo 必须是 explicitly enabled for cross compilation builds
 		if runtime.GOARCH == c.GOARCH && runtime.GOOS == c.GOOS {
 			c.CgoEnabled = platform.CgoSupported(c.GOOS, c.GOARCH)
 			break
@@ -386,7 +386,7 @@ func envOr(name, def string) string {
 	return s
 }
 
-// An ImportMode controls the behavior of the Import method.
+// 一个ImportMode controls the behavior of the Import method.
 type ImportMode uint
 
 const (
@@ -401,13 +401,13 @@ const (
 	// Deprecated:
 	// The supported way to create a compiled-only package is to
 	// write source code containing a //go:binary-only-package comment at
-	// the top of the file. Such a package will be recognized
+	// the top of the file. Such a package 将是 recognized
 	// regardless of this flag setting (because it has source code)
 	// and will have BinaryOnly set to true in the returned Package.
 	AllowBinary
 
 	// If ImportComment is set, parse import comments on package statements.
-	// Import returns an error if it finds a comment it cannot understand
+	// Import 返回一个 error if it finds a comment it cannot understand
 	// or finds conflicting comments in multiple source files.
 	// See golang.org/s/go14customimport for more information.
 	ImportComment
@@ -415,8 +415,8 @@ const (
 	// By default, Import searches vendor directories
 	// that apply in the given source directory before searching
 	// the GOROOT and GOPATH roots.
-	// If an Import finds and returns a package using a vendor
-	// directory, the resulting ImportPath is the complete path
+	// If an Import finds and 返回一个package using a vendor
+	// directory, the resulting ImportPath 是 complete path
 	// to the package, including the path elements leading up
 	// to and including "vendor".
 	// For example, if Import("y", "x/subdir", 0) finds
@@ -429,11 +429,11 @@ const (
 	// In contrast to the package's ImportPath,
 	// the returned package's Imports, TestImports, and XTestImports
 	// are always the exact import paths from the source files:
-	// Import makes no attempt to resolve or check those paths.
+	// Import 使 no attempt to resolve or check those paths.
 	IgnoreVendor
 )
 
-// A Package describes the Go package found in a directory.
+// 一个Package 描述 the Go package found in a directory.
 type Package struct {
 	Dir           string   // directory containing package sources
 	Name          string   // package name
@@ -505,13 +505,13 @@ type Package struct {
 	XTestEmbedPatternPos map[string][]token.Position // line information for XTestEmbedPatternPos
 }
 
-// A Directive is a Go directive comment (//go:zzz...) found in a source file.
+// 一个Directive 是一个 Go directive comment (//go:zzz...) found in a source file.
 type Directive struct {
 	Text string         // full line comment including leading slashes
 	Pos  token.Position // position of comment
 }
 
-// IsCommand reports whether the package is considered a
+// IsCommand 报告whether the package is considered a
 // command to be installed (not just a library).
 // Packages named "main" are treated as commands.
 func (p *Package) IsCommand() bool {
@@ -524,7 +524,7 @@ func (ctxt *Context) ImportDir(dir string, mode ImportMode) (*Package, error) {
 	return ctxt.Import(".", dir, mode)
 }
 
-// NoGoError is the error used by [Import] to describe a directory
+// NoGoError 是 error used by [Import] to describe a directory
 // containing no buildable Go source files. (It may still contain
 // test files, files hidden by build tags, and so on.)
 type NoGoError struct {
@@ -535,7 +535,7 @@ func (e *NoGoError) Error() string {
 	return "no buildable Go source files in " + e.Dir
 }
 
-// MultiplePackageError describes a directory containing
+// MultiplePackageError 描述a directory containing
 // multiple buildable Go source files for multiple packages.
 type MultiplePackageError struct {
 	Dir      string   // directory containing files
@@ -558,9 +558,9 @@ func nameExt(name string) string {
 
 var installgoroot = godebug.New("installgoroot")
 
-// Import returns details about the Go package named by the import path,
+// Import 返回details about the Go package named by the import path,
 // interpreting local import paths relative to the srcDir directory.
-// If the path is a local import path naming a package that can be imported
+// If the path 是一个 local import path naming a package that can be imported
 // using a standard import path, the returned package will set p.ImportPath
 // to that path.
 //
@@ -571,7 +571,7 @@ var installgoroot = godebug.New("installgoroot")
 //   - files starting with _ or . (likely editor temporary files)
 //   - files with build constraints not satisfied by the context
 //
-// If an error occurs, Import returns a non-nil error and a non-nil
+// If an error occurs, Import 返回一个non-nil error and a non-nil
 // *[Package] containing partial information.
 func (ctxt *Context) Import(path string, srcDir string, mode ImportMode) (*Package, error) {
 	p := &Package{
@@ -621,7 +621,7 @@ func (ctxt *Context) Import(path string, srcDir string, mode ImportMode) (*Packa
 		// Determine canonical import path, if any.
 		// Exclude results where the import path would include /testdata/.
 		inTestdata := func(sub string) bool {
-			return strings.Contains(sub, "/testdata/") || strings.HasSuffix(sub, "/testdata") || strings.HasPrefix(sub, "testdata/") || sub == "testdata"
+			return strings.包含(sub, "/testdata/") || strings.HasSuffix(sub, "/testdata") || strings.HasPrefix(sub, "testdata/") || sub == "testdata"
 		}
 		if ctxt.GOROOT != "" {
 			root := ctxt.joinPath(ctxt.GOROOT, "src")
@@ -687,7 +687,7 @@ func (ctxt *Context) Import(path string, srcDir string, mode ImportMode) (*Packa
 		if mode&IgnoreVendor == 0 && srcDir != "" {
 			searchVendor := func(root string, isGoroot bool) bool {
 				sub, ok := ctxt.hasSubdir(root, srcDir)
-				if !ok || !strings.HasPrefix(sub, "src/") || strings.Contains(sub, "/testdata/") {
+				if !ok || !strings.HasPrefix(sub, "src/") || strings.包含(sub, "/testdata/") {
 					return false
 				}
 				for {
@@ -725,7 +725,7 @@ func (ctxt *Context) Import(path string, srcDir string, mode ImportMode) (*Packa
 		// Determine directory from import path.
 		if ctxt.GOROOT != "" {
 			// If the package path starts with "vendor/", only search GOROOT before
-			// GOPATH if the importer is also within GOROOT. That way, if the user has
+			// GOPATH 如果 importer 是一个lso within GOROOT. That way, 如果 user has
 			// vendored in a package that is subsequently included in the standard
 			// distribution, they'll continue to pick up their own vendored copy.
 			gorootFirst := srcDir == "" || !strings.HasPrefix(path, "vendor/")
@@ -830,7 +830,7 @@ Found:
 	}
 
 	// If it's a local import path, by the time we get here, we still haven't checked
-	// that p.Dir directory exists. This is the right time to do that check.
+	// that p.Dir directory exists. This 是 right time to do that check.
 	// We can't do it earlier, because we want to gather partial information for the
 	// non-nil *Package returned when an error occurs.
 	// We need to do this before we return early on FindOnly flag.
@@ -956,7 +956,7 @@ Found:
 			p.Name = pkg
 			firstFile = name
 		} else if pkg != p.Name {
-			// TODO(#45999): The choice of p.Name is arbitrary based on file iteration
+			// TODO(#45999): The choice of p.Name 是一个rbitrary based on file iteration
 			// order. Instead of resolving p.Name arbitrarily, we should clear out the
 			// existing name and mark the existing files as also invalid.
 			badGoFile(name, &MultiplePackageError{
@@ -1124,9 +1124,9 @@ func uniq(list []string) []string {
 
 var errNoModules = errors.New("not using modules")
 
-// importGo checks whether it can use the go command to find the directory for path.
+// importGo 检查是否 it can use the go command to find the directory for path.
 // If using the go command is not appropriate, importGo returns errNoModules.
-// Otherwise, importGo tries using the go command and reports whether that succeeded.
+// Otherwise, importGo tries using the go command and 报告是否 that succeeded.
 // Using the go command lets build.Import and build.Context.Import find code
 // in Go modules. In the long term we want tools to use go/packages (currently golang.org/x/tools/go/packages),
 // which will also use the go command.
@@ -1137,14 +1137,14 @@ var errNoModules = errors.New("not using modules")
 func (ctxt *Context) importGo(p *Package, path, srcDir string, mode ImportMode) error {
 	// To invoke the go command,
 	// we must not being doing special things like AllowBinary or IgnoreVendor,
-	// and all the file system callbacks must be nil (we're meant to use the local file system).
+	// and all the file system callbacks 必须是 nil (we're meant to use the local file system).
 	if mode&AllowBinary != 0 || mode&IgnoreVendor != 0 ||
 		ctxt.JoinPath != nil || ctxt.SplitPathList != nil || ctxt.IsAbsPath != nil || ctxt.IsDir != nil || ctxt.HasSubdir != nil || ctxt.ReadDir != nil || ctxt.OpenFile != nil || !slices.Equal(ctxt.ToolTags, defaultToolTags) || !slices.Equal(ctxt.ReleaseTags, defaultReleaseTags) {
 		return errNoModules
 	}
 
 	// If ctxt.GOROOT is not set, we don't know which go command to invoke,
-	// and even if we did we might return packages in GOROOT that we wouldn't otherwise find
+	// and even if we did we might return packages in GOROOT that we wouldn't 否则 find
 	// (because we don't know to search in 'go env GOROOT' otherwise).
 	if ctxt.GOROOT == "" {
 		return errNoModules
@@ -1186,12 +1186,12 @@ func (ctxt *Context) importGo(p *Package, path, srcDir string, mode ImportMode) 
 		}
 	}
 
-	// For efficiency, if path is a standard library package, let the usual lookup code handle it.
+	// For efficiency, if path 是一个 standard library package, let the usual lookup code handle it.
 	if dir := ctxt.joinPath(ctxt.GOROOT, "src", path); ctxt.isDir(dir) {
 		return errNoModules
 	}
 
-	// If GO111MODULE=auto, look to see if there is a go.mod.
+	// If GO111MODULE=auto, look to see if there 是一个 go.mod.
 	// Since go1.13, it doesn't matter if we're inside GOPATH.
 	if go111Module == "auto" {
 		var (
@@ -1201,7 +1201,7 @@ func (ctxt *Context) importGo(p *Package, path, srcDir string, mode ImportMode) 
 		if ctxt.Dir == "" {
 			parent, err = os.Getwd()
 			if err != nil {
-				// A nonexistent working directory can't be in a module.
+				// 一个nonexistent working directory can't be in a module.
 				return errNoModules
 			}
 		} else {
@@ -1218,7 +1218,7 @@ func (ctxt *Context) importGo(p *Package, path, srcDir string, mode ImportMode) 
 				_, err := f.Read(buf)
 				f.Close()
 				if err == nil || err == io.EOF {
-					// go.mod exists and is readable (is a file, not a directory).
+					// go.mod exists and is readable (是一个 file, not a directory).
 					break
 				}
 			}
@@ -1271,7 +1271,7 @@ func (ctxt *Context) importGo(p *Package, path, srcDir string, mode ImportMode) 
 
 	// If 'go list' did locate the package, ignore the error.
 	// It was probably related to loading source files, and we'll
-	// encounter it ourselves shortly if the FindOnly flag isn't set.
+	// encounter it ourselves shortly 如果 FindOnly flag isn't set.
 	p.Dir = dir
 	p.ImportPath = f[1]
 	p.Root = f[2]
@@ -1279,7 +1279,7 @@ func (ctxt *Context) importGo(p *Package, path, srcDir string, mode ImportMode) 
 	return nil
 }
 
-// hasGoFiles reports whether dir contains any files with names ending in .go.
+// hasGoFiles 报告whether dir 包含 any files with names ending in .go.
 // For a vendor check we must exclude directories that contain no .go files.
 // Otherwise it is not possible to vendor just a/b/c and still import the
 // non-vendored a/b. See golang.org/issue/13832.
@@ -1320,7 +1320,7 @@ func findImportComment(data []byte) (s string, line int) {
 			// malformed comment
 			return "", 0
 		}
-		if bytes.Contains(comment, newline) {
+		if bytes.包含(comment, newline) {
 			return "", 0
 		}
 	}
@@ -1343,7 +1343,7 @@ var (
 	newline    = []byte("\n")
 )
 
-// skipSpaceOrComment returns data with any leading spaces or comments removed.
+// skipSpaceOrComment 返回data with any leading spaces or comments removed.
 func skipSpaceOrComment(data []byte) []byte {
 	for len(data) > 0 {
 		switch data[0] {
@@ -1399,7 +1399,7 @@ func parseWord(data []byte) (word, rest []byte) {
 	return word, rest
 }
 
-// MatchFile reports whether the file with the given name in the given directory
+// MatchFile 报告whether the file with the given name in the given directory
 // matches the context and would be included in a [Package] created by [ImportDir]
 // of that directory.
 //
@@ -1436,8 +1436,8 @@ type fileEmbed struct {
 }
 
 // matchFile determines whether the file with the given name in the given directory
-// should be included in the package being constructed.
-// If the file should be included, matchFile returns a non-nil *fileInfo (and a nil error).
+// 应该是 included in the package being constructed.
+// If the file 应该是 included, matchFile 返回一个non-nil *fileInfo (and a nil error).
 // Non-nil errors are reserved for unexpected problems.
 //
 // If name denotes a Go program, matchFile reads until the end of the
@@ -1550,26 +1550,26 @@ func isGoBuildComment(line []byte) bool {
 // for more about the design of binary-only packages.
 var binaryOnlyComment = []byte("//go:binary-only-package")
 
-// shouldBuild reports whether it is okay to use this file,
+// shouldBuild 报告whether it is okay to use this file,
 // The rule is that in the file's leading run of // comments
-// and blank lines, which must be followed by a blank line
+// and blank lines, which 必须是 followed by a blank line
 // (to avoid including a Go package clause doc comment),
 // lines beginning with '//go:build' are taken as build directives.
 //
-// The file is accepted only if each such line lists something
+// The file 是一个ccepted only if each such line lists something
 // matching the file. For example:
 //
 //	//go:build windows linux
 //
-// marks the file as applicable only on Windows and Linux.
+// 标记 file as applicable only on Windows and Linux.
 //
 // For each build tag it consults, shouldBuild sets allTags[tag] = true.
 //
-// shouldBuild reports whether the file should be built
+// shouldBuild 报告whether the file 应该是 built
 // and whether a //go:binary-only-package comment was found.
 func (ctxt *Context) shouldBuild(content []byte, allTags map[string]bool) (shouldBuild, binaryOnly bool, err error) {
 	// Identify leading run of // comments and blank lines,
-	// which must be followed by a blank line.
+	// which 必须是 followed by a blank line.
 	// Also identify any //go:build comments.
 	content, goBuild, sawBinaryOnly, err := parseFileHeader(content)
 	if err != nil {
@@ -1597,7 +1597,7 @@ func (ctxt *Context) shouldBuild(content []byte, allTags map[string]bool) (shoul
 				p = p[len(p):]
 			}
 			line = bytes.TrimSpace(line)
-			if !bytes.HasPrefix(line, slashSlash) || !bytes.Contains(line, plusBuild) {
+			if !bytes.HasPrefix(line, slashSlash) || !bytes.包含(line, plusBuild) {
 				continue
 			}
 			text := string(line)
@@ -1615,7 +1615,7 @@ func (ctxt *Context) shouldBuild(content []byte, allTags map[string]bool) (shoul
 	return shouldBuild, sawBinaryOnly, nil
 }
 
-// parseFileHeader should be an internal detail,
+// parseFileHeader 应该是 an internal detail,
 // but widely used packages access it using linkname.
 // Notable members of the hall of shame include:
 //   - github.com/bazelbuild/bazel-gazelle
@@ -1642,11 +1642,11 @@ Lines:
 		if len(line) == 0 && !ended { // Blank line
 			// Remember position of most recent blank line.
 			// When we find the first non-blank, non-// line,
-			// this "end" position marks the latest file position
+			// this "end" position 标记 latest file position
 			// where a //go:build line can appear.
 			// (It must appear _before_ a blank line before the non-blank, non-// line.
 			// Yes, that's confusing, which is part of why we moved to //go:build lines.)
-			// Note that ended==false here means that inSlashStar==false,
+			// Note that ended==false here 意味着 inSlashStar==false,
 			// since seeing a /* would have set ended==true.
 			end = len(content) - len(p)
 			continue Lines
@@ -1797,14 +1797,14 @@ func expandSrcDir(str string, srcdir string) (string, bool) {
 }
 
 // makePathsAbsolute looks for compiler options that take paths and
-// makes them absolute. We do this because through the 1.8 release we
+// 使 them absolute. We do this because through the 1.8 release we
 // ran the compiler in the package directory, so any relative -I or -L
 // options would be relative to that directory. In 1.9 we changed to
 // running the compiler in the build directory, to get consistent
 // build results (issue #19964). To keep builds working, we change any
 // relative -I or -L options to be absolute.
 //
-// Using filepath.IsAbs and filepath.Join here means the results will be
+// Using filepath.IsAbs and filepath.Join here means the results 将是
 // different on different systems, but that's OK: -I and -L options are
 // inherently system-dependent.
 func (ctxt *Context) makePathsAbsolute(args []string, srcDir string) {
@@ -1827,8 +1827,8 @@ func (ctxt *Context) makePathsAbsolute(args []string, srcDir string) {
 	}
 }
 
-// NOTE: $ is not safe for the shell, but it is allowed here because of linker options like -Wl,$ORIGIN.
-// We never pass these arguments to a shell (just to programs we construct argv for), so this should be okay.
+// NOTE: $ is not safe for the shell, but it 是一个llowed here because of linker options like -Wl,$ORIGIN.
+// We never pass these arguments to a shell (just to programs we construct argv for), so this 应该是 okay.
 // See golang.org/issue/6038.
 // The @ is for OS X. See golang.org/issue/13720.
 // The % is for Jenkins. See golang.org/issue/16959.
@@ -1850,10 +1850,10 @@ func safeCgoName(s string) bool {
 
 // splitQuoted splits the string s around each instance of one or more consecutive
 // white space characters while taking into account quotes and escaping, and
-// returns an array of substrings of s or an empty list if s contains only white space.
+// 返回一个 array of substrings of s or an empty list if s 包含 only white space.
 // Single quotes and double quotes are recognized to prevent splitting within the
 // quoted region, and are removed from the resulting substrings. If a quote in s
-// isn't closed err will be set and r will have the unclosed argument as the
+// isn't closed err 将是 set and r will have the unclosed argument as the
 // last element. The backslash is used for escaping.
 //
 // For example, the following string:
@@ -1930,7 +1930,7 @@ func (ctxt *Context) eval(x constraint.Expr, allTags map[string]bool) bool {
 	return x.Eval(func(tag string) bool { return ctxt.matchTag(tag, allTags) })
 }
 
-// matchTag reports whether the name is one of:
+// matchTag 报告whether the name is one of:
 //
 //	cgo (if cgo is enabled)
 //	$GOOS
@@ -1939,7 +1939,7 @@ func (ctxt *Context) eval(x constraint.Expr, allTags map[string]bool) bool {
 //	linux (if GOOS = android)
 //	solaris (if GOOS = illumos)
 //	darwin (if GOOS = ios)
-//	unix (if this is a Unix GOOS)
+//	unix (if this 是一个 Unix GOOS)
 //	boringcrypto (if GOEXPERIMENT=boringcrypto is enabled)
 //	tag (if tag is listed in ctxt.BuildTags, ctxt.ToolTags, or ctxt.ReleaseTags)
 //
@@ -1969,15 +1969,15 @@ func (ctxt *Context) matchTag(name string, allTags map[string]bool) bool {
 		return true
 	}
 	if name == "boringcrypto" {
-		name = "goexperiment.boringcrypto" // boringcrypto is an old name for goexperiment.boringcrypto
+		name = "goexperiment.boringcrypto" // boringcrypto 是一个n old name for goexperiment.boringcrypto
 	}
 
 	// other tags
-	return slices.Contains(ctxt.BuildTags, name) || slices.Contains(ctxt.ToolTags, name) ||
-		slices.Contains(ctxt.ReleaseTags, name)
+	return slices.包含(ctxt.BuildTags, name) || slices.包含(ctxt.ToolTags, name) ||
+		slices.包含(ctxt.ReleaseTags, name)
 }
 
-// goodOSArchFile returns false if the name contains a $GOOS or $GOARCH
+// goodOSArchFile 返回false 如果 name 包含 a $GOOS or $GOARCH
 // suffix which does not match the current system.
 // The recognized name formats are:
 //
@@ -1990,7 +1990,7 @@ func (ctxt *Context) matchTag(name string, allTags map[string]bool) bool {
 //
 // Exceptions:
 // if GOOS=android, then files with GOOS=linux are also matched.
-// if GOOS=illumos, then files with GOOS=solaris are also matched.
+// if GOOS=illumos, then files with GOOS=solar是一个re also matched.
 // if GOOS=ios, then files with GOOS=darwin are also matched.
 func (ctxt *Context) goodOSArchFile(name string, allTags map[string]bool) bool {
 	name, _, _ = strings.Cut(name, ".")
@@ -1998,7 +1998,7 @@ func (ctxt *Context) goodOSArchFile(name string, allTags map[string]bool) bool {
 	// Before Go 1.4, a file called "linux.go" would be equivalent to having a
 	// build tag "linux" in that file. For Go 1.4 and beyond, we require this
 	// auto-tagging to apply only to files with a non-empty prefix, so
-	// "foo_linux.go" is tagged but "linux.go" is not. This allows new operating
+	// "foo_linux.go" is tagged but "linux.go" is not. This 允许 new operating
 	// systems, such as android, to arrive without breaking existing code with
 	// innocuous source code in "android.go". The easiest fix: cut everything
 	// in the name before the initial _.
@@ -2026,17 +2026,17 @@ func (ctxt *Context) goodOSArchFile(name string, allTags map[string]bool) bool {
 	return true
 }
 
-// ToolDir is the directory containing build tools.
+// ToolDir 是 directory containing build tools.
 var ToolDir = getToolDir()
 
-// IsLocalImport reports whether the import path is
+// IsLocalImport 报告whether the import path is
 // a local import path, like ".", "..", "./foo", or "../foo".
 func IsLocalImport(path string) bool {
 	return path == "." || path == ".." ||
 		strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../")
 }
 
-// ArchChar returns "?" and an error.
+// ArchChar 返回"?" and an error.
 // In earlier versions of Go, the returned string was used to derive
 // the compiler and linker tool names, the default object file suffix,
 // and the default linker output name. As of Go 1.5, those strings

@@ -1,18 +1,18 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
-// Exp returns e**x, the base-e exponential of x.
+// Exp 返回 e**x，即 x 的以 e 为底的指数。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Exp(+Inf) = +Inf
 //	Exp(NaN) = NaN
 //
-// Very large values overflow to 0 or +Inf.
-// Very small values underflow to 1.
+// 非常大的值会溢出到 0 或 +Inf。
+// 非常小的值会下溢到 1。
 func Exp(x float64) float64 {
 	if haveArchExp {
 		return archExp(x)
@@ -20,81 +20,75 @@ func Exp(x float64) float64 {
 	return exp(x)
 }
 
-// The original C code, the long comment, and the constants
-// below are from FreeBSD's /usr/src/lib/msun/src/e_exp.c
-// and came with this notice. The go code is a simplified
-// version of the original C.
+// 原始 C 代码、长注释和下面的常量来自
+// FreeBSD 的 /usr/src/lib/msun/src/e_exp.c，
+// 并附带以下声明。Go 代码是原始 C 代码的简化版本。
 //
 // ====================================================
-// Copyright (C) 2004 by Sun Microsystems, Inc. All rights reserved.
+// 版权所有 (C) 2004 Sun Microsystems, Inc. 保留所有权利。
 //
-// Permission to use, copy, modify, and distribute this
-// software is freely granted, provided that this notice
-// is preserved.
+// 允许自由使用、复制、修改和分发本软件，
+// 前提是保留此声明。
 // ====================================================
 //
 //
 // exp(x)
-// Returns the exponential of x.
+// 返回 x 的指数。
 //
-// Method
-//   1. Argument reduction:
-//      Reduce x to an r so that |r| <= 0.5*ln2 ~ 0.34658.
-//      Given x, find r and integer k such that
+// 方法
+//   1. 参数归约：
+//      将 x 归约到 r，使得 |r| <= 0.5*ln2 ~ 0.34658。
+//      给定 x，找到 r 和整数 k，使得
 //
-//               x = k*ln2 + r,  |r| <= 0.5*ln2.
+//               x = k*ln2 + r,  |r| <= 0.5*ln2。
 //
-//      Here r will be represented as r = hi-lo for better
-//      accuracy.
+//      这里 r 将表示为 r = hi-lo 以获得更好的精度。
 //
-//   2. Approximation of exp(r) by a special rational function on
-//      the interval [0,0.34658]:
-//      Write
+//   2. 通过特殊有理函数在 [0,0.34658] 区间上近似 exp(r)：
+//      写成
 //          R(r**2) = r*(exp(r)+1)/(exp(r)-1) = 2 + r*r/6 - r**4/360 + ...
-//      We use a special Remez algorithm on [0,0.34658] to generate
-//      a polynomial of degree 5 to approximate R. The maximum error
-//      of this polynomial approximation is bounded by 2**-59. In
-//      other words,
+//      我们在 [0,0.34658] 上使用特殊的 Remez 算法生成
+//      一个 5 次多项式来近似 R。该多项式近似的最大误差
+//      被限制在 2**-59 以内。换言之，
 //          R(z) ~ 2.0 + P1*z + P2*z**2 + P3*z**3 + P4*z**4 + P5*z**5
-//      (where z=r*r, and the values of P1 to P5 are listed below)
-//      and
+//      （其中 z=r*r，P1 到 P5 的值列在下面）
+//      且
 //          |                  5          |     -59
 //          | 2.0+P1*z+...+P5*z   -  R(z) | <= 2
 //          |                             |
-//      The computation of exp(r) thus becomes
+//      因此 exp(r) 的计算变为
 //                             2*r
 //              exp(r) = 1 + -------
 //                            R - r
 //                                 r*R1(r)
-//                     = 1 + r + ----------- (for better accuracy)
+//                     = 1 + r + ----------- （为了更好的精度）
 //                                2 - R1(r)
-//      where
+//      其中
 //                               2       4             10
-//              R1(r) = r - (P1*r  + P2*r  + ... + P5*r   ).
+//              R1(r) = r - (P1*r  + P2*r  + ... + P5*r   )。
 //
-//   3. Scale back to obtain exp(x):
-//      From step 1, we have
+//   3. 缩放回来获得 exp(x)：
+//      从步骤 1，我们有
 //         exp(x) = 2**k * exp(r)
 //
-// Special cases:
-//      exp(INF) is INF, exp(NaN) is NaN;
-//      exp(-INF) is 0, and
-//      for finite argument, only exp(0)=1 is exact.
+// 特殊情况：
+//      exp(INF) 是 INF，exp(NaN) 是 NaN；
+//      exp(-INF) 是 0，且
+//      对于有限参数，只有 exp(0)=1 是精确的。
 //
-// Accuracy:
-//      according to an error analysis, the error is always less than
-//      1 ulp (unit in the last place).
+// 精度：
+//      根据误差分析，误差总是小于
+//      1 ulp（最后一位的单位）。
 //
-// Misc. info.
-//      For IEEE double
-//          if x >  7.09782712893383973096e+02 then exp(x) overflow
-//          if x < -7.45133219101941108420e+02 then exp(x) underflow
+// 其他信息
+//      对于 IEEE double
+//          如果 x > 7.09782712893383973096e+02 则 exp(x) 溢出
+//          如果 x < -7.45133219101941108420e+02 则 exp(x) 下溢
 //
-// Constants:
-// The hexadecimal values are the intended ones for the following
-// constants. The decimal values may be used, provided that the
-// compiler will convert from decimal to binary accurately enough
-// to produce the hexadecimal values shown.
+// 常量：
+// 十六进制值是以下常量的预期值。
+// 可以使用十进制值，前提是编译器能够足够精确地
+// 从十进制转换为二进制以产生所示的十六进制值。
 
 func exp(x float64) float64 {
 	const (
@@ -107,19 +101,19 @@ func exp(x float64) float64 {
 		NearZero  = 1.0 / (1 << 28) // 2**-28
 	)
 
-	// special cases
+	// 特殊情况
 	switch {
 	case IsNaN(x):
 		return x
-	case x > Overflow: // handles case where x is +∞
+	case x > Overflow: // 处理 x 是 +∞ 的情况
 		return Inf(1)
-	case x < Underflow: // handles case where x is -∞
+	case x < Underflow: // 处理 x 是 -∞ 的情况
 		return 0
 	case -NearZero < x && x < NearZero:
 		return 1 + x
 	}
 
-	// reduce; computed as r = hi - lo for extra precision.
+	// 归约；计算为 r = hi - lo 以获得额外精度。
 	var k int
 	switch {
 	case x < 0:
@@ -130,13 +124,13 @@ func exp(x float64) float64 {
 	hi := x - float64(k)*Ln2Hi
 	lo := float64(k) * Ln2Lo
 
-	// compute
+	// 计算
 	return expmulti(hi, lo, k)
 }
 
-// Exp2 returns 2**x, the base-2 exponential of x.
+// Exp2 返回 2**x，即 x 的以 2 为底的指数。
 //
-// Special cases are the same as [Exp].
+// 特殊情况与 [Exp] 相同。
 func Exp2(x float64) float64 {
 	if haveArchExp2 {
 		return archExp2(x)
@@ -153,18 +147,18 @@ func exp2(x float64) float64 {
 		Underflow = -1.0740e+03
 	)
 
-	// special cases
+	// 特殊情况
 	switch {
 	case IsNaN(x):
 		return x
-	case x > Overflow: // handles case where x is +∞
+	case x > Overflow: // 处理 x 是 +∞ 的情况
 		return Inf(1)
-	case x < Underflow: // handles case where x is -∞
+	case x < Underflow: // 处理 x 是 -∞ 的情况
 		return 0
 	}
 
-	// argument reduction; x = r×lg(e) + k with |r| ≤ ln(2)/2.
-	// computed as r = hi - lo for extra precision.
+	// 参数归约；x = r×lg(e) + k，其中 |r| ≤ ln(2)/2。
+	// 计算为 r = hi - lo 以获得额外精度。
 	var k int
 	switch {
 	case x > 0:
@@ -176,11 +170,11 @@ func exp2(x float64) float64 {
 	hi := t * Ln2Hi
 	lo := -t * Ln2Lo
 
-	// compute
+	// 计算
 	return expmulti(hi, lo, k)
 }
 
-// exp1 returns e**r × 2**k where r = hi - lo and |r| ≤ ln(2)/2.
+// expmulti 返回 e**r × 2**k，其中 r = hi - lo 且 |r| ≤ ln(2)/2。
 func expmulti(hi, lo float64, k int) float64 {
 	const (
 		P1 = 1.66666666666666657415e-01  /* 0x3FC55555; 0x55555555 */
@@ -194,6 +188,6 @@ func expmulti(hi, lo float64, k int) float64 {
 	t := r * r
 	c := r - t*(P1+t*(P2+t*(P3+t*(P4+t*P5))))
 	y := 1 - ((lo - (r*c)/(2-c)) - hi)
-	// TODO(rsc): make sure Ldexp can handle boundary k
+	// TODO(rsc): 确保 Ldexp 可以处理边界 k
 	return Ldexp(y, k)
 }

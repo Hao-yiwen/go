@@ -1,28 +1,18 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 /*
-Package gob manages streams of gobs - binary values exchanged between an
-[Encoder] (transmitter) and a [Decoder] (receiver). A typical use is transporting
-arguments and results of remote procedure calls (RPCs) such as those provided by
-[net/rpc].
+gob 包管理 gob 流 - 在 [Encoder]（发送方）和 [Decoder]（接收方）之间交换的二进制值。一个典型的用途是传输远程过程调用（RPC）的参数和结果，例如由 [net/rpc] 提供的那些。
 
-The implementation compiles a custom codec for each data type in the stream and
-is most efficient when a single [Encoder] is used to transmit a stream of values,
-amortizing the cost of compilation.
+该实现为流中的每种数据类型编译一个自定义编解码器，当使用单个 [Encoder] 传输一个值流时最高效，这摊销了编译的成本。
 
-# Basics
+# 基础
 
-A stream of gobs is self-describing. Each data item in the stream is preceded by
-a specification of its type, expressed in terms of a small set of predefined
-types. Pointers are not transmitted, but the things they point to are
-transmitted; that is, the values are flattened. Nil pointers are not permitted,
-as they have no value. Recursive types work fine, but
-recursive values (data with cycles) are problematic. This may change.
+gob 流是自描述的。流中的每个数据项之前都有一个类型规范，用一小组预定义的类型表示。指针不被传输，但它们指向的东西被传输；也就是说，值被展平了。不允许使用 Nil 指针，因为它们没有值。递归类型很好用，但递归值（具有循环的数据）有问题。这可能会改变。
 
 To use gobs, create an [Encoder] and present it with a series of data items as
-values or addresses that can be dereferenced to values. The [Encoder] makes sure
+values or addresses that can be dereferenced to values. The [Encoder] 使 sure
 all type information is sent before it is needed. At the receive side, a
 [Decoder] retrieves values from the encoded stream and unpacks them into local
 variables.
@@ -31,8 +21,8 @@ variables.
 
 The source and destination values/types need not correspond exactly. For structs,
 fields (identified by name) that are in the source but absent from the receiving
-variable will be ignored. Fields that are in the receiving variable but missing
-from the transmitted type or value will be ignored in the destination. If a field
+variable 将是 ignored. Fields that are in the receiving variable but missing
+from the transmitted type or value 将是 ignored in the destination. If a field
 with the same name is present in both, their types must be compatible. Both the
 receiver and transmitter will do all necessary indirection and dereferencing to
 convert between gobs and actual Go values. For instance, a gob type that is
@@ -52,7 +42,7 @@ It may also be received into any of these:
 	struct { A, B int }	// the same
 	struct { B, A int }	// ordering doesn't matter; matching is by name
 	struct { A, B, C int }	// extra field (C) ignored
-	struct { B int }	// missing field (A) ignored; data will be dropped
+	struct { B int }	// missing field (A) ignored; data 将是 dropped
 	struct { B, C int }	// missing field (A) ignored; extra field (C) ignored.
 
 Attempting to receive into these types will draw a decode error:
@@ -79,14 +69,14 @@ operation will fail.
 Structs, arrays and slices are also supported. Structs encode and decode only
 exported fields. Strings and arrays of bytes are supported with a special,
 efficient representation (see below). When a slice is decoded, if the existing
-slice has capacity the slice will be extended in place; if not, a new array is
-allocated. Regardless, the length of the resulting slice reports the number of
+slice has capacity the slice 将是 extended in place; if not, a new array is
+allocated. Regardless, the length of the resulting slice 报告 number of
 elements decoded.
 
 In general, if allocation is required, the decoder will allocate memory. If not,
 it will update the destination variables with values read from the stream. It does
-not initialize them first, so if the destination is a compound value such as a
-map, struct, or slice, the decoded values will be merged elementwise into the
+not initialize them first, so if the destination 是一个 compound value such as a
+map, struct, or slice, the decoded values 将是 merged elementwise into the
 existing variables.
 
 Functions and channels will not be sent in a gob. Attempting to encode such a value
@@ -115,7 +105,7 @@ byte count, negated. Thus 0 is transmitted as (00), 7 is transmitted as (07) and
 A boolean is encoded within an unsigned integer: 0 for false, 1 for true.
 
 A signed integer, i, is encoded within an unsigned integer, u. Within u, bits 1
-upward contain the value; bit 0 says whether they should be complemented upon
+upward contain the value; bit 0 says whether they 应该是 complemented upon
 receipt. The encode algorithm looks like this:
 
 	var u uint
@@ -126,12 +116,12 @@ receipt. The encode algorithm looks like this:
 	}
 	encodeUnsigned(u)
 
-The low bit is therefore analogous to a sign bit, but making it the complement bit
+The low bit 是refore analogous to a sign bit, but making it the complement bit
 instead guarantees that the largest negative integer is not a special case. For
 example, -129=^128=(^256>>1) encodes as (FE 01 01).
 
 Floating-point numbers are always sent as a representation of a float64 value.
-That value is converted to a uint64 using [math.Float64bits]. The uint64 is then
+That value is converted to a uint64 using [math.Float64bits]. The uint64 是n
 byte-reversed and sent as a regular unsigned integer. The byte-reversal means the
 exponent and high-precision part of the mantissa go first. Since the low bits are
 often zero, this can save encoding bytes. For instance, 17.0 is encoded in only
@@ -143,12 +133,12 @@ uninterpreted bytes of the value.
 All other slices and arrays are sent as an unsigned count followed by that many
 elements using the standard gob encoding for their type, recursively.
 
-Maps are sent as an unsigned count followed by that many key, element
-pairs. Empty but non-nil maps are sent, so if the receiver has not allocated
+映射 are sent as an unsigned count followed by that many key, element
+pairs. Empty but non-nil 映射 are sent, so if the receiver has not allocated
 one already, one will always be allocated on receipt unless the transmitted map
 is nil and not at the top level.
 
-In slices and arrays, as well as maps, all elements, even zero-valued elements,
+In slices and arrays, as well as 映射, all elements, even zero-valued elements,
 are transmitted, even if all the elements are zero.
 
 Structs are sent as a sequence of (field number, field value) pairs. The field
@@ -159,10 +149,10 @@ is defined by the type of the encoded struct: the first field of the encoded typ
 is field 0, the second is field 1, etc. When encoding a value, the field numbers
 are delta encoded for efficiency and the fields are always sent in order of
 increasing field number; the deltas are therefore unsigned. The initialization
-for the delta encoding sets the field number to -1, so an unsigned integer field 0
+for the delta encoding 设置 field number to -1, so an unsigned integer field 0
 with value 7 is transmitted as unsigned delta = 1, unsigned value = 7 or (01 07).
 Finally, after all the fields have been sent a terminating mark denotes the end
-of the struct. That mark is a delta=0 value, which has representation (00).
+of the struct. That mark 是一个 delta=0 value, which has representation (00).
 
 Interface types are not checked for compatibility; all interface types are
 treated, for transmission, as members of a single "interface" type, analogous to
@@ -182,14 +172,14 @@ after the last field of an encoded struct, so that the decode algorithm knows wh
 the top-level value is complete.
 
 The representation of types is described below. When a type is defined on a given
-connection between an [Encoder] and [Decoder], it is assigned a signed integer type
-id. When [Encoder.Encode](v) is called, it makes sure there is an id assigned for
+connection between an [Encoder] and [Decoder], it 是一个ssigned a signed integer type
+id. When [Encoder.Encode](v) is called, it 使 sure there 是一个n id assigned for
 the type of v and all its elements and then it sends the pair (typeid, encoded-v)
-where typeid is the type id of the encoded type of v and encoded-v is the gob
+where typeid 是 type id of the encoded type of v and encoded-v 是 gob
 encoding of the value v.
 
 To define a type, the encoder chooses an unused, positive type id and sends the
-pair (-type id, encoded-type) where encoded-type is the gob encoding of a wireType
+pair (-type id, encoded-type) where encoded-type 是 gob encoding of a wireType
 description, constructed from these types:
 
 	type wireType struct {
@@ -269,7 +259,7 @@ be predefined or be defined before the value in the stream.
 
 Compatibility: Any future changes to the package will endeavor to maintain
 compatibility with streams encoded using previous versions. That is, any released
-version of this package should be able to decode data written with any previously
+version of this package 应该是 able to decode data written with any previously
 released version, subject to issues such as security fixes. See the Go compatibility
 document for background: https://golang.org/doc/go1compat
 
@@ -281,7 +271,7 @@ https://go.dev/blog/gob
 This package is not designed to be hardened against adversarial inputs, and is
 outside the scope of https://go.dev/security/policy. In particular, the [Decoder]
 does only basic sanity checking on decoded input sizes, and its limits are not
-configurable. Care should be taken when decoding gob data from untrusted
+configurable. Care 应该是 taken when decoding gob data from untrusted
 sources, which may consume significant resources.
 */
 package gob
@@ -335,18 +325,18 @@ StructValue:
 */
 
 /*
-For implementers and the curious, here is an encoded example. Given
+For implementers and the curious, here 是一个n encoded example. Given
 	type Point struct {X, Y int}
 and the value
 	p := Point{22, 33}
-the bytes transmitted that encode p will be:
+the bytes transmitted that encode p 将是:
 	1f ff 81 03 01 01 05 50 6f 69 6e 74 01 ff 82 00
 	01 02 01 01 58 01 04 00 01 01 59 01 04 00 00 00
 	07 ff 82 01 2c 01 42 00
 They are determined as follows.
 
-Since this is the first transmission of type Point, the type descriptor
-for Point itself must be sent before the value. This is the first type
+Since this 是 first transmission of type Point, the type descriptor
+for Point itself must be sent before the value. This 是 first type
 we've sent on this Encoder, so it has type id 65 (0 through 64 are
 reserved).
 
@@ -357,13 +347,13 @@ reserved).
 		// rest upon receipt.
 
 	// Now we send a type descriptor, which is itself a struct (wireType).
-	// The type of wireType itself is known (it's built in, as is the type of
-	// all its components), so we just need to send a *value* of type wireType
+	// The type of wireType itself is known (it's built in, as 是 type of
+	// all its components), so we just need to send a *value* 类型为 wireType
 	// that represents type "Point".
 	// Here starts the encoding of that value.
 	// Set the field number implicitly to -1; this is done at the beginning
 	// of every struct, including nested structs.
-	03	// Add 3 to field number; now 2 (wireType.structType; this is a struct).
+	03	// Add 3 to field number; now 2 (wireType.structType; this 是一个 struct).
 		// structType starts with an embedded CommonType, which appears
 		// as a regular structure here too.
 	01	// add 1 to field number (now 0); start of embedded CommonType.
@@ -401,8 +391,8 @@ Now we can send the Point value. Again the field number resets to -1:
 	00	// end of structure
 
 The type encoding is long and fairly intricate but we send it only once.
-If p is transmitted a second time, the type is already known so the
-output will be just:
+If p is transmitted a second time, the type 是一个lready known so the
+output 将是 just:
 
 	07 ff 82 01 2c 01 42 00
 

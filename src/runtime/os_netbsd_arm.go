@@ -10,7 +10,7 @@ import (
 )
 
 func lwp_mcontext_init(mc *mcontextt, stk unsafe.Pointer, mp *m, gp *g, fn uintptr) {
-	// Machine dependent mcontext initialisation for LWP.
+	// 用于 LWP 的机器依赖 mcontext 初始化。
 	mc.__gregs[_REG_R15] = uint32(abi.FuncPCABI0(lwp_tramp))
 	mc.__gregs[_REG_R13] = uint32(uintptr(stk))
 	mc.__gregs[_REG_R0] = uint32(uintptr(unsafe.Pointer(mp)))
@@ -19,10 +19,10 @@ func lwp_mcontext_init(mc *mcontextt, stk unsafe.Pointer, mp *m, gp *g, fn uintp
 }
 
 func checkgoarm() {
-	// TODO(minux): FP checks like in os_linux_arm.go.
+	// TODO(minux): 类似于 os_linux_arm.go 中的 FP 检查。
 
-	// osinit not called yet, so numCPUStartup not set: must use
-	// getCPUCount directly.
+	// osinit 还未被调用，所以 numCPUStartup 未设置：必须直接
+	// 使用 getCPUCount。
 	if getCPUCount() > 1 && goarm < 7 {
 		print("runtime: this system has multiple CPUs and must use\n")
 		print("atomic synchronization instructions. Recompile using GOARM=7.\n")
@@ -32,6 +32,6 @@ func checkgoarm() {
 
 //go:nosplit
 func cputicks() int64 {
-	// runtime·nanotime() is a poor approximation of CPU ticks that is enough for the profiler.
+	// runtime·nanotime() 是 CPU 计时的粗略近似，但对分析器来说是足够的。
 	return nanotime()
 }

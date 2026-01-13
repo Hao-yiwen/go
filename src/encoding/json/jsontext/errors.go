@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -28,7 +28,7 @@ func (e *ioError) Unwrap() error {
 	return e.err
 }
 
-// SyntacticError is a description of a syntactic error that occurred when
+// SyntacticError 是一个 description of a syntactic error that occurred when
 // encoding or decoding JSON according to the grammar.
 //
 // The contents of this error as produced by this package may change over time.
@@ -36,26 +36,26 @@ type SyntacticError struct {
 	requireKeyedLiterals
 	nonComparable
 
-	// ByteOffset indicates that an error occurred after this byte offset.
+	// ByteOffset 指示 an error occurred after this byte offset.
 	ByteOffset int64
-	// JSONPointer indicates that an error occurred within this JSON value
+	// JSONPointer 指示 an error occurred within this JSON value
 	// as indicated using the JSON Pointer notation (see RFC 6901).
 	JSONPointer Pointer
 
-	// Err is the underlying error.
+	// Err 是 underlying error.
 	Err error
 }
 
 // wrapSyntacticError wraps an error and annotates it with a precise location
 // using the provided [encoderState] or [decoderState].
-// If err is an [ioError] or [io.EOF], then it is not wrapped.
+// If err 是一个n [ioError] or [io.EOF], then it is not wrapped.
 //
 // It takes a relative offset pos that can be resolved into
 // an absolute offset using state.offsetAt.
 //
 // It takes a where that specify how the JSON pointer is derived.
-// If the underlying error is a [pointerSuffixError],
-// then the suffix is appended to the derived pointer.
+// If the underlying error 是一个 [pointerSuffixError],
+// then the suffix 是一个ppended to the derived pointer.
 func wrapSyntacticError(state interface {
 	offsetAt(pos int) int64
 	AppendStackPointer(b []byte, where int) []byte
@@ -113,8 +113,8 @@ func (e *SyntacticError) Unwrap() error {
 	return e.Err
 }
 
-// pointerSuffixError represents a JSON pointer suffix to be appended
-// to [SyntacticError.JSONPointer]. It is an internal error type
+// pointerSuffixError 表示a JSON pointer suffix to be appended
+// to [SyntacticError.JSONPointer]. It 是一个n internal error type
 // used within this package and does not appear in the public API.
 //
 // This type is primarily used to annotate errors in Encoder.WriteValue
@@ -131,24 +131,24 @@ func (e *SyntacticError) Unwrap() error {
 // the pointer in reverse and is only later reversed when appending to
 // the pointer prefix.
 //
-// For example, if the encoder is at "/alpha/bravo/charlie"
+// For example, 如果 encoder 是一个t "/alpha/bravo/charlie"
 // and an error occurs in WriteValue at "/xray/yankee/zulu", then
-// the final pointer should be "/alpha/bravo/charlie/xray/yankee/zulu".
+// the final pointer 应该是 "/alpha/bravo/charlie/xray/yankee/zulu".
 //
 // As pointerSuffixError is populated during the error return path,
-// it first contains "/zulu", then "/zulu/yankee",
+// it first 包含 "/zulu", then "/zulu/yankee",
 // and finally "/zulu/yankee/xray".
 // These tokens are reversed and concatenated to "/alpha/bravo/charlie"
 // to form the full pointer.
 type pointerSuffixError struct {
 	error
 
-	// reversePointer is a JSON pointer, but with each token in reverse order.
+	// reversePointer 是一个 JSON pointer, but with each token in reverse order.
 	reversePointer []byte
 }
 
 // wrapWithObjectName wraps err with a JSON object name access,
-// which must be a valid quoted JSON string.
+// which 必须是 a valid quoted JSON string.
 func wrapWithObjectName(err error, quotedName []byte) error {
 	serr, _ := err.(*pointerSuffixError)
 	if serr == nil {
@@ -172,7 +172,7 @@ func wrapWithArrayIndex(err error, index int64) error {
 // appendPointer appends the path encoded in e to the end of pointer.
 func (e *pointerSuffixError) appendPointer(pointer []byte) []byte {
 	// Copy each token in reversePointer to the end of pointer in reverse order.
-	// Double reversal means that the appended suffix is now in forward order.
+	// Double reversal 意味着 the appended suffix is now in forward order.
 	bi, bo := e.reversePointer, pointer
 	for len(bi) > 0 {
 		i := bytes.LastIndexByte(bi, '/')

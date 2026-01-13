@@ -2,10 +2,10 @@
 
 package unicode
 
-// Version is the Unicode edition from which the tables are derived.
+// Version 是表的 Unicode 版本。
 const Version = "15.0.0"
 
-// Categories is the set of Unicode category tables.
+// Categories 是 Unicode 分类表的集合。
 var Categories = map[string]*RangeTable{
 	"C":  C,
 	"Cc": Cc,
@@ -47,7 +47,7 @@ var Categories = map[string]*RangeTable{
 	"Zs": Zs,
 }
 
-// CategoryAliases maps category aliases to standard category names.
+// CategoryAliases 将分类别名映射到标准分类名称。
 var CategoryAliases = map[string]string{
 	"Cased_Letter":          "LC",
 	"Close_Punctuation":     "Pe",

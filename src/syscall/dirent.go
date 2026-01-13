@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build unix || (js && wasm) || wasip1
 
@@ -13,7 +13,7 @@ import (
 	"unsafe"
 )
 
-// readInt returns the size-bytes unsigned integer in native byte order at offset off.
+// readInt 返回位于偏移量 off 处的 size 字节无符号整数（按本机字节序）。
 func readInt(b []byte, off, size uintptr) (u uint64, ok bool) {
 	if len(b) < int(off+size) {
 		return 0, false
@@ -54,10 +54,9 @@ func readIntLE(b []byte, size uintptr) uint64 {
 	}
 }
 
-// ParseDirent parses up to max directory entries in buf,
-// appending the names to names. It returns the number of
-// bytes consumed from buf, the number of entries added
-// to names, and the new names slice.
+// ParseDirent 解析 buf 中最多 max 个目录条目，
+// 将名称追加到 names。它返回从 buf 中消耗的字节数、
+// 添加到 names 的条目数以及新的 names 切片。
 func ParseDirent(buf []byte, max int, names []string) (consumed int, count int, newnames []string) {
 	origlen := len(buf)
 	count = 0
@@ -72,9 +71,9 @@ func ParseDirent(buf []byte, max int, names []string) (consumed int, count int, 
 		if !ok {
 			break
 		}
-		// See src/os/dir_unix.go for the reason why this condition is
-		// excluded on wasip1 and linux.
-		if ino == 0 && runtime.GOOS != "linux" && runtime.GOOS != "wasip1" { // File absent in directory.
+		// 关于为什么在 wasip1 和 linux 上排除此条件，
+		// 请参阅 src/os/dir_unix.go。
+		if ino == 0 && runtime.GOOS != "linux" && runtime.GOOS != "wasip1" { // 文件不在目录中。
 			continue
 		}
 		const namoff = uint64(unsafe.Offsetof(Dirent{}.Name))
@@ -89,7 +88,7 @@ func ParseDirent(buf []byte, max int, names []string) (consumed int, count int, 
 				break
 			}
 		}
-		// Check for useless names before allocating a string.
+		// 在分配字符串之前检查无用的名称。
 		if string(name) == "." || string(name) == ".." {
 			continue
 		}

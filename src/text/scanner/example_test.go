@@ -1,6 +1,6 @@
-// Copyright 2018 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2018 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package scanner_test
 
@@ -25,7 +25,7 @@ if a > 10 {
 		fmt.Printf("%s: %s\n", s.Position, s.TokenText())
 	}
 
-	// Output:
+	// 输出：
 	// example:3:1: if
 	// example:3:4: a
 	// example:3:6: >
@@ -52,7 +52,7 @@ func Example_isIdentRune() {
 	s.Init(strings.NewReader(src))
 	s.Filename = "percent"
 
-	// treat leading '%' as part of an identifier
+	// 将前导 '%' 作为标识符的一部分处理
 	s.IsIdentRune = func(ch rune, i int) bool {
 		return ch == '%' && i == 0 || unicode.IsLetter(ch) || unicode.IsDigit(ch) && i > 0
 	}
@@ -61,7 +61,7 @@ func Example_isIdentRune() {
 		fmt.Printf("%s: %s\n", s.Position, s.TokenText())
 	}
 
-	// Output:
+	// 输出：
 	// default:1:1: %
 	// default:1:2: var1
 	// default:1:7: var2
@@ -88,7 +88,7 @@ its entirety.
 	var s scanner.Scanner
 	s.Init(strings.NewReader(src))
 	s.Filename = "comments"
-	s.Mode ^= scanner.SkipComments // don't skip comments
+	s.Mode ^= scanner.SkipComments // 不跳过注释
 
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		txt := s.TokenText()
@@ -97,7 +97,7 @@ its entirety.
 		}
 	}
 
-	// Output:
+	// 输出：
 	// comments:2:5: // Comment begins at column 5.
 	// comments:6:1: /*
 	// This multiline comment
@@ -107,7 +107,7 @@ its entirety.
 }
 
 func Example_whitespace() {
-	// tab-separated values
+	// 制表符分隔的值
 	const src = `aa	ab	ac	ad
 ba	bb	bc	bd
 ca	cb	cc	cd
@@ -116,10 +116,10 @@ da	db	dc	dd`
 	var (
 		col, row int
 		s        scanner.Scanner
-		tsv      [4][4]string // large enough for example above
+		tsv      [4][4]string // 对于上面的示例足够大
 	)
 	s.Init(strings.NewReader(src))
-	s.Whitespace ^= 1<<'\t' | 1<<'\n' // don't skip tabs and new lines
+	s.Whitespace ^= 1<<'\t' | 1<<'\n' // 不跳过制表符和换行符
 
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		switch tok {
@@ -135,6 +135,6 @@ da	db	dc	dd`
 
 	fmt.Print(tsv)
 
-	// Output:
+	// 输出：
 	// [[aa ab ac ad] [ba bb bc bd] [ca cb cc cd] [da db dc dd]]
 }

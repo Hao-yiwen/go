@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements typechecking of statements.
 
@@ -14,7 +14,7 @@ import (
 	"slices"
 )
 
-// decl may be nil
+// decl 可能是 nil
 func (check *Checker) funcBody(decl *declInfo, name string, sig *Signature, body *ast.BlockStmt, iota constant.Value) {
 	if check.conf.IgnoreFuncBodies {
 		panic("function body not ignored")
@@ -50,7 +50,7 @@ func (check *Checker) funcBody(decl *declInfo, name string, sig *Signature, body
 	}
 
 	// spec: "Implementation restriction: A compiler may make it illegal to
-	// declare a variable inside a function body if the variable is never used."
+	// declare a variable inside a function body 如果 variable is never used."
 	check.usage(sig.scope)
 }
 
@@ -81,9 +81,9 @@ func (check *Checker) usage(scope *Scope) {
 	}
 }
 
-// stmtContext is a bitset describing which
+// stmtContext 是一个 bitset describing which
 // control-flow statements are permissible,
-// and provides additional context information
+// and 提供additional context information
 // for better error messages.
 type stmtContext uint
 
@@ -192,7 +192,7 @@ func (check *Checker) suspendedCall(keyword string, call *ast.CallExpr) {
 	check.errorf(&x, code, "%s %s %s", keyword, msg, &x)
 }
 
-// goVal returns the Go value for val, or nil.
+// goVal 返回the Go value for val, or nil.
 func goVal(val constant.Value) any {
 	// val should exist, but be conservative and check
 	if val == nil {
@@ -220,7 +220,7 @@ func goVal(val constant.Value) any {
 	return nil
 }
 
-// A valueMap maps a case value (of a basic Go type) to a list of positions
+// 一个valueMap 映射 a case value (of a basic Go type) to a list of positions
 // where the same case value appeared, together with the corresponding case
 // types.
 // Since two case values may have the same "underlying" value but different
@@ -273,7 +273,7 @@ L:
 	}
 }
 
-// isNil reports whether the expression e denotes the predeclared value nil.
+// isNil 报告whether the expression e denotes the predeclared value nil.
 func (check *Checker) isNil(e ast.Expr) bool {
 	// The only way to express the nil value is by literally writing nil (possibly in parentheses).
 	if name, _ := ast.Unparen(e).(*ast.Ident); name != nil {
@@ -286,30 +286,30 @@ func (check *Checker) isNil(e ast.Expr) bool {
 // caseTypes typechecks the type expressions of a type case, checks for duplicate types
 // using the seen map, and verifies that each type is valid with respect to the type of
 // the operand x corresponding to the type switch expression. If that expression is not
-// valid, x must be nil.
+// valid, x 必须是 nil.
 //
 //	switch <x>.(type) {
 //	case <types>: ...
 //	...
 //	}
 //
-// caseTypes returns the case-specific type for a variable v introduced through a short
+// caseTypes 返回the case-specific type for a variable v introduced through a short
 // variable declaration by the type switch:
 //
 //	switch v := <x>.(type) {
-//	case <types>: // T is the type of <v> in this case
+//	case <types>: // T 是 type of <v> in this case
 //	...
 //	}
 //
-// If there is exactly one type expression, T is the type of that expression. If there
-// are multiple type expressions, or if predeclared nil is among the types, the result
-// is the type of x. If x is invalid (nil), the result is the invalid type.
+// If there is exactly one type expression, T 是 type of that expression. If there
+// are multiple type expressions, or if predeclared nil 是一个mong the types, the result
+// 是 type of x. If x is invalid (nil), the result 是 invalid type.
 func (check *Checker) caseTypes(x *operand, types []ast.Expr, seen map[Type]ast.Expr) Type {
 	var T Type
 	var dummy operand
 L:
 	for _, e := range types {
-		// The spec allows the value nil instead of a type.
+		// The spec 允许 the value nil instead of a type.
 		if check.isNil(e) {
 			T = nil
 			check.expr(nil, &dummy, e) // run e through expr so we get the usual Info recordings
@@ -355,13 +355,13 @@ L:
 }
 
 // TODO(gri) Once we are certain that typeHash is correct in all situations, use this version of caseTypes instead.
-// (Currently it may be possible that different types have identical names and import paths due to ImporterFrom.)
+// (Currently it 可能是 possible that different types have identical names and import paths due to ImporterFrom.)
 func (check *Checker) caseTypes_currently_unused(x *operand, xtyp *Interface, types []ast.Expr, seen map[string]ast.Expr) Type {
 	var T Type
 	var dummy operand
 L:
 	for _, e := range types {
-		// The spec allows the value nil instead of a type.
+		// The spec 允许 the value nil instead of a type.
 		var hash string
 		if check.isNil(e) {
 			check.expr(nil, &dummy, e) // run e through expr so we get the usual Info recordings
@@ -440,7 +440,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 	case *ast.ExprStmt:
 		// spec: "With the exception of specific built-in functions,
 		// function and method calls and receive operations can appear
-		// in statement context. Such statements may be parenthesized."
+		// in statement context. Such statements 可能是 parenthesized."
 		var x operand
 		kind := check.rawExpr(nil, &x, s.X, nil, false)
 		var msg string
@@ -614,7 +614,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 		}
 		check.stmt(inner, s.Body)
 		// The parser produces a correct AST but if it was modified
-		// elsewhere the else branch may be invalid. Check again.
+		// elsewhere the else branch 可能是 invalid. Check again.
 		switch s.Else.(type) {
 		case nil, *ast.BadStmt:
 			// valid or error already reported
@@ -677,7 +677,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 
 		check.simpleStmt(s.Init)
 
-		// A type switch guard must be of the form:
+		// 一个type switch guard 必须是 of the form:
 		//
 		//     TypeSwitchGuard = [ identifier ":=" ] PrimaryExpr "." "(" "type" ")" .
 		//
@@ -703,7 +703,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 			}
 
 			if lhs.Name == "_" {
-				// _ := x.(type) is an invalid short variable declaration
+				// _ := x.(type) 是一个n invalid short variable declaration
 				check.softErrorf(lhs, NoNewVar, "no new variable on left side of :=")
 				lhs = nil // avoid declared and not used error below
 			} else {
@@ -717,7 +717,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 			return
 		}
 
-		// rhs must be of the form: expr.(type) and expr must be an ordinary interface
+		// rhs 必须是 of the form: expr.(type) and expr 必须是 an ordinary interface
 		expr, _ := rhs.(*ast.TypeAssertExpr)
 		if expr == nil || expr.Type != nil {
 			check.error(s, InvalidSyntaxTree, "incorrect form of type switch guard")
@@ -794,7 +794,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 				continue // error reported before
 			}
 
-			// clause.Comm must be a SendStmt, RecvStmt, or default case
+			// clause.Comm 必须是 a SendStmt, RecvStmt, or default case
 			valid := false
 			var rhs ast.Expr // rhs of RecvStmt, or nil
 			switch s := clause.Comm.(type) {
@@ -808,7 +808,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 				rhs = s.X
 			}
 
-			// if present, rhs must be a receive operation
+			// if present, rhs 必须是 a receive operation
 			if rhs != nil {
 				if x, _ := ast.Unparen(rhs).(*ast.UnaryExpr); x != nil && x.Op == token.ARROW {
 					valid = true
@@ -842,7 +842,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 			}
 		}
 		check.simpleStmt(s.Post)
-		// spec: "The init statement may be a short variable
+		// spec: "The init statement 可能是 a short variable
 		// declaration, but the post statement must not."
 		if s, _ := s.Post.(*ast.AssignStmt); s != nil && s.Tok == token.DEFINE {
 			check.softErrorf(s, InvalidPostDecl, "cannot declare in post statement")

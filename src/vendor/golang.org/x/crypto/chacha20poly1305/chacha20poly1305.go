@@ -1,10 +1,9 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2016 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package chacha20poly1305 implements the ChaCha20-Poly1305 AEAD and its
-// extended nonce variant XChaCha20-Poly1305, as specified in RFC 8439 and
-// draft-irtf-cfrg-xchacha-01.
+// chacha20poly1305 包实现了 ChaCha20-Poly1305 AEAD 及其扩展随机数变体
+// XChaCha20-Poly1305，如 RFC 8439 和 draft-irtf-cfrg-xchacha-01 中所规定。
 package chacha20poly1305
 
 import (
@@ -13,22 +12,21 @@ import (
 )
 
 const (
-	// KeySize is the size of the key used by this AEAD, in bytes.
+	// KeySize 是此 AEAD 使用的密钥大小，以字节为单位。
 	KeySize = 32
 
-	// NonceSize is the size of the nonce used with the standard variant of this
-	// AEAD, in bytes.
+	// NonceSize 是此 AEAD 标准变体使用的随机数大小，以字节为单位。
 	//
-	// Note that this is too short to be safely generated at random if the same
-	// key is reused more than 2³² times.
+	// 注意，如果同一密钥重复使用超过 2³² 次，
+	// 这个长度太短，不能安全地随机生成。
 	NonceSize = 12
 
-	// NonceSizeX is the size of the nonce used with the XChaCha20-Poly1305
-	// variant of this AEAD, in bytes.
+	// NonceSizeX 是此 AEAD 的 XChaCha20-Poly1305 变体使用的随机数大小，
+	// 以字节为单位。
 	NonceSizeX = 24
 
-	// Overhead is the size of the Poly1305 authentication tag, and the
-	// difference between a ciphertext length and its plaintext.
+	// Overhead 是 Poly1305 认证标签的大小，
+	// 也是密文长度与明文长度之间的差值。
 	Overhead = 16
 )
 
@@ -36,7 +34,7 @@ type chacha20poly1305 struct {
 	key [KeySize]byte
 }
 
-// New returns a ChaCha20-Poly1305 AEAD that uses the given 256-bit key.
+// New 返回使用给定 256 位密钥的 ChaCha20-Poly1305 AEAD。
 func New(key []byte) (cipher.AEAD, error) {
 	if fips140Enforced() {
 		return nil, errors.New("chacha20poly1305: use of ChaCha20Poly1305 is not allowed in FIPS 140-only mode")
@@ -85,10 +83,9 @@ func (c *chacha20poly1305) Open(dst, nonce, ciphertext, additionalData []byte) (
 	return c.open(dst, nonce, ciphertext, additionalData)
 }
 
-// sliceForAppend takes a slice and a requested number of bytes. It returns a
-// slice with the contents of the given slice followed by that many bytes and a
-// second slice that aliases into it and contains only the extra bytes. If the
-// original slice has sufficient capacity then no allocation is performed.
+// sliceForAppend 接受一个切片和请求的字节数。它返回一个切片，
+// 其内容是给定切片的内容后跟那么多字节，以及第二个别名切片，
+// 只包含额外的字节。如果原始切片有足够的容量，则不执行分配。
 func sliceForAppend(in []byte, n int) (head, tail []byte) {
 	if total := len(in) + n; cap(in) >= total {
 		head = in[:total]

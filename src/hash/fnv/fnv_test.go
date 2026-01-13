@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package fnv
 
@@ -43,7 +43,7 @@ func TestHashInterface(t *testing.T) {
 type golden struct {
 	out       []byte
 	in        string
-	halfState string // marshaled hash state after first half of in written, used by TestGoldenMarshal
+	halfState string // 写入 in 的前半部分后序列化的哈希状态，用于 TestGoldenMarshal
 }
 
 var golden32 = []golden{
@@ -249,7 +249,7 @@ func testIntegrity(t *testing.T, h hash.Hash) {
 			t.Fatalf("Sum()=0x%x, but Sum64()=0x%x", sum, sum64)
 		}
 	case 16:
-		// There's no Sum128 function, so we don't need to test anything here.
+		// 没有 Sum128 函数，所以我们不需要在这里测试任何东西。
 	}
 }
 

@@ -1,6 +1,6 @@
-// Copyright 2019 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2019 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build !race
 
@@ -18,18 +18,18 @@ import (
 	"testing"
 )
 
-// Smhasher is a torture test for hash functions.
+// Smhasher 是哈希函数的压力测试。
 // https://code.google.com/p/smhasher/
-// This code is a port of some of the Smhasher tests to Go.
+// 此代码是一些 Smhasher 测试移植到 Go 的版本。
 
-// Note: due to the long running time of these tests, they are
-// currently disabled in -race mode.
+// 注意：由于这些测试运行时间较长，
+// 目前在 -race 模式下被禁用。
 
 var fixedSeed = MakeSeed()
 
-// Sanity checks.
-// hash should not depend on values outside key.
-// hash should not depend on alignment.
+// 健全性检查。
+// 哈希不应依赖于键之外的值。
+// 哈希不应依赖于对齐方式。
 func TestSmhasherSanity(t *testing.T) {
 	t.Parallel()
 	r := rand.New(rand.NewSource(1234))
@@ -72,9 +72,9 @@ func randBytes(r *rand.Rand, b []byte) {
 	r.Read(b) // can't fail
 }
 
-// A hashSet measures the frequency of hash collisions.
+// hashSet 用于测量哈希冲突的频率。
 type hashSet struct {
-	list []uint64 // list of hashes added
+	list []uint64 // 已添加的哈希列表
 }
 
 func newHashSet() *hashSet {
@@ -115,11 +115,11 @@ func (s *hashSet) check(t *testing.T) {
 	if float64(collisions) > expected+SLOP*(3*stddev+1) {
 		t.Errorf("unexpected number of collisions: got=%d mean=%f stddev=%f", collisions, expected, stddev)
 	}
-	// Reset for reuse
+	// 重置以便重用
 	s.list = s.list[:0]
 }
 
-// a string plus adding zeros must make distinct hashes
+// 字符串加上添加零必须产生不同的哈希
 func TestSmhasherAppendedZeros(t *testing.T) {
 	t.Parallel()
 	s := "hello" + strings.Repeat("\x00", 256)
@@ -130,7 +130,7 @@ func TestSmhasherAppendedZeros(t *testing.T) {
 	h.check(t)
 }
 
-// All 0-3 byte strings have distinct hashes.
+// 所有 0-3 字节的字符串都有不同的哈希。
 func TestSmhasherSmallKeys(t *testing.T) {
 	testenv.ParallelOn64Bit(t)
 	h := newHashSet()
@@ -152,7 +152,7 @@ func TestSmhasherSmallKeys(t *testing.T) {
 	h.check(t)
 }
 
-// Different length strings of all zeros have distinct hashes.
+// 不同长度的全零字符串具有不同的哈希。
 func TestSmhasherZeros(t *testing.T) {
 	t.Parallel()
 	N := 256 * 1024
@@ -167,7 +167,7 @@ func TestSmhasherZeros(t *testing.T) {
 	h.check(t)
 }
 
-// Strings with up to two nonzero bytes all have distinct hashes.
+// 最多有两个非零字节的字符串都有不同的哈希。
 func TestSmhasherTwoNonzero(t *testing.T) {
 	if runtime.GOARCH == "wasm" {
 		t.Skip("Too slow on wasm")
@@ -185,10 +185,10 @@ func TestSmhasherTwoNonzero(t *testing.T) {
 func twoNonZero(h *hashSet, n int) {
 	b := make([]byte, n)
 
-	// all zero
+	// 全零
 	h.addB(b)
 
-	// one non-zero byte
+	// 一个非零字节
 	for i := 0; i < n; i++ {
 		for x := 1; x < 256; x++ {
 			b[i] = byte(x)
@@ -197,7 +197,7 @@ func twoNonZero(h *hashSet, n int) {
 		}
 	}
 
-	// two non-zero bytes
+	// 两个非零字节
 	for i := 0; i < n; i++ {
 		for x := 1; x < 256; x++ {
 			b[i] = byte(x)
@@ -213,7 +213,7 @@ func twoNonZero(h *hashSet, n int) {
 	}
 }
 
-// Test strings with repeats, like "abcdabcdabcdabcd..."
+// 测试具有重复的字符串，如 "abcdabcdabcdabcd..."
 func TestSmhasherCyclic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping in short mode")
@@ -240,7 +240,7 @@ func TestSmhasherCyclic(t *testing.T) {
 	}
 }
 
-// Test strings with only a few bits set
+// 测试只有少数位被设置的字符串
 func TestSmhasherSparse(t *testing.T) {
 	if runtime.GOARCH == "wasm" {
 		t.Skip("Too slow on wasm")
@@ -266,7 +266,7 @@ func sparse(t *testing.T, h *hashSet, n int, k int) {
 	h.check(t)
 }
 
-// set up to k bits at index i and greater
+// 在索引 i 及更大位置设置最多 k 位
 func setbits(h *hashSet, b []byte, i int, k int) {
 	h.addB(b)
 	if k == 0 {
@@ -279,8 +279,8 @@ func setbits(h *hashSet, b []byte, i int, k int) {
 	}
 }
 
-// Test all possible combinations of n blocks from the set s.
-// "permutation" is a bad name here, but it is what Smhasher uses.
+// 测试集合 s 中 n 个块的所有可能组合。
+// "permutation" 在这里是一个不恰当的名称，但这是 Smhasher 使用的名称。
 func TestSmhasherPermutation(t *testing.T) {
 	if runtime.GOARCH == "wasm" {
 		t.Skip("Too slow on wasm")
@@ -317,12 +317,12 @@ func genPerm(h *hashSet, b []byte, s []uint32, n int) {
 }
 
 type key interface {
-	clear()              // set bits all to 0
-	random(r *rand.Rand) // set key to something random
-	bits() int           // how many bits key has
-	flipBit(i int)       // flip bit i of the key
-	hash() uint64        // hash the key
-	name() string        // for error reporting
+	clear()              // 将所有位设置为 0
+	random(r *rand.Rand) // 将键设置为随机值
+	bits() int           // 键有多少位
+	flipBit(i int)       // 翻转键的第 i 位
+	hash() uint64        // 对键进行哈希
+	name() string        // 用于错误报告
 }
 
 type bytesKey struct {
@@ -348,7 +348,7 @@ func (k *bytesKey) name() string {
 	return fmt.Sprintf("bytes%d", len(k.b))
 }
 
-// Flipping a single bit of a key should flip each output bit with 50% probability.
+// 翻转键的单个位应该以 50% 的概率翻转每个输出位。
 func TestSmhasherAvalanche(t *testing.T) {
 	if runtime.GOARCH == "wasm" {
 		t.Skip("Too slow on wasm")
@@ -370,22 +370,22 @@ func avalancheTest1(t *testing.T, k key) {
 	r := rand.New(rand.NewSource(1234))
 	n := k.bits()
 
-	// grid[i][j] is a count of whether flipping
-	// input bit i affects output bit j.
+	// grid[i][j] 是翻转输入位 i
+	// 是否影响输出位 j 的计数。
 	grid := make([][hashSize]int, n)
 
 	for z := 0; z < REP; z++ {
-		// pick a random key, hash it
+		// 选择一个随机键，对其进行哈希
 		k.random(r)
 		h := k.hash()
 
-		// flip each bit, hash & compare the results
+		// 翻转每个位，哈希并比较结果
 		for i := 0; i < n; i++ {
 			k.flipBit(i)
 			d := h ^ k.hash()
 			k.flipBit(i)
 
-			// record the effects of that bit flip
+			// 记录该位翻转的效果
 			g := &grid[i]
 			for j := 0; j < hashSize; j++ {
 				g[j] += int(d & 1)
@@ -394,17 +394,16 @@ func avalancheTest1(t *testing.T, k key) {
 		}
 	}
 
-	// Each entry in the grid should be about REP/2.
-	// More precisely, we did N = k.bits() * hashSize experiments where
-	// each is the sum of REP coin flips. We want to find bounds on the
-	// sum of coin flips such that a truly random experiment would have
-	// all sums inside those bounds with 99% probability.
+	// 网格中的每个条目应该大约是 REP/2。
+	// 更精确地说，我们进行了 N = k.bits() * hashSize 次实验，
+	// 每次是 REP 次抛硬币的总和。我们想要找到抛硬币总和的边界，
+	// 使得真正随机的实验有 99% 的概率所有总和都在这些边界内。
 	N := n * hashSize
 	var c float64
-	// find c such that Prob(mean-c*stddev < x < mean+c*stddev)^N > .9999
+	// 找到 c 使得 Prob(mean-c*stddev < x < mean+c*stddev)^N > .9999
 	for c = 0.0; math.Pow(math.Erf(c/math.Sqrt(2)), float64(N)) < .9999; c += .1 {
 	}
-	c *= 11.0 // allowed slack: 40% to 60% - we don't need to be perfectly random
+	c *= 11.0 // 允许的偏差：40% 到 60% - 我们不需要完全随机
 	mean := .5 * REP
 	stddev := .5 * math.Sqrt(REP)
 	low := int(mean - c*stddev)
@@ -419,7 +418,7 @@ func avalancheTest1(t *testing.T, k key) {
 	}
 }
 
-// All bit rotations of a set of distinct keys
+// 一组不同键的所有位旋转
 func TestSmhasherWindowed(t *testing.T) {
 	t.Parallel()
 	windowed(t, &bytesKey{make([]byte, 128)})
@@ -448,7 +447,7 @@ func windowed(t *testing.T, k key) {
 	}
 }
 
-// All keys of the form prefix + [A-Za-z0-9]*N + suffix.
+// 所有形式为 prefix + [A-Za-z0-9]*N + suffix 的键。
 func TestSmhasherText(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping in short mode")
@@ -484,7 +483,7 @@ func text(t *testing.T, h *hashSet, prefix, suffix string) {
 	h.check(t)
 }
 
-// Make sure different seed values generate different hashes.
+// 确保不同的种子值生成不同的哈希。
 func TestSmhasherSeed(t *testing.T) {
 	if !maps.Use64BitHash {
 		t.Skip("32-bit platforms don't have ideal seed-input distributions (see issue 33988)")
@@ -495,7 +494,7 @@ func TestSmhasherSeed(t *testing.T) {
 	s := "hello"
 	for i := 0; i < N; i++ {
 		h.addS_seed(s, Seed{s: uint64(i + 1)})
-		h.addS_seed(s, Seed{s: uint64(i+1) << 32}) // make sure high bits are used
+		h.addS_seed(s, Seed{s: uint64(i+1) << 32}) // 确保使用高位
 	}
 	h.check(t)
 }

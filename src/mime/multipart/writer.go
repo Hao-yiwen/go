@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package multipart
 
@@ -16,15 +16,14 @@ import (
 	"strings"
 )
 
-// A Writer generates multipart messages.
+// Writer 生成 multipart 消息。
 type Writer struct {
 	w        io.Writer
 	boundary string
 	lastpart *part
 }
 
-// NewWriter returns a new multipart [Writer] with a random boundary,
-// writing to w.
+// NewWriter 返回一个带有随机 boundary 的新 multipart [Writer]，写入 w。
 func NewWriter(w io.Writer) *Writer {
 	return &Writer{
 		w:        w,
@@ -32,17 +31,15 @@ func NewWriter(w io.Writer) *Writer {
 	}
 }
 
-// Boundary returns the [Writer]'s boundary.
+// Boundary 返回 [Writer] 的 boundary。
 func (w *Writer) Boundary() string {
 	return w.boundary
 }
 
-// SetBoundary overrides the [Writer]'s default randomly-generated
-// boundary separator with an explicit value.
+// SetBoundary 用显式值覆盖 [Writer] 的默认随机生成的 boundary 分隔符。
 //
-// SetBoundary must be called before any parts are created, may only
-// contain certain ASCII characters, and must be non-empty and
-// at most 70 bytes long.
+// SetBoundary 必须在创建任何 part 之前调用，只能包含某些 ASCII 字符，
+// 并且必须非空且最多 70 字节长。
 func (w *Writer) SetBoundary(boundary string) error {
 	if w.lastpart != nil {
 		return errors.New("mime: SetBoundary called after write")

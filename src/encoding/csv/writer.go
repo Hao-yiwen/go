@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package csv
 
@@ -12,16 +12,16 @@ import (
 	"unicode/utf8"
 )
 
-// A Writer writes records using CSV encoding.
+// 一个Writer writes records using CSV encoding.
 //
 // As returned by [NewWriter], a Writer writes records terminated by a
 // newline and uses ',' as the field delimiter. The exported fields can be
 // changed to customize the details before
 // the first call to [Writer.Write] or [Writer.WriteAll].
 //
-// [Writer.Comma] is the field delimiter.
+// [Writer.Comma] 是 field delimiter.
 //
-// If [Writer.UseCRLF] is true,
+// If [Writer.UseCRLF] 为真,
 // the Writer ends each output line with \r\n instead of \n.
 //
 // The writes of individual records are buffered.
@@ -35,7 +35,7 @@ type Writer struct {
 	w       *bufio.Writer
 }
 
-// NewWriter returns a new Writer that writes to w.
+// NewWriter 返回a new Writer that writes to w.
 func NewWriter(w io.Writer) *Writer {
 	return &Writer{
 		Comma: ',',
@@ -44,7 +44,7 @@ func NewWriter(w io.Writer) *Writer {
 }
 
 // Write writes a single CSV record to w along with any necessary quoting.
-// A record is a slice of strings with each string being one field.
+// 一个record 是一个 slice of strings with each string being one field.
 // Writes are buffered, so [Writer.Flush] must eventually be called to ensure
 // that the record is written to the underlying [io.Writer].
 func (w *Writer) Write(record []string) error {
@@ -126,7 +126,7 @@ func (w *Writer) Flush() {
 	w.w.Flush()
 }
 
-// Error reports any error that has occurred during
+// Error 报告any error that has occurred during
 // a previous [Writer.Write] or [Writer.Flush].
 func (w *Writer) Error() error {
 	_, err := w.w.Write(nil)
@@ -145,16 +145,16 @@ func (w *Writer) WriteAll(records [][]string) error {
 	return w.w.Flush()
 }
 
-// fieldNeedsQuotes reports whether our field must be enclosed in quotes.
+// fieldNeedsQuotes 报告whether our field 必须是 enclosed in quotes.
 // Fields with a Comma, fields with a quote or newline, and
-// fields which start with a space must be enclosed in quotes.
+// fields which start with a space 必须是 enclosed in quotes.
 // We used to quote empty strings, but we do not anymore (as of Go 1.4).
-// The two representations should be equivalent, but Postgres distinguishes
+// The two representations 应该是 equivalent, but Postgres distinguishes
 // quoted vs non-quoted empty string during database imports, and it has
 // an option to force the quoted behavior for non-quoted CSV but it has
 // no option to force the non-quoted behavior for quoted CSV, making
 // CSV with quoted empty strings strictly less useful.
-// Not quoting the empty string also makes this package match the behavior
+// Not quoting the empty string also 使 this package match the behavior
 // of Microsoft Excel and Google Drive.
 // For Postgres, quote the data terminating string `\.`.
 func (w *Writer) fieldNeedsQuotes(field string) bool {

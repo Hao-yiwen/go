@@ -10,9 +10,9 @@ import "unsafe"
 
 func sbrk0() uintptr
 
-// Called from write_err_android.go only, but defined in sys_linux_*.s;
-// declared here (instead of in write_err_android.go) for go vet on non-android builds.
-// The return value is the raw syscall result, which may encode an error number.
+// 仅从 write_err_android.go 调用，但在 sys_linux_*.s 中定义；
+// 在此声明（而不是在 write_err_android.go 中）是为了在非 Android 构建上进行 go vet。
+// 返回值是原始系统调用结果，可能编码一个错误号。
 //
 //go:noescape
 func access(name *byte, mode int32) int32

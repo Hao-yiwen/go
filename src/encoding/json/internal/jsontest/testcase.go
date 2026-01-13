@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -14,7 +14,7 @@ import (
 
 // TODO(https://go.dev/issue/52751): Replace with native testing support.
 
-// CaseName is a case name annotated with a file and line.
+// CaseName 是一个 case name annotated with a file and line.
 type CaseName struct {
 	Name  string
 	Where CasePos
@@ -27,7 +27,7 @@ func Name(s string) (c CaseName) {
 	return c
 }
 
-// CasePos represents a file and line number.
+// CasePos 表示a file and line number.
 type CasePos struct{ pc [1]uintptr }
 
 func (pos CasePos) String() string {

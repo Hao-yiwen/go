@@ -10,10 +10,13 @@ import (
 )
 
 // Functions starting with "Is" can be used to inspect which table of range a
+// 以 "Is" 开头的函数可用于检查符文属于哪个范围表。
 // rune belongs to. Note that runes may fit into more than one range.
+// 请注意，符文可能适合多个范围。
 func Example_is() {
 
 	// constant with mixed type runes
+	// 具有混合类型符文的常数
 	const mixed = "\b5Ὂg̀9! ℃ᾭG"
 	for _, c := range mixed {
 		fmt.Printf("For %q:\n", c)
@@ -118,7 +121,7 @@ func ExampleSimpleFold() {
 	fmt.Printf("%#U\n", unicode.SimpleFold('a'))      // 'A'
 	fmt.Printf("%#U\n", unicode.SimpleFold('K'))      // 'k'
 	fmt.Printf("%#U\n", unicode.SimpleFold('k'))      // '\u212A' (Kelvin symbol, K)
-	fmt.Printf("%#U\n", unicode.SimpleFold('\u212A')) // 'K'
+	fmt.Printf("%#U\n", unicode.SimpleFold('\u212A')) // 'K' (开尔文符号)
 	fmt.Printf("%#U\n", unicode.SimpleFold('1'))      // '1'
 
 	// Output:

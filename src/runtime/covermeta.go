@@ -9,8 +9,8 @@ import (
 	"unsafe"
 )
 
-// The compiler emits calls to runtime.addCovMeta
-// but this code has moved to rtcov.AddMeta.
+// 编译器发出对 runtime.addCovMeta 的调用，
+// 但此代码已移到 rtcov.AddMeta。
 func addCovMeta(p unsafe.Pointer, dlen uint32, hash [16]byte, pkgpath string, pkgid int, cmode uint8, cgran uint8) uint32 {
 	id := rtcov.AddMeta(p, dlen, hash, pkgpath, pkgid, cmode, cgran)
 	if id == 0 {

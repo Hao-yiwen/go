@@ -4,18 +4,17 @@
 
 package runtime
 
-// This file contains the implementation of Go channels.
+// 本文件包含 Go 通道的实现。
 
-// Invariants:
-//  At least one of c.sendq and c.recvq is empty,
-//  except for the case of an unbuffered channel with a single goroutine
-//  blocked on it for both sending and receiving using a select statement,
-//  in which case the length of c.sendq and c.recvq is limited only by the
-//  size of the select statement.
+// 不变式：
+//  c.sendq 和 c.recvq 至少有一个为空，
+//  除了无缓冲通道上有一个 goroutine 使用 select 语句
+//  同时阻塞在发送和接收的情况，在这种情况下 c.sendq 和 c.recvq
+//  的长度仅受 select 语句的大小限制。
 //
-// For buffered channels, also:
-//  c.qcount > 0 implies that c.recvq is empty.
-//  c.qcount < c.dataqsiz implies that c.sendq is empty.
+// 对于有缓冲通道，还有：
+//  c.qcount > 0 意味着 c.recvq 为空。
+//  c.qcount < c.dataqsiz 意味着 c.sendq 为空。
 
 import (
 	"internal/abi"
@@ -32,25 +31,24 @@ const (
 )
 
 type hchan struct {
-	qcount   uint           // total data in the queue
-	dataqsiz uint           // size of the circular queue
-	buf      unsafe.Pointer // points to an array of dataqsiz elements
+	qcount   uint           // 队列中的数据总数
+	dataqsiz uint           // 环形队列的大小
+	buf      unsafe.Pointer // 指向 dataqsiz 个元素的数组
 	elemsize uint16
 	closed   uint32
-	timer    *timer // timer feeding this chan
-	elemtype *_type // element type
-	sendx    uint   // send index
-	recvx    uint   // receive index
-	recvq    waitq  // list of recv waiters
-	sendq    waitq  // list of send waiters
+	timer    *timer // 向此通道馈送数据的定时器
+	elemtype *_type // 元素类型
+	sendx    uint   // 发送索引
+	recvx    uint   // 接收索引
+	recvq    waitq  // 接收等待者列表
+	sendq    waitq  // 发送等待者列表
 	bubble   *synctestBubble
 
-	// lock protects all fields in hchan, as well as several
-	// fields in sudogs blocked on this channel.
+	// lock 保护 hchan 中的所有字段，以及阻塞在此通道上的
+	// sudog 中的几个字段。
 	//
-	// Do not change another G's status while holding this lock
-	// (in particular, do not ready a G), as this can deadlock
-	// with stack shrinking.
+	// 持有此锁时不要更改另一个 G 的状态（特别是不要使 G 就绪），
+	// 因为这可能与栈收缩发生死锁。
 	lock mutex
 }
 
@@ -75,7 +73,7 @@ func makechan64(t *chantype, size int64) *hchan {
 func makechan(t *chantype, size int) *hchan {
 	elem := t.Elem
 
-	// compiler checks this but be safe.
+	// 编译器会检查这个，但为了安全起见。
 	if elem.Size_ >= 1<<16 {
 		throw("makechan: invalid channel element type")
 	}
@@ -88,24 +86,24 @@ func makechan(t *chantype, size int) *hchan {
 		panic(plainError("makechan: size out of range"))
 	}
 
-	// Hchan does not contain pointers interesting for GC when elements stored in buf do not contain pointers.
-	// buf points into the same allocation, elemtype is persistent.
-	// SudoG's are referenced from their owning thread so they can't be collected.
-	// TODO(dvyukov,rlh): Rethink when collector can move allocated objects.
+	// 当存储在 buf 中的元素不包含指针时，Hchan 不包含 GC 感兴趣的指针。
+	// buf 指向同一个分配，elemtype 是持久的。
+	// SudoG 从其拥有的线程引用，因此不能被回收。
+	// TODO(dvyukov,rlh): 重新考虑收集器何时可以移动已分配的对象。
 	var c *hchan
 	switch {
 	case mem == 0:
-		// Queue or element size is zero.
+		// 队列或元素大小为零。
 		c = (*hchan)(mallocgc(hchanSize, nil, true))
-		// Race detector uses this location for synchronization.
+		// 竞态检测器使用此位置进行同步。
 		c.buf = c.raceaddr()
 	case !elem.Pointers():
-		// Elements do not contain pointers.
-		// Allocate hchan and buf in one call.
+		// 元素不包含指针。
+		// 在一次调用中分配 hchan 和 buf。
 		c = (*hchan)(mallocgc(hchanSize+mem, nil, true))
 		c.buf = add(unsafe.Pointer(c), hchanSize)
 	default:
-		// Elements contain pointers.
+		// 元素包含指针。
 		c = new(hchan)
 		c.buf = mallocgc(mem, elem, true)
 	}
@@ -124,37 +122,36 @@ func makechan(t *chantype, size int) *hchan {
 	return c
 }
 
-// chanbuf(c, i) is pointer to the i'th slot in the buffer.
+// chanbuf(c, i) 是缓冲区中第 i 个槽的指针。
 //
-// chanbuf should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// chanbuf 应该是一个内部实现细节，
+// 但许多广泛使用的包通过 linkname 访问它。
+// 耻辱榜上的知名成员包括：
 //   - github.com/fjl/memsize
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname chanbuf
 func chanbuf(c *hchan, i uint) unsafe.Pointer {
 	return add(c.buf, uintptr(i)*uintptr(c.elemsize))
 }
 
-// full reports whether a send on c would block (that is, the channel is full).
-// It uses a single word-sized read of mutable state, so although
-// the answer is instantaneously true, the correct answer may have changed
-// by the time the calling function receives the return value.
+// full 报告在 c 上发送是否会阻塞（即通道已满）。
+// 它使用对可变状态的单个字大小的读取，所以虽然答案在那一刻是正确的，
+// 但在调用函数接收返回值时正确答案可能已经改变。
 func full(c *hchan) bool {
-	// c.dataqsiz is immutable (never written after the channel is created)
-	// so it is safe to read at any time during channel operation.
+	// c.dataqsiz 是不可变的（创建通道后永远不会写入）
+	// 所以在通道操作期间任何时候读取都是安全的。
 	if c.dataqsiz == 0 {
-		// Assumes that a pointer read is relaxed-atomic.
+		// 假设指针读取是松散原子的。
 		return c.recvq.first == nil
 	}
-	// Assumes that a uint read is relaxed-atomic.
+	// 假设 uint 读取是松散原子的。
 	return c.qcount == c.dataqsiz
 }
 
-// entry point for c <- x from compiled code.
+// 编译代码中 c <- x 的入口点。
 //
 //go:nosplit
 func chansend1(c *hchan, elem unsafe.Pointer) {
@@ -162,16 +159,15 @@ func chansend1(c *hchan, elem unsafe.Pointer) {
 }
 
 /*
- * generic single channel send/recv
- * If block is not nil,
- * then the protocol will not
- * sleep but return if it could
- * not complete.
+ * 通用单通道发送/接收
+ * 如果 block 不为 nil，
+ * 那么协议将不会休眠，
+ * 而是在无法完成时返回。
  *
- * sleep can wake up with g.param == nil
- * when a channel involved in the sleep has
- * been closed.  it is easiest to loop and re-run
- * the operation; we'll see that it's now closed.
+ * 当涉及休眠的通道被关闭时，
+ * 休眠可能以 g.param == nil 唤醒。
+ * 最简单的方法是循环并重新运行操作；
+ * 我们会看到它现在已关闭。
  */
 func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
 	if c == nil {

@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -54,8 +54,7 @@ type tplSSAData struct {
 	Helper string
 }
 
-// writeSIMDSSA generates the ssa to prog lowering codes and writes it to simdssa.go
-// within the specified directory.
+// writeSIMDSSA 生成 SSA 到程序的降低代码，并将其写入指定目录中的 simdssa.go。
 func writeSIMDSSA(ops []Operation) *bytes.Buffer {
 	var ZeroingMask []string
 	regInfoKeys := []string{
@@ -133,8 +132,8 @@ func writeSIMDSSA(ops []Operation) *bytes.Buffer {
 		if mem == NoMem && op.hasMaskedMerging(maskType, shapeOut) {
 			regShapeMerging := regShape
 			if shapeOut != OneVregOutAtIn {
-				// We have to copy the slice here becasue the sort will be visible from other
-				// aliases when no reslicing is happening.
+				// 我们必须在这里复制切片，因为当没有重新切片时，
+				// 排序操作会从其他别名中可见。
 				newIn := make([]Operand, len(op.In), len(op.In)+1)
 				copy(newIn, op.In)
 				op.In = newIn
@@ -173,11 +172,11 @@ func writeSIMDSSA(ops []Operation) *bytes.Buffer {
 			panic(err)
 		}
 		if op.MemFeatures != nil && *op.MemFeatures == "vbcst" {
-			// Make a full vec memory variant
+			// 创建完整的向量内存变体
 			op = rewriteLastVregToMem(op)
-			// Ignore the error
-			// an error could be triggered by [checkVecAsScalar].
-			// TODO: make [checkVecAsScalar] aware of mem ops.
+			// 忽略错误
+			// 错误可能由 [checkVecAsScalar] 触发。
+			// TODO: 使 [checkVecAsScalar] 能够识别内存操作。
 			if err := classifyOp(op, maskType, shapeIn, shapeOut, caseStr+"load", VregMemIn); err != nil {
 				if *Verbose {
 					log.Printf("Seen error: %e", err)
@@ -202,7 +201,7 @@ func writeSIMDSSA(ops []Operation) *bytes.Buffer {
 	}
 
 	for _, regShape := range regInfoKeys {
-		// Stable traversal of regInfoSet
+		// 稳定遍历 regInfoSet
 		cases := regInfoSet[regShape]
 		if len(cases) == 0 {
 			continue

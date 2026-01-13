@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package io_test
 
@@ -66,7 +66,7 @@ func TestMultiReader(t *testing.T) {
 func TestMultiReaderAsWriterTo(t *testing.T) {
 	mr := MultiReader(
 		strings.NewReader("foo "),
-		MultiReader( // Tickle the buffer reusing codepath
+		MultiReader( // 触发缓冲区复用代码路径
 			strings.NewReader(""),
 			strings.NewReader("bar"),
 		),
@@ -90,7 +90,7 @@ func TestMultiReaderAsWriterTo(t *testing.T) {
 
 func TestMultiWriter(t *testing.T) {
 	sink := new(bytes.Buffer)
-	// Hide bytes.Buffer's WriteString method:
+	// 隐藏 bytes.Buffer 的 WriteString 方法：
 	testMultiWriter(t, struct {
 		Writer
 		fmt.Stringer
@@ -101,11 +101,11 @@ func TestMultiWriter_String(t *testing.T) {
 	testMultiWriter(t, new(bytes.Buffer))
 }
 
-// Test that a multiWriter.WriteString calls results in at most 1 allocation,
-// even if multiple targets don't support WriteString.
+// 测试 multiWriter.WriteString 调用最多产生 1 次分配，
+// 即使多个目标不支持 WriteString。
 func TestMultiWriter_WriteStringSingleAlloc(t *testing.T) {
 	var sink1, sink2 bytes.Buffer
-	type simpleWriter struct { // hide bytes.Buffer's WriteString
+	type simpleWriter struct { // 隐藏 bytes.Buffer 的 WriteString
 		Writer
 	}
 	mw := MultiWriter(simpleWriter{&sink1}, simpleWriter{&sink2})
@@ -166,19 +166,19 @@ func testMultiWriter(t *testing.T, sink interface {
 	}
 }
 
-// writerFunc is a Writer implemented by the underlying func.
+// writerFunc 是由底层函数实现的 Writer。
 type writerFunc func(p []byte) (int, error)
 
 func (f writerFunc) Write(p []byte) (int, error) {
 	return f(p)
 }
 
-// Test that MultiWriter properly flattens chained multiWriters.
+// 测试 MultiWriter 正确展平链式 multiWriters。
 func TestMultiWriterSingleChainFlatten(t *testing.T) {
-	pc := make([]uintptr, 1000) // 1000 should fit the full stack
+	pc := make([]uintptr, 1000) // 1000 应该能容纳完整的调用栈
 	n := runtime.Callers(0, pc)
 	var myDepth = callDepth(pc[:n])
-	var writeDepth int // will contain the depth from which writerFunc.Writer was called
+	var writeDepth int // 将包含调用 writerFunc.Writer 时的深度
 	var w Writer = MultiWriter(writerFunc(func(p []byte) (int, error) {
 		n := runtime.Callers(1, pc)
 		writeDepth += callDepth(pc[:n])
@@ -186,15 +186,15 @@ func TestMultiWriterSingleChainFlatten(t *testing.T) {
 	}))
 
 	mw := w
-	// chain a bunch of multiWriters
+	// 链接一堆 multiWriters
 	for i := 0; i < 100; i++ {
 		mw = MultiWriter(w)
 	}
 
 	mw = MultiWriter(w, mw, w, mw)
-	mw.Write(nil) // don't care about errors, just want to check the call-depth for Write
+	mw.Write(nil) // 不关心错误，只想检查 Write 的调用深度
 
-	if writeDepth != 4*(myDepth+2) { // 2 should be multiWriter.Write and writerFunc.Write
+	if writeDepth != 4*(myDepth+2) { // 2 应该是 multiWriter.Write 和 writerFunc.Write
 		t.Errorf("multiWriter did not flatten chained multiWriters: expected writeDepth %d, got %d",
 			4*(myDepth+2), writeDepth)
 	}
@@ -215,7 +215,7 @@ func TestMultiWriterError(t *testing.T) {
 	}
 }
 
-// Test that MultiReader copies the input slice and is insulated from future modification.
+// 测试 MultiReader 复制输入切片并与未来的修改隔离。
 func TestMultiReaderCopy(t *testing.T) {
 	slice := []Reader{strings.NewReader("hello world")}
 	r := MultiReader(slice...)
@@ -226,7 +226,7 @@ func TestMultiReaderCopy(t *testing.T) {
 	}
 }
 
-// Test that MultiWriter copies the input slice and is insulated from future modification.
+// 测试 MultiWriter 复制输入切片并与未来的修改隔离。
 func TestMultiWriterCopy(t *testing.T) {
 	var buf strings.Builder
 	slice := []Writer{&buf}
@@ -241,14 +241,14 @@ func TestMultiWriterCopy(t *testing.T) {
 	}
 }
 
-// readerFunc is a Reader implemented by the underlying func.
+// readerFunc 是由底层函数实现的 Reader。
 type readerFunc func(p []byte) (int, error)
 
 func (f readerFunc) Read(p []byte) (int, error) {
 	return f(p)
 }
 
-// callDepth returns the logical call depth for the given PCs.
+// callDepth 返回给定 PC 的逻辑调用深度。
 func callDepth(callers []uintptr) (depth int) {
 	frames := runtime.CallersFrames(callers)
 	more := true
@@ -259,46 +259,46 @@ func callDepth(callers []uintptr) (depth int) {
 	return
 }
 
-// Test that MultiReader properly flattens chained multiReaders when Read is called
+// 测试当调用 Read 时 MultiReader 正确展平链式 multiReaders
 func TestMultiReaderFlatten(t *testing.T) {
-	pc := make([]uintptr, 1000) // 1000 should fit the full stack
+	pc := make([]uintptr, 1000) // 1000 应该能容纳完整的调用栈
 	n := runtime.Callers(0, pc)
 	var myDepth = callDepth(pc[:n])
-	var readDepth int // will contain the depth from which fakeReader.Read was called
+	var readDepth int // 将包含调用 fakeReader.Read 时的深度
 	var r Reader = MultiReader(readerFunc(func(p []byte) (int, error) {
 		n := runtime.Callers(1, pc)
 		readDepth = callDepth(pc[:n])
 		return 0, errors.New("irrelevant")
 	}))
 
-	// chain a bunch of multiReaders
+	// 链接一堆 multiReaders
 	for i := 0; i < 100; i++ {
 		r = MultiReader(r)
 	}
 
-	r.Read(nil) // don't care about errors, just want to check the call-depth for Read
+	r.Read(nil) // 不关心错误，只想检查 Read 的调用深度
 
-	if readDepth != myDepth+2 { // 2 should be multiReader.Read and fakeReader.Read
+	if readDepth != myDepth+2 { // 2 应该是 multiReader.Read 和 fakeReader.Read
 		t.Errorf("multiReader did not flatten chained multiReaders: expected readDepth %d, got %d",
 			myDepth+2, readDepth)
 	}
 }
 
-// byteAndEOFReader is a Reader which reads one byte (the underlying
-// byte) and EOF at once in its Read call.
+// byteAndEOFReader 是一个 Reader，在其 Read 调用中同时读取一个字节
+// （底层字节）和 EOF。
 type byteAndEOFReader byte
 
 func (b byteAndEOFReader) Read(p []byte) (n int, err error) {
 	if len(p) == 0 {
-		// Read(0 bytes) is useless. We expect no such useless
-		// calls in this test.
+		// Read(0 bytes) 是无用的。我们预期在此测试中
+		// 不会有这样无用的调用。
 		panic("unexpected call")
 	}
 	p[0] = byte(b)
 	return 1, EOF
 }
 
-// This used to yield bytes forever; issue 16795.
+// 这曾经会永远产生字节；issue 16795。
 func TestMultiReaderSingleByteWithEOF(t *testing.T) {
 	got, err := ReadAll(LimitReader(MultiReader(byteAndEOFReader('a'), byteAndEOFReader('b')), 10))
 	if err != nil {
@@ -310,9 +310,9 @@ func TestMultiReaderSingleByteWithEOF(t *testing.T) {
 	}
 }
 
-// Test that a reader returning (n, EOF) at the end of a MultiReader
-// chain continues to return EOF on its final read, rather than
-// yielding a (0, EOF).
+// 测试在 MultiReader 链末尾返回 (n, EOF) 的 reader
+// 在其最后一次读取时继续返回 EOF，而不是
+// 产生 (0, EOF)。
 func TestMultiReaderFinalEOF(t *testing.T) {
 	r := MultiReader(bytes.NewReader(nil), byteAndEOFReader('a'))
 	buf := make([]byte, 2)
@@ -325,9 +325,8 @@ func TestMultiReaderFinalEOF(t *testing.T) {
 func TestMultiReaderFreesExhaustedReaders(t *testing.T) {
 	var mr Reader
 	closed := make(chan struct{})
-	// The closure ensures that we don't have a live reference to buf1
-	// on our stack after MultiReader is inlined (Issue 18819).  This
-	// is a work around for a limitation in liveness analysis.
+	// 闭包确保在 MultiReader 被内联后我们在栈上没有对 buf1 的
+	// 活引用（Issue 18819）。这是对活性分析限制的一个变通方法。
 	func() {
 		buf1 := bytes.NewReader([]byte("foo"))
 		buf2 := bytes.NewReader([]byte("bar"))
@@ -361,15 +360,15 @@ func TestInterleavedMultiReader(t *testing.T) {
 
 	buf := make([]byte, 4)
 
-	// Have mr2 use mr1's []Readers.
-	// Consume r1 (and clear it for GC to handle) and consume part of r2.
+	// 让 mr2 使用 mr1 的 []Readers。
+	// 消耗 r1（并清除它让 GC 处理）并消耗 r2 的一部分。
 	n, err := ReadFull(mr2, buf)
 	if got := string(buf[:n]); got != "1234" || err != nil {
 		t.Errorf(`ReadFull(mr2) = (%q, %v), want ("1234", nil)`, got, err)
 	}
 
-	// Consume the rest of r2 via mr1.
-	// This should not panic even though mr2 cleared r1.
+	// 通过 mr1 消耗 r2 的剩余部分。
+	// 即使 mr2 清除了 r1，这也不应该 panic。
 	n, err = ReadFull(mr1, buf)
 	if got := string(buf[:n]); got != "5678" || err != nil {
 		t.Errorf(`ReadFull(mr1) = (%q, %v), want ("5678", nil)`, got, err)

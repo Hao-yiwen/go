@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
@@ -13,29 +13,29 @@ import (
 // ----------------------------------------------------------------------------
 // API
 
-// An Interface represents an interface type.
+// 一个Interface represents an interface type.
 type Interface struct {
 	check     *Checker     // for error reporting; nil once type set is computed
 	methods   []*Func      // ordered list of explicitly declared methods
 	embeddeds []Type       // ordered list of explicitly embedded elements
 	embedPos  *[]token.Pos // positions of embedded elements; or nil (for error messages) - use pointer to save space
 	implicit  bool         // interface is wrapper for type set literal (non-interface T, ~T, or A|B)
-	complete  bool         // indicates that obj, methods, and embeddeds are set and type set can be computed
+	complete  bool         // 指示 obj, methods, and embeddeds are set and type set can be computed
 
 	tset *_TypeSet // type set described by this interface, computed lazily
 }
 
-// typeSet returns the type set for interface t.
+// typeSet 返回the type set for interface t.
 func (t *Interface) typeSet() *_TypeSet { return computeInterfaceTypeSet(t.check, nopos, t) }
 
-// emptyInterface represents the empty (completed) interface
+// emptyInterface 表示the empty (completed) interface
 var emptyInterface = Interface{complete: true, tset: &topTypeSet}
 
-// NewInterface returns a new interface for the given methods and embedded types.
+// NewInterface 返回a new interface for the given methods and embedded types.
 // NewInterface takes ownership of the provided methods and may modify their types
 // by setting missing receivers.
 //
-// Deprecated: Use NewInterfaceType instead which allows arbitrary embedded types.
+// Deprecated: Use NewInterfaceType instead which 允许 arbitrary embedded types.
 func NewInterface(methods []*Func, embeddeds []*Named) *Interface {
 	tnames := make([]Type, len(embeddeds))
 	for i, t := range embeddeds {
@@ -44,11 +44,11 @@ func NewInterface(methods []*Func, embeddeds []*Named) *Interface {
 	return NewInterfaceType(methods, tnames)
 }
 
-// NewInterfaceType returns a new interface for the given methods and embedded
+// NewInterfaceType 返回a new interface for the given methods and embedded
 // types. NewInterfaceType takes ownership of the provided methods and may
 // modify their types by setting missing receivers.
 //
-// To avoid race conditions, the interface's type set should be computed before
+// To avoid race conditions, the interface's type set 应该是 computed before
 // concurrent use of the interface, by explicitly calling Complete.
 func NewInterfaceType(methods []*Func, embeddeds []Type) *Interface {
 	if len(methods) == 0 && len(embeddeds) == 0 {
@@ -73,7 +73,7 @@ func NewInterfaceType(methods []*Func, embeddeds []Type) *Interface {
 	return typ
 }
 
-// check may be nil
+// check 可能是 nil
 func (check *Checker) newInterface() *Interface {
 	typ := &Interface{check: check}
 	if check != nil {
@@ -82,65 +82,65 @@ func (check *Checker) newInterface() *Interface {
 	return typ
 }
 
-// MarkImplicit marks the interface t as implicit, meaning this interface
+// MarkImplicit 标记the interface t as implicit, meaning this interface
 // corresponds to a constraint literal such as ~T or A|B without explicit
-// interface embedding. MarkImplicit should be called before any concurrent use
+// interface embedding. MarkImplicit 应该是 called before any concurrent use
 // of implicit interfaces.
 func (t *Interface) MarkImplicit() {
 	t.implicit = true
 }
 
-// NumExplicitMethods returns the number of explicitly declared methods of interface t.
+// NumExplicitMethods 返回the number of explicitly declared methods of interface t.
 func (t *Interface) NumExplicitMethods() int { return len(t.methods) }
 
-// ExplicitMethod returns the i'th explicitly declared method of interface t for 0 <= i < t.NumExplicitMethods().
+// ExplicitMethod 返回the i'th explicitly declared method of interface t for 0 <= i < t.NumExplicitMethods().
 // The methods are ordered by their unique [Id].
 func (t *Interface) ExplicitMethod(i int) *Func { return t.methods[i] }
 
-// NumEmbeddeds returns the number of embedded types in interface t.
+// NumEmbeddeds 返回the number of embedded types in interface t.
 func (t *Interface) NumEmbeddeds() int { return len(t.embeddeds) }
 
-// Embedded returns the i'th embedded defined (*[Named]) type of interface t for 0 <= i < t.NumEmbeddeds().
-// The result is nil if the i'th embedded type is not a defined type.
+// Embedded 返回the i'th embedded defined (*[Named]) type of interface t for 0 <= i < t.NumEmbeddeds().
+// The result is nil 如果 i'th embedded type is not a defined type.
 //
 // Deprecated: Use [Interface.EmbeddedType] which is not restricted to defined (*[Named]) types.
 func (t *Interface) Embedded(i int) *Named { return asNamed(t.embeddeds[i]) }
 
-// EmbeddedType returns the i'th embedded type of interface t for 0 <= i < t.NumEmbeddeds().
+// EmbeddedType 返回the i'th embedded type of interface t for 0 <= i < t.NumEmbeddeds().
 func (t *Interface) EmbeddedType(i int) Type { return t.embeddeds[i] }
 
-// NumMethods returns the total number of methods of interface t.
+// NumMethods 返回the total number of methods of interface t.
 func (t *Interface) NumMethods() int { return t.typeSet().NumMethods() }
 
-// Method returns the i'th method of interface t for 0 <= i < t.NumMethods().
+// Method 返回the i'th method of interface t for 0 <= i < t.NumMethods().
 // The methods are ordered by their unique Id.
 func (t *Interface) Method(i int) *Func { return t.typeSet().Method(i) }
 
-// Empty reports whether t is the empty interface.
+// Empty 报告whether t 是 empty interface.
 func (t *Interface) Empty() bool { return t.typeSet().IsAll() }
 
-// IsComparable reports whether each type in interface t's type set is comparable.
+// IsComparable 报告whether each type in interface t's type set is comparable.
 func (t *Interface) IsComparable() bool { return t.typeSet().IsComparable(nil) }
 
-// IsMethodSet reports whether the interface t is fully described by its method
+// IsMethodSet 报告whether the interface t is fully described by its method
 // set.
 func (t *Interface) IsMethodSet() bool { return t.typeSet().IsMethodSet() }
 
-// IsImplicit reports whether the interface t is a wrapper for a type set literal.
+// IsImplicit 报告whether the interface t 是一个 wrapper for a type set literal.
 func (t *Interface) IsImplicit() bool { return t.implicit }
 
-// Complete computes the interface's type set. It must be called by users of
+// Complete computes the interface's type set. It 必须是 called by users of
 // [NewInterfaceType] and [NewInterface] after the interface's embedded types are
 // fully defined and before using the interface type in any way other than to
 // form other types. The interface must not contain duplicate methods or a
-// panic occurs. Complete returns the receiver.
+// panic occurs. Complete 返回 receiver.
 //
 // Interface types that have been completed are safe for concurrent use.
 func (t *Interface) Complete() *Interface {
 	if !t.complete {
 		t.complete = true
 	}
-	t.typeSet() // checks if t.tset is already set
+	t.typeSet() // 检查 t.tset 是一个lready set
 	return t
 }
 
@@ -212,7 +212,7 @@ func (check *Checker) interfaceType(ityp *Interface, iface *ast.InterfaceType, d
 	}
 
 	// All methods and embedded elements for this interface are collected;
-	// i.e., this interface may be used in a type set computation.
+	// i.e., this interface 可能是 used in a type set computation.
 	ityp.complete = true
 
 	if len(ityp.methods) == 0 && len(ityp.embeddeds) == 0 {
@@ -226,7 +226,7 @@ func (check *Checker) interfaceType(ityp *Interface, iface *ast.InterfaceType, d
 	// (don't sort embeddeds: they must correspond to *embedPos entries)
 
 	// Compute type set as soon as possible to report any errors.
-	// Subsequent uses of type sets will use this computed type
+	// Subsequent uses 类型为 sets will use this computed type
 	// set and won't need to pass in a *Checker.
 	check.later(func() {
 		computeInterfaceTypeSet(check, iface.Pos(), ityp)

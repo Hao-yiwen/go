@@ -2,18 +2,18 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package syslist stores tables of OS and ARCH names that are
-// (or at one point were) acceptable build targets.
+// Package syslist 存储操作系统和体系结构名称表，这些名称是
+// （或曾经是）可接受的构建目标。
 
 package syslist
 
-// Note that this file is read by internal/goarch/gengoarch.go and by
-// internal/goos/gengoos.go. If you change this file, look at those
-// files as well.
+// 注意：此文件由 internal/goarch/gengoarch.go 和
+// internal/goos/gengoos.go 读取。如果您修改此文件，请查看那些
+// 文件。
 
-// KnownOS is the list of past, present, and future known GOOS values.
-// Do not remove from this list, as it is used for filename matching.
-// If you add an entry to this list, look at UnixOS, below.
+// KnownOS 是过去、现在和未来已知 GOOS 值的列表。
+// 不要从此列表中删除，因为它用于文件名匹配。
+// 如果您向此列表添加条目，请查看下面的 UnixOS。
 var KnownOS = map[string]bool{
 	"aix":       true,
 	"android":   true,
@@ -35,9 +35,9 @@ var KnownOS = map[string]bool{
 	"zos":       true,
 }
 
-// UnixOS is the set of GOOS values matched by the "unix" build tag.
-// This is not used for filename matching.
-// This list also appears in cmd/dist/build.go.
+// UnixOS 是与 "unix" 构建标签匹配的 GOOS 值集合。
+// 这不用于文件名匹配。
+// 此列表也显示在 cmd/dist/build.go 中。
 var UnixOS = map[string]bool{
 	"aix":       true,
 	"android":   true,
@@ -53,8 +53,8 @@ var UnixOS = map[string]bool{
 	"solaris":   true,
 }
 
-// KnownArch is the list of past, present, and future known GOARCH values.
-// Do not remove from this list, as it is used for filename matching.
+// KnownArch 是过去、现在和未来已知 GOARCH 值的列表。
+// 不要从此列表中删除，因为它用于文件名匹配。
 var KnownArch = map[string]bool{
 	"386":         true,
 	"amd64":       true,

@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package comment
 
@@ -12,7 +12,7 @@ import (
 	"unicode/utf8"
 )
 
-// A textPrinter holds the state needed for printing a Doc as plain text.
+// 一个textPrinter 保存 state needed for printing a Doc as plain text.
 type textPrinter struct {
 	*Printer
 	long       strings.Builder
@@ -21,7 +21,7 @@ type textPrinter struct {
 	width      int
 }
 
-// Text returns a textual formatting of the [Doc].
+// Text 返回a textual formatting of the [Doc].
 // See the [Printer] documentation for ways to customize the text output.
 func (p *Printer) Text(d *Doc) []byte {
 	tp := &textPrinter{
@@ -207,22 +207,22 @@ func wrap(words []string, max int) (seq []int) {
 	// single very long words. Having done that, it can move on to
 	// minimizing the lo score, which is more interesting.
 	//
-	// The lo score is the sum for each line of the square of the
+	// The lo score 是 sum for each line of the square of the
 	// number of spaces remaining at the end of the line and a
 	// penalty of 64 given out for not ending the line in a
 	// punctuation character (.,:;).
 	// The penalty is somewhat arbitrarily chosen by trying
 	// different amounts and judging how nice the wrapped text looks.
-	// Roughly speaking, using 64 means that we are willing to
+	// Roughly speaking, using 64 意味着 we are willing to
 	// end a line with eight blank spaces in order to end at a
-	// punctuation character, even if the next word would fit in
+	// punctuation character, even 如果 next word would fit in
 	// those spaces.
 	//
 	// We care about ending in punctuation characters because
-	// it makes the text easier to skim if not too many sentences
+	// it 使 the text easier to skim if not too many sentences
 	// or phrases begin with a single word on the previous line.
 
-	// A score is the score (also called weight) for a given line.
+	// 一个score 是 score (also called weight) for a given line.
 	// add and cmp add and compare scores.
 	type score struct {
 		hi int64
@@ -243,7 +243,7 @@ func wrap(words []string, max int) (seq []int) {
 		return 0
 	}
 
-	// total[j] is the total number of runes
+	// total[j] 是 total number of runes
 	// (including separating spaces) in words[:j].
 	total := make([]int, len(words)+1)
 	total[0] = 0
@@ -259,7 +259,7 @@ func wrap(words []string, max int) (seq []int) {
 			return score{0, 0}
 		}
 
-		// Otherwise the weight is the penalty plus the square of the number of
+		// Otherwise the weight 是 penalty plus the square of the number of
 		// characters remaining on the line or by which the line goes over.
 		// In the latter case, that value goes in the hi part of the score.
 		// (See note above.)
@@ -288,7 +288,7 @@ func wrap(words []string, max int) (seq []int) {
 		return cmp(g(c, k), g(b, k)) <= 0
 	}
 
-	// d is a one-ended deque implemented as a slice.
+	// d 是一个 one-ended deque implemented as a slice.
 	d := make([]int, 1, len(words))
 	d[0] = 0
 	bestleft := make([]int, 1, len(words))
@@ -327,7 +327,7 @@ func wrap(words []string, max int) (seq []int) {
 	return seq
 }
 
-// wrapPenalty is the penalty for inserting a line break after word s.
+// wrapPenalty 是 penalty for inserting a line break after word s.
 func wrapPenalty(s string) int64 {
 	switch s[len(s)-1] {
 	case '.', ',', ':', ';':

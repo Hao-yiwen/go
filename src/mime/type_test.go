@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package mime
 
@@ -36,12 +36,10 @@ func setType(ext, typ string) {
 
 func TestTypeByExtension(t *testing.T) {
 	once = sync.Once{}
-	// initMimeForTests returns the platform-specific extension =>
-	// type tests. On Unix and Plan 9, this also tests the parsing
-	// of MIME text files (in testdata/*). On Windows, we test the
-	// real registry on the machine and assume that ".png" exists
-	// there, which empirically it always has, for all versions of
-	// Windows.
+	// initMimeForTests 返回平台特定的扩展名 => 类型测试。
+	// 在 Unix 和 Plan 9 上，这也测试 MIME 文本文件的解析（在 testdata/* 中）。
+	// 在 Windows 上，我们测试机器上的真实注册表，并假设 ".png" 存在于那里，
+	// 根据经验，所有版本的 Windows 上都是如此。
 	typeTests := initMimeForTests()
 
 	for ext, want := range typeTests {
@@ -66,7 +64,7 @@ func TestTypeByExtension_LocalData(t *testing.T) {
 		".bar":          "x/bar",
 		".Bar":          "x/bar; capital=1",
 		".sdlkfjskdlfj": "",
-		".t1":           "", // testdata shouldn't be used
+		".t1":           "", // testdata 不应被使用
 	}
 
 	for ext, want := range tests {
@@ -88,7 +86,7 @@ func TestTypeByExtensionCase(t *testing.T) {
 	})
 	defer cleanup()
 
-	// case-sensitive lookup
+	// 区分大小写的查找
 	if got := TypeByExtension(".tesT"); got != custom {
 		t.Fatalf("for .tesT, got %q; want %q", got, custom)
 	}
@@ -96,7 +94,7 @@ func TestTypeByExtensionCase(t *testing.T) {
 		t.Fatalf("for .TEST, got %q; want %s", got, caps)
 	}
 
-	// case-insensitive
+	// 不区分大小写
 	if got := TypeByExtension(".TesT"); got != custom {
 		t.Fatalf("for .TesT, got %q; want %q", got, custom)
 	}
@@ -119,7 +117,7 @@ func TestExtensionsByType(t *testing.T) {
 		wantErr string
 	}{
 		{typ: "image/gif", want: []string{".gif"}},
-		{typ: "image/png", want: []string{".png"}}, // lowercase
+		{typ: "image/png", want: []string{".png"}}, // 小写
 		{typ: "foo/letter", want: []string{".a", ".b"}},
 		{typ: "x/unknown", want: nil},
 	}
@@ -199,7 +197,7 @@ func BenchmarkExtensionsByType(b *testing.B) {
 func TestExtensionsByType2(t *testing.T) {
 	cleanup := setMimeInit(func() {
 		clearMimeTypes()
-		// Initialize built-in types like in type.go before osInitMime.
+		// 像 type.go 中那样在 osInitMime 之前初始化内置类型。
 		setMimeTypes(builtinTypesLower, builtinTypesLower)
 	})
 	defer cleanup()

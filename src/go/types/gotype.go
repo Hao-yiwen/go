@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build ignore
 
@@ -180,7 +180,7 @@ func report(err error) {
 	errorCount++
 }
 
-// parse may be called concurrently.
+// parse 可能是 called concurrently.
 func parse(filename string, src any) (*ast.File, error) {
 	if *verbose {
 		fmt.Println(filename)
@@ -222,10 +222,10 @@ func parseFiles(dir string, filenames []string) ([]*ast.File, error) {
 	for _, err := range errors {
 		if err != nil {
 			first = err
-			// If we have an error, some files may be nil.
+			// If we have an error, some files 可能是 nil.
 			// Remove them. (The go/parser always returns
 			// a possibly partial AST even in the presence
-			// of errors, except if the file doesn't exist
+			// of errors, except 如果 file doesn't exist
 			// in the first place, in which case it cannot
 			// matter.)
 			i := 0
@@ -342,7 +342,7 @@ func main() {
 	files, err := getPkgFiles(flag.Args())
 	if err != nil {
 		report(err)
-		// ok to continue (files may be empty, but not nil)
+		// ok to continue (files 可能是 empty, but not nil)
 	}
 
 	checkPkgFiles(files)

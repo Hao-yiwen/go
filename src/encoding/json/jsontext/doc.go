@@ -1,12 +1,12 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
-// Package jsontext implements syntactic processing of JSON
+// jsontext 包实现了 syntactic processing of JSON
 // as specified in RFC 4627, RFC 7159, RFC 7493, RFC 8259, and RFC 8785.
-// JSON is a simple data interchange format that can represent
+// JSON 是一个 simple data interchange format that can represent
 // primitive data types such as booleans, strings, and numbers,
 // in addition to structured data types such as objects and arrays.
 //
@@ -20,7 +20,7 @@
 //
 // # Tokens and Values
 //
-// A JSON token refers to the basic structural elements of JSON:
+// 一个JSON token refers to the basic structural elements of JSON:
 //
 //   - a JSON literal (i.e., null, true, or false)
 //   - a JSON string (e.g., "hello, world!")
@@ -28,20 +28,20 @@
 //   - a begin or end delimiter for a JSON object (i.e., '{' or '}')
 //   - a begin or end delimiter for a JSON array (i.e., '[' or ']')
 //
-// A JSON token is represented by the [Token] type in Go. Technically,
+// 一个JSON token is represented by the [Token] type in Go. Technically,
 // there are two additional structural characters (i.e., ':' and ','),
 // but there is no [Token] representation for them since their presence
 // can be inferred by the structure of the JSON grammar itself.
 // For example, there must always be an implicit colon between
 // the name and value of a JSON object member.
 //
-// A JSON value refers to a complete unit of JSON data:
+// 一个JSON value refers to a complete unit of JSON data:
 //
 //   - a JSON literal, string, or number
 //   - a JSON object (e.g., `{"name":"value"}`)
 //   - a JSON array (e.g., `[1,2,3,]`)
 //
-// A JSON value is represented by the [Value] type in Go and is a []byte
+// 一个JSON value is represented by the [Value] type in Go and 是一个 []byte
 // containing the raw textual representation of the value. There is some overlap
 // between tokens and values as both contain literals, strings, and numbers.
 // However, only a value can represent the entirety of a JSON object or array.
@@ -49,7 +49,7 @@
 // The [Encoder] and [Decoder] types contain methods to read or write the next
 // [Token] or [Value] in a sequence. They maintain a state machine to validate
 // whether the sequence of JSON tokens and/or values produces a valid JSON.
-// [Options] may be passed to the [NewEncoder] or [NewDecoder] constructors
+// [Options] 可能是 passed to the [NewEncoder] or [NewDecoder] constructors
 // to configure the syntactic behavior of encoding and decoding.
 //
 // # Terminology
@@ -89,9 +89,9 @@
 //     but does not require (but recommends) that object names be unique.
 //   - RFC 7493 requires the use of UTF-8
 //     and also requires that object names be unique.
-//   - RFC 8785 defines a canonical representation. It requires the use of UTF-8
+//   - RFC 8785 定义 a canonical representation. It requires the use of UTF-8
 //     and also requires that object names be unique and in a specific ordering.
-//     It specifies exactly how strings and numbers must be formatted.
+//     It 指定 exactly how strings and numbers 必须是 formatted.
 //
 // The primary difference between RFC 4627 and RFC 7159 is that the former
 // restricted top-level values to only JSON objects and arrays, while
@@ -100,8 +100,8 @@
 //
 // By default, this package operates on RFC 7493, but can be configured
 // to operate according to the other RFC specifications.
-// RFC 7493 is a stricter subset of RFC 8259 and fully compliant with it.
-// In particular, it makes specific choices about behavior that RFC 8259
+// RFC 7493 是一个 stricter subset of RFC 8259 and fully compliant with it.
+// In particular, it 使 specific choices about behavior that RFC 8259
 // leaves as undefined in order to ensure greater interoperability.
 //
 // # Security Considerations

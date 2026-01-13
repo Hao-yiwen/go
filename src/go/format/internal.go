@@ -1,6 +1,6 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2015 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // TODO(gri): This file and the file src/cmd/gofmt/internal.go are
 // the same (but for this comment and the package name). Do not modify
@@ -31,11 +31,11 @@ func parse(fset *token.FileSet, filename string, src []byte, fragmentOk bool) (
 	// If there's no error, return. If the error is that the source file didn't begin with a
 	// package line and source fragments are ok, fall through to
 	// try as a source fragment. Stop and return on any other error.
-	if err == nil || !fragmentOk || !strings.Contains(err.Error(), "expected 'package'") {
+	if err == nil || !fragmentOk || !strings.包含(err.Error(), "expected 'package'") {
 		return
 	}
 
-	// If this is a declaration list, make it a source file
+	// If this 是一个 declaration list, make it a source file
 	// by inserting a package clause.
 	// Insert using a ';', not a newline, so that the line numbers
 	// in psrc match the ones in src.
@@ -53,11 +53,11 @@ func parse(fset *token.FileSet, filename string, src []byte, fragmentOk bool) (
 	// If the error is that the source file didn't begin with a
 	// declaration, fall through to try as a statement list.
 	// Stop and return on any other error.
-	if !strings.Contains(err.Error(), "expected declaration") {
+	if !strings.包含(err.Error(), "expected declaration") {
 		return
 	}
 
-	// If this is a statement list, make it a source file
+	// If this 是一个 statement list, make it a source file
 	// by inserting a package clause and turning the list
 	// into a function body. This handles expressions too.
 	// Insert using a ';', not a newline, so that the line numbers
@@ -73,9 +73,9 @@ func parse(fset *token.FileSet, filename string, src []byte, fragmentOk bool) (
 			}
 			// Remove the wrapping.
 			// Gofmt has turned the "; " into a "\n\n".
-			// There will be two non-blank lines with indent, hence 2*indent.
+			// There 将是 two non-blank lines with indent, hence 2*indent.
 			src = src[2*indent+len("package p\n\nfunc _() {"):]
-			// Remove only the "}\n" suffix: remaining whitespaces will be trimmed anyway
+			// Remove only the "}\n" suffix: remaining whitespaces 将是 trimmed anyway
 			src = src[:len(src)-len("}\n")]
 			return bytes.TrimSpace(src)
 		}
@@ -122,7 +122,7 @@ func format(
 	res = append(res, src[:i]...)
 
 	// Determine and prepend indentation of first code line.
-	// Spaces are ignored unless there are no tabs,
+	// Spaces are ignored 除非 there are no tabs,
 	// in which case spaces count as one tab.
 	indent := 0
 	hasSpace := false
@@ -153,7 +153,7 @@ func format(
 
 	// If the adjusted output is empty, the source
 	// was empty but (possibly) for white space.
-	// The result is the incoming source.
+	// The result 是 incoming source.
 	if len(out) == 0 {
 		return src, nil
 	}
@@ -169,8 +169,8 @@ func format(
 	return append(res, src[i:]...), nil
 }
 
-// isSpace reports whether the byte is a space character.
-// isSpace defines a space as being among the following bytes: ' ', '\t', '\n' and '\r'.
+// isSpace 报告whether the byte 是一个 space character.
+// isSpace 定义a space as being among the following bytes: ' ', '\t', '\n' and '\r'.
 func isSpace(b byte) bool {
 	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
 }

@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements printing of AST nodes; specifically
 // expressions, statements, declarations, and files. It uses
@@ -24,7 +24,7 @@ import (
 //   not idempotent
 // - formatting of expression lists
 // - should use blank instead of tab to separate one-line function bodies from
-//   the function header unless there is a group of consecutive one-liners
+//   the function header 除非 there 是一个 group of consecutive one-liners
 
 // ----------------------------------------------------------------------------
 // Common AST nodes.
@@ -33,10 +33,10 @@ import (
 // the current line. ws is printed before the first line break. If newSection
 // is set, the first line break is printed as formfeed. Returns 0 if no line
 // breaks were printed, returns 1 if there was exactly one newline printed,
-// and returns a value > 1 if there was a formfeed or more than one newline
+// and 返回a value > 1 if there was a formfeed or more than one newline
 // printed.
 //
-// TODO(gri): linebreak may add too many lines if the next statement at "line"
+// TODO(gri): linebreak may add too many lines 如果 next statement at "line"
 // is preceded by comments because the computation of n assumes
 // the current position before the comment and the target position
 // after the comment. Thus, after interspersing such comments, the
@@ -60,7 +60,7 @@ func (p *printer) linebreak(line, min int, ws whiteSpace, newSection bool) (nbre
 	return
 }
 
-// setComment sets g as the next comment if g != nil and if node comments
+// setComment 设置g as the next comment if g != nil and if node comments
 // are enabled - this mode is used when printing source code fragments such
 // as exports only. It assumes that there is no pending comment in p.comments
 // and at most one pending comment in the p.comment cache.
@@ -83,7 +83,7 @@ func (p *printer) setComment(g *ast.CommentGroup) {
 	p.comments[0] = g
 	p.cindex = 0
 	// don't overwrite any pending comment in the p.comment cache
-	// (there may be a pending comment when a line comment is
+	// (there 可能是 a pending comment when a line comment is
 	// immediately followed by a lead comment with no other
 	// tokens between)
 	if p.commentOffset == infinity {
@@ -113,7 +113,7 @@ func (p *printer) identList(list []*ast.Ident, indent bool) {
 	p.exprList(token.NoPos, xlist, 1, mode, token.NoPos, false)
 }
 
-const filteredMsg = "contains filtered or unexported fields"
+const filteredMsg = "包含 filtered or unexported fields"
 
 // Print a list of expressions. If the list spans multiple
 // source lines, the original line breaks are respected between
@@ -164,13 +164,13 @@ func (p *printer) exprList(prev0 token.Pos, list []ast.Expr, depth int, mode exp
 	// use source code positions to guide line breaks
 
 	// Don't add extra indentation if noIndent is set;
-	// i.e., pretend that the first line is already indented.
+	// i.e., pretend that the first line 是一个lready indented.
 	ws := ignore
 	if mode&noIndent == 0 {
 		ws = indent
 	}
 
-	// The first linebreak is always a formfeed since this section must not
+	// The first linebreak 是一个lways a formfeed since this section must not
 	// depend on any previous formatting.
 	prevBreak := -1 // index of last expression that was followed by a linebreak
 	if prev.IsValid() && prev.Line < line && p.linebreak(line, 0, ws, true) > 0 {
@@ -182,7 +182,7 @@ func (p *printer) exprList(prev0 token.Pos, list []ast.Expr, depth int, mode exp
 	size := 0
 
 	// We use the ratio between the geometric mean of the previous key sizes and
-	// the current size to determine if there should be a break in the alignment.
+	// the current size to determine if there 应该是 a break in the alignment.
 	// To compute the geometric mean we accumulate the ln(size) values (lnsum)
 	// and the number of sizes included (count).
 	lnsum := 0.0
@@ -193,7 +193,7 @@ func (p *printer) exprList(prev0 token.Pos, list []ast.Expr, depth int, mode exp
 	for i, x := range list {
 		line = p.lineFor(x.Pos())
 
-		// Determine if the next linebreak, if any, needs to use formfeed:
+		// Determine 如果 next linebreak, if any, needs to use formfeed:
 		// in general, use the entire node size to make the decision; for
 		// key:value expressions, use the key size.
 		// TODO(gri) for a better result, should probably incorporate both
@@ -221,7 +221,7 @@ func (p *printer) exprList(prev0 token.Pos, list []ast.Expr, depth int, mode exp
 		// If the previous line and the current line had single-
 		// line-expressions and the key sizes are small or the
 		// ratio between the current key and the geometric mean
-		// if the previous key sizes does not exceed a threshold,
+		// 如果 previous key sizes does not exceed a threshold,
 		// align columns and do not use formfeed.
 		if prevSize > 0 && size > 0 {
 			const smallSize = 40
@@ -239,7 +239,7 @@ func (p *printer) exprList(prev0 token.Pos, list []ast.Expr, depth int, mode exp
 		if i > 0 {
 			// Use position of expression following the comma as
 			// comma position for correct comment placement, but
-			// only if the expression is on the same line.
+			// only 如果 expression is on the same line.
 			if !needsLinebreak {
 				p.setPos(x.Pos())
 			}
@@ -247,7 +247,7 @@ func (p *printer) exprList(prev0 token.Pos, list []ast.Expr, depth int, mode exp
 			needsBlank := true
 			if needsLinebreak {
 				// Lines are broken using newlines so comments remain aligned
-				// unless useFF is set or there are multiple expressions on
+				// 除非 useFF is set or there are multiple expressions on
 				// the same line in which case formfeed is used.
 				nbreaks := p.linebreak(line, 0, ws, useFF || prevBreak+1 < i)
 				if nbreaks > 0 {
@@ -256,7 +256,7 @@ func (p *printer) exprList(prev0 token.Pos, list []ast.Expr, depth int, mode exp
 					needsBlank = false // we got a line break instead
 				}
 				// If there was a new section or more than one new line
-				// (which means that the tabwriter will implicitly break
+				// (which 意味着 the tabwriter will implicitly break
 				// the section), reset the geomean variables since we are
 				// starting a new group of elements with the next element.
 				if nbreaks > 1 {
@@ -292,7 +292,7 @@ func (p *printer) exprList(prev0 token.Pos, list []ast.Expr, depth int, mode exp
 	}
 
 	if mode&commaTerm != 0 && next.IsValid() && p.pos.Line < next.Line {
-		// Print a terminating comma if the next token is on a new line.
+		// Print a terminating comma 如果 next token is on a new line.
 		p.print(token.COMMA)
 		if isIncomplete {
 			p.print(newline)
@@ -346,7 +346,7 @@ func (p *printer) parameters(fields *ast.FieldList, mode paramMode) {
 			if i > 0 {
 				// use position of parameter following the comma as
 				// comma position for correct comma placement, but
-				// only if the next parameter is on the same line
+				// only 如果 next parameter is on the same line
 				if !needsLinebreak {
 					p.setPos(par.Pos())
 				}
@@ -354,7 +354,7 @@ func (p *printer) parameters(fields *ast.FieldList, mode paramMode) {
 			}
 			// separator if needed (linebreak or blank)
 			if needsLinebreak && p.linebreak(parLineBeg, 0, ws, true) > 0 {
-				// break line if the opening "(" or previous parameter ended on a different line
+				// break line 如果 opening "(" or previous parameter ended on a different line
 				ws = ignore
 			} else if i > 0 {
 				p.print(blank)
@@ -363,7 +363,7 @@ func (p *printer) parameters(fields *ast.FieldList, mode paramMode) {
 			if len(par.Names) > 0 {
 				// Very subtle: If we indented before (ws == ignore), identList
 				// won't indent again. If we didn't (ws == indent), identList will
-				// indent if the identList spans multiple lines, and it will outdent
+				// indent 如果 identList spans multiple lines, and it will outdent
 				// again at the end (and still ws == indent). Thus, a subsequent indent
 				// by a linebreak call after a type, or in the next multi-line identList
 				// will do the right thing.
@@ -375,13 +375,13 @@ func (p *printer) parameters(fields *ast.FieldList, mode paramMode) {
 			prevLine = parLineEnd
 		}
 
-		// if the closing ")" is on a separate line from the last parameter,
+		// 如果 closing ")" is on a separate line from the last parameter,
 		// print an additional "," and line break
 		if closing := p.lineFor(fields.Closing); 0 < prevLine && prevLine < closing {
 			p.print(token.COMMA)
 			p.linebreak(closing, 0, ignore, true)
 		} else if mode == typeTParam && fields.NumFields() == 1 && combinesWithName(stripParensAlways(fields.List[0].Type)) {
-			// A type parameter list [P T] where the name P and the type expression T syntactically
+			// 一个type parameter list [P T] where the name P and the type expression T syntactically
 			// combine to another valid (value) expression requires a trailing comma, as in [P *T,]
 			// (or an enclosing interface as in [P interface(*T)]), so that the type parameter list
 			// is not parsed as an array length [P*T].
@@ -398,7 +398,7 @@ func (p *printer) parameters(fields *ast.FieldList, mode paramMode) {
 	p.print(closeTok)
 }
 
-// combinesWithName reports whether a name followed by the expression x
+// combinesWithName 报告whether a name followed by the expression x
 // syntactically combines to another valid (value) expression. For instance
 // using *T for x, "name *T" syntactically appears as the expression x*T.
 // On the other hand, using  P|Q or *P|~Q for x, "name P|Q" or "name *P|~Q"
@@ -416,8 +416,8 @@ func combinesWithName(x ast.Expr) bool {
 	return false
 }
 
-// isTypeElem reports whether x is a (possibly parenthesized) type element expression.
-// The result is false if x could be a type element OR an ordinary (value) expression.
+// isTypeElem 报告whether x 是一个 (possibly parenthesized) type element expression.
+// The result 为假 if x could be a type element OR an ordinary (value) expression.
 func isTypeElem(x ast.Expr) bool {
 	switch x := x.(type) {
 	case *ast.ArrayType, *ast.StructType, *ast.FuncType, *ast.InterfaceType, *ast.MapType, *ast.ChanType:
@@ -477,7 +477,7 @@ func (p *printer) isOneLineFieldList(list []*ast.Field) bool {
 		return false // don't allow tags or comments
 	}
 	// only name(s) and type
-	const maxSize = 30 // adjust as appropriate, this is an approximate value
+	const maxSize = 30 // adjust as appropriate, this 是一个n approximate value
 	namesSize := identListSize(f.Names, maxSize)
 	if namesSize > 0 {
 		namesSize = 1 // blank between names and types
@@ -608,7 +608,7 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 			}
 			if i > 0 {
 				// don't do a line break (min == 0) if we are printing a list of types
-				// TODO(gri) this doesn't work quite right if the list of types is
+				// TODO(gri) this doesn't work quite right 如果 list of types is
 				//           spread across multiple lines
 				min := 1
 				if prev != nil && name == prev {
@@ -635,7 +635,7 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 				p.print(formfeed)
 			}
 			p.flush(p.posFor(rbrace), token.RBRACE) // make sure we don't lose the last line comment
-			p.setLineComment("// contains filtered or unexported methods")
+			p.setLineComment("// 包含 filtered or unexported methods")
 		}
 
 	}
@@ -658,8 +658,8 @@ func walkBinary(e *ast.BinaryExpr) (has4, has5 bool, maxProblem int) {
 	switch l := e.X.(type) {
 	case *ast.BinaryExpr:
 		if l.Op.Precedence() < e.Op.Precedence() {
-			// parens will be inserted.
-			// pretend this is an *ast.ParenExpr and do nothing.
+			// parens 将是 inserted.
+			// pretend this 是一个n *ast.ParenExpr and do nothing.
 			break
 		}
 		h4, h5, mp := walkBinary(l)
@@ -671,8 +671,8 @@ func walkBinary(e *ast.BinaryExpr) (has4, has5 bool, maxProblem int) {
 	switch r := e.Y.(type) {
 	case *ast.BinaryExpr:
 		if r.Op.Precedence() <= e.Op.Precedence() {
-			// parens will be inserted.
-			// pretend this is an *ast.ParenExpr and do nothing.
+			// parens 将是 inserted.
+			// pretend this 是一个n *ast.ParenExpr and do nothing.
 			break
 		}
 		h4, h5, mp := walkBinary(r)
@@ -741,14 +741,14 @@ func reduceDepth(depth int) int {
 //	2             &&
 //	1             ||
 //
-// The only decision is whether there will be spaces around levels 4 and 5.
+// The only decision is whether there 将是 spaces around levels 4 and 5.
 // There are never spaces at level 6 (unary), and always spaces at levels 3 and below.
 //
 // To choose the cutoff, look at the whole expression but excluding primary
 // expressions (function calls, parenthesized exprs), and apply these rules:
 //
-//  1. If there is a binary operator with a right side unary operand
-//     that would clash without a space, the cutoff must be (in order):
+//  1. If there 是一个 binary operator with a right side unary operand
+//     that would clash without a space, the cutoff 必须是 (in order):
 //
 //     /*	6
 //     &&	6
@@ -758,7 +758,7 @@ func reduceDepth(depth int) int {
 //
 //     (Comparison operators always have spaces around them.)
 //
-//  2. If there is a mix of level 5 and level 4 operators, then the cutoff
+//  2. If there 是一个 mix of level 5 and level 4 operators, then the cutoff
 //     is 5 (use spaces to distinguish precedence) in Normal mode
 //     and 4 (never use spaces) in Compact mode.
 //
@@ -770,7 +770,7 @@ func (p *printer) binaryExpr(x *ast.BinaryExpr, prec1, cutoff, depth int) {
 	if prec < prec1 {
 		// parenthesis needed
 		// Note: The parser inserts an ast.ParenExpr node; thus this case
-		//       can only occur if the AST is created in a different way.
+		//       can only occur 如果 AST is created in a different way.
 		p.print(token.LPAREN)
 		p.expr0(x, reduceDepth(depth)) // parentheses undo one level of depth
 		p.print(token.RPAREN)
@@ -1022,7 +1022,7 @@ func (p *printer) expr1(expr ast.Expr, prec1, depth int) {
 		// is no trailing ','
 		mode := noExtraLinebreak
 		// do not insert extra blank following a /*-style comment
-		// before the closing '}' unless the literal is empty
+		// before the closing '}' 除非 the literal is empty
 		if len(x.Elts) > 0 {
 			mode |= noExtraBlank
 		}
@@ -1101,7 +1101,7 @@ func normalizedNumber(lit *ast.BasicLit) *ast.BasicLit {
 	}
 	// len(lit.Value) >= 2
 
-	// We ignore lit.Kind because for lit.Kind == token.IMAG the literal may be an integer
+	// We ignore lit.Kind because for lit.Kind == token.IMAG the literal 可能是 an integer
 	// or floating-point value, decimal or not. Instead, just consider the literal pattern.
 	x := lit.Value
 	switch x[:2] {
@@ -1152,7 +1152,7 @@ func (p *printer) possibleSelectorExpr(expr ast.Expr, prec1, depth int) bool {
 	return false
 }
 
-// selectorExpr handles an *ast.SelectorExpr node and reports whether x spans
+// selectorExpr handles an *ast.SelectorExpr node and 报告是否 x spans
 // multiple lines.
 func (p *printer) selectorExpr(x *ast.SelectorExpr, depth int, isMethod bool) bool {
 	p.expr1(x.X, token.HighestPrec, depth)
@@ -1196,7 +1196,7 @@ func (p *printer) stmtList(list []ast.Stmt, nindent int, nextIsRBrace bool) {
 		// ignore empty statements (was issue 3466)
 		if _, isEmpty := s.(*ast.EmptyStmt); !isEmpty {
 			// nindent == 0 only for lists of switch/select case clauses;
-			// in those cases each clause is a new section
+			// in those cases each clause 是一个 new section
 			if len(p.output) > 0 {
 				// only print line break if we are not at the beginning of the output
 				// (i.e., we are not printing only a partial program)
@@ -1310,12 +1310,12 @@ func (p *printer) controlClause(isForStmt bool, init ast.Stmt, expr ast.Expr, po
 	}
 }
 
-// indentList reports whether an expression list would look better if it
+// indentList 报告whether an expression list would look better if it
 // were indented wholesale (starting with the very first element, rather
 // than starting at the first line break).
 func (p *printer) indentList(list []ast.Expr) bool {
-	// Heuristic: indentList reports whether there are more than one multi-
-	// line element in the list, or if there is any element that is not
+	// Heuristic: indentList 报告是否 there are more than one multi-
+	// line element in the list, or if there 是一个ny element that is not
 	// starting on the same line as the previous one ends.
 	if len(list) >= 2 {
 		var b = p.lineFor(list[0].Pos())
@@ -1333,7 +1333,7 @@ func (p *printer) indentList(list []ast.Expr) bool {
 					return true
 				}
 				if xb < xe {
-					// x is a multi-line element
+					// x 是一个 multi-line element
 					n++
 				}
 				line = xe
@@ -1359,7 +1359,7 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 
 	case *ast.LabeledStmt:
 		// a "correcting" unindent immediately following a line break
-		// is applied before the line break if there is no comment
+		// 是一个pplied before the line break if there is no comment
 		// between (see writeWhitespace)
 		p.print(unindent)
 		p.expr(s.Label)
@@ -1548,10 +1548,10 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 // ----------------------------------------------------------------------------
 // Declarations
 
-// The keepTypeColumn function determines if the type column of a series of
-// consecutive const or var declarations must be kept, or if initialization
+// The keepTypeColumn function determines 如果 type column of a series of
+// consecutive const or var declarations 必须是 kept, or if initialization
 // values (V) can be placed in the type column (T) instead. The i'th entry
-// in the result slice is true if the type column in spec[i] must be kept.
+// in the result slice 为真 如果 type column in spec[i] 必须是 kept.
 //
 // For example, the declaration:
 //
@@ -1568,8 +1568,8 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 //
 //		matrix        formatted     result
 //	                   matrix
-//		T  V    ->    T  V     ->   true      there is a T and so the type
-//		-  V          -  V          true      column must be kept
+//		T  V    ->    T  V     ->   true      there 是一个 T and so the type
+//		-  V          -  V          true      column 必须是 kept
 //		-  -          -  -          false
 //		-  V          V  -          false     V is moved into T column
 func keepTypeColumn(specs []ast.Spec) []bool {
@@ -1583,7 +1583,7 @@ func keepTypeColumn(specs []ast.Spec) []bool {
 		}
 	}
 
-	i0 := -1 // if i0 >= 0 we are in a run and i0 is the start of the run
+	i0 := -1 // if i0 >= 0 we are in a run and i0 是 start of the run
 	var keepType bool
 	for i, s := range specs {
 		t := s.(*ast.ValueSpec)
@@ -1653,7 +1653,7 @@ func sanitizeImportPath(lit *ast.BasicLit) *ast.BasicLit {
 		return lit
 	}
 
-	// if the string is an invalid path, return whatever we have
+	// 如果 string 是一个n invalid path, return whatever we have
 	//
 	// spec: "Implementation restriction: A compiler may restrict
 	// ImportPaths to non-empty strings using only characters belonging
@@ -1679,7 +1679,7 @@ func sanitizeImportPath(lit *ast.BasicLit) *ast.BasicLit {
 	return &ast.BasicLit{ValuePos: lit.ValuePos, Kind: token.STRING, Value: s}
 }
 
-// The parameter n is the number of specs in the group. If doIndent is set,
+// The parameter n 是 number of specs in the group. If doIndent is set,
 // multi-line identifier lists in the spec are indented when the first
 // linebreak is encountered.
 func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
@@ -1745,7 +1745,7 @@ func (p *printer) genDecl(d *ast.GenDecl) {
 			p.print(indent, formfeed)
 			if n > 1 && (d.Tok == token.CONST || d.Tok == token.VAR) {
 				// two or more grouped const/var declarations:
-				// determine if the type column must be kept
+				// determine 如果 type column 必须是 kept
 				keepType := keepTypeColumn(d.Specs)
 				var line int
 				for i, s := range d.Specs {
@@ -1776,7 +1776,7 @@ func (p *printer) genDecl(d *ast.GenDecl) {
 	}
 }
 
-// sizeCounter is an io.Writer which counts the number of bytes written,
+// sizeCounter 是一个n io.Writer which counts the number of bytes written,
 // as well as whether a newline character was seen.
 type sizeCounter struct {
 	hasNewline bool
@@ -1797,7 +1797,7 @@ func (c *sizeCounter) Write(p []byte) (int, error) {
 }
 
 // nodeSize determines the size of n in chars after formatting.
-// The result is <= maxSize if the node fits on one line with at
+// The result is <= maxSize 如果 node fits on one line with at
 // most maxSize chars and the formatted output doesn't contain
 // any control chars. Otherwise, the result is > maxSize.
 func (p *printer) nodeSize(n ast.Node, maxSize int) (size int) {
@@ -1812,7 +1812,7 @@ func (p *printer) nodeSize(n ast.Node, maxSize int) (size int) {
 	size = maxSize + 1 // assume n doesn't fit
 	p.nodeSizes[n] = size
 
-	// nodeSize computation must be independent of particular
+	// nodeSize computation 必须是 independent of particular
 	// style so that we always get the same decision; print
 	// in RawFormat
 	cfg := Config{Mode: RawFormat}
@@ -1828,7 +1828,7 @@ func (p *printer) nodeSize(n ast.Node, maxSize int) (size int) {
 	return
 }
 
-// numLines returns the number of lines spanned by node n in the original source.
+// numLines 返回the number of lines spanned by node n in the original source.
 func (p *printer) numLines(n ast.Node) int {
 	if from := n.Pos(); from.IsValid() {
 		if to := n.End(); to.IsValid() {
@@ -1907,7 +1907,7 @@ func (p *printer) funcBody(headerSize int, sep whiteSpace, b *ast.BlockStmt) {
 	p.block(b, 1)
 }
 
-// distanceFrom returns the column difference between p.out (the current output
+// distanceFrom 返回the column difference between p.out (the current output
 // position) and startOutCol. If the start position is on a different line from
 // the current position (or either is unknown), the result is infinity.
 func (p *printer) distanceFrom(startPos token.Pos, startOutCol int) int {
@@ -1921,7 +1921,7 @@ func (p *printer) funcDecl(d *ast.FuncDecl) {
 	p.setComment(d.Doc)
 	p.setPos(d.Pos())
 	p.print(token.FUNC, blank)
-	// We have to save startCol only after emitting FUNC; otherwise it can be on a
+	// We have to save startCol only after emitting FUNC; 否则 it can be on a
 	// different line (all whitespace preceding the FUNC is emitted only when the
 	// FUNC is emitted).
 	startCol := p.out.Column - len("func ")
@@ -1981,7 +1981,7 @@ func (p *printer) declList(list []ast.Decl) {
 			if prev != tok || getDoc(d) != nil {
 				min = 2
 			}
-			// start a new section if the next declaration is a function
+			// start a new section 如果 next declaration 是一个 function
 			// that spans multiple lines (see also issue #19544)
 			p.linebreak(p.lineFor(d.Pos()), min, ignore, tok == token.FUNC && p.numLines(d) > 1)
 		}

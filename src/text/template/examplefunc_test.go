@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package template_test
 
@@ -11,22 +11,22 @@ import (
 	"text/template"
 )
 
-// This example demonstrates a custom function to process template text.
-// It installs the strings.Title function and uses it to
-// Make Title Text Look Good In Our Template's Output.
+// 此示例演示了一个用于处理模板文本的自定义函数。
+// 它安装 strings.Title 函数并使用它来
+// 使标题文本在我们的模板输出中看起来更好。
 func ExampleTemplate_func() {
-	// First we create a FuncMap with which to register the function.
+	// 首先我们创建一个 FuncMap 来注册函数。
 	funcMap := template.FuncMap{
-		// The name "title" is what the function will be called in the template text.
+		// 名称 "title" 是函数在模板文本中被调用的名称。
 		"title": strings.Title,
 	}
 
-	// A simple template definition to test our function.
-	// We print the input text several ways:
-	// - the original
-	// - title-cased
-	// - title-cased and then printed with %q
-	// - printed with %q and then title-cased.
+	// 一个简单的模板定义来测试我们的函数。
+	// 我们以多种方式打印输入文本：
+	// - 原始文本
+	// - 标题大小写
+	// - 标题大小写然后用 %q 打印
+	// - 用 %q 打印然后标题大小写。
 	const templateText = `
 Input: {{printf "%q" .}}
 Output 0: {{title .}}
@@ -34,19 +34,19 @@ Output 1: {{title . | printf "%q"}}
 Output 2: {{printf "%q" . | title}}
 `
 
-	// Create a template, add the function map, and parse the text.
+	// 创建模板，添加函数映射，并解析文本。
 	tmpl, err := template.New("titleTest").Funcs(funcMap).Parse(templateText)
 	if err != nil {
 		log.Fatalf("parsing: %s", err)
 	}
 
-	// Run the template to verify the output.
+	// 运行模板以验证输出。
 	err = tmpl.Execute(os.Stdout, "the go programming language")
 	if err != nil {
 		log.Fatalf("execution: %s", err)
 	}
 
-	// Output:
+	// 输出：
 	// Input: "the go programming language"
 	// Output 0: The Go Programming Language
 	// Output 1: "The Go Programming Language"

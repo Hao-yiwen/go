@@ -1,8 +1,8 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package srcimporter implements importing directly
+// srcimporter 包实现了 importing directly
 // from source files rather than installed packages.
 package srcimporter // import "go/internal/srcimporter"
 
@@ -22,7 +22,7 @@ import (
 	_ "unsafe" // for go:linkname
 )
 
-// An Importer provides the context for importing packages from source code.
+// 一个Importer provides the context for importing packages from source code.
 type Importer struct {
 	ctxt     *build.Context
 	fset     *token.FileSet
@@ -30,7 +30,7 @@ type Importer struct {
 	packages map[string]*types.Package
 }
 
-// New returns a new Importer for the given context, file set, and map
+// New 返回a new Importer for the given context, file set, and map
 // of packages. The context is used to resolve import paths to package paths,
 // and identifying the files belonging to the package. If the context provides
 // non-nil file system functions, they are used instead of the regular package
@@ -45,19 +45,19 @@ func New(ctxt *build.Context, fset *token.FileSet, packages map[string]*types.Pa
 	}
 }
 
-// Importing is a sentinel taking the place in Importer.packages
+// Importing 是一个 sentinel taking the place in Importer.packages
 // for a package that is in the process of being imported.
 var importing types.Package
 
-// Import(path) is a shortcut for ImportFrom(path, ".", 0).
+// Import(path) 是一个 shortcut for ImportFrom(path, ".", 0).
 func (p *Importer) Import(path string) (*types.Package, error) {
 	return p.ImportFrom(path, ".", 0) // use "." rather than "" (see issue #24441)
 }
 
 // ImportFrom imports the package with the given import path resolved from the given srcDir,
-// adds the new package to the set of packages maintained by the importer, and returns the
+// adds the new package to the set of packages maintained by the importer, and 返回
 // package. Package path resolution and file system operations are controlled by the context
-// maintained with the importer. The import mode must be zero but is otherwise ignored.
+// maintained with the importer. The import mode 必须是 zero but is 否则 ignored.
 // Packages that are not comprised entirely of pure Go files may fail to import because the
 // type checker may not be able to determine all exported entities (e.g. due to cgo dependencies).
 func (p *Importer) ImportFrom(path, srcDir string, mode types.ImportMode) (*types.Package, error) {
@@ -78,7 +78,7 @@ func (p *Importer) ImportFrom(path, srcDir string, mode types.ImportMode) (*type
 		return types.Unsafe, nil
 	}
 
-	// no need to re-import if the package was imported completely before
+	// no need to re-import 如果 package was imported completely before
 	pkg := p.packages[bp.ImportPath]
 	if pkg != nil {
 		if pkg == &importing {
@@ -183,7 +183,7 @@ func (p *Importer) parseFiles(dir string, filenames []string) ([]*ast.File, erro
 				return
 			}
 			files[i], errors[i] = parser.ParseFile(p.fset, filepath, src, parser.SkipObjectResolution)
-			src.Close() // ignore Close error - parsing may have succeeded which is all we need
+			src.Close() // ignore Close error - parsing may have succeeded which 是一个ll we need
 		}(i, p.joinPath(dir, filename))
 	}
 	wg.Wait()
@@ -246,7 +246,7 @@ func (p *Importer) cgo(bp *build.Package) (*ast.File, error) {
 // context-controlled file system operations
 
 func (p *Importer) absPath(path string) (string, error) {
-	// TODO(gri) This should be using p.ctxt.AbsPath which doesn't
+	// TODO(gri) This 应该是 using p.ctxt.AbsPath which doesn't
 	// exist but probably should. See also issue #14282.
 	return filepath.Abs(path)
 }

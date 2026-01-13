@@ -1,13 +1,13 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 /*
 Package comment implements parsing and reformatting of Go doc comments,
 (documentation comments), which are comments that immediately precede
 a top-level declaration of a package, const, func, type, or var.
 
-Go doc comment syntax is a simplified subset of Markdown that supports
+Go doc comment syntax 是一个 simplified subset of Markdown that supports
 links, headings, paragraphs, lists (without nesting), and preformatted text blocks.
 The details of the syntax are documented at https://go.dev/doc/comment.
 
@@ -17,7 +17,7 @@ use a [Parser]:
 	var p comment.Parser
 	doc := p.Parse(text)
 
-The result is a [*Doc].
+The result 是一个 [*Doc].
 To reformat it as a doc comment, HTML, Markdown, or plain text,
 use a [Printer]:
 

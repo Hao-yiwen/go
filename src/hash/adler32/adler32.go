@@ -1,16 +1,16 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package adler32 implements the Adler-32 checksum.
+// adler32 包实现了 Adler-32 校验和。
 //
-// It is defined in RFC 1950:
+// 它在 RFC 1950 中定义：
 //
-//	Adler-32 is composed of two sums accumulated per byte: s1 is
-//	the sum of all bytes, s2 is the sum of all s1 values. Both sums
-//	are done modulo 65521. s1 is initialized to 1, s2 to zero.  The
-//	Adler-32 checksum is stored as s2*65536 + s1 in most-
-//	significant-byte first (network) order.
+//	Adler-32 由每字节累加的两个和组成：s1 是
+//	所有字节的和，s2 是所有 s1 值的和。两个和
+//	都对 65521 取模。s1 初始化为 1，s2 初始化为零。
+//	Adler-32 校验和以 s2*65536 + s1 的形式存储，
+//	采用最高有效字节优先（网络）字节序。
 package adler32
 
 import (
@@ -20,28 +20,28 @@ import (
 )
 
 const (
-	// mod is the largest prime that is less than 65536.
+	// mod 是小于 65536 的最大素数。
 	mod = 65521
-	// nmax is the largest n such that
-	// 255 * n * (n+1) / 2 + (n+1) * (mod-1) <= 2^32-1.
-	// It is mentioned in RFC 1950 (search for "5552").
+	// nmax 是满足以下条件的最大 n：
+	// 255 * n * (n+1) / 2 + (n+1) * (mod-1) <= 2^32-1。
+	// 它在 RFC 1950 中提到（搜索 "5552"）。
 	nmax = 5552
 )
 
-// The size of an Adler-32 checksum in bytes.
+// Size 是 Adler-32 校验和的字节大小。
 const Size = 4
 
-// digest represents the partial evaluation of a checksum.
-// The low 16 bits are s1, the high 16 bits are s2.
+// digest 表示校验和的部分计算结果。
+// 低 16 位是 s1，高 16 位是 s2。
 type digest uint32
 
 func (d *digest) Reset() { *d = 1 }
 
-// New returns a new hash.Hash32 computing the Adler-32 checksum. Its
-// Sum method will lay the value out in big-endian byte order. The
-// returned Hash32 also implements [encoding.BinaryMarshaler] and
-// [encoding.BinaryUnmarshaler] to marshal and unmarshal the internal
-// state of the hash.
+// New 返回一个新的 hash.Hash32，用于计算 Adler-32 校验和。
+// 其 Sum 方法将以大端字节序输出值。
+// 返回的 Hash32 还实现了 [encoding.BinaryMarshaler] 和
+// [encoding.BinaryUnmarshaler]，用于序列化和反序列化
+// 哈希的内部状态。
 func New() hash.Hash32 {
 	d := new(digest)
 	d.Reset()
@@ -83,7 +83,7 @@ func (d *digest) Clone() (hash.Cloner, error) {
 	return &r, nil
 }
 
-// Add p to the running checksum d.
+// 将 p 添加到正在运行的校验和 d 中。
 func update(d digest, p []byte) digest {
 	s1, s2 := uint32(d&0xffff), uint32(d>>16)
 	for len(p) > 0 {
@@ -125,5 +125,5 @@ func (d *digest) Sum(in []byte) []byte {
 	return append(in, byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
 }
 
-// Checksum returns the Adler-32 checksum of data.
+// Checksum 返回 data 的 Adler-32 校验和。
 func Checksum(data []byte) uint32 { return uint32(update(1, data)) }

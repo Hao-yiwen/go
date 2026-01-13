@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package cipher
 
@@ -18,15 +18,15 @@ const (
 	gcmBlockSize         = 16
 	gcmStandardNonceSize = 12
 	gcmTagSize           = 16
-	gcmMinimumTagSize    = 12 // NIST SP 800-38D recommends tags with 12 or more bytes.
+	gcmMinimumTagSize    = 12 // NIST SP 800-38D 建议使用 12 字节或更多字节的标签。
 )
 
-// NewGCM returns the given 128-bit, block cipher wrapped in Galois Counter Mode
-// with the standard nonce length.
+// NewGCM 返回给定的 128 位块密码，包装在具有标准随机数长度的
+// 伽罗瓦计数器模式中。
 //
-// In general, the GHASH operation performed by this implementation of GCM is not constant-time.
-// An exception is when the underlying [Block] was created by aes.NewCipher
-// on systems with hardware support for AES. See the [crypto/aes] package documentation for details.
+// 一般来说，此 GCM 实现执行的 GHASH 操作不是常量时间的。
+// 例外情况是当底层 [Block] 是在具有 AES 硬件支持的系统上
+// 由 aes.NewCipher 创建时。详情请参阅 [crypto/aes] 包文档。
 func NewGCM(cipher Block) (AEAD, error) {
 	if fips140only.Enforced() {
 		return nil, errors.New("crypto/cipher: use of GCM with arbitrary IVs is not allowed in FIPS 140-only mode, use NewGCMWithRandomNonce")
@@ -34,13 +34,11 @@ func NewGCM(cipher Block) (AEAD, error) {
 	return newGCM(cipher, gcmStandardNonceSize, gcmTagSize)
 }
 
-// NewGCMWithNonceSize returns the given 128-bit, block cipher wrapped in Galois
-// Counter Mode, which accepts nonces of the given length. The length must not
-// be zero.
+// NewGCMWithNonceSize 返回给定的 128 位块密码，包装在伽罗瓦计数器模式中，
+// 接受给定长度的随机数。长度不能为零。
 //
-// Only use this function if you require compatibility with an existing
-// cryptosystem that uses non-standard nonce lengths. All other users should use
-// [NewGCM], which is faster and more resistant to misuse.
+// 仅当您需要与使用非标准随机数长度的现有加密系统兼容时才使用此函数。
+// 所有其他用户应使用 [NewGCM]，它更快且更能抵抗误用。
 func NewGCMWithNonceSize(cipher Block, size int) (AEAD, error) {
 	if fips140only.Enforced() {
 		return nil, errors.New("crypto/cipher: use of GCM with arbitrary IVs is not allowed in FIPS 140-only mode, use NewGCMWithRandomNonce")
@@ -48,14 +46,13 @@ func NewGCMWithNonceSize(cipher Block, size int) (AEAD, error) {
 	return newGCM(cipher, size, gcmTagSize)
 }
 
-// NewGCMWithTagSize returns the given 128-bit, block cipher wrapped in Galois
-// Counter Mode, which generates tags with the given length.
+// NewGCMWithTagSize 返回给定的 128 位块密码，包装在伽罗瓦计数器模式中，
+// 生成给定长度的标签。
 //
-// Tag sizes between 12 and 16 bytes are allowed.
+// 允许的标签大小在 12 到 16 字节之间。
 //
-// Only use this function if you require compatibility with an existing
-// cryptosystem that uses non-standard tag lengths. All other users should use
-// [NewGCM], which is more resistant to misuse.
+// 仅当您需要与使用非标准标签长度的现有加密系统兼容时才使用此函数。
+// 所有其他用户应使用 [NewGCM]，它更能抵抗误用。
 func NewGCMWithTagSize(cipher Block, tagSize int) (AEAD, error) {
 	if fips140only.Enforced() {
 		return nil, errors.New("crypto/cipher: use of GCM with arbitrary IVs is not allowed in FIPS 140-only mode, use NewGCMWithRandomNonce")
@@ -71,8 +68,8 @@ func newGCM(cipher Block, nonceSize, tagSize int) (AEAD, error) {
 		}
 		return newGCMFallback(cipher, nonceSize, tagSize)
 	}
-	// We don't return gcm.New directly, because it would always return a non-nil
-	// AEAD interface value with type *gcm.GCM even if the *gcm.GCM is nil.
+	// 我们不直接返回 gcm.New，因为即使 *gcm.GCM 为 nil，
+	// 它也总是返回类型为 *gcm.GCM 的非 nil AEAD 接口值。
 	g, err := gcm.New(c, nonceSize, tagSize)
 	if err != nil {
 		return nil, err
@@ -80,16 +77,15 @@ func newGCM(cipher Block, nonceSize, tagSize int) (AEAD, error) {
 	return g, nil
 }
 
-// NewGCMWithRandomNonce returns the given cipher wrapped in Galois Counter
-// Mode, with randomly-generated nonces. The cipher must have been created by
-// [crypto/aes.NewCipher].
+// NewGCMWithRandomNonce 返回包装在伽罗瓦计数器模式中的给定密码，
+// 使用随机生成的随机数。密码必须由 [crypto/aes.NewCipher] 创建。
 //
-// It generates a random 96-bit nonce, which is prepended to the ciphertext by Seal,
-// and is extracted from the ciphertext by Open. The NonceSize of the AEAD is zero,
-// while the Overhead is 28 bytes (the combination of nonce size and tag size).
+// 它生成一个随机的 96 位随机数，由 Seal 预置到密文中，
+// 并由 Open 从密文中提取。AEAD 的 NonceSize 为零，
+// 而 Overhead 为 28 字节（随机数大小和标签大小的组合）。
 //
-// A given key MUST NOT be used to encrypt more than 2^32 messages, to limit the
-// risk of a random nonce collision to negligible levels.
+// 给定的密钥不得用于加密超过 2^32 条消息，以将随机数
+// 冲突的风险限制在可忽略的水平。
 func NewGCMWithRandomNonce(cipher Block) (AEAD, error) {
 	c, ok := cipher.(*aes.Block)
 	if !ok {
@@ -129,19 +125,18 @@ func (g gcmWithRandomNonce) Seal(dst, nonce, plaintext, additionalData []byte) [
 	nonce = out[:gcmStandardNonceSize]
 	ciphertext := out[gcmStandardNonceSize:]
 
-	// The AEAD interface allows using plaintext[:0] or ciphertext[:0] as dst.
+	// AEAD 接口允许使用 plaintext[:0] 或 ciphertext[:0] 作为 dst。
 	//
-	// This is kind of a problem when trying to prepend or trim a nonce, because the
-	// actual AES-GCTR blocks end up overlapping but not exactly.
+	// 当尝试预置或修剪随机数时，这是个问题，因为实际的 AES-GCTR 块
+	// 最终会重叠但不完全重叠。
 	//
-	// In Open, we write the output *before* the input, so unless we do something
-	// weird like working through a chunk of block backwards, it works out.
+	// 在 Open 中，我们在输入*之前*写入输出，所以除非我们做一些奇怪的事情，
+	// 比如反向处理块，否则它会正常工作。
 	//
-	// In Seal, we could work through the input backwards or intentionally load
-	// ahead before writing.
+	// 在 Seal 中，我们可以反向处理输入，或者在写入之前故意预先加载。
 	//
-	// However, the crypto/internal/fips140/aes/gcm APIs also check for exact overlap,
-	// so for now we just do a memmove if we detect overlap.
+	// 然而，crypto/internal/fips140/aes/gcm API 也检查精确重叠，
+	// 所以目前如果我们检测到重叠，就只做一个 memmove。
 	//
 	//     ┌───────────────────────────┬ ─ ─
 	//     │PPPPPPPPPPPPPPPPPPPPPPPPPPP│    │
@@ -176,10 +171,9 @@ func (g gcmWithRandomNonce) Open(dst, nonce, ciphertext, additionalData []byte) 
 	if alias.AnyOverlap(out, additionalData) {
 		panic("crypto/cipher: invalid buffer overlap of output and additional data")
 	}
-	// See the discussion in Seal. Note that if there is any overlap at this
-	// point, it's because out = ciphertext, so out must have enough capacity
-	// even if we sliced the tag off. Also note how [AEAD] specifies that "the
-	// contents of dst, up to its capacity, may be overwritten".
+	// 参见 Seal 中的讨论。注意，如果此时有任何重叠，那是因为 out = ciphertext，
+	// 所以即使我们切掉了标签，out 也必须有足够的容量。还要注意 [AEAD] 如何指定
+	// "dst 的内容，直到其容量，可能会被覆盖"。
 	if alias.AnyOverlap(out, ciphertext) {
 		nonce = make([]byte, gcmStandardNonceSize)
 		copy(nonce, ciphertext)
@@ -197,9 +191,8 @@ func (g gcmWithRandomNonce) Open(dst, nonce, ciphertext, additionalData []byte) 
 	return ret, nil
 }
 
-// gcmAble is an interface implemented by ciphers that have a specific optimized
-// implementation of GCM. crypto/aes doesn't use this anymore, and we'd like to
-// eventually remove it.
+// gcmAble 是一个由具有 GCM 特定优化实现的密码实现的接口。
+// crypto/aes 不再使用它，我们最终希望将其移除。
 type gcmAble interface {
 	NewGCM(nonceSize, tagSize int) (AEAD, error)
 }
@@ -220,9 +213,9 @@ func newGCMFallback(cipher Block, nonceSize, tagSize int) (AEAD, error) {
 	return &gcmFallback{cipher: cipher, nonceSize: nonceSize, tagSize: tagSize}, nil
 }
 
-// gcmFallback is only used for non-AES ciphers, which regrettably we
-// theoretically support. It's a copy of the generic implementation from
-// crypto/internal/fips140/aes/gcm/gcm_generic.go, refer to that file for more details.
+// gcmFallback 仅用于非 AES 密码，遗憾的是我们在理论上支持它。
+// 它是 crypto/internal/fips140/aes/gcm/gcm_generic.go 中
+// 通用实现的副本，详情请参阅该文件。
 type gcmFallback struct {
 	cipher    Block
 	nonceSize int
@@ -306,10 +299,9 @@ func (g *gcmFallback) Open(dst, nonce, ciphertext, additionalData []byte) ([]byt
 	var expectedTag [gcmTagSize]byte
 	gcmAuth(expectedTag[:], &H, &tagMask, ciphertext, additionalData)
 	if subtle.ConstantTimeCompare(expectedTag[:g.tagSize], tag) != 1 {
-		// We sometimes decrypt and authenticate concurrently, so we overwrite
-		// dst in the event of a tag mismatch. To be consistent across platforms
-		// and to avoid releasing unauthenticated plaintext, we clear the buffer
-		// in the event of an error.
+		// 我们有时会同时进行解密和认证，所以在标签不匹配时会覆盖 dst。
+		// 为了在各平台上保持一致，并避免释放未经认证的明文，
+		// 我们在出错时清除缓冲区。
 		clear(out)
 		return nil, errOpen
 	}
@@ -361,10 +353,10 @@ func gcmAuth(out []byte, H, tagMask *[gcmBlockSize]byte, ciphertext, additionalD
 	subtle.XORBytes(out, S, tagMask[:])
 }
 
-// sliceForAppend takes a slice and a requested number of bytes. It returns a
-// slice with the contents of the given slice followed by that many bytes and a
-// second slice that aliases into it and contains only the extra bytes. If the
-// original slice has sufficient capacity then no allocation is performed.
+// sliceForAppend 接受一个切片和请求的字节数。它返回一个切片，
+// 其内容是给定切片的内容后跟那么多字节，以及第二个切片，
+// 它是对第一个切片的别名，只包含额外的字节。
+// 如果原始切片有足够的容量，则不执行分配。
 func sliceForAppend(in []byte, n int) (head, tail []byte) {
 	if total := len(in) + n; cap(in) >= total {
 		head = in[:total]

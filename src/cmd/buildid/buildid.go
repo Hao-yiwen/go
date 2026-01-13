@@ -1,6 +1,6 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -45,7 +45,7 @@ func main() {
 		return
 	}
 
-	// Keep in sync with src/cmd/go/internal/work/buildid.go:updateBuildID
+	// 与 src/cmd/go/internal/work/buildid.go:updateBuildID 保持同步
 
 	f, err := os.Open(file)
 	if err != nil {
@@ -57,7 +57,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// <= go 1.7 doesn't embed the contentID or actionID, so no slash is present
+	// <= go 1.7 不嵌入 contentID 或 actionID，因此没有斜杠
 	if !strings.Contains(id, "/") {
 		log.Fatalf("%s: build ID is a legacy format...binary too old for this tool", file)
 	}

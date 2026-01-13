@@ -1,22 +1,22 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
 /*
-	Floating-point arcsine and arccosine.
+	浮点数反正弦和反余弦。
 
-	They are implemented by computing the arctangent
-	after appropriate range reduction.
+	它们通过在适当的范围归约后
+	计算反正切来实现。
 */
 
-// Asin returns the arcsine, in radians, of x.
+// Asin 返回 x 的反正弦值，以弧度表示。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Asin(±0) = ±0
-//	Asin(x) = NaN if x < -1 or x > 1
+//	Asin(x) = NaN 如果 x < -1 或 x > 1
 func Asin(x float64) float64 {
 	if haveArchAsin {
 		return archAsin(x)
@@ -26,7 +26,7 @@ func Asin(x float64) float64 {
 
 func asin(x float64) float64 {
 	if x == 0 {
-		return x // special case
+		return x // 特殊情况
 	}
 	sign := false
 	if x < 0 {
@@ -34,7 +34,7 @@ func asin(x float64) float64 {
 		sign = true
 	}
 	if x > 1 {
-		return NaN() // special case
+		return NaN() // 特殊情况
 	}
 
 	temp := Sqrt(1 - x*x)
@@ -50,11 +50,11 @@ func asin(x float64) float64 {
 	return temp
 }
 
-// Acos returns the arccosine, in radians, of x.
+// Acos 返回 x 的反余弦值，以弧度表示。
 //
-// Special case is:
+// 特殊情况：
 //
-//	Acos(x) = NaN if x < -1 or x > 1
+//	Acos(x) = NaN 如果 x < -1 或 x > 1
 func Acos(x float64) float64 {
 	if haveArchAcos {
 		return archAcos(x)

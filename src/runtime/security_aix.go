@@ -4,8 +4,8 @@
 
 package runtime
 
-// secureMode is only ever mutated in schedinit, so we don't need to worry about
-// synchronization primitives.
+// secureMode 仅在 schedinit 中被修改，因此我们不需要担心
+// 同步原语。
 var secureMode bool
 
 func initSecureMode() {

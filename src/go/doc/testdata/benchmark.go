@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package testing
 
@@ -15,14 +15,14 @@ import (
 var matchBenchmarks = flag.String("test.bench", "", "regular expression to select benchmarks to run")
 var benchTime = flag.Duration("test.benchtime", 1*time.Second, "approximate run time for each benchmark")
 
-// An internal type but exported because it is cross-package; part of the implementation
+// 一个internal type but exported because it is cross-package; part of the implementation
 // of go test.
 type InternalBenchmark struct {
 	Name string
 	F    func(b *B)
 }
 
-// B is a type passed to Benchmark functions to manage benchmark
+// B 是一个 type passed to Benchmark functions to manage benchmark
 // timing and to specify the number of iterations to run.
 type B struct {
 	common
@@ -53,8 +53,8 @@ func (b *B) StopTimer() {
 	}
 }
 
-// ResetTimer sets the elapsed benchmark time to zero.
-// It does not affect whether the timer is running.
+// ResetTimer 设置the elapsed benchmark time to zero.
+// It 执行not affect whether the timer is running.
 func (b *B) ResetTimer() {
 	if b.timerOn {
 		b.start = time.Now()
@@ -212,7 +212,7 @@ func (r BenchmarkResult) String() string {
 	return fmt.Sprintf("%8d\t%s%s", r.N, ns, mb)
 }
 
-// An internal function but exported because it is cross-package; part of the implementation
+// 一个internal function but exported because it is cross-package; part of the implementation
 // of go test.
 func RunBenchmarks(matchString func(pat, str string) (bool, error), benchmarks []InternalBenchmark) {
 	// If no flag was specified, don't run benchmarks.
@@ -266,7 +266,7 @@ func RunBenchmarks(matchString func(pat, str string) (bool, error), benchmarks [
 // trimOutput shortens the output from a benchmark, which can be very long.
 func (b *B) trimOutput() {
 	// The output is likely to appear multiple times because the benchmark
-	// is run multiple times, but at least it will be seen. This is not a big deal
+	// is run multiple times, but at least it 将是 seen. This is not a big deal
 	// because benchmarks rarely print, but just in case, we trim it if it's too long.
 	const maxNewlines = 10
 	for nlCount, j := 0, 0; j < len(b.output); j++ {

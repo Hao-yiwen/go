@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package template
 
@@ -8,14 +8,13 @@ import (
 	"strings"
 )
 
-// attrTypeMap[n] describes the value of the given attribute.
-// If an attribute affects (or can mask) the encoding or interpretation of
-// other content, or affects the contents, idempotency, or credentials of a
-// network message, then the value in this map is contentTypeUnsafe.
-// This map is derived from HTML5, specifically
+// attrTypeMap[n] 描述给定属性的值。
+// 如果某个属性影响（或可能掩盖）其他内容的编码或解释，
+// 或者影响网络消息的内容、幂等性或凭证，
+// 则此映射中的值为 contentTypeUnsafe。
+// 此映射源自 HTML5，具体参见
 // https://www.w3.org/TR/html5/Overview.html#attributes-1
-// as well as "%URI"-typed attributes from
-// https://www.w3.org/TR/html4/index/attributes.html
+// 以及来自 https://www.w3.org/TR/html4/index/attributes.html 的 "%URI" 类型属性
 var attrTypeMap = map[string]contentType{
 	"accept":          contentTypePlain,
 	"accept-charset":  contentTypeUnsafe,
@@ -89,9 +88,9 @@ var attrTypeMap = map[string]contentType{
 	"multiple":        contentTypePlain,
 	"name":            contentTypePlain,
 	"novalidate":      contentTypeUnsafe,
-	// Skip handler names from
+	// 跳过来自
 	// https://www.w3.org/TR/html5/webappapis.html#event-handlers-on-elements,-document-objects,-and-window-objects
-	// since we have special handling in attrType.
+	// 的事件处理器名称，因为我们在 attrType 中有专门处理。
 	"open":        contentTypePlain,
 	"optimum":     contentTypePlain,
 	"pattern":     contentTypeUnsafe,
@@ -135,37 +134,34 @@ var attrTypeMap = map[string]contentType{
 	"xmlns":       contentTypeURL,
 }
 
-// attrType returns a conservative (upper-bound on authority) guess at the
-// type of the lowercase named attribute.
+// attrType 返回对小写命名属性类型的保守（权限上限）猜测。
 func attrType(name string) contentType {
 	if strings.HasPrefix(name, "data-") {
-		// Strip data- so that custom attribute heuristics below are
-		// widely applied.
-		// Treat data-action as URL below.
+		// 去除 data- 前缀，以便下面的自定义属性启发式规则
+		// 能够广泛应用。
+		// 将 data-action 视为下面的 URL。
 		name = name[5:]
 	} else if prefix, short, ok := strings.Cut(name, ":"); ok {
 		if prefix == "xmlns" {
 			return contentTypeURL
 		}
-		// Treat svg:href and xlink:href as href below.
+		// 将 svg:href 和 xlink:href 视为下面的 href。
 		name = short
 	}
 	if t, ok := attrTypeMap[name]; ok {
 		return t
 	}
-	// Treat partial event handler names as script.
+	// 将部分事件处理器名称视为脚本。
 	if strings.HasPrefix(name, "on") {
 		return contentTypeJS
 	}
 
-	// Heuristics to prevent "javascript:..." injection in custom
-	// data attributes and custom attributes like g:tweetUrl.
+	// 用于防止在自定义 data 属性和自定义属性（如 g:tweetUrl）中
+	// 注入 "javascript:..." 的启发式规则。
 	// https://www.w3.org/TR/html5/dom.html#embedding-custom-non-visible-data-with-the-data-*-attributes
-	// "Custom data attributes are intended to store custom data
-	//  private to the page or application, for which there are no
-	//  more appropriate attributes or elements."
-	// Developers seem to store URL content in data URLs that start
-	// or end with "URI" or "URL".
+	// "自定义 data 属性旨在存储页面或应用程序私有的自定义数据，
+	// 对于这些数据没有更合适的属性或元素。"
+	// 开发者似乎会在以 "URI" 或 "URL" 开头或结尾的 data URL 中存储 URL 内容。
 	if strings.Contains(name, "src") ||
 		strings.Contains(name, "uri") ||
 		strings.Contains(name, "url") {

@@ -1,49 +1,47 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
-// The original C code, the long comment, and the constants
-// below are from FreeBSD's /usr/src/lib/msun/src/e_atanh.c
-// and came with this notice. The go code is a simplified
-// version of the original C.
+// 原始 C 代码、长注释以及下面的常量
+// 来自 FreeBSD 的 /usr/src/lib/msun/src/e_atanh.c
+// 并附带以下声明。Go 代码是原始 C 代码的简化版本。
 //
 // ====================================================
-// Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+// 版权所有 (C) 1993 Sun Microsystems, Inc. 保留所有权利。
 //
-// Developed at SunPro, a Sun Microsystems, Inc. business.
-// Permission to use, copy, modify, and distribute this
-// software is freely granted, provided that this notice
-// is preserved.
+// 由 SunPro（Sun Microsystems, Inc. 的一个业务部门）开发。
+// 允许自由使用、复制、修改和分发本软件，
+// 前提是保留此声明。
 // ====================================================
 //
 //
 // __ieee754_atanh(x)
-// Method :
-//	1. Reduce x to positive by atanh(-x) = -atanh(x)
-//	2. For x>=0.5
+// 方法：
+//	1. 通过 atanh(-x) = -atanh(x) 将 x 归约为正
+//	2. 对于 x>=0.5
 //	            1              2x                          x
 //	atanh(x) = --- * log(1 + -------) = 0.5 * log1p(2 * --------)
 //	            2             1 - x                      1 - x
 //
-//	For x<0.5
+//	对于 x<0.5
 //	atanh(x) = 0.5*log1p(2x+2x*x/(1-x))
 //
-// Special cases:
-//	atanh(x) is NaN if |x| > 1 with signal;
-//	atanh(NaN) is that NaN with no signal;
-//	atanh(+-1) is +-INF with signal.
+// 特殊情况：
+//	如果 |x| > 1，atanh(x) 是带信号的 NaN；
+//	atanh(NaN) 是不带信号的 NaN；
+//	atanh(+-1) 是带信号的 +-INF。
 //
 
-// Atanh returns the inverse hyperbolic tangent of x.
+// Atanh 返回 x 的反双曲正切值。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Atanh(1) = +Inf
 //	Atanh(±0) = ±0
 //	Atanh(-1) = -Inf
-//	Atanh(x) = NaN if x < -1 or x > 1
+//	Atanh(x) = NaN 如果 x < -1 或 x > 1
 //	Atanh(NaN) = NaN
 func Atanh(x float64) float64 {
 	if haveArchAtanh {
@@ -54,7 +52,7 @@ func Atanh(x float64) float64 {
 
 func atanh(x float64) float64 {
 	const NearZero = 1.0 / (1 << 28) // 2**-28
-	// special cases
+	// 特殊情况
 	switch {
 	case x < -1 || x > 1 || IsNaN(x):
 		return NaN()

@@ -13,6 +13,7 @@ import (
 )
 
 // Validate the constants redefined from unicode.
+// 验证从 unicode 重新定义的常数。
 func TestConstants(t *testing.T) {
 	if MaxRune != unicode.MaxRune {
 		t.Errorf("utf16.maxRune is wrong: %x should be %x", MaxRune, unicode.MaxRune)
@@ -158,6 +159,7 @@ var decodeRuneTests = []struct {
 	{0xd808, 0xdf45, 0x12345},
 	{0xdbff, 0xdfff, 0x10ffff},
 	{0xd800, 'a', 0xfffd}, // illegal, replacement rune substituted
+	// 非法，替换符文替代
 }
 
 func TestDecodeRune(t *testing.T) {
@@ -174,18 +176,30 @@ var surrogateTests = []struct {
 	want bool
 }{
 	// from https://en.wikipedia.org/wiki/UTF-16
+	// 来自 https://en.wikipedia.org/wiki/UTF-16
 	{'\u007A', false},     // LATIN SMALL LETTER Z
+	// 拉丁小写字母 Z
 	{'\u6C34', false},     // CJK UNIFIED IDEOGRAPH-6C34 (water)
+	// CJK 统一表意文字-6C34（水）
 	{'\uFEFF', false},     // Byte Order Mark
+	// 字节顺序标记
 	{'\U00010000', false}, // LINEAR B SYLLABLE B008 A (first non-BMP code point)
+	// LINEAR B 音节 B008 A（第一个非 BMP 码点）
 	{'\U0001D11E', false}, // MUSICAL SYMBOL G CLEF
+	// 音乐符号 G 谱号
 	{'\U0010FFFD', false}, // PRIVATE USE CHARACTER-10FFFD (last Unicode code point)
+	// 私人使用字符-10FFFD（最后一个 Unicode 码点）
 
 	{rune(0xd7ff), false}, // surr1-1
+	// surr1-1
 	{rune(0xd800), true},  // surr1
+	// surr1
 	{rune(0xdc00), true},  // surr2
+	// surr2
 	{rune(0xe000), false}, // surr3
+	// surr3
 	{rune(0xdfff), true},  // surr3-1
+	// surr3-1
 }
 
 func TestIsSurrogate(t *testing.T) {
@@ -199,6 +213,7 @@ func TestIsSurrogate(t *testing.T) {
 
 func BenchmarkDecodeValidASCII(b *testing.B) {
 	// "hello world"
+	// "hello world"（你好世界）
 	data := []uint16{104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100}
 	for i := 0; i < b.N; i++ {
 		Decode(data)
@@ -207,6 +222,7 @@ func BenchmarkDecodeValidASCII(b *testing.B) {
 
 func BenchmarkDecodeValidJapaneseChars(b *testing.B) {
 	// "日本語日本語日本語"
+	// 日语日语日语（日本語三次）
 	data := []uint16{26085, 26412, 35486, 26085, 26412, 35486, 26085, 26412, 35486}
 	for i := 0; i < b.N; i++ {
 		Decode(data)
@@ -216,6 +232,7 @@ func BenchmarkDecodeValidJapaneseChars(b *testing.B) {
 func BenchmarkDecodeRune(b *testing.B) {
 	rs := make([]rune, 10)
 	// U+1D4D0 to U+1D4D4: MATHEMATICAL BOLD SCRIPT CAPITAL LETTERS
+	// U+1D4D0 到 U+1D4D4：数学粗体脚本大写字母
 	for i, u := range []rune{'𝓐', '𝓑', '𝓒', '𝓓', '𝓔'} {
 		rs[2*i], rs[2*i+1] = EncodeRune(u)
 	}

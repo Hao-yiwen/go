@@ -1,9 +1,9 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// This package computes the exported API of a set of Go packages.
-// It is only a test, not a command, nor a usefully importable package.
+// 本包计算一组 Go 包的导出 API。
+// 它只是一个测试，不是命令，也不是可有效导入的包。
 
 package main
 
@@ -46,7 +46,7 @@ func goCmd() string {
 	return "go"
 }
 
-// contexts are the default contexts which are scanned.
+// contexts 是被扫描的默认构建上下文。
 var contexts = []*build.Context{
 	{GOOS: "linux", GOARCH: "386", CgoEnabled: true},
 	{GOOS: "linux", GOARCH: "386"},
@@ -185,7 +185,7 @@ func Check(t *testing.T) {
 	}
 }
 
-// export emits the exported package features.
+// export 输出导出的包特性。
 func (w *Walker) export(pkg *apiPackage) {
 	if verbose {
 		log.Println(pkg)
@@ -219,8 +219,8 @@ func featureWithoutContext(f string) string {
 	return spaceParensRx.ReplaceAllString(f, "")
 }
 
-// portRemoved reports whether the given port-specific API feature is
-// okay to no longer exist because its port was removed.
+// portRemoved 报告给定的平台特定 API 特性是否可以不再存在，
+// 因为其平台已被移除。
 func portRemoved(feature string) bool {
 	return strings.Contains(feature, "(darwin-386)") ||
 		strings.Contains(feature, "(darwin-386-cgo)")
@@ -246,16 +246,13 @@ func compareAPI(w io.Writer, features, required, exception []string) (ok bool) {
 		case len(features) == 0 || (len(required) > 0 && required[0] < features[0]):
 			feature := take(&required)
 			if exceptionSet[feature] {
-				// An "unfortunate" case: the feature was once
-				// included in the API (e.g. go1.txt), but was
-				// subsequently removed. These are already
-				// acknowledged by being in the file
-				// "api/except.txt". No need to print them out
-				// here.
+				// 一种"不幸"的情况：该特性曾经被包含在 API 中（例如 go1.txt），
+				// 但随后被移除。这些已经通过列入 "api/except.txt" 文件
+				// 而被确认。无需在此处打印。
 			} else if portRemoved(feature) {
-				// okay.
+				// 可以。
 			} else if featureSet[featureWithoutContext(feature)] {
-				// okay.
+				// 可以。
 			} else {
 				fmt.Fprintf(w, "-%s\n", feature)
 				ok = false // broke compatibility
@@ -273,12 +270,12 @@ func compareAPI(w io.Writer, features, required, exception []string) (ok bool) {
 	return ok
 }
 
-// aliasReplacer applies type aliases to earlier API files,
-// to avoid misleading negative results.
-// This makes all the references to os.FileInfo in go1.txt
-// be read as if they said fs.FileInfo, since os.FileInfo is now an alias.
-// If there are many of these, we could do a more general solution,
-// but for now the replacer is fine.
+// aliasReplacer 将类型别名应用于早期的 API 文件，
+// 以避免产生误导性的负面结果。
+// 这使得 go1.txt 中所有对 os.FileInfo 的引用被读取为 fs.FileInfo，
+// 因为 os.FileInfo 现在是一个别名。
+// 如果有很多这样的情况，我们可以采用更通用的解决方案，
+// 但目前这个替换器就足够了。
 var aliasReplacer = strings.NewReplacer(
 	"os.FileInfo", "fs.FileInfo",
 	"os.FileMode", "fs.FileMode",
@@ -292,18 +289,17 @@ func fileFeatures(filename string, needApproval bool) []string {
 	}
 	s := string(bs)
 
-	// Diagnose common mistakes people make,
-	// since there is no apifmt to format these files.
-	// The missing final newline is important for the
-	// final release step of cat next/*.txt >go1.X.txt.
-	// If the files don't end in full lines, the concatenation goes awry.
+	// 诊断人们常犯的错误，
+	// 因为没有 apifmt 来格式化这些文件。
+	// 缺少最后的换行符对于最终发布步骤 cat next/*.txt >go1.X.txt 很重要。
+	// 如果文件不以完整行结尾，连接就会出错。
 	if strings.Contains(s, "\r") {
 		log.Printf("%s: contains CRLFs", filename)
 		exitCode = 1
 	}
 	if filepath.Base(filename) == "go1.4.txt" {
-		// No use for blank lines in api files, except go1.4.txt
-		// used them in a reasonable way and we should let it be.
+		// API 文件中不需要空行，但 go1.4.txt 以合理的方式使用了它们，
+		// 我们应该保留它。
 	} else if strings.HasPrefix(s, "\n") || strings.Contains(s, "\n\n") {
 		log.Printf("%s: contains a blank line", filename)
 		exitCode = 1
@@ -355,11 +351,11 @@ type Walker struct {
 	scope       []string
 	current     *apiPackage
 	deprecated  map[token.Pos]bool
-	features    map[string]bool              // set
-	imported    map[string]*apiPackage       // packages already imported
-	stdPackages []string                     // names, omitting "unsafe", internal, and vendored packages
-	importMap   map[string]map[string]string // importer dir -> import path -> canonical path
-	importDir   map[string]string            // canonical import path -> dir
+	features    map[string]bool              // 集合
+	imported    map[string]*apiPackage       // 已导入的包
+	stdPackages []string                     // 包名，省略 "unsafe"、internal 和 vendored 包
+	importMap   map[string]map[string]string // 导入目录 -> 导入路径 -> 规范路径
+	importDir   map[string]string            // 规范导入路径 -> 目录
 
 }
 
@@ -399,20 +395,20 @@ func (w *Walker) parseFile(dir, file string) (*ast.File, error) {
 	return f, nil
 }
 
-// Disable before debugging non-obvious errors from the type-checker.
+// 在调试类型检查器中不明显的错误之前禁用此功能。
 const usePkgCache = true
 
 var (
-	pkgCache = map[string]*apiPackage{} // map tagKey to package
-	pkgTags  = map[string][]string{}    // map import dir to list of relevant tags
+	pkgCache = map[string]*apiPackage{} // tagKey 到包的映射
+	pkgTags  = map[string][]string{}    // 导入目录到相关标签列表的映射
 )
 
-// tagKey returns the tag-based key to use in the pkgCache.
-// It is a comma-separated string; the first part is dir, the rest tags.
-// The satisfied tags are derived from context but only those that
-// matter (the ones listed in the tags argument plus GOOS and GOARCH) are used.
-// The tags list, which came from go/build's Package.AllTags,
-// is known to be sorted.
+// tagKey 返回用于 pkgCache 的基于标签的键。
+// 它是一个逗号分隔的字符串；第一部分是目录，其余是标签。
+// 满足的标签来自 context，但只使用重要的标签
+// （tags 参数中列出的标签加上 GOOS 和 GOARCH）。
+// tags 列表来自 go/build 的 Package.AllTags，
+// 已知是已排序的。
 func tagKey(dir string, context *build.Context, tags []string) string {
 	ctags := map[string]bool{
 		context.GOOS:   true,
@@ -424,12 +420,11 @@ func tagKey(dir string, context *build.Context, tags []string) string {
 	for _, tag := range context.BuildTags {
 		ctags[tag] = true
 	}
-	// TODO: ReleaseTags (need to load default)
+	// TODO: ReleaseTags（需要加载默认值）
 	key := dir
 
-	// explicit on GOOS and GOARCH as global cache will use "all" cached packages for
-	// an indirect imported package. See https://github.com/golang/go/issues/21181
-	// for more detail.
+	// 显式指定 GOOS 和 GOARCH，因为全局缓存会对间接导入的包使用"所有"缓存的包。
+	// 详情请参见 https://github.com/golang/go/issues/21181。
 	tags = append(tags, context.GOOS, context.GOARCH)
 	slices.Sort(tags)
 
@@ -443,26 +438,24 @@ func tagKey(dir string, context *build.Context, tags []string) string {
 }
 
 type listImports struct {
-	stdPackages []string                     // names, omitting "unsafe", internal, and vendored packages
-	importDir   map[string]string            // canonical import path → directory
-	importMap   map[string]map[string]string // import path → canonical import path
+	stdPackages []string                     // 包名，省略 "unsafe"、internal 和 vendored 包
+	importDir   map[string]string            // 规范导入路径 → 目录
+	importMap   map[string]map[string]string // 导入路径 → 规范导入路径
 }
 
-var listCache sync.Map // map[string]listImports, keyed by contextName
+var listCache sync.Map // map[string]listImports，以 contextName 为键
 
-// listSem is a semaphore restricting concurrent invocations of 'go list'. 'go
-// list' has its own internal concurrency, so we use a hard-coded constant (to
-// allow the I/O-intensive phases of 'go list' to overlap) instead of scaling
-// all the way up to GOMAXPROCS.
+// listSem 是限制 'go list' 并发调用的信号量。'go list' 有自己的内部并发，
+// 因此我们使用硬编码常量（允许 'go list' 的 I/O 密集阶段重叠），
+// 而不是一直扩展到 GOMAXPROCS。
 var listSem = make(chan semToken, 2)
 
 type semToken struct{}
 
-// loadImports populates w with information about the packages in the standard
-// library and the packages they themselves import in w's build context.
+// loadImports 在 w 中填充关于标准库中的包以及它们在 w 的构建上下文中导入的包的信息。
 //
-// The source import path and expanded import path are identical except for vendored packages.
-// For example, on return:
+// 源导入路径和扩展导入路径是相同的，除了 vendored 包。
+// 例如，返回时：
 //
 //	w.importMap["math"] = "math"
 //	w.importDir["math"] = "<goroot>/src/math"
@@ -470,12 +463,11 @@ type semToken struct{}
 //	w.importMap["golang.org/x/net/route"] = "vendor/golang.org/x/net/route"
 //	w.importDir["vendor/golang.org/x/net/route"] = "<goroot>/src/vendor/golang.org/x/net/route"
 //
-// Since the set of packages that exist depends on context, the result of
-// loadImports also depends on context. However, to improve test running time
-// the configuration for each environment is cached across runs.
+// 由于存在的包集合取决于上下文，loadImports 的结果也取决于上下文。
+// 但是，为了改善测试运行时间，每个环境的配置在运行之间被缓存。
 func (w *Walker) loadImports() {
 	if w.context == nil {
-		return // test-only Walker; does not use the import map
+		return // 仅用于测试的 Walker；不使用导入映射
 	}
 
 	name := contextName(w.context)
@@ -514,15 +506,12 @@ func (w *Walker) loadImports() {
 				log.Fatalf("go list: invalid output: %v", err)
 			}
 
-			// - Package "unsafe" contains special signatures requiring
-			//   extra care when printing them - ignore since it is not
-			//   going to change w/o a language change.
-			// - Internal and vendored packages do not contribute to our
-			//   API surface. (If we are running within the "std" module,
-			//   vendored dependencies appear as themselves instead of
-			//   their "vendor/" standard-library copies.)
-			// - 'go list std' does not include commands, which cannot be
-			//   imported anyway.
+			// - 包 "unsafe" 包含需要在打印时特别小心的特殊签名 -
+			//   忽略它，因为它不会在没有语言更改的情况下改变。
+			// - internal 和 vendored 包不贡献我们的 API 表面。
+			//   （如果我们在 "std" 模块中运行，vendored 依赖项显示为它们自己，
+			//   而不是它们的 "vendor/" 标准库副本。）
+			// - 'go list std' 不包括命令，这些命令无论如何都无法导入。
 			if ip := pkg.ImportPath; pkg.Standard && ip != "unsafe" && !strings.HasPrefix(ip, "vendor/") && !internalPkg.MatchString(ip) {
 				stdPackages = append(stdPackages, ip)
 			}
@@ -550,8 +539,7 @@ func (w *Walker) loadImports() {
 	w.importMap = li.importMap
 }
 
-// listEnv returns the process environment to use when invoking 'go list' for
-// the given context.
+// listEnv 返回在给定上下文中调用 'go list' 时要使用的进程环境。
 func listEnv(c *build.Context) []string {
 	if c == nil {
 		return os.Environ()
@@ -573,16 +561,16 @@ type apiPackage struct {
 	Files []*ast.File
 }
 
-// Importing is a sentinel taking the place in Walker.imported
-// for a package that is in the process of being imported.
+// importing 是一个哨兵值，在 Walker.imported 中占位，
+// 表示一个正在被导入过程中的包。
 var importing apiPackage
 
-// Import implements types.Importer.
+// Import 实现 types.Importer 接口。
 func (w *Walker) Import(name string) (*types.Package, error) {
 	return w.ImportFrom(name, "", 0)
 }
 
-// ImportFrom implements types.ImporterFrom.
+// ImportFrom 实现 types.ImporterFrom 接口。
 func (w *Walker) ImportFrom(fromPath, fromDir string, mode types.ImportMode) (*types.Package, error) {
 	pkg, err := w.importFrom(fromPath, fromDir, mode)
 	if err != nil {
@@ -610,7 +598,7 @@ func (w *Walker) importFrom(fromPath, fromDir string, mode types.ImportMode) (*a
 	}
 	w.imported[name] = &importing
 
-	// Determine package files.
+	// 确定包文件。
 	dir := w.importDir[name]
 	if dir == "" {
 		dir = filepath.Join(w.root, filepath.FromSlash(name))
@@ -624,9 +612,8 @@ func (w *Walker) importFrom(fromPath, fromDir string, mode types.ImportMode) (*a
 		context = &build.Default
 	}
 
-	// Look in cache.
-	// If we've already done an import with the same set
-	// of relevant tags, reuse the result.
+	// 查看缓存。
+	// 如果我们已经使用相同的相关标签集进行了导入，则重用结果。
 	var key string
 	if usePkgCache {
 		if tags, ok := pkgTags[dir]; ok {
@@ -646,7 +633,7 @@ func (w *Walker) importFrom(fromPath, fromDir string, mode types.ImportMode) (*a
 		log.Fatalf("pkg %q, dir %q: ScanDir: %v", name, dir, err)
 	}
 
-	// Save tags list first time we see a directory.
+	// 第一次看到目录时保存标签列表。
 	if usePkgCache {
 		if _, ok := pkgTags[dir]; !ok {
 			pkgTags[dir] = info.AllTags
@@ -656,7 +643,7 @@ func (w *Walker) importFrom(fromPath, fromDir string, mode types.ImportMode) (*a
 
 	filenames := append(append([]string{}, info.GoFiles...), info.CgoFiles...)
 
-	// Parse package files.
+	// 解析包文件。
 	var files []*ast.File
 	for _, file := range filenames {
 		f, err := w.parseFile(dir, file)
@@ -666,7 +653,7 @@ func (w *Walker) importFrom(fromPath, fromDir string, mode types.ImportMode) (*a
 		files = append(files, f)
 	}
 
-	// Type-check package files.
+	// 对包文件进行类型检查。
 	var sizes types.Sizes
 	if w.context != nil {
 		sizes = types.SizesFor(w.context.Compiler, w.context.GOARCH)
@@ -695,9 +682,8 @@ func (w *Walker) importFrom(fromPath, fromDir string, mode types.ImportMode) (*a
 	return pkg, nil
 }
 
-// pushScope enters a new scope (walking a package, type, node, etc)
-// and returns a function that will leave the scope (with sanity checking
-// for mismatched pushes & pops)
+// pushScope 进入一个新的作用域（遍历包、类型、节点等），
+// 并返回一个将离开该作用域的函数（带有对不匹配的 push 和 pop 的健全性检查）
 func (w *Walker) pushScope(name string) (popFunc func()) {
 	w.scope = append(w.scope, name)
 	return func() {
@@ -721,8 +707,8 @@ func sortedMethodNames(typ *types.Interface) []string {
 	return list
 }
 
-// sortedEmbeddeds returns constraint types embedded in an
-// interface. It does not include embedded interface types or methods.
+// sortedEmbeddeds 返回嵌入在接口中的约束类型。
+// 它不包括嵌入的接口类型或方法。
 func (w *Walker) sortedEmbeddeds(typ *types.Interface) []string {
 	n := typ.NumEmbeddeds()
 	list := make([]string, 0, n)
@@ -763,8 +749,8 @@ func (w *Walker) writeType(buf *bytes.Buffer, typ types.Type) {
 		case types.UntypedInt:
 			s = "ideal-int"
 		case types.UntypedRune:
-			// "ideal-char" for compatibility with old tool
-			// TODO(gri) change to "ideal-rune"
+			// "ideal-char" 是为了与旧工具兼容
+			// TODO(gri) 改为 "ideal-rune"
 			s = "ideal-char"
 		case types.UntypedFloat:
 			s = "ideal-float"
@@ -866,7 +852,7 @@ func (w *Walker) writeType(buf *bytes.Buffer, typ types.Type) {
 		}
 
 	case *types.TypeParam:
-		// Type parameter names may change, so use a placeholder instead.
+		// 类型参数名称可能会更改，因此使用占位符代替。
 		fmt.Fprintf(buf, "$%d", typ.Index())
 
 	default:
@@ -881,7 +867,7 @@ func (w *Walker) writeSignature(buf *bytes.Buffer, sig *types.Signature) {
 	w.writeParams(buf, sig.Params(), sig.Variadic())
 	switch res := sig.Results(); res.Len() {
 	case 0:
-		// nothing to do
+		// 无需操作
 	case 1:
 		buf.WriteByte(' ')
 		w.writeType(buf, res.At(0).Type())
@@ -991,7 +977,7 @@ func (w *Walker) emitType(obj *types.TypeName) {
 		w.emitf("type %s %s", name, w.typeString(typ.Underlying()))
 	}
 
-	// emit methods with value receiver
+	// 输出带有值接收器的方法
 	var methodNames map[string]bool
 	vset := types.NewMethodSet(typ)
 	for i, n := 0, vset.Len(); i < n; i++ {
@@ -1005,9 +991,8 @@ func (w *Walker) emitType(obj *types.TypeName) {
 		}
 	}
 
-	// emit methods with pointer receiver; exclude
-	// methods that we have emitted already
-	// (the method set of *T includes the methods of T)
+	// 输出带有指针接收器的方法；排除我们已经输出的方法
+	// （*T 的方法集包括 T 的方法）
 	pset := types.NewMethodSet(types.NewPointer(typ))
 	for i, n := 0, pset.Len(); i < n; i++ {
 		m := pset.At(i)
@@ -1062,13 +1047,10 @@ func (w *Walker) emitIfaceType(name string, typ *types.Interface) {
 	}
 
 	if !complete {
-		// The method set has unexported methods, so all the
-		// implementations are provided by the same package,
-		// so the method set can be extended. Instead of recording
-		// the full set of names (below), record only that there were
-		// unexported methods. (If the interface shrinks, we will notice
-		// because a method signature emitted during the last loop
-		// will disappear.)
+		// 方法集有未导出的方法，因此所有实现都由同一个包提供，
+		// 所以方法集可以被扩展。我们不记录完整的名称集合（如下），
+		// 而只记录存在未导出的方法。（如果接口缩小，我们会注意到，
+		// 因为上一个循环中输出的方法签名会消失。）
 		w.emitf("unexported methods")
 	}
 
@@ -1101,7 +1083,7 @@ func (w *Walker) emitFunc(f *types.Func) {
 func (w *Walker) emitMethod(m *types.Selection) {
 	sig := m.Type().(*types.Signature)
 	recv := sig.Recv().Type()
-	// report exported methods with unexported receiver base type
+	// 报告具有未导出接收器基类型的导出方法
 	if true {
 		base := recv
 		if p, _ := recv.(*types.Pointer); p != nil {
@@ -1149,7 +1131,7 @@ func needApproval(filename string) bool {
 	if err != nil {
 		log.Fatalf("unexpected api file: %v", name)
 	}
-	return n >= 19 // started tracking approvals in Go 1.19
+	return n >= 19 // 从 Go 1.19 开始跟踪批准
 }
 
 func (w *Walker) collectDeprecated() {
@@ -1191,7 +1173,7 @@ func (w *Walker) collectDeprecated() {
 						}
 					}
 				}
-				return true // look at specs
+				return true // 查看规范
 			case *ast.FuncDecl:
 				if isDeprecated(n.Doc) {
 					mark(n.Name)
@@ -1201,13 +1183,13 @@ func (w *Walker) collectDeprecated() {
 				if isDeprecated(n.Doc) {
 					mark(n.Name)
 				}
-				return true // recurse into struct or interface type
+				return true // 递归进入结构体或接口类型
 			case *ast.StructType:
-				return true // recurse into fields
+				return true // 递归进入字段
 			case *ast.InterfaceType:
-				return true // recurse into methods
+				return true // 递归进入方法
 			case *ast.FieldList:
-				return true // recurse into fields
+				return true // 递归进入字段
 			case *ast.ValueSpec:
 				if isDeprecated(n.Doc) {
 					for _, id := range n.Names {
@@ -1221,7 +1203,7 @@ func (w *Walker) collectDeprecated() {
 						mark(id)
 					}
 					if len(n.Names) == 0 {
-						// embedded field T or *T?
+						// 嵌入字段 T 或 *T？
 						typ := n.Type
 						if ptr, ok := typ.(*ast.StarExpr); ok {
 							typ = ptr.X

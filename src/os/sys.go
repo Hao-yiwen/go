@@ -1,10 +1,10 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package os
 
-// Hostname returns the host name reported by the kernel.
+// Hostname 返回内核报告的主机名。
 func Hostname() (name string, err error) {
 	return hostname()
 }

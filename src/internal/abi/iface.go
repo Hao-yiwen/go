@@ -1,40 +1,39 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package abi
 
 import "unsafe"
 
-// The first word of every non-empty interface type contains an *ITab.
-// It records the underlying concrete type (Type), the interface type it
-// is implementing (Inter), and some ancillary information.
+// 每个非空接口类型的第一个字包含一个 *ITab。
+// 它记录底层具体类型（Type）、它正在实现的接口类型（Inter），
+// 以及一些辅助信息。
 //
-// allocated in non-garbage-collected memory
+// 分配在非垃圾回收内存中
 type ITab struct {
 	Inter *InterfaceType
 	Type  *Type
-	Hash  uint32     // copy of Type.Hash. Used for type switches.
-	Fun   [1]uintptr // variable sized. fun[0]==0 means Type does not implement Inter.
+	Hash  uint32     // Type.Hash 的副本。用于类型 switch。
+	Fun   [1]uintptr // 可变大小。fun[0]==0 表示 Type 没有实现 Inter。
 }
 
-// EmptyInterface describes the layout of a "interface{}" or a "any."
-// These are represented differently than non-empty interface, as the first
-// word always points to an abi.Type.
+// EmptyInterface 描述 "interface{}" 或 "any" 的布局。
+// 这些与非空接口的表示方式不同，因为第一个字总是指向 abi.Type。
 type EmptyInterface struct {
 	Type *Type
 	Data unsafe.Pointer
 }
 
-// NonEmptyInterface describes the layout of an interface that contains any methods.
+// NonEmptyInterface 描述包含任何方法的接口的布局。
 type NonEmptyInterface struct {
 	ITab *ITab
 	Data unsafe.Pointer
 }
 
-// CommonInterface describes the layout of both [EmptyInterface] and [NonEmptyInterface].
+// CommonInterface 描述 [EmptyInterface] 和 [NonEmptyInterface] 的共同布局。
 type CommonInterface struct {
-	// Either an *ITab or a *Type, unexported to avoid accidental use.
+	// *ITab 或 *Type，未导出以避免意外使用。
 	_ unsafe.Pointer
 
 	Data unsafe.Pointer

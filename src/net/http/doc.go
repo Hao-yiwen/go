@@ -1,11 +1,11 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 /*
-Package http provides HTTP client and server implementations.
+Package http 提供 HTTP 客户端和服务器实现。
 
-[Get], [Head], [Post], and [PostForm] make HTTP (or HTTPS) requests:
+[Get]、[Head]、[Post] 和 [PostForm] 执行 HTTP（或 HTTPS）请求：
 
 	resp, err := http.Get("http://example.com/")
 	...
@@ -14,20 +14,20 @@ Package http provides HTTP client and server implementations.
 	resp, err := http.PostForm("http://example.com/form",
 		url.Values{"key": {"Value"}, "id": {"123"}})
 
-The caller must close the response body when finished with it:
+调用者在完成响应体后必须关闭它：
 
 	resp, err := http.Get("http://example.com/")
 	if err != nil {
-		// handle error
+		// 处理错误
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	// ...
 
-# Clients and Transports
+# 客户端和传输
 
-For control over HTTP client headers, redirect policy, and other
-settings, create a [Client]:
+要控制 HTTP 客户端标头、重定向策略和其他
+设置，创建一个 [Client]：
 
 	client := &http.Client{
 		CheckRedirect: redirectPolicyFunc,
@@ -42,8 +42,8 @@ settings, create a [Client]:
 	resp, err := client.Do(req)
 	// ...
 
-For control over proxies, TLS configuration, keep-alives,
-compression, and other settings, create a [Transport]:
+要控制代理、TLS 配置、keep-alive、
+压缩和其他设置，创建一个 [Transport]：
 
 	tr := &http.Transport{
 		MaxIdleConns:       10,
@@ -53,14 +53,14 @@ compression, and other settings, create a [Transport]:
 	client := &http.Client{Transport: tr}
 	resp, err := client.Get("https://example.com")
 
-Clients and Transports are safe for concurrent use by multiple
-goroutines and for efficiency should only be created once and re-used.
+客户端和传输对于多个
+goroutine 的并发使用是安全的，为了效率应该仅创建一次并重新使用。
 
-# Servers
+# 服务器
 
-ListenAndServe starts an HTTP server with a given address and handler.
-The handler is usually nil, which means to use [DefaultServeMux].
-[Handle] and [HandleFunc] add handlers to [DefaultServeMux]:
+ListenAndServe 启动一个具有给定地址和处理程序的 HTTP 服务器。
+处理程序通常为 nil，这意味着使用 [DefaultServeMux]。
+[Handle] 和 [HandleFunc] 将处理程序添加到 [DefaultServeMux]：
 
 	http.Handle("/foo", fooHandler)
 
@@ -70,8 +70,8 @@ The handler is usually nil, which means to use [DefaultServeMux].
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
-More control over the server's behavior is available by creating a
-custom Server:
+通过创建自定义
+Server 可以获得对服务器行为的更多控制：
 
 	s := &http.Server{
 		Addr:           ":8080",
@@ -84,26 +84,25 @@ custom Server:
 
 # HTTP/2
 
-The http package has transparent support for the HTTP/2 protocol.
+http 包对 HTTP/2 协议提供透明支持。
 
-[Server] and [DefaultTransport] automatically enable HTTP/2 support
-when using HTTPS. [Transport] does not enable HTTP/2 by default.
+[Server] 和 [DefaultTransport] 在
+使用 HTTPS 时自动启用 HTTP/2 支持。[Transport] 默认不启用 HTTP/2。
 
-To enable or disable support for HTTP/1, HTTP/2, and/or unencrypted HTTP/2,
-see the [Server.Protocols] and [Transport.Protocols] configuration fields.
+要启用或禁用对 HTTP/1、HTTP/2 和/或未加密 HTTP/2 的支持，
+请参阅 [Server.Protocols] 和 [Transport.Protocols] 配置字段。
 
-To configure advanced HTTP/2 features, see the [Server.HTTP2] and
-[Transport.HTTP2] configuration fields.
+要配置高级 HTTP/2 功能，请参阅 [Server.HTTP2] 和
+[Transport.HTTP2] 配置字段。
 
-Alternatively, the following GODEBUG settings are currently supported:
+或者，目前支持以下 GODEBUG 设置：
 
-	GODEBUG=http2client=0  # disable HTTP/2 client support
-	GODEBUG=http2server=0  # disable HTTP/2 server support
-	GODEBUG=http2debug=1   # enable verbose HTTP/2 debug logs
-	GODEBUG=http2debug=2   # ... even more verbose, with frame dumps
+	GODEBUG=http2client=0  # 禁用 HTTP/2 客户端支持
+	GODEBUG=http2server=0  # 禁用 HTTP/2 服务器支持
+	GODEBUG=http2debug=1   # 启用详细 HTTP/2 调试日志
+	GODEBUG=http2debug=2   # ... 更详细，包括帧转储
 
-The "omithttp2" build tag may be used to disable the HTTP/2 implementation
-contained in the http package.
+"omithttp2" 构建标记可用于禁用 http 包中包含的 HTTP/2 实现。
 */
 
 package http

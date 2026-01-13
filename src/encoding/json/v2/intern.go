@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -11,11 +11,11 @@ import (
 	"math/bits"
 )
 
-// stringCache is a cache for strings converted from a []byte.
+// stringCache 是一个 cache for strings converted from a []byte.
 type stringCache = [256]string // 256*unsafe.Sizeof(string("")) => 4KiB
 
-// makeString returns the string form of b.
-// It returns a pre-allocated string from c if present, otherwise
+// makeString 返回the string form of b.
+// It 返回a pre-allocated string from c if present, otherwise
 // it allocates a new string, inserts it into the cache, and returns it.
 func makeString(c *stringCache, b []byte) string {
 	const (
@@ -27,7 +27,7 @@ func makeString(c *stringCache, b []byte) string {
 	}
 
 	// Compute a hash from the fixed-width prefix and suffix of the string.
-	// This ensures hashing a string is a constant time operation.
+	// This ensures hashing a string 是一个 constant time operation.
 	var h uint32
 	switch {
 	case len(b) >= 8:
@@ -54,7 +54,7 @@ func makeString(c *stringCache, b []byte) string {
 	return s
 }
 
-// hash64 returns the hash of two uint32s as a single uint32.
+// hash64 返回the hash of two uint32s as a single uint32.
 func hash64(lo, hi uint32) uint32 {
 	// If avalanche=true, this is identical to XXH32 hash on a 8B string:
 	//	var b [8]byte

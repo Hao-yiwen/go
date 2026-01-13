@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -19,62 +19,62 @@ import (
 type Operation struct {
 	rawOperation
 
-	// Go is the Go method name of this operation.
+	// Go 是此操作的 Go 方法名。
 	//
-	// It is derived from the raw Go method name by adding optional suffixes.
-	// Currently, "Masked" is the only suffix.
+	// 它是通过在原始 Go 方法名上添加可选后缀派生的。
+	// 目前，"Masked" 是唯一的后缀。
 	Go string
 
-	// Documentation is the doc string for this API.
+	// Documentation 是此 API 的文档字符串。
 	//
-	// It is computed from the raw documentation:
+	// 它是从原始文档计算而来的：
 	//
-	// - "NAME" is replaced by the Go method name.
+	// - "NAME" 被替换为 Go 方法名。
 	//
-	// - For masked operation, a sentence about masking is added.
+	// - 对于掩码操作，会添加关于掩码的说明。
 	Documentation string
 
-	// In is the sequence of parameters to the Go method.
+	// In 是 Go 方法的参数序列。
 	//
-	// For masked operations, this will have the mask operand appended.
+	// 对于掩码操作，这将附加掩码操作数。
 	In []Operand
 }
 
-// rawOperation is the unifier representation of an [Operation]. It is
-// translated into a more parsed form after unifier decoding.
+// rawOperation 是 [Operation] 的统一器表示。它在统一器解码后
+// 被翻译成更解析的形式。
 type rawOperation struct {
-	Go string // Base Go method name
+	Go string // 基本 Go 方法名
 
-	GoArch       string  // GOARCH for this definition
-	Asm          string  // Assembly mnemonic
-	OperandOrder *string // optional Operand order for better Go declarations
-	// Optional tag to indicate this operation is paired with special generic->machine ssa lowering rules.
-	// Should be paired with special templates in gen_simdrules.go
+	GoArch       string  // 此定义的 GOARCH
+	Asm          string  // 汇编助记符
+	OperandOrder *string // 可选的操作数顺序，用于更好的 Go 声明
+	// 可选标签，指示此操作与特殊的通用->机器 SSA 降低规则配对。
+	// 应该与 gen_simdrules.go 中的特殊模板配对使用。
 	SpecialLower *string
 
-	In              []Operand // Parameters
-	InVariant       []Operand // Optional parameters
-	Out             []Operand // Results
-	MemFeatures     *string   // The memory operand feature this operation supports
-	MemFeaturesData *string   // Additional data associated with MemFeatures
-	Commutative     bool      // Commutativity
-	CPUFeature      string    // CPUID/Has* feature name
-	Zeroing         *bool     // nil => use asm suffix ".Z"; false => do not use asm suffix ".Z"
-	Documentation   *string   // Documentation will be appended to the stubs comments.
-	AddDoc          *string   // Additional doc to be appended.
-	// ConstMask is a hack to reduce the size of defs the user writes for const-immediate
-	// If present, it will be copied to [In[0].Const].
+	In              []Operand // 参数
+	InVariant       []Operand // 可选参数
+	Out             []Operand // 结果
+	MemFeatures     *string   // 此操作支持的内存操作数特性
+	MemFeaturesData *string   // 与 MemFeatures 相关的附加数据
+	Commutative     bool      // 交换性
+	CPUFeature      string    // CPUID/Has* 特性名称
+	Zeroing         *bool     // nil => 使用汇编后缀 ".Z"；false => 不使用汇编后缀 ".Z"
+	Documentation   *string   // 文档将附加到存根注释中。
+	AddDoc          *string   // 要附加的附加文档。
+	// ConstMask 是一个技巧，用于减少用户为常量立即数编写的定义大小。
+	// 如果存在，它将被复制到 [In[0].Const]。
 	ConstImm *string
-	// NameAndSizeCheck is used to check [BWDQ] maps to (8|16|32|64) elemBits.
+	// NameAndSizeCheck 用于检查 [BWDQ] 是否映射到 (8|16|32|64) elemBits。
 	NameAndSizeCheck *bool
-	// If non-nil, all generation in gen_simdTypes.go and gen_intrinsics will be skipped.
+	// 如果非空，gen_simdTypes.go 和 gen_intrinsics 中的所有生成将被跳过。
 	NoTypes *string
-	// If non-nil, all generation in gen_simdGenericOps and gen_simdrules will be skipped.
+	// 如果非空，gen_simdGenericOps 和 gen_simdrules 中的所有生成将被跳过。
 	NoGenericOps *string
-	// If non-nil, this string will be attached to the machine ssa op name.  E.g. "const"
+	// 如果非空，此字符串将附加到机器 SSA 操作名称。例如 "const"
 	SSAVariant *string
-	// If true, do not emit method declarations, generic ops, or intrinsics for masked variants
-	// DO emit the architecture-specific opcodes and optimizations.
+	// 如果为 true，则不为掩码变体发出方法声明、通用操作或内置函数。
+	// 但会发出特定于架构的操作码和优化。
 	HideMaskMethods *bool
 }
 
@@ -107,13 +107,13 @@ func (o *Operation) DecodeUnified(v *unify.Value) error {
 
 	isMasked := o.IsMasked()
 
-	// Compute full Go method name.
+	// 计算完整的 Go 方法名。
 	o.Go = o.rawOperation.Go
 	if isMasked {
 		o.Go += "Masked"
 	}
 
-	// Compute doc string.
+	// 计算文档字符串。
 	if o.rawOperation.Documentation != nil {
 		o.Documentation = *o.rawOperation.Documentation
 	} else {
@@ -122,7 +122,7 @@ func (o *Operation) DecodeUnified(v *unify.Value) error {
 	o.Documentation = reForName.ReplaceAllString(o.Documentation, o.Go)
 	if isMasked {
 		o.Documentation += "\n//\n// This operation is applied selectively under a write mask."
-		// Suppress generic op and method declaration for exported methods, if a mask is present.
+		// 如果存在掩码，则抑制导出方法的通用操作和方法声明。
 		if unicode.IsUpper([]rune(o.Go)[0]) {
 			trueVal := "true"
 			o.NoGenericOps = &trueVal
@@ -135,8 +135,8 @@ func (o *Operation) DecodeUnified(v *unify.Value) error {
 
 	o.In = append(o.rawOperation.In, o.rawOperation.InVariant...)
 
-	// For down conversions, the high elements are zeroed if the result has more elements.
-	// TODO: we should encode this logic in the YAML file, instead of hardcoding it here.
+	// 对于向下转换，如果结果有更多元素，则高位元素被置零。
+	// TODO: 我们应该在 YAML 文件中编码这个逻辑，而不是在这里硬编码。
 	if len(o.In) > 0 && len(o.Out) > 0 {
 		inLanes := o.In[0].Lanes
 		outLanes := o.Out[0].Lanes
@@ -165,14 +165,14 @@ func (o *Operation) VectorWidth() int {
 	panic(fmt.Errorf("Figure out what the vector width is for %v and implement it", *o))
 }
 
-// Right now simdgen computes the machine op name for most instructions
-// as $Name$OutputSize, by this denotation, these instructions are "overloaded".
-// for example:
+// 目前 simdgen 将大多数指令的机器操作名称计算为 $Name$OutputSize，
+// 按照这种表示法，这些指令是"重载的"。
+// 例如：
 // (Uint16x8) ConvertToInt8
 // (Uint16x16) ConvertToInt8
-// are both VPMOVWB128.
-// To make them distinguishable we need to append the input size to them as well.
-// TODO: document them well in the generated code.
+// 都是 VPMOVWB128。
+// 为了使它们可区分，我们还需要将输入大小附加到它们上。
+// TODO: 在生成的代码中对它们进行良好的文档记录。
 var demotingConvertOps = map[string]bool{
 	"VPMOVQD128": true, "VPMOVSQD128": true, "VPMOVUSQD128": true, "VPMOVQW128": true, "VPMOVSQW128": true,
 	"VPMOVUSQW128": true, "VPMOVDW128": true, "VPMOVSDW128": true, "VPMOVUSDW128": true, "VPMOVQB128": true,
@@ -194,8 +194,8 @@ func machineOpName(maskType maskShape, gOp Operation) string {
 		asm += *gOp.SSAVariant
 	}
 	if demotingConvertOps[asm] {
-		// Need to append the size of the source as well.
-		// TODO: should be "%sto%d".
+		// 还需要附加源的大小。
+		// TODO: 应该是 "%sto%d"。
 		asm = fmt.Sprintf("%s_%d", asm, *gOp.In[0].Bits)
 	}
 	return asm
@@ -281,64 +281,63 @@ func compareOperands(x, y *Operand) int {
 }
 
 type Operand struct {
-	Class string // One of "mask", "immediate", "vreg", "greg", and "mem"
+	Class string // "mask"、"immediate"、"vreg"、"greg" 和 "mem" 之一
 
-	Go     *string // Go type of this operand
-	AsmPos int     // Position of this operand in the assembly instruction
+	Go     *string // 此操作数的 Go 类型
+	AsmPos int     // 此操作数在汇编指令中的位置
 
-	Base     *string // Base Go type ("int", "uint", "float")
-	ElemBits *int    // Element bit width
-	Bits     *int    // Total vector bit width
+	Base     *string // 基本 Go 类型（"int"、"uint"、"float"）
+	ElemBits *int    // 元素位宽
+	Bits     *int    // 总向量位宽
 
-	Const *string // Optional constant value for immediates.
-	// Optional immediate arg offsets. If this field is non-nil,
-	// This operand will be an immediate operand:
-	// The compiler will right-shift the user-passed value by ImmOffset and set it as the AuxInt
-	// field of the operation.
+	Const *string // 立即数的可选常量值。
+	// 可选的立即数参数偏移量。如果此字段非空，
+	// 此操作数将是立即数操作数：
+	// 编译器将用户传递的值右移 ImmOffset，并将其设置为操作的 AuxInt 字段。
 	ImmOffset *string
-	Name      *string // optional name in the Go intrinsic declaration
-	Lanes     *int    // *Lanes equals Bits/ElemBits except for scalars, when *Lanes == 1
-	// TreatLikeAScalarOfSize means only the lower $TreatLikeAScalarOfSize bits of the vector
-	// is used, so at the API level we can make it just a scalar value of this size; Then we
-	// can overwrite it to a vector of the right size during intrinsics stage.
+	Name      *string // Go 内置函数声明中的可选名称
+	Lanes     *int    // *Lanes 等于 Bits/ElemBits，除了标量，此时 *Lanes == 1
+	// TreatLikeAScalarOfSize 意味着只使用向量的低 $TreatLikeAScalarOfSize 位，
+	// 所以在 API 级别我们可以将其仅作为此大小的标量值；然后我们
+	// 可以在内置函数阶段将其覆盖为正确大小的向量。
 	TreatLikeAScalarOfSize *int
-	// If non-nil, it means the [Class] field is overwritten here, right now this is used to
-	// overwrite the results of AVX2 compares to masks.
+	// 如果非空，表示 [Class] 字段在此处被覆盖，目前用于
+	// 将 AVX2 比较的结果覆盖为掩码。
 	OverwriteClass *string
-	// If non-nil, it means the [Base] field is overwritten here. This field exist solely
-	// because Intel's XED data is inconsistent. e.g. VANDNP[SD] marks its operand int.
+	// 如果非空，表示 [Base] 字段在此处被覆盖。此字段纯粹是因为
+	// Intel 的 XED 数据不一致而存在。例如 VANDNP[SD] 将其操作数标记为 int。
 	OverwriteBase *string
-	// If non-nil, it means the [ElementBits] field is overwritten. This field exist solely
-	// because Intel's XED data is inconsistent. e.g. AVX512 VPMADDUBSW marks its operand
-	// elemBits 16, which should be 8.
+	// 如果非空，表示 [ElementBits] 字段被覆盖。此字段纯粹是因为
+	// Intel 的 XED 数据不一致而存在。例如 AVX512 VPMADDUBSW 将其操作数
+	// elemBits 标记为 16，实际应该是 8。
 	OverwriteElementBits *int
-	// FixedReg is the name of the fixed registers
+	// FixedReg 是固定寄存器的名称
 	FixedReg *string
 }
 
-// isDigit returns true if the byte is an ASCII digit.
+// isDigit 如果字节是 ASCII 数字则返回 true。
 func isDigit(b byte) bool {
 	return b >= '0' && b <= '9'
 }
 
-// compareNatural performs a "natural sort" comparison of two strings.
-// It compares non-digit sections lexicographically and digit sections
-// numerically.  In the case of string-unequal "equal" strings like
-// "a01b" and "a1b", strings.Compare breaks the tie.
+// compareNatural 对两个字符串执行"自然排序"比较。
+// 它按字典顺序比较非数字部分，按数值比较数字部分。
+// 对于字符串不相等的"相等"字符串，如 "a01b" 和 "a1b"，
+// strings.Compare 用于打破平局。
 //
-// It returns:
+// 返回值：
 //
-//	-1 if s1 < s2
-//	 0 if s1 == s2
-//	+1 if s1 > s2
+//	如果 s1 < s2 返回 -1
+//	如果 s1 == s2 返回 0
+//	如果 s1 > s2 返回 +1
 func compareNatural(s1, s2 string) int {
 	i, j := 0, 0
 	len1, len2 := len(s1), len(s2)
 
 	for i < len1 && j < len2 {
-		// Find a non-digit segment or a number segment in both strings.
+		// 在两个字符串中查找非数字段或数字段。
 		if isDigit(s1[i]) && isDigit(s2[j]) {
-			// Number segment comparison.
+			// 数字段比较。
 			numStart1 := i
 			for i < len1 && isDigit(s1[i]) {
 				i++
@@ -357,9 +356,9 @@ func compareNatural(s1, s2 string) int {
 			if num1 > num2 {
 				return 1
 			}
-			// If numbers are equal, continue to the next segment.
+			// 如果数字相等，继续下一段。
 		} else {
-			// Non-digit comparison.
+			// 非数字比较。
 			if s1[i] < s2[j] {
 				return -1
 			}
@@ -371,7 +370,7 @@ func compareNatural(s1, s2 string) int {
 		}
 	}
 
-	// deal with a01b vs a1b; there needs to be an order.
+	// 处理 a01b 与 a1b 的情况；需要有一个顺序。
 	return strings.Compare(s1, s2)
 }
 
@@ -379,8 +378,7 @@ const generatedHeader = `// Code generated by 'simdgen -o godefs -goroot $GOROOT
 `
 
 func writeGoDefs(path string, cl unify.Closure) error {
-	// TODO: Merge operations with the same signature but multiple
-	// implementations (e.g., SSE vs AVX)
+	// TODO: 合并具有相同签名但有多个实现的操作（例如 SSE vs AVX）
 	var ops []Operation
 	for def := range cl.All() {
 		var op Operation
@@ -392,14 +390,14 @@ func writeGoDefs(path string, cl unify.Closure) error {
 			log.Println(def)
 			continue
 		}
-		// TODO: verify that this is safe.
+		// TODO: 验证这是否安全。
 		op.sortOperand()
 		op.adjustAsm()
 		ops = append(ops, op)
 	}
 	slices.SortFunc(ops, compareOperations)
-	// The parsed XED data might contain duplicates, like
-	// 512 bits VPADDP.
+	// 解析的 XED 数据可能包含重复项，例如
+	// 512 位 VPADDP。
 	deduped := dedup(ops)
 	slices.SortFunc(deduped, compareOperations)
 
@@ -414,8 +412,8 @@ func writeGoDefs(path string, cl unify.Closure) error {
 		log.Printf("dedup len: %d\n", len(deduped))
 	}
 	if !*FlagNoDedup {
-		// TODO: This can hide mistakes in the API definitions, especially when
-		// multiple patterns result in the same API unintentionally. Make it stricter.
+		// TODO: 这可能会隐藏 API 定义中的错误，特别是当
+		// 多个模式无意中导致相同的 API 时。使其更严格。
 		if deduped, err = dedupGodef(deduped); err != nil {
 			return err
 		}

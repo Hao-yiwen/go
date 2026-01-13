@@ -1,14 +1,14 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package tabwriter implements a write filter (tabwriter.Writer) that
-// translates tabbed columns in input into properly aligned text.
+// Package tabwriter 实现了一个写入过滤器（tabwriter.Writer），
+// 将输入中的制表符分隔列转换为正确对齐的文本。
 //
-// The package is using the Elastic Tabstops algorithm described at
-// http://nickgravgaard.com/elastictabstops/index.html.
+// 该包使用了在 http://nickgravgaard.com/elastictabstops/index.html
+// 描述的弹性制表位算法。
 //
-// The text/tabwriter package is frozen and is not accepting new features.
+// text/tabwriter 包已冻结，不再接受新功能。
 package tabwriter
 
 import (
@@ -18,77 +18,67 @@ import (
 )
 
 // ----------------------------------------------------------------------------
-// Filter implementation
+// 过滤器实现
 
-// A cell represents a segment of text terminated by tabs or line breaks.
-// The text itself is stored in a separate buffer; cell only describes the
-// segment's size in bytes, its width in runes, and whether it's an htab
-// ('\t') terminated cell.
+// cell 表示由制表符或换行符终止的文本段。
+// 文本本身存储在单独的缓冲区中；cell 仅描述
+// 该段的字节大小、rune 宽度，以及它是否由 htab（'\t'）终止。
 type cell struct {
-	size  int  // cell size in bytes
-	width int  // cell width in runes
-	htab  bool // true if the cell is terminated by an htab ('\t')
+	size  int  // 单元格字节大小
+	width int  // 单元格 rune 宽度
+	htab  bool // 如果单元格由 htab（'\t'）终止则为 true
 }
 
-// A Writer is a filter that inserts padding around tab-delimited
-// columns in its input to align them in the output.
+// Writer 是一个过滤器，它在输入的制表符分隔列周围插入填充，
+// 以在输出中对齐它们。
 //
-// The Writer treats incoming bytes as UTF-8-encoded text consisting
-// of cells terminated by horizontal ('\t') or vertical ('\v') tabs,
-// and newline ('\n') or formfeed ('\f') characters; both newline and
-// formfeed act as line breaks.
+// Writer 将传入的字节视为 UTF-8 编码的文本，由水平制表符（'\t'）
+// 或垂直制表符（'\v'）终止的单元格，以及换行符（'\n'）或
+// 换页符（'\f'）组成；换行符和换页符都充当换行符。
 //
-// Tab-terminated cells in contiguous lines constitute a column. The
-// Writer inserts padding as needed to make all cells in a column have
-// the same width, effectively aligning the columns. It assumes that
-// all characters have the same width, except for tabs for which a
-// tabwidth must be specified. Column cells must be tab-terminated, not
-// tab-separated: non-tab terminated trailing text at the end of a line
-// forms a cell but that cell is not part of an aligned column.
-// For instance, in this example (where | stands for a horizontal tab):
+// 连续行中由制表符终止的单元格构成一列。Writer 根据需要
+// 插入填充，使列中的所有单元格具有相同的宽度，从而有效地
+// 对齐列。它假设所有字符具有相同的宽度，但制表符除外，
+// 必须为其指定 tabwidth。列单元格必须由制表符终止，而不是
+// 由制表符分隔：行末尾未由制表符终止的尾随文本形成一个
+// 单元格，但该单元格不是对齐列的一部分。
+// 例如，在这个例子中（其中 | 代表水平制表符）：
 //
 //	aaaa|bbb|d
 //	aa  |b  |dd
 //	a   |
 //	aa  |cccc|eee
 //
-// the b and c are in distinct columns (the b column is not contiguous
-// all the way). The d and e are not in a column at all (there's no
-// terminating tab, nor would the column be contiguous).
+// b 和 c 在不同的列中（b 列不是完全连续的）。d 和 e 根本
+// 不在列中（没有终止制表符，列也不会连续）。
 //
-// The Writer assumes that all Unicode code points have the same width;
-// this may not be true in some fonts or if the string contains combining
-// characters.
+// Writer 假设所有 Unicode 码点具有相同的宽度；
+// 这在某些字体中可能不正确，或者如果字符串包含组合字符。
 //
-// If [DiscardEmptyColumns] is set, empty columns that are terminated
-// entirely by vertical (or "soft") tabs are discarded. Columns
-// terminated by horizontal (or "hard") tabs are not affected by
-// this flag.
+// 如果设置了 [DiscardEmptyColumns]，则完全由垂直（或"软"）
+// 制表符终止的空列将被丢弃。由水平（或"硬"）制表符终止的
+// 列不受此标志影响。
 //
-// If a Writer is configured to filter HTML, HTML tags and entities
-// are passed through. The widths of tags and entities are
-// assumed to be zero (tags) and one (entities) for formatting purposes.
+// 如果 Writer 配置为过滤 HTML，则 HTML 标签和实体将被
+// 传递。出于格式化目的，标签和实体的宽度分别假定为
+// 零（标签）和一（实体）。
 //
-// A segment of text may be escaped by bracketing it with [Escape]
-// characters. The tabwriter passes escaped text segments through
-// unchanged. In particular, it does not interpret any tabs or line
-// breaks within the segment. If the [StripEscape] flag is set, the
-// Escape characters are stripped from the output; otherwise they
-// are passed through as well. For the purpose of formatting, the
-// width of the escaped text is always computed excluding the Escape
-// characters.
+// 文本段可以通过用 [Escape] 字符括起来来转义。tabwriter
+// 将转义的文本段原样传递。特别是，它不解释段内的任何
+// 制表符或换行符。如果设置了 [StripEscape] 标志，则 Escape
+// 字符将从输出中剥离；否则它们也会被传递。出于格式化目的，
+// 转义文本的宽度始终在排除 Escape 字符后计算。
 //
-// The formfeed character acts like a newline but it also terminates
-// all columns in the current line (effectively calling [Writer.Flush]). Tab-
-// terminated cells in the next line start new columns. Unless found
-// inside an HTML tag or inside an escaped text segment, formfeed
-// characters appear as newlines in the output.
+// 换页符的作用类似于换行符，但它还终止当前行中的所有列
+// （实际上调用 [Writer.Flush]）。下一行中由制表符终止的单元格
+// 开始新列。除非在 HTML 标签内或转义文本段内找到，否则
+// 换页符在输出中显示为换行符。
 //
-// The Writer must buffer input internally, because proper spacing
-// of one line may depend on the cells in future lines. Clients must
-// call Flush when done calling [Writer.Write].
+// Writer 必须在内部缓冲输入，因为一行的正确间距可能
+// 取决于未来行中的单元格。客户端必须在完成调用
+// [Writer.Write] 后调用 Flush。
 type Writer struct {
-	// configuration
+	// 配置
 	output   io.Writer
 	minwidth int
 	tabwidth int
@@ -96,22 +86,21 @@ type Writer struct {
 	padbytes [8]byte
 	flags    uint
 
-	// current state
-	buf     []byte   // collected text excluding tabs or line breaks
-	pos     int      // buffer position up to which cell.width of incomplete cell has been computed
-	cell    cell     // current incomplete cell; cell.width is up to buf[pos] excluding ignored sections
-	endChar byte     // terminating char of escaped sequence (Escape for escapes, '>', ';' for HTML tags/entities, or 0)
-	lines   [][]cell // list of lines; each line is a list of cells
-	widths  []int    // list of column widths in runes - re-used during formatting
+	// 当前状态
+	buf     []byte   // 收集的文本，不包括制表符或换行符
+	pos     int      // 缓冲区位置，到此为止已计算不完整单元格的 cell.width
+	cell    cell     // 当前不完整的单元格；cell.width 到 buf[pos] 为止，不包括忽略的部分
+	endChar byte     // 转义序列的终止字符（转义用 Escape，HTML 标签/实体用 '>'、';'，或 0）
+	lines   [][]cell // 行列表；每行是单元格列表
+	widths  []int    // 列宽度列表（以 rune 为单位）- 在格式化期间重用
 }
 
-// addLine adds a new line.
-// flushed is a hint indicating whether the underlying writer was just flushed.
-// If so, the previous line is not likely to be a good indicator of the new line's cells.
+// addLine 添加新行。
+// flushed 是一个提示，指示底层 writer 是否刚刚刷新。
+// 如果是，则前一行可能不是新行单元格的好指标。
 func (b *Writer) addLine(flushed bool) {
-	// Grow slice instead of appending,
-	// as that gives us an opportunity
-	// to re-use an existing []cell.
+	// 增长切片而不是追加，
+	// 因为这给了我们重用现有 []cell 的机会。
 	if n := len(b.lines) + 1; n <= cap(b.lines) {
 		b.lines = b.lines[:n]
 		b.lines[n-1] = b.lines[n-1][:0]
@@ -120,10 +109,9 @@ func (b *Writer) addLine(flushed bool) {
 	}
 
 	if !flushed {
-		// The previous line is probably a good indicator
-		// of how many cells the current line will have.
-		// If the current line's capacity is smaller than that,
-		// abandon it and make a new one.
+		// 前一行可能是当前行将有多少单元格的好指标。
+		// 如果当前行的容量小于此值，
+		// 则放弃它并创建一个新的。
 		if n := len(b.lines); n >= 2 {
 			if prev := len(b.lines[n-2]); prev > cap(b.lines[n-1]) {
 				b.lines[n-1] = make([]cell, 0, prev)
@@ -132,7 +120,7 @@ func (b *Writer) addLine(flushed bool) {
 	}
 }
 
-// Reset the current state.
+// 重置当前状态。
 func (b *Writer) reset() {
 	b.buf = b.buf[:0]
 	b.pos = 0
@@ -143,19 +131,18 @@ func (b *Writer) reset() {
 	b.addLine(true)
 }
 
-// Internal representation (current state):
+// 内部表示（当前状态）：
 //
-// - all text written is appended to buf; tabs and line breaks are stripped away
-// - at any given time there is a (possibly empty) incomplete cell at the end
-//   (the cell starts after a tab or line break)
-// - cell.size is the number of bytes belonging to the cell so far
-// - cell.width is text width in runes of that cell from the start of the cell to
-//   position pos; html tags and entities are excluded from this width if html
-//   filtering is enabled
-// - the sizes and widths of processed text are kept in the lines list
-//   which contains a list of cells for each line
-// - the widths list is a temporary list with current widths used during
-//   formatting; it is kept in Writer because it's re-used
+// - 所有写入的文本都附加到 buf；制表符和换行符被剥离
+// - 在任何给定时间，末尾都有一个（可能为空的）不完整单元格
+//   （单元格在制表符或换行符之后开始）
+// - cell.size 是到目前为止属于单元格的字节数
+// - cell.width 是该单元格从单元格开始到位置 pos 的文本 rune 宽度；
+//   如果启用了 html 过滤，则 html 标签和实体不包括在此宽度中
+// - 已处理文本的大小和宽度保存在 lines 列表中，
+//   该列表包含每行的单元格列表
+// - widths 列表是一个临时列表，包含格式化期间使用的当前宽度；
+//   它保存在 Writer 中是因为它被重用
 //
 //                    |<---------- size ---------->|
 //                    |                            |
@@ -164,48 +151,47 @@ func (b *Writer) reset() {
 // [---processed---tab------------<tag>...</tag>...]
 // ^                  ^                         ^
 // |                  |                         |
-// buf                start of incomplete cell  pos
+// buf                不完整单元格的开始         pos
 
-// Formatting can be controlled with these flags.
+// 格式化可以通过这些标志控制。
 const (
-	// Ignore html tags and treat entities (starting with '&'
-	// and ending in ';') as single characters (width = 1).
+	// 忽略 html 标签，并将实体（以 '&' 开头，以 ';' 结尾）
+	// 视为单个字符（宽度 = 1）。
 	FilterHTML uint = 1 << iota
 
-	// Strip Escape characters bracketing escaped text segments
-	// instead of passing them through unchanged with the text.
+	// 剥离括起转义文本段的 Escape 字符，
+	// 而不是将它们与文本一起原样传递。
 	StripEscape
 
-	// Force right-alignment of cell content.
-	// Default is left-alignment.
+	// 强制单元格内容右对齐。
+	// 默认是左对齐。
 	AlignRight
 
-	// Handle empty columns as if they were not present in
-	// the input in the first place.
+	// 将空列视为一开始就不存在于输入中。
 	DiscardEmptyColumns
 
-	// Always use tabs for indentation columns (i.e., padding of
-	// leading empty cells on the left) independent of padchar.
+	// 总是使用制表符作为缩进列（即左侧前导空单元格的填充），
+	// 与 padchar 无关。
 	TabIndent
 
-	// Print a vertical bar ('|') between columns (after formatting).
-	// Discarded columns appear as zero-width columns ("||").
+	// 在列之间打印竖线（'|'）（格式化之后）。
+	// 被丢弃的列显示为零宽度列（"||"）。
 	Debug
 )
 
-// A [Writer] must be initialized with a call to Init. The first parameter (output)
-// specifies the filter output. The remaining parameters control the formatting:
+// [Writer] 必须通过调用 Init 进行初始化。第一个参数（output）
+// 指定过滤器输出。其余参数控制格式化：
 //
-//	minwidth	minimal cell width including any padding
-//	tabwidth	width of tab characters (equivalent number of spaces)
-//	padding		padding added to a cell before computing its width
-//	padchar		ASCII char used for padding
-//			if padchar == '\t', the Writer will assume that the
-//			width of a '\t' in the formatted output is tabwidth,
-//			and cells are left-aligned independent of align_left
-//			(for correct-looking results, tabwidth must correspond
-//			to the tab width in the viewer displaying the result)
-//	flags		formatting control
+//	minwidth	最小单元格宽度，包括任何填充
+//	tabwidth	制表符的宽度（等效的空格数）
+//	padding		在计算单元格宽度之前添加到单元格的填充
+//	padchar		用于填充的 ASCII 字符
+//			如果 padchar == '\t'，Writer 将假设
+//			格式化输出中 '\t' 的宽度是 tabwidth，
+//			并且单元格左对齐，与 align_left 无关
+//			（为了正确的显示效果，tabwidth 必须与
+//			显示结果的查看器中的制表符宽度相对应）
+//	flags		格式化控制
 func (b *Writer) Init(output io.Writer, minwidth, tabwidth, padding int, padchar byte, flags uint) *Writer {
 	if minwidth < 0 || tabwidth < 0 || padding < 0 {
 		panic("negative minwidth, tabwidth, or padding")
@@ -218,7 +204,7 @@ func (b *Writer) Init(output io.Writer, minwidth, tabwidth, padding int, padchar
 		b.padbytes[i] = padchar
 	}
 	if padchar == '\t' {
-		// tab padding enforces left-alignment
+		// 制表符填充强制左对齐
 		flags &^= AlignRight
 	}
 	b.flags = flags
@@ -228,7 +214,7 @@ func (b *Writer) Init(output io.Writer, minwidth, tabwidth, padding int, padchar
 	return b
 }
 
-// debugging support (keep code around)
+// 调试支持（保留代码）
 func (b *Writer) dump() {
 	pos := 0
 	for i, line := range b.lines {
@@ -242,8 +228,8 @@ func (b *Writer) dump() {
 	print("\n")
 }
 
-// local error wrapper so we can distinguish errors we want to return
-// as errors from genuine panics (which we don't want to return as errors)
+// 本地错误包装器，以便我们可以将想要作为错误返回的错误
+// 与真正的 panic（我们不想作为错误返回）区分开来
 type osError struct {
 	err error
 }
@@ -273,13 +259,13 @@ var (
 
 func (b *Writer) writePadding(textw, cellw int, useTabs bool) {
 	if b.padbytes[0] == '\t' || useTabs {
-		// padding is done with tabs
+		// 使用制表符进行填充
 		if b.tabwidth == 0 {
-			return // tabs have no width - can't do any padding
+			return // 制表符没有宽度 - 无法进行任何填充
 		}
-		// make cellw the smallest multiple of b.tabwidth
+		// 使 cellw 成为 b.tabwidth 的最小倍数
 		cellw = (cellw + b.tabwidth - 1) / b.tabwidth * b.tabwidth
-		n := cellw - textw // amount of padding
+		n := cellw - textw // 填充量
 		if n < 0 {
 			panic("internal error")
 		}
@@ -287,7 +273,7 @@ func (b *Writer) writePadding(textw, cellw int, useTabs bool) {
 		return
 	}
 
-	// padding is done with non-tab characters
+	// 使用非制表符进行填充
 	b.writeN(b.padbytes[0:], cellw-textw)
 }
 
@@ -298,30 +284,30 @@ func (b *Writer) writeLines(pos0 int, line0, line1 int) (pos int) {
 	for i := line0; i < line1; i++ {
 		line := b.lines[i]
 
-		// if TabIndent is set, use tabs to pad leading empty cells
+		// 如果设置了 TabIndent，使用制表符填充前导空单元格
 		useTabs := b.flags&TabIndent != 0
 
 		for j, c := range line {
 			if j > 0 && b.flags&Debug != 0 {
-				// indicate column break
+				// 指示列分隔
 				b.write0(vbar)
 			}
 
 			if c.size == 0 {
-				// empty cell
+				// 空单元格
 				if j < len(b.widths) {
 					b.writePadding(c.width, b.widths[j], useTabs)
 				}
 			} else {
-				// non-empty cell
+				// 非空单元格
 				useTabs = false
-				if b.flags&AlignRight == 0 { // align left
+				if b.flags&AlignRight == 0 { // 左对齐
 					b.write0(b.buf[pos : pos+c.size])
 					pos += c.size
 					if j < len(b.widths) {
 						b.writePadding(c.width, b.widths[j], false)
 					}
-				} else { // align right
+				} else { // 右对齐
 					if j < len(b.widths) {
 						b.writePadding(c.width, b.widths[j], false)
 					}
@@ -332,22 +318,21 @@ func (b *Writer) writeLines(pos0 int, line0, line1 int) (pos int) {
 		}
 
 		if i+1 == len(b.lines) {
-			// last buffered line - we don't have a newline, so just write
-			// any outstanding buffered data
+			// 最后一个缓冲行 - 我们没有换行符，所以只写入
+			// 任何未完成的缓冲数据
 			b.write0(b.buf[pos : pos+b.cell.size])
 			pos += b.cell.size
 		} else {
-			// not the last line - write newline
+			// 不是最后一行 - 写入换行符
 			b.write0(newline)
 		}
 	}
 	return
 }
 
-// Format the text between line0 and line1 (excluding line1); pos
-// is the buffer position corresponding to the beginning of line0.
-// Returns the buffer position corresponding to the beginning of
-// line1 and an error, if any.
+// 格式化 line0 和 line1 之间的文本（不包括 line1）；pos
+// 是对应于 line0 开头的缓冲区位置。
+// 返回对应于 line1 开头的缓冲区位置，以及错误（如果有）。
 func (b *Writer) format(pos0 int, line0, line1 int) (pos int) {
 	pos = pos0
 	column := len(b.widths)
@@ -357,76 +342,74 @@ func (b *Writer) format(pos0 int, line0, line1 int) (pos int) {
 		if column >= len(line)-1 {
 			continue
 		}
-		// cell exists in this column => this line
-		// has more cells than the previous line
-		// (the last cell per line is ignored because cells are
-		// tab-terminated; the last cell per line describes the
-		// text before the newline/formfeed and does not belong
-		// to a column)
+		// 此列中存在单元格 => 此行
+		// 比前一行有更多的单元格
+		// （每行的最后一个单元格被忽略，因为单元格是
+		// 制表符终止的；每行的最后一个单元格描述
+		// 换行符/换页符之前的文本，不属于列）
 
-		// print unprinted lines until beginning of block
+		// 打印未打印的行，直到块的开始
 		pos = b.writeLines(pos, line0, this)
 		line0 = this
 
-		// column block begin
-		width := b.minwidth // minimal column width
-		discardable := true // true if all cells in this column are empty and "soft"
+		// 列块开始
+		width := b.minwidth // 最小列宽度
+		discardable := true // 如果此列中的所有单元格都是空的且"软"，则为 true
 		for ; this < line1; this++ {
 			line = b.lines[this]
 			if column >= len(line)-1 {
 				break
 			}
-			// cell exists in this column
+			// 此列中存在单元格
 			c := line[column]
-			// update width
+			// 更新宽度
 			if w := c.width + b.padding; w > width {
 				width = w
 			}
-			// update discardable
+			// 更新 discardable
 			if c.width > 0 || c.htab {
 				discardable = false
 			}
 		}
-		// column block end
+		// 列块结束
 
-		// discard empty columns if necessary
+		// 如有必要，丢弃空列
 		if discardable && b.flags&DiscardEmptyColumns != 0 {
 			width = 0
 		}
 
-		// format and print all columns to the right of this column
-		// (we know the widths of this column and all columns to the left)
-		b.widths = append(b.widths, width) // push width
+		// 格式化并打印此列右侧的所有列
+		// （我们知道此列和左侧所有列的宽度）
+		b.widths = append(b.widths, width) // 推入宽度
 		pos = b.format(pos, line0, this)
-		b.widths = b.widths[0 : len(b.widths)-1] // pop width
+		b.widths = b.widths[0 : len(b.widths)-1] // 弹出宽度
 		line0 = this
 	}
 
-	// print unprinted lines until end
+	// 打印未打印的行，直到结束
 	return b.writeLines(pos, line0, line1)
 }
 
-// Append text to current cell.
+// 将文本附加到当前单元格。
 func (b *Writer) append(text []byte) {
 	b.buf = append(b.buf, text...)
 	b.cell.size += len(text)
 }
 
-// Update the cell width.
+// 更新单元格宽度。
 func (b *Writer) updateWidth() {
 	b.cell.width += utf8.RuneCount(b.buf[b.pos:])
 	b.pos = len(b.buf)
 }
 
-// To escape a text segment, bracket it with Escape characters.
-// For instance, the tab in this string "Ignore this tab: \xff\t\xff"
-// does not terminate a cell and constitutes a single character of
-// width one for formatting purposes.
+// 要转义文本段，请用 Escape 字符将其括起来。
+// 例如，此字符串 "Ignore this tab: \xff\t\xff" 中的制表符
+// 不终止单元格，并且出于格式化目的构成宽度为一的单个字符。
 //
-// The value 0xff was chosen because it cannot appear in a valid UTF-8 sequence.
+// 选择值 0xff 是因为它不能出现在有效的 UTF-8 序列中。
 const Escape = '\xff'
 
-// Start escaped mode.
+// 开始转义模式。
 func (b *Writer) startEscape(ch byte) {
 	switch ch {
 	case Escape:
@@ -438,27 +421,26 @@ func (b *Writer) startEscape(ch byte) {
 	}
 }
 
-// Terminate escaped mode. If the escaped text was an HTML tag, its width
-// is assumed to be zero for formatting purposes; if it was an HTML entity,
-// its width is assumed to be one. In all other cases, the width is the
-// unicode width of the text.
+// 终止转义模式。如果转义的文本是 HTML 标签，出于格式化目的
+// 其宽度假定为零；如果是 HTML 实体，其宽度假定为一。
+// 在所有其他情况下，宽度是文本的 unicode 宽度。
 func (b *Writer) endEscape() {
 	switch b.endChar {
 	case Escape:
 		b.updateWidth()
 		if b.flags&StripEscape == 0 {
-			b.cell.width -= 2 // don't count the Escape chars
+			b.cell.width -= 2 // 不计算 Escape 字符
 		}
-	case '>': // tag of zero width
+	case '>': // 零宽度标签
 	case ';':
-		b.cell.width++ // entity, count as one rune
+		b.cell.width++ // 实体，计为一个 rune
 	}
 	b.pos = len(b.buf)
 	b.endChar = 0
 }
 
-// Terminate the current cell by adding it to the list of cells of the
-// current line. Returns the number of cells in that line.
+// 通过将当前单元格添加到当前行的单元格列表来终止它。
+// 返回该行中的单元格数。
 func (b *Writer) terminateCell(htab bool) int {
 	b.cell.htab = htab
 	line := &b.lines[len(b.lines)-1]
@@ -470,7 +452,7 @@ func (b *Writer) terminateCell(htab bool) int {
 func (b *Writer) handlePanic(err *error, op string) {
 	if e := recover(); e != nil {
 		if op == "Flush" {
-			// If Flush ran into a panic, we still need to reset.
+			// 如果 Flush 遇到 panic，我们仍然需要重置。
 			b.reset()
 		}
 		if nerr, ok := e.(osError); ok {
@@ -481,91 +463,87 @@ func (b *Writer) handlePanic(err *error, op string) {
 	}
 }
 
-// Flush should be called after the last call to [Writer.Write] to ensure
-// that any data buffered in the [Writer] is written to output. Any
-// incomplete escape sequence at the end is considered
-// complete for formatting purposes.
+// Flush 应该在最后一次调用 [Writer.Write] 后调用，以确保
+// [Writer] 中缓冲的任何数据都写入输出。出于格式化目的，
+// 末尾任何不完整的转义序列都被视为完整。
 func (b *Writer) Flush() error {
 	return b.flush()
 }
 
-// flush is the internal version of Flush, with a named return value which we
-// don't want to expose.
+// flush 是 Flush 的内部版本，带有我们不想暴露的命名返回值。
 func (b *Writer) flush() (err error) {
 	defer b.handlePanic(&err, "Flush")
 	b.flushNoDefers()
 	return nil
 }
 
-// flushNoDefers is like flush, but without a deferred handlePanic call. This
-// can be called from other methods which already have their own deferred
-// handlePanic calls, such as Write, and avoid the extra defer work.
+// flushNoDefers 类似于 flush，但没有延迟的 handlePanic 调用。
+// 这可以从其他已经有自己延迟 handlePanic 调用的方法调用，
+// 例如 Write，以避免额外的 defer 工作。
 func (b *Writer) flushNoDefers() {
-	// add current cell if not empty
+	// 如果当前单元格不为空，则添加它
 	if b.cell.size > 0 {
 		if b.endChar != 0 {
-			// inside escape - terminate it even if incomplete
+			// 在转义内 - 即使不完整也终止它
 			b.endEscape()
 		}
 		b.terminateCell(false)
 	}
 
-	// format contents of buffer
+	// 格式化缓冲区内容
 	b.format(0, 0, len(b.lines))
 	b.reset()
 }
 
 var hbar = []byte("---\n")
 
-// Write writes buf to the writer b.
-// The only errors returned are ones encountered
-// while writing to the underlying output stream.
+// Write 将 buf 写入 writer b。
+// 返回的唯一错误是写入底层输出流时遇到的错误。
 func (b *Writer) Write(buf []byte) (n int, err error) {
 	defer b.handlePanic(&err, "Write")
 
-	// split text into cells
+	// 将文本拆分为单元格
 	n = 0
 	for i, ch := range buf {
 		if b.endChar == 0 {
-			// outside escape
+			// 在转义外
 			switch ch {
 			case '\t', '\v', '\n', '\f':
-				// end of cell
+				// 单元格结束
 				b.append(buf[n:i])
 				b.updateWidth()
-				n = i + 1 // ch consumed
+				n = i + 1 // ch 已消费
 				ncells := b.terminateCell(ch == '\t')
 				if ch == '\n' || ch == '\f' {
-					// terminate line
+					// 终止行
 					b.addLine(ch == '\f')
 					if ch == '\f' || ncells == 1 {
-						// A '\f' always forces a flush. Otherwise, if the previous
-						// line has only one cell which does not have an impact on
-						// the formatting of the following lines (the last cell per
-						// line is ignored by format()), thus we can flush the
-						// Writer contents.
+						// '\f' 总是强制刷新。否则，如果前一行
+						// 只有一个单元格，它不会影响后续行的格式化
+						// （每行的最后一个单元格被 format() 忽略），
+						// 因此我们可以刷新 Writer 内容。
 						b.flushNoDefers()
 						if ch == '\f' && b.flags&Debug != 0 {
-							// indicate section break
+							// 指示节分隔
 							b.write0(hbar)
 						}
 					}
 				}
 
 			case Escape:
-				// start of escaped sequence
+				// 转义序列开始
 				b.append(buf[n:i])
 				b.updateWidth()
 				n = i
 				if b.flags&StripEscape != 0 {
-					n++ // strip Escape
+					n++ // 剥离 Escape
 				}
 				b.startEscape(Escape)
 
 			case '<', '&':
-				// possibly an html tag/entity
+				// 可能是 html 标签/实体
 				if b.flags&FilterHTML != 0 {
-					// begin of tag/entity
+					// 标签/实体开始
 					b.append(buf[n:i])
 					b.updateWidth()
 					n = i
@@ -574,28 +552,28 @@ func (b *Writer) Write(buf []byte) (n int, err error) {
 			}
 
 		} else {
-			// inside escape
+			// 在转义内
 			if ch == b.endChar {
-				// end of tag/entity
+				// 标签/实体结束
 				j := i + 1
 				if ch == Escape && b.flags&StripEscape != 0 {
-					j = i // strip Escape
+					j = i // 剥离 Escape
 				}
 				b.append(buf[n:j])
-				n = i + 1 // ch consumed
+				n = i + 1 // ch 已消费
 				b.endEscape()
 			}
 		}
 	}
 
-	// append leftover text
+	// 附加剩余文本
 	b.append(buf[n:])
 	n = len(buf)
 	return
 }
 
-// NewWriter allocates and initializes a new [Writer].
-// The parameters are the same as for the Init function.
+// NewWriter 分配并初始化一个新的 [Writer]。
+// 参数与 Init 函数相同。
 func NewWriter(output io.Writer, minwidth, tabwidth, padding int, padchar byte, flags uint) *Writer {
 	return new(Writer).Init(output, minwidth, tabwidth, padding, padchar, flags)
 }

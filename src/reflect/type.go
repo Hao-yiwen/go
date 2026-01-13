@@ -1,17 +1,15 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package reflect implements run-time reflection, allowing a program to
-// manipulate objects with arbitrary types. The typical use is to take a value
-// with static type interface{} and extract its dynamic type information by
-// calling TypeOf, which returns a Type.
+// reflect 包实现了运行时反射，允许程序操作任意类型的对象。
+// 典型的用法是取一个静态类型为 interface{} 的值，
+// 通过调用 TypeOf 提取其动态类型信息，该函数返回一个 Type。
 //
-// A call to ValueOf returns a Value representing the run-time data.
-// Zero takes a Type and returns a Value representing a zero value
-// for that type.
+// 调用 ValueOf 返回一个表示运行时数据的 Value。
+// Zero 接受一个 Type 并返回一个表示该类型零值的 Value。
 //
-// See "The Laws of Reflection" for an introduction to reflection in Go:
+// 有关 Go 中反射的介绍，请参阅"反射定律"：
 // https://golang.org/doc/articles/laws_of_reflection.html
 package reflect
 
@@ -27,274 +25,258 @@ import (
 	"unsafe"
 )
 
-// Type is the representation of a Go type.
+// Type 是 Go 类型的表示。
 //
-// Not all methods apply to all kinds of types. Restrictions,
-// if any, are noted in the documentation for each method.
-// Use the Kind method to find out the kind of type before
-// calling kind-specific methods. Calling a method
-// inappropriate to the kind of type causes a run-time panic.
+// 并非所有方法都适用于所有类型。如果有限制，
+// 会在每个方法的文档中注明。
+// 在调用特定类型的方法之前，使用 Kind 方法找出类型的种类。
+// 调用与类型种类不匹配的方法会导致运行时 panic。
 //
-// Type values are comparable, such as with the == operator,
-// so they can be used as map keys.
-// Two Type values are equal if they represent identical types.
+// Type 值是可比较的，例如可以使用 == 运算符，
+// 因此它们可以用作 map 的键。
+// 如果两个 Type 值表示相同的类型，则它们相等。
 type Type interface {
-	// Methods applicable to all types.
+	// 适用于所有类型的方法。
 
-	// Align returns the alignment in bytes of a value of
-	// this type when allocated in memory.
+	// Align 返回在内存中分配此类型值时的对齐字节数。
 	Align() int
 
-	// FieldAlign returns the alignment in bytes of a value of
-	// this type when used as a field in a struct.
+	// FieldAlign 返回此类型的值作为结构体字段时的对齐字节数。
 	FieldAlign() int
 
-	// Method returns the i'th method in the type's method set.
-	// It panics if i is not in the range [0, NumMethod()).
+	// Method 返回类型方法集中的第 i 个方法。
+	// 如果 i 不在 [0, NumMethod()) 范围内，它会 panic。
 	//
-	// For a non-interface type T or *T, the returned Method's Type and Func
-	// fields describe a function whose first argument is the receiver,
-	// and only exported methods are accessible.
+	// 对于非接口类型 T 或 *T，返回的 Method 的 Type 和 Func 字段
+	// 描述一个第一个参数是接收者的函数，且只能访问导出的方法。
 	//
-	// For an interface type, the returned Method's Type field gives the
-	// method signature, without a receiver, and the Func field is nil.
+	// 对于接口类型，返回的 Method 的 Type 字段给出方法签名（没有接收者），
+	// Func 字段为 nil。
 	//
-	// Methods are sorted in lexicographic order.
+	// 方法按字典序排序。
 	//
-	// Calling this method will force the linker to retain all exported methods in all packages.
-	// This may make the executable binary larger but will not affect execution time.
+	// 调用此方法将强制链接器保留所有包中的所有导出方法。
+	// 这可能会使可执行二进制文件变大，但不会影响执行时间。
 	Method(int) Method
 
-	// Methods returns an iterator over each method in the type's method set. The sequence is
-	// equivalent to calling Method successively for each index i in the range [0, NumMethod()).
+	// Methods 返回类型方法集中每个方法的迭代器。序列等同于
+	// 对 [0, NumMethod()) 范围内的每个索引 i 连续调用 Method。
 	Methods() iter.Seq[Method]
 
-	// MethodByName returns the method with that name in the type's
-	// method set and a boolean indicating if the method was found.
+	// MethodByName 返回类型方法集中具有该名称的方法，
+	// 以及一个指示是否找到该方法的布尔值。
 	//
-	// For a non-interface type T or *T, the returned Method's Type and Func
-	// fields describe a function whose first argument is the receiver.
+	// 对于非接口类型 T 或 *T，返回的 Method 的 Type 和 Func 字段
+	// 描述一个第一个参数是接收者的函数。
 	//
-	// For an interface type, the returned Method's Type field gives the
-	// method signature, without a receiver, and the Func field is nil.
+	// 对于接口类型，返回的 Method 的 Type 字段给出方法签名（没有接收者），
+	// Func 字段为 nil。
 	//
-	// Calling this method will cause the linker to retain all methods with this name in all packages.
-	// If the linker can't determine the name, it will retain all exported methods.
-	// This may make the executable binary larger but will not affect execution time.
+	// 调用此方法将导致链接器保留所有包中具有此名称的所有方法。
+	// 如果链接器无法确定名称，它将保留所有导出的方法。
+	// 这可能会使可执行二进制文件变大，但不会影响执行时间。
 	MethodByName(string) (Method, bool)
 
-	// NumMethod returns the number of methods accessible using Method.
+	// NumMethod 返回使用 Method 可访问的方法数量。
 	//
-	// For a non-interface type, it returns the number of exported methods.
+	// 对于非接口类型，它返回导出方法的数量。
 	//
-	// For an interface type, it returns the number of exported and unexported methods.
+	// 对于接口类型，它返回导出和未导出方法的数量。
 	NumMethod() int
 
-	// Name returns the type's name within its package for a defined type.
-	// For other (non-defined) types it returns the empty string.
+	// Name 返回已定义类型在其包内的类型名称。
+	// 对于其他（未定义的）类型，它返回空字符串。
 	Name() string
 
-	// PkgPath returns a defined type's package path, that is, the import path
-	// that uniquely identifies the package, such as "encoding/base64".
-	// If the type was predeclared (string, error) or not defined (*T, struct{},
-	// []int, or A where A is an alias for a non-defined type), the package path
-	// will be the empty string.
+	// PkgPath 返回已定义类型的包路径，即唯一标识包的导入路径，
+	// 例如 "encoding/base64"。
+	// 如果类型是预声明的（string、error）或未定义的（*T、struct{}、
+	// []int 或 A（其中 A 是未定义类型的别名）），包路径将是空字符串。
 	PkgPath() string
 
-	// Size returns the number of bytes needed to store
-	// a value of the given type; it is analogous to unsafe.Sizeof.
+	// Size 返回存储给定类型值所需的字节数；它类似于 unsafe.Sizeof。
 	Size() uintptr
 
-	// String returns a string representation of the type.
-	// The string representation may use shortened package names
-	// (e.g., base64 instead of "encoding/base64") and is not
-	// guaranteed to be unique among types. To test for type identity,
-	// compare the Types directly.
+	// String 返回类型的字符串表示。
+	// 字符串表示可能使用缩短的包名（例如，base64 而不是 "encoding/base64"），
+	// 并且不保证在类型之间是唯一的。要测试类型标识，请直接比较 Type。
 	String() string
 
-	// Kind returns the specific kind of this type.
+	// Kind 返回此类型的具体种类。
 	Kind() Kind
 
-	// Implements reports whether the type implements the interface type u.
+	// Implements 报告该类型是否实现了接口类型 u。
 	Implements(u Type) bool
 
-	// AssignableTo reports whether a value of the type is assignable to type u.
+	// AssignableTo 报告该类型的值是否可以赋值给类型 u。
 	AssignableTo(u Type) bool
 
-	// ConvertibleTo reports whether a value of the type is convertible to type u.
-	// Even if ConvertibleTo returns true, the conversion may still panic.
-	// For example, a slice of type []T is convertible to *[N]T,
-	// but the conversion will panic if its length is less than N.
+	// ConvertibleTo 报告该类型的值是否可以转换为类型 u。
+	// 即使 ConvertibleTo 返回 true，转换仍可能 panic。
+	// 例如，类型 []T 的切片可以转换为 *[N]T，
+	// 但如果其长度小于 N，转换将 panic。
 	ConvertibleTo(u Type) bool
 
-	// Comparable reports whether values of this type are comparable.
-	// Even if Comparable returns true, the comparison may still panic.
-	// For example, values of interface type are comparable,
-	// but the comparison will panic if their dynamic type is not comparable.
+	// Comparable 报告此类型的值是否可比较。
+	// 即使 Comparable 返回 true，比较仍可能 panic。
+	// 例如，接口类型的值是可比较的，
+	// 但如果它们的动态类型不可比较，比较将 panic。
 	Comparable() bool
 
-	// Methods applicable only to some types, depending on Kind.
-	// The methods allowed for each kind are:
+	// 仅适用于某些类型的方法，取决于 Kind。
+	// 每种类型允许的方法如下：
 	//
 	//	Int*, Uint*, Float*, Complex*: Bits
 	//	Array: Elem, Len
 	//	Chan: ChanDir, Elem
-	//	Func: In, NumIn, Out, NumOut, IsVariadic.
+	//	Func: In, NumIn, Out, NumOut, IsVariadic
 	//	Map: Key, Elem
 	//	Pointer: Elem
 	//	Slice: Elem
 	//	Struct: Field, FieldByIndex, FieldByName, FieldByNameFunc, NumField
 
-	// Bits returns the size of the type in bits.
-	// It panics if the type's Kind is not one of the
-	// sized or unsized Int, Uint, Float, or Complex kinds.
+	// Bits 返回类型的位大小。
+	// 如果类型的 Kind 不是有大小或无大小的 Int、Uint、Float 或 Complex 种类之一，
+	// 它会 panic。
 	Bits() int
 
-	// ChanDir returns a channel type's direction.
-	// It panics if the type's Kind is not Chan.
+	// ChanDir 返回通道类型的方向。
+	// 如果类型的 Kind 不是 Chan，它会 panic。
 	ChanDir() ChanDir
 
-	// IsVariadic reports whether a function type's final input parameter
-	// is a "..." parameter. If so, t.In(t.NumIn() - 1) returns the parameter's
-	// implicit actual type []T.
+	// IsVariadic 报告函数类型的最后一个输入参数是否是 "..." 参数。
+	// 如果是，t.In(t.NumIn() - 1) 返回参数的隐式实际类型 []T。
 	//
-	// For concreteness, if t represents func(x int, y ... float64), then
+	// 具体来说，如果 t 表示 func(x int, y ... float64)，则
 	//
 	//	t.NumIn() == 2
-	//	t.In(0) is the reflect.Type for "int"
-	//	t.In(1) is the reflect.Type for "[]float64"
+	//	t.In(0) 是 "int" 的 reflect.Type
+	//	t.In(1) 是 "[]float64" 的 reflect.Type
 	//	t.IsVariadic() == true
 	//
-	// IsVariadic panics if the type's Kind is not Func.
+	// 如果类型的 Kind 不是 Func，IsVariadic 会 panic。
 	IsVariadic() bool
 
-	// Elem returns a type's element type.
-	// It panics if the type's Kind is not Array, Chan, Map, Pointer, or Slice.
+	// Elem 返回类型的元素类型。
+	// 如果类型的 Kind 不是 Array、Chan、Map、Pointer 或 Slice，它会 panic。
 	Elem() Type
 
-	// Field returns a struct type's i'th field.
-	// It panics if the type's Kind is not Struct.
-	// It panics if i is not in the range [0, NumField()).
+	// Field 返回结构体类型的第 i 个字段。
+	// 如果类型的 Kind 不是 Struct，它会 panic。
+	// 如果 i 不在 [0, NumField()) 范围内，它会 panic。
 	Field(i int) StructField
 
-	// Fields returns an iterator over each struct field for struct type t. The sequence is
-	// equivalent to calling Field successively for each index i in the range [0, NumField()).
-	// It panics if the type's Kind is not Struct.
+	// Fields 返回结构体类型 t 的每个结构体字段的迭代器。序列等同于
+	// 对 [0, NumField()) 范围内的每个索引 i 连续调用 Field。
+	// 如果类型的 Kind 不是 Struct，它会 panic。
 	Fields() iter.Seq[StructField]
 
-	// FieldByIndex returns the nested field corresponding
-	// to the index sequence. It is equivalent to calling Field
-	// successively for each index i.
-	// It panics if the type's Kind is not Struct.
+	// FieldByIndex 返回与索引序列对应的嵌套字段。
+	// 它等同于对每个索引 i 连续调用 Field。
+	// 如果类型的 Kind 不是 Struct，它会 panic。
 	FieldByIndex(index []int) StructField
 
-	// FieldByName returns the struct field with the given name
-	// and a boolean indicating if the field was found.
-	// If the returned field is promoted from an embedded struct,
-	// then Offset in the returned StructField is the offset in
-	// the embedded struct.
+	// FieldByName 返回具有给定名称的结构体字段，
+	// 以及一个指示是否找到该字段的布尔值。
+	// 如果返回的字段是从嵌入结构体提升的，
+	// 则返回的 StructField 中的 Offset 是嵌入结构体中的偏移量。
 	FieldByName(name string) (StructField, bool)
 
-	// FieldByNameFunc returns the struct field with a name
-	// that satisfies the match function and a boolean indicating if
-	// the field was found.
+	// FieldByNameFunc 返回名称满足匹配函数的结构体字段，
+	// 以及一个指示是否找到该字段的布尔值。
 	//
-	// FieldByNameFunc considers the fields in the struct itself
-	// and then the fields in any embedded structs, in breadth first order,
-	// stopping at the shallowest nesting depth containing one or more
-	// fields satisfying the match function. If multiple fields at that depth
-	// satisfy the match function, they cancel each other
-	// and FieldByNameFunc returns no match.
-	// This behavior mirrors Go's handling of name lookup in
-	// structs containing embedded fields.
+	// FieldByNameFunc 首先考虑结构体本身的字段，
+	// 然后按广度优先顺序考虑任何嵌入结构体中的字段，
+	// 在包含一个或多个满足匹配函数的字段的最浅嵌套深度处停止。
+	// 如果该深度有多个字段满足匹配函数，它们相互抵消，
+	// FieldByNameFunc 返回无匹配。
+	// 此行为反映了 Go 在包含嵌入字段的结构体中处理名称查找的方式。
 	//
-	// If the returned field is promoted from an embedded struct,
-	// then Offset in the returned StructField is the offset in
-	// the embedded struct.
+	// 如果返回的字段是从嵌入结构体提升的，
+	// 则返回的 StructField 中的 Offset 是嵌入结构体中的偏移量。
 	FieldByNameFunc(match func(string) bool) (StructField, bool)
 
-	// In returns the type of a function type's i'th input parameter.
-	// It panics if the type's Kind is not Func.
-	// It panics if i is not in the range [0, NumIn()).
+	// In 返回函数类型第 i 个输入参数的类型。
+	// 如果类型的 Kind 不是 Func，它会 panic。
+	// 如果 i 不在 [0, NumIn()) 范围内，它会 panic。
 	In(i int) Type
 
-	// Ins returns an iterator over each input parameter of function type t. The sequence
-	// is equivalent to calling In successively for each index i in the range [0, NumIn()).
-	// It panics if the type's Kind is not Func.
+	// Ins 返回函数类型 t 的每个输入参数的迭代器。序列等同于
+	// 对 [0, NumIn()) 范围内的每个索引 i 连续调用 In。
+	// 如果类型的 Kind 不是 Func，它会 panic。
 	Ins() iter.Seq[Type]
 
-	// Key returns a map type's key type.
-	// It panics if the type's Kind is not Map.
+	// Key 返回 map 类型的键类型。
+	// 如果类型的 Kind 不是 Map，它会 panic。
 	Key() Type
 
-	// Len returns an array type's length.
-	// It panics if the type's Kind is not Array.
+	// Len 返回数组类型的长度。
+	// 如果类型的 Kind 不是 Array，它会 panic。
 	Len() int
 
-	// NumField returns a struct type's field count.
-	// It panics if the type's Kind is not Struct.
+	// NumField 返回结构体类型的字段数量。
+	// 如果类型的 Kind 不是 Struct，它会 panic。
 	NumField() int
 
-	// NumIn returns a function type's input parameter count.
-	// It panics if the type's Kind is not Func.
+	// NumIn 返回函数类型的输入参数数量。
+	// 如果类型的 Kind 不是 Func，它会 panic。
 	NumIn() int
 
-	// NumOut returns a function type's output parameter count.
-	// It panics if the type's Kind is not Func.
+	// NumOut 返回函数类型的输出参数数量。
+	// 如果类型的 Kind 不是 Func，它会 panic。
 	NumOut() int
 
-	// Out returns the type of a function type's i'th output parameter.
-	// It panics if the type's Kind is not Func.
-	// It panics if i is not in the range [0, NumOut()).
+	// Out 返回函数类型第 i 个输出参数的类型。
+	// 如果类型的 Kind 不是 Func，它会 panic。
+	// 如果 i 不在 [0, NumOut()) 范围内，它会 panic。
 	Out(i int) Type
 
-	// Outs returns an iterator over each output parameter of function type t. The sequence
-	// is equivalent to calling Out successively for each index i in the range [0, NumOut()).
-	// It panics if the type's Kind is not Func.
+	// Outs 返回函数类型 t 的每个输出参数的迭代器。序列等同于
+	// 对 [0, NumOut()) 范围内的每个索引 i 连续调用 Out。
+	// 如果类型的 Kind 不是 Func，它会 panic。
 	Outs() iter.Seq[Type]
 
-	// OverflowComplex reports whether the complex128 x cannot be represented by type t.
-	// It panics if t's Kind is not Complex64 or Complex128.
+	// OverflowComplex 报告 complex128 x 是否无法由类型 t 表示。
+	// 如果 t 的 Kind 不是 Complex64 或 Complex128，它会 panic。
 	OverflowComplex(x complex128) bool
 
-	// OverflowFloat reports whether the float64 x cannot be represented by type t.
-	// It panics if t's Kind is not Float32 or Float64.
+	// OverflowFloat 报告 float64 x 是否无法由类型 t 表示。
+	// 如果 t 的 Kind 不是 Float32 或 Float64，它会 panic。
 	OverflowFloat(x float64) bool
 
-	// OverflowInt reports whether the int64 x cannot be represented by type t.
-	// It panics if t's Kind is not Int, Int8, Int16, Int32, or Int64.
+	// OverflowInt 报告 int64 x 是否无法由类型 t 表示。
+	// 如果 t 的 Kind 不是 Int、Int8、Int16、Int32 或 Int64，它会 panic。
 	OverflowInt(x int64) bool
 
-	// OverflowUint reports whether the uint64 x cannot be represented by type t.
-	// It panics if t's Kind is not Uint, Uintptr, Uint8, Uint16, Uint32, or Uint64.
+	// OverflowUint 报告 uint64 x 是否无法由类型 t 表示。
+	// 如果 t 的 Kind 不是 Uint、Uintptr、Uint8、Uint16、Uint32 或 Uint64，它会 panic。
 	OverflowUint(x uint64) bool
 
-	// CanSeq reports whether a [Value] with this type can be iterated over using [Value.Seq].
+	// CanSeq 报告具有此类型的 [Value] 是否可以使用 [Value.Seq] 进行迭代。
 	CanSeq() bool
 
-	// CanSeq2 reports whether a [Value] with this type can be iterated over using [Value.Seq2].
+	// CanSeq2 报告具有此类型的 [Value] 是否可以使用 [Value.Seq2] 进行迭代。
 	CanSeq2() bool
 
 	common() *abi.Type
 	uncommon() *uncommonType
 }
 
-// BUG(rsc): FieldByName and related functions consider struct field names to be equal
-// if the names are equal, even if they are unexported names originating
-// in different packages. The practical effect of this is that the result of
-// t.FieldByName("x") is not well defined if the struct type t contains
-// multiple fields named x (embedded from different packages).
-// FieldByName may return one of the fields named x or may report that there are none.
-// See https://golang.org/issue/4876 for more details.
+// BUG(rsc): FieldByName 及相关函数认为结构体字段名相等
+// 只要名称相等，即使它们是源自不同包的未导出名称。
+// 这意味着如果结构体类型 t 包含多个名为 x 的字段
+// （从不同包嵌入），t.FieldByName("x") 的结果是未定义的。
+// FieldByName 可能返回名为 x 的字段之一，也可能报告没有这样的字段。
+// 更多详情请参见 https://golang.org/issue/4876。
 
 /*
- * These data structures are known to the compiler (../cmd/compile/internal/reflectdata/reflect.go).
- * A few are known to ../runtime/type.go to convey to debuggers.
- * They are also known to ../internal/abi/type.go.
+ * 这些数据结构为编译器所知（../cmd/compile/internal/reflectdata/reflect.go）。
+ * 一些为 ../runtime/type.go 所知，以便传递给调试器。
+ * 它们也为 ../internal/abi/type.go 所知。
  */
 
-// A Kind represents the specific kind of type that a [Type] represents.
-// The zero Kind is not a valid kind.
+// Kind 表示 [Type] 所代表的类型的具体种类。
+// 零值 Kind 不是有效的种类。
 type Kind uint
 
 const (
@@ -327,27 +309,25 @@ const (
 	UnsafePointer
 )
 
-// Ptr is the old name for the [Pointer] kind.
+// Ptr 是 [Pointer] 种类的旧名称。
 //
 //go:fix inline
 const Ptr = Pointer
 
-// uncommonType is present only for defined types or types with methods
-// (if T is a defined type, the uncommonTypes for T and *T have methods).
-// When present, the uncommonType struct immediately follows the
-// abi.Type struct in memory.
-// The abi.TFlagUncommon indicates the presence of uncommonType.
-// Using an optional struct reduces the overall size required
-// to describe a non-defined type with no methods.
+// uncommonType 仅存在于已定义类型或带有方法的类型中
+// （如果 T 是已定义类型，则 T 和 *T 的 uncommonType 都有方法）。
+// 当存在时，uncommonType 结构紧跟在内存中的 abi.Type 结构之后。
+// abi.TFlagUncommon 指示 uncommonType 的存在。
+// 使用可选结构减少了描述没有方法的未定义类型所需的总大小。
 type uncommonType = abi.UncommonType
 
-// Embed this type to get common/uncommon
+// 嵌入此类型以获取 common/uncommon
 type common struct {
 	abi.Type
 }
 
-// rtype is the common implementation of most values.
-// It is embedded in other struct types.
+// rtype 是大多数值的通用实现。
+// 它嵌入在其他结构体类型中。
 type rtype struct {
 	t abi.Type
 }
@@ -364,7 +344,7 @@ type aNameOff = abi.NameOff
 type aTypeOff = abi.TypeOff
 type aTextOff = abi.TextOff
 
-// ChanDir represents a channel type's direction.
+// ChanDir 表示通道类型的方向。
 type ChanDir int
 
 const (
@@ -373,28 +353,28 @@ const (
 	BothDir = RecvDir | SendDir             // chan
 )
 
-// arrayType represents a fixed array type.
+// arrayType 表示固定数组类型。
 type arrayType = abi.ArrayType
 
-// chanType represents a channel type.
+// chanType 表示通道类型。
 type chanType = abi.ChanType
 
-// funcType represents a function type.
+// funcType 表示函数类型。
 //
-// A *rtype for each in and out parameter is stored in an array that
-// directly follows the funcType (and possibly its uncommonType). So
-// a function type with one method, one input, and one output is:
+// 每个输入和输出参数的 *rtype 存储在一个数组中，
+// 该数组紧跟在 funcType（可能还有其 uncommonType）之后。
+// 所以一个具有一个方法、一个输入和一个输出的函数类型是：
 //
 //	struct {
 //		funcType
 //		uncommonType
-//		[2]*rtype    // [0] is in, [1] is out
+//		[2]*rtype    // [0] 是输入，[1] 是输出
 //	}
 type funcType = abi.FuncType
 
-// interfaceType represents an interface type.
+// interfaceType 表示接口类型。
 type interfaceType struct {
-	abi.InterfaceType // can embed directly because not a public type.
+	abi.InterfaceType // 可以直接嵌入，因为不是公共类型。
 }
 
 func (t *interfaceType) nameOff(off aNameOff) abi.Name {
@@ -421,20 +401,20 @@ func (t *interfaceType) uncommon() *abi.UncommonType {
 	return t.Uncommon()
 }
 
-// ptrType represents a pointer type.
+// ptrType 表示指针类型。
 type ptrType struct {
 	abi.PtrType
 }
 
-// sliceType represents a slice type.
+// sliceType 表示切片类型。
 type sliceType struct {
 	abi.SliceType
 }
 
-// Struct field
+// 结构体字段
 type structField = abi.StructField
 
-// structType represents a struct type.
+// structType 表示结构体类型。
 type structType struct {
 	abi.StructType
 }
@@ -450,8 +430,8 @@ func pkgPath(n abi.Name) string {
 		off += i2 + l2
 	}
 	var nameOff int32
-	// Note that this field may not be aligned in memory,
-	// so we cannot use a direct int32 assignment here.
+	// 注意此字段在内存中可能未对齐，
+	// 所以我们不能在这里使用直接的 int32 赋值。
 	copy((*[4]byte)(unsafe.Pointer(&nameOff))[:], (*[4]byte)(unsafe.Pointer(n.DataChecked(off, "name offset field")))[:])
 	pkgPathName := abi.Name{Bytes: (*byte)(resolveTypeOff(unsafe.Pointer(n.Bytes), nameOff))}
 	return pkgPathName.Name()
@@ -462,33 +442,32 @@ func newName(n, tag string, exported, embedded bool) abi.Name {
 }
 
 /*
- * The compiler knows the exact layout of all the data structures above.
- * The compiler does not know about the data structures and methods below.
+ * 编译器知道上面所有数据结构的确切布局。
+ * 编译器不知道下面的数据结构和方法。
  */
 
-// Method represents a single method.
+// Method 表示单个方法。
 type Method struct {
-	// Name is the method name.
+	// Name 是方法名。
 	Name string
 
-	// PkgPath is the package path that qualifies a lower case (unexported)
-	// method name. It is empty for upper case (exported) method names.
-	// The combination of PkgPath and Name uniquely identifies a method
-	// in a method set.
-	// See https://golang.org/ref/spec#Uniqueness_of_identifiers
+	// PkgPath 是限定小写（未导出）方法名的包路径。
+	// 对于大写（导出）方法名，它为空。
+	// PkgPath 和 Name 的组合唯一标识方法集中的一个方法。
+	// 参见 https://golang.org/ref/spec#Uniqueness_of_identifiers
 	PkgPath string
 
-	Type  Type  // method type
-	Func  Value // func with receiver as first argument
-	Index int   // index for Type.Method
+	Type  Type  // 方法类型
+	Func  Value // 接收者作为第一个参数的函数
+	Index int   // Type.Method 的索引
 }
 
-// IsExported reports whether the method is exported.
+// IsExported 报告方法是否已导出。
 func (m Method) IsExported() bool {
 	return m.PkgPath == ""
 }
 
-// String returns the name of k.
+// String 返回 k 的名称。
 func (k Kind) String() string {
 	if uint(k) < uint(len(kindNames)) {
 		return kindNames[uint(k)]
@@ -526,58 +505,57 @@ var kindNames = []string{
 	UnsafePointer: "unsafe.Pointer",
 }
 
-// resolveNameOff resolves a name offset from a base pointer.
-// The (*rtype).nameOff method is a convenience wrapper for this function.
-// Implemented in the runtime package.
+// resolveNameOff 从基指针解析名称偏移量。
+// (*rtype).nameOff 方法是此函数的便捷包装器。
+// 在 runtime 包中实现。
 //
 //go:noescape
 func resolveNameOff(ptrInModule unsafe.Pointer, off int32) unsafe.Pointer
 
-// resolveTypeOff resolves an *rtype offset from a base type.
-// The (*rtype).typeOff method is a convenience wrapper for this function.
-// Implemented in the runtime package.
+// resolveTypeOff 从基类型解析 *rtype 偏移量。
+// (*rtype).typeOff 方法是此函数的便捷包装器。
+// 在 runtime 包中实现。
 //
 //go:noescape
 func resolveTypeOff(rtype unsafe.Pointer, off int32) unsafe.Pointer
 
-// resolveTextOff resolves a function pointer offset from a base type.
-// The (*rtype).textOff method is a convenience wrapper for this function.
-// Implemented in the runtime package.
+// resolveTextOff 从基类型解析函数指针偏移量。
+// (*rtype).textOff 方法是此函数的便捷包装器。
+// 在 runtime 包中实现。
 //
 //go:noescape
 func resolveTextOff(rtype unsafe.Pointer, off int32) unsafe.Pointer
 
-// addReflectOff adds a pointer to the reflection lookup map in the runtime.
-// It returns a new ID that can be used as a typeOff or textOff, and will
-// be resolved correctly. Implemented in the runtime package.
+// addReflectOff 在运行时向反射查找映射添加一个指针。
+// 它返回一个可以用作 typeOff 或 textOff 的新 ID，
+// 并将被正确解析。在 runtime 包中实现。
 //
-// addReflectOff should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// addReflectOff 应该是内部细节，
+// 但广泛使用的包通过 linkname 访问它。
+// 著名的耻辱成员包括：
 //   - github.com/goplus/reflectx
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 不要删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname addReflectOff
 //go:noescape
 func addReflectOff(ptr unsafe.Pointer) int32
 
-// resolveReflectName adds a name to the reflection lookup map in the runtime.
-// It returns a new nameOff that can be used to refer to the pointer.
+// resolveReflectName 在运行时向反射查找映射添加一个名称。
+// 它返回一个可以用于引用该指针的新 nameOff。
 func resolveReflectName(n abi.Name) aNameOff {
 	return aNameOff(addReflectOff(unsafe.Pointer(n.Bytes)))
 }
 
-// resolveReflectType adds a *rtype to the reflection lookup map in the runtime.
-// It returns a new typeOff that can be used to refer to the pointer.
+// resolveReflectType 在运行时向反射查找映射添加一个 *rtype。
+// 它返回一个可以用于引用该指针的新 typeOff。
 func resolveReflectType(t *abi.Type) aTypeOff {
 	return aTypeOff(addReflectOff(unsafe.Pointer(t)))
 }
 
-// resolveReflectText adds a function pointer to the reflection lookup map in
-// the runtime. It returns a new textOff that can be used to refer to the
-// pointer.
+// resolveReflectText 在运行时向反射查找映射添加一个函数指针。
+// 它返回一个可以用于引用该指针的新 textOff。
 func resolveReflectText(ptr unsafe.Pointer) aTextOff {
 	return aTextOff(addReflectOff(ptr))
 }

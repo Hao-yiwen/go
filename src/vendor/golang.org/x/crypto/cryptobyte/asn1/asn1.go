@@ -1,17 +1,15 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package asn1 contains supporting types for parsing and building ASN.1
-// messages with the cryptobyte package.
+// asn1 包包含用于使用 cryptobyte 包解析和构建 ASN.1 消息的支持类型。
 package asn1
 
-// Tag represents an ASN.1 identifier octet, consisting of a tag number
-// (indicating a type) and class (such as context-specific or constructed).
+// Tag 表示一个 ASN.1 标识符八位字节，由标签号（指示类型）和类
+//（如上下文特定或构造）组成。
 //
-// Methods in the cryptobyte package only support the low-tag-number form, i.e.
-// a single identifier octet with bits 7-8 encoding the class and bits 1-6
-// encoding the tag number.
+// cryptobyte 包中的方法仅支持低标签号形式，即单个标识符八位字节，
+// 其中第 7-8 位编码类，第 1-6 位编码标签号。
 type Tag uint8
 
 const (
@@ -19,13 +17,13 @@ const (
 	classContextSpecific = 0x80
 )
 
-// Constructed returns t with the constructed class bit set.
+// Constructed 返回设置了构造类位的 t。
 func (t Tag) Constructed() Tag { return t | classConstructed }
 
-// ContextSpecific returns t with the context-specific class bit set.
+// ContextSpecific 返回设置了上下文特定类位的 t。
 func (t Tag) ContextSpecific() Tag { return t | classContextSpecific }
 
-// The following is a list of standard tag and class combinations.
+// 以下是标准标签和类组合的列表。
 const (
 	BOOLEAN           = Tag(1)
 	INTEGER           = Tag(2)

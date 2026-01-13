@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package gcimporter
 
@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// A pkgReader holds the shared state for reading a unified IR package
+// 一个pkgReader 保存 shared state for reading a unified IR package
 // description.
 type pkgReader struct {
 	pkgbits.PkgDecoder
@@ -106,7 +106,7 @@ func readUnifiedPackage(fset *token.FileSet, ctxt *types.Context, imports map[st
 	return pkg
 }
 
-// A reader holds the state for reading a single unified IR element
+// 一个reader 保存 state for reading a single unified IR element
 // within a package.
 type reader struct {
 	pkgbits.Decoder
@@ -116,17 +116,17 @@ type reader struct {
 	dict *readerDict
 }
 
-// A readerDict holds the state for type parameters that parameterize
+// 一个readerDict 保存 state for type parameters that parameterize
 // the current unified IR element.
 type readerDict struct {
-	// bounds is a slice of typeInfos corresponding to the underlying
+	// bounds 是一个 slice of typeInfos corresponding to the underlying
 	// bounds of the element's type parameters.
 	bounds []typeInfo
 
-	// tparams is a slice of the constructed TypeParams for the element.
+	// tparams 是一个 slice of the constructed TypeParams for the element.
 	tparams []*types.TypeParam
 
-	// derived is a slice of types derived from tparams, which may be
+	// derived 是一个 slice of types derived from tparams, which may be
 	// instantiated while reading the current element.
 	derived      []derivedInfo
 	derivedTypes []types.Type // lazily instantiated from derived
@@ -389,7 +389,7 @@ func (r *reader) interfaceType() *types.Interface {
 	// interface type yet. So we need to defer calling Complete until
 	// after we've called SetUnderlying everywhere.
 	//
-	// TODO(mdempsky): After CL 424876 lands, it should be safe to call
+	// TODO(mdempsky): After CL 424876 lands, it 应该是 safe to call
 	// iface.Complete() immediately.
 	r.p.ifaces = append(r.p.ifaces, iface)
 
@@ -520,7 +520,7 @@ func (pr *pkgReader) objIdx(idx pkgbits.Index) (*types.Package, string) {
 
 			underlying := r.typ().Underlying()
 
-			// If the underlying type is an interface, we need to
+			// If the underlying type 是一个n interface, we need to
 			// duplicate its methods so we can replace the receiver
 			// parameter's type (#49906).
 			if iface, ok := underlying.(*types.Interface); ok && iface.NumExplicitMethods() != 0 {
@@ -652,7 +652,7 @@ func (r *reader) method() *types.Func {
 	rparams := r.typeParamNames()
 	sig := r.signature(r.param(types.RecvVar), rparams, nil)
 
-	_ = r.pos() // TODO(mdempsky): Remove; this is a hacker for linker.go.
+	_ = r.pos() // TODO(mdempsky): Remove; this 是一个 hacker for linker.go.
 	return types.NewFunc(pos, pkg, name, sig)
 }
 
@@ -665,7 +665,7 @@ func (r *reader) ident(marker pkgbits.SyncMarker) (*types.Package, string) {
 	return r.pkg(), r.String()
 }
 
-// pkgScope returns pkg.Scope().
+// pkgScope 返回pkg.Scope().
 // If pkg is nil, it returns types.Universe instead.
 //
 // TODO(mdempsky): Remove after x/tools can depend on Go 1.19.
@@ -676,9 +676,9 @@ func pkgScope(pkg *types.Package) *types.Scope {
 	return types.Universe
 }
 
-// newAliasTypeName returns a new TypeName, with a materialized *types.Alias if supported.
+// newAliasTypeName 返回a new TypeName, with a materialized *types.Alias if supported.
 func newAliasTypeName(pos token.Pos, pkg *types.Package, name string, rhs types.Type, tparams []*types.TypeParam) *types.TypeName {
-	// When GODEBUG=gotypesalias=1 or unset, the Type() of the return value is a
+	// When GODEBUG=gotypesalias=1 or unset, the Type() of the return value 是一个
 	// *types.Alias. Copied from x/tools/internal/aliases.NewAlias.
 	switch godebug.New("gotypesalias").Value() {
 	case "", "1":

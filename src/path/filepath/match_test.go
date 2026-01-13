@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package filepath_test
 
@@ -93,7 +93,7 @@ func TestMatch(t *testing.T) {
 		s := tt.s
 		if runtime.GOOS == "windows" {
 			if strings.Contains(pattern, "\\") {
-				// no escape allowed on windows.
+				// Windows 上不允许转义。
 				continue
 			}
 			pattern = Clean(pattern)
@@ -162,9 +162,8 @@ func TestGlob(t *testing.T) {
 }
 
 func TestCVE202230632(t *testing.T) {
-	// Prior to CVE-2022-30632, this would cause a stack exhaustion given a
-	// large number of separators (more than 4,000,000). There is now a limit
-	// of 10,000.
+	// 在 CVE-2022-30632 之前，给定大量分隔符（超过 4,000,000 个）会导致栈耗尽。
+	// 现在有 10,000 的限制。
 	_, err := Glob("/*" + strings.Repeat("/", 10001))
 	if err != ErrBadPattern {
 		t.Fatalf("Glob returned err=%v, want ErrBadPattern", err)
@@ -181,8 +180,8 @@ func TestGlobError(t *testing.T) {
 }
 
 func TestGlobUNC(t *testing.T) {
-	// Just make sure this runs without crashing for now.
-	// See issue 15879.
+	// 目前只是确保这个运行时不会崩溃。
+	// 见 issue 15879。
 	Glob(`\\?\C:\*`)
 }
 
@@ -213,7 +212,7 @@ func TestGlobSymlink(t *testing.T) {
 			t.Fatal(err)
 		}
 		if tt.brokenLink {
-			// Break the symlink.
+			// 破坏符号链接。
 			os.Remove(path)
 		}
 		matches, err := Glob(dest)
@@ -265,7 +264,7 @@ func (test *globTest) globRel(root string) error {
 	if slices.Equal(want, have) {
 		return nil
 	}
-	// try also matching version without root prefix
+	// 也尝试匹配没有 root 前缀的版本
 	wantWithNoRoot := test.buildWant("")
 	if slices.Equal(wantWithNoRoot, have) {
 		return nil
@@ -320,19 +319,19 @@ func TestWindowsGlob(t *testing.T) {
 		{"d*/*/bin/git.exe", []string{"dir/d/bin/git.exe"}},
 	}
 
-	// test absolute paths
+	// 测试绝对路径
 	for _, test := range tests {
 		var p string
 		if err := test.globAbs(tmpDir, tmpDir); err != nil {
 			t.Error(err)
 		}
-		// test C:\*Documents and Settings\...
+		// 测试 C:\*Documents and Settings\...
 		p = tmpDir
 		p = strings.Replace(p, `:\`, `:\*`, 1)
 		if err := test.globAbs(tmpDir, p); err != nil {
 			t.Error(err)
 		}
-		// test C:\Documents and Settings*\...
+		// 测试 C:\Documents and Settings*\...
 		p = tmpDir
 		p = strings.Replace(p, `:\`, `:`, 1)
 		p = strings.Replace(p, `\`, `*\`, 1)
@@ -342,7 +341,7 @@ func TestWindowsGlob(t *testing.T) {
 		}
 	}
 
-	// test relative paths
+	// 测试相对路径
 	t.Chdir(tmpDir)
 	for _, test := range tests {
 		err := test.globRel("")

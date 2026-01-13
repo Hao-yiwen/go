@@ -6,28 +6,27 @@
 
 package runtime
 
-// sleep and wakeup on one-time events.
-// before any calls to notesleep or notewakeup,
-// must call noteclear to initialize the Note.
-// then, exactly one thread can call notesleep
-// and exactly one thread can call notewakeup (once).
-// once notewakeup has been called, the notesleep
-// will return.  future notesleep will return immediately.
-// subsequent noteclear must be called only after
-// previous notesleep has returned, e.g. it's disallowed
-// to call noteclear straight after notewakeup.
+// 在一次性事件上睡眠和唤醒。
+// 在调用 notesleep 或 notewakeup 之前，
+// 必须调用 noteclear 来初始化 Note。
+// 然后，恰好一个线程可以调用 notesleep，
+// 恰好一个线程可以调用 notewakeup（一次）。
+// 一旦 notewakeup 被调用，notesleep
+// 将返回。未来 notesleep 将立即返回。
+// 后续 noteclear 必须仅在
+// 之前的 notesleep 返回后调用，例如不允许
+// 在 notewakeup 之后直接调用 noteclear。
 //
-// notetsleep is like notesleep but wakes up after
-// a given number of nanoseconds even if the event
-// has not yet happened.  if a goroutine uses notetsleep to
-// wake up early, it must wait to call noteclear until it
-// can be sure that no other goroutine is calling
-// notewakeup.
+// notetsleep 类似于 notesleep 但在给定的纳秒数后唤醒，
+// 即使事件尚未发生。如果 goroutine 使用 notetsleep 来
+// 提前唤醒，它必须等待调用 noteclear，直到
+// 确保没有其他 goroutine 调用
+// notewakeup。
 //
-// notesleep/notetsleep are generally called on g0,
-// notetsleepg is similar to notetsleep but is called on user g.
+// notesleep/notetsleep 通常在 g0 上调用，
+// notetsleepg 类似于 notetsleep 但在用户 g 上调用。
 type note struct {
-	// Futex-based impl treats it as uint32 key,
-	// while sema-based impl as M* waitm.
+	// 基于 Futex 的实现将其视为 uint32 键，
+	// 而基于 sema 的实现将其视为 M* waitm。
 	key uintptr
 }

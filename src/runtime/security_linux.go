@@ -7,7 +7,7 @@ package runtime
 import _ "unsafe"
 
 func initSecureMode() {
-	// We have already initialized the secureMode bool in sysauxv.
+	// 我们已在 sysauxv 中初始化了 secureMode 布尔值。
 }
 
 func isSecureMode() bool {

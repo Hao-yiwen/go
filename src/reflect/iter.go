@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package reflect
 
@@ -13,11 +13,10 @@ func rangeNum[T int8 | int16 | int32 | int64 | int |
 	uintptr, N int64 | uint64](num N, t Type) iter.Seq[Value] {
 	return func(yield func(v Value) bool) {
 		convert := t.PkgPath() != ""
-		// cannot use range T(v) because no core type.
+		// 不能使用 range T(v)，因为没有核心类型。
 		for i := T(0); i < T(num); i++ {
 			tmp := ValueOf(i)
-			// if the iteration value type is define by
-			// type T built-in type.
+			// 如果迭代值类型是由 type T 内置类型定义的。
 			if convert {
 				tmp = tmp.Convert(t)
 			}
@@ -28,13 +27,13 @@ func rangeNum[T int8 | int16 | int32 | int64 | int |
 	}
 }
 
-// Seq returns an iter.Seq[Value] that loops over the elements of v.
-// If v's kind is Func, it must be a function that has no results and
-// that takes a single argument of type func(T) bool for some type T.
-// If v's kind is Pointer, the pointer element type must have kind Array.
-// Otherwise v's kind must be Int, Int8, Int16, Int32, Int64,
-// Uint, Uint8, Uint16, Uint32, Uint64, Uintptr,
-// Array, Chan, Map, Slice, or String.
+// Seq 返回一个 iter.Seq[Value]，遍历 v 的元素。
+// 如果 v 的 kind 是 Func，它必须是一个没有返回值的函数，
+// 并且接受一个类型为 func(T) bool 的单一参数（T 是某种类型）。
+// 如果 v 的 kind 是 Pointer，指针元素类型必须是 Array 类型。
+// 否则 v 的 kind 必须是 Int、Int8、Int16、Int32、Int64、
+// Uint、Uint8、Uint16、Uint32、Uint64、Uintptr、
+// Array、Chan、Map、Slice 或 String。
 func (v Value) Seq() iter.Seq[Value] {
 	if canRangeFunc(v.abiType()) {
 		return func(yield func(Value) bool) {
@@ -116,11 +115,11 @@ func (v Value) Seq() iter.Seq[Value] {
 	panic("reflect: " + v.Type().String() + " cannot produce iter.Seq[Value]")
 }
 
-// Seq2 returns an iter.Seq2[Value, Value] that loops over the elements of v.
-// If v's kind is Func, it must be a function that has no results and
-// that takes a single argument of type func(K, V) bool for some type K, V.
-// If v's kind is Pointer, the pointer element type must have kind Array.
-// Otherwise v's kind must be Array, Map, Slice, or String.
+// Seq2 返回一个 iter.Seq2[Value, Value]，遍历 v 的元素。
+// 如果 v 的 kind 是 Func，它必须是一个没有返回值的函数，
+// 并且接受一个类型为 func(K, V) bool 的单一参数（K、V 是某种类型）。
+// 如果 v 的 kind 是 Pointer，指针元素类型必须是 Array 类型。
+// 否则 v 的 kind 必须是 Array、Map、Slice 或 String。
 func (v Value) Seq2() iter.Seq2[Value, Value] {
 	if canRangeFunc2(v.abiType()) {
 		return func(yield func(Value, Value) bool) {

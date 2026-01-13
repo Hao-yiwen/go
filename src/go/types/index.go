@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements typechecking of index/slice expressions.
 
@@ -13,12 +13,12 @@ import (
 	. "internal/types/errors"
 )
 
-// If e is a valid function instantiation, indexExpr returns true.
+// If e 是一个 valid function instantiation, indexExpr returns true.
 // In that case x represents the uninstantiated function value and
-// it is the caller's responsibility to instantiate the function.
+// it 是 caller's responsibility to instantiate the function.
 func (check *Checker) indexExpr(x *operand, e *indexedExpr) (isFuncInst bool) {
 	check.exprOrType(x, e.x, true)
-	// x may be generic
+	// x 可能是 generic
 
 	switch x.mode {
 	case invalid:
@@ -59,7 +59,7 @@ func (check *Checker) indexExpr(x *operand, e *indexedExpr) (isFuncInst bool) {
 				length = int64(len(constant.StringVal(x.val)))
 			}
 			// an indexed string always yields a byte value
-			// (not a constant) even if the string and the
+			// (not a constant) even 如果 string and the
 			// index are constant
 			x.mode = value
 			x.typ = universeByte // use 'byte' name
@@ -106,12 +106,12 @@ func (check *Checker) indexExpr(x *operand, e *indexedExpr) (isFuncInst bool) {
 			break
 		}
 		// TODO(gri) report detailed failure cause for better error messages
-		var key, elem Type // key != nil: we must have all maps
-		mode := variable   // non-maps result mode
+		var key, elem Type // key != nil: we must have all 映射
+		mode := variable   // non-映射 result mode
 		// TODO(gri) factor out closure and use it for non-typeparam cases as well
 		if underIs(x.typ, func(u Type) bool {
 			l := int64(-1) // valid if >= 0
-			var k, e Type  // k is only set for maps
+			var k, e Type  // k is only set for 映射
 			switch t := u.(type) {
 			case *Basic:
 				if isString(t) {
@@ -144,12 +144,12 @@ func (check *Checker) indexExpr(x *operand, e *indexedExpr) (isFuncInst bool) {
 				key, elem = k, e
 				return true
 			}
-			// all map keys must be identical (incl. all nil)
-			// (that is, we cannot mix maps with other types)
+			// all map keys 必须是 identical (incl. all nil)
+			// (that is, we cannot mix 映射 with other types)
 			if !Identical(key, k) {
 				return false
 			}
-			// all element types must be identical
+			// all element types 必须是 identical
 			if !Identical(elem, e) {
 				return false
 			}
@@ -159,7 +159,7 @@ func (check *Checker) indexExpr(x *operand, e *indexedExpr) (isFuncInst bool) {
 			}
 			return true
 		}) {
-			// For maps, the index expression must be assignable to the map key type.
+			// For 映射, the index expression 必须是 assignable to the map key type.
 			if key != nil {
 				index := check.singleIndex(e)
 				if index == nil {
@@ -176,7 +176,7 @@ func (check *Checker) indexExpr(x *operand, e *indexedExpr) (isFuncInst bool) {
 				return false
 			}
 
-			// no maps
+			// no 映射
 			valid = true
 			x.mode = mode
 			x.typ = elem
@@ -198,7 +198,7 @@ func (check *Checker) indexExpr(x *operand, e *indexedExpr) (isFuncInst bool) {
 	}
 
 	// In pathological (invalid) cases (e.g.: type T1 [][[]T1{}[0][0]]T0)
-	// the element type may be accessed before it's set. Make sure we have
+	// the element type 可能是 accessed before it's set. Make sure we have
 	// a valid type.
 	if x.typ == nil {
 		x.typ = Typ[Invalid]
@@ -232,7 +232,7 @@ func (check *Checker) sliceExpr(x *operand, e *ast.SliceExpr) {
 			hasString = true
 		}
 
-		// If this is the first type we're seeing, we're done.
+		// If this 是 first type we're seeing, we're done.
 		if cu == nil {
 			ct, cu = t, u
 			return true
@@ -269,7 +269,7 @@ func (check *Checker) sliceExpr(x *operand, e *ast.SliceExpr) {
 			if e.Slice3 {
 				at := e.Max
 				if at == nil {
-					at = e // e.Index[2] should be present but be careful
+					at = e // e.Index[2] 应该是 present but be careful
 				}
 				check.error(at, InvalidSliceExpr, invalidOp+"3-index slice of string")
 				x.mode = invalid
@@ -280,7 +280,7 @@ func (check *Checker) sliceExpr(x *operand, e *ast.SliceExpr) {
 				length = int64(len(constant.StringVal(x.val)))
 			}
 			// spec: "For untyped string operands the result
-			// is a non-constant value of type string."
+			// 是一个 non-constant value 类型为 string."
 			if isUntyped(x.typ) {
 				x.typ = Typ[String]
 			}
@@ -316,7 +316,7 @@ func (check *Checker) sliceExpr(x *operand, e *ast.SliceExpr) {
 
 	x.mode = value
 
-	// spec: "Only the first index may be omitted; it defaults to 0."
+	// spec: "Only the first index 可能是 omitted; it defaults to 0."
 	if e.Slice3 && (e.High == nil || e.Max == nil) {
 		check.error(inNode(e, e.Rbrack), InvalidSyntaxTree, "2nd and 3rd index required in 3-index slice")
 		x.mode = invalid
@@ -330,7 +330,7 @@ func (check *Checker) sliceExpr(x *operand, e *ast.SliceExpr) {
 		switch {
 		case expr != nil:
 			// The "capacity" is only known statically for strings, arrays,
-			// and pointers to arrays, and it is the same as the length for
+			// and pointers to arrays, and it 是 same as the length for
 			// those types.
 			max := int64(-1)
 			if length >= 0 {
@@ -349,7 +349,7 @@ func (check *Checker) sliceExpr(x *operand, e *ast.SliceExpr) {
 		ind[i] = x
 	}
 
-	// constant indices must be in range
+	// constant indices 必须是 in range
 	// (check.index already checks that existing indices >= 0)
 L:
 	for i, x := range ind[:len(ind)-1] {
@@ -368,7 +368,7 @@ L:
 	}
 }
 
-// singleIndex returns the (single) index from the index expression e.
+// singleIndex 返回the (single) index from the index expression e.
 // If the index is missing, or if there are multiple indices, an error
 // is reported and the result is nil.
 func (check *Checker) singleIndex(expr *indexedExpr) ast.Expr {
@@ -384,7 +384,7 @@ func (check *Checker) singleIndex(expr *indexedExpr) ast.Expr {
 }
 
 // index checks an index expression for validity.
-// If max >= 0, it is the upper bound for index.
+// If max >= 0, it 是 upper bound for index.
 // If the result typ is != Typ[Invalid], index is valid and typ is its (possibly named) integer type.
 // If the result val >= 0, index is valid and val is its constant int value.
 func (check *Checker) index(index ast.Expr, max int64) (typ Type, val int64) {
@@ -427,20 +427,20 @@ func (check *Checker) isValidIndex(x *operand, code Code, what string, allowNega
 		return false
 	}
 
-	// spec: "the index x must be of integer type or an untyped constant"
+	// spec: "the index x 必须是 of integer type or an untyped constant"
 	if !allInteger(x.typ) {
 		check.errorf(x, code, invalidArg+"%s %s must be integer", what, x)
 		return false
 	}
 
 	if x.mode == constant_ {
-		// spec: "a constant index must be non-negative ..."
+		// spec: "a constant index 必须是 non-negative ..."
 		if !allowNegative && constant.Sign(x.val) < 0 {
 			check.errorf(x, code, invalidArg+"%s %s must not be negative", what, x)
 			return false
 		}
 
-		// spec: "... and representable by a value of type int"
+		// spec: "... and representable by a value 类型为 int"
 		if !representableConst(x.val, check, Typ[Int], &x.val) {
 			check.errorf(x, code, invalidArg+"%s %s overflows int", what, x)
 			return false
@@ -452,7 +452,7 @@ func (check *Checker) isValidIndex(x *operand, code Code, what string, allowNega
 
 // indexedExpr wraps an ast.IndexExpr or ast.IndexListExpr.
 //
-// Orig holds the original ast.Expr from which this indexedExpr was derived.
+// Orig 保存the original ast.Expr from which this indexedExpr was derived.
 //
 // Note: indexedExpr (intentionally) does not wrap ast.Expr, as that leads to
 // accidental misuse such as encountered in golang/go#63933.

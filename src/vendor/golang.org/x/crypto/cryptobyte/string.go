@@ -1,28 +1,22 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package cryptobyte contains types that help with parsing and constructing
-// length-prefixed, binary messages, including ASN.1 DER. (The asn1 subpackage
-// contains useful ASN.1 constants.)
+// cryptobyte 包包含有助于解析和构造长度前缀二进制消息（包括 ASN.1 DER）的类型。
+//（asn1 子包包含有用的 ASN.1 常量。）
 //
-// The String type is for parsing. It wraps a []byte slice and provides helper
-// functions for consuming structures, value by value.
+// String 类型用于解析。它包装一个 []byte 切片，并提供用于逐值消费结构的辅助函数。
 //
-// The Builder type is for constructing messages. It providers helper functions
-// for appending values and also for appending length-prefixed submessages –
-// without having to worry about calculating the length prefix ahead of time.
+// Builder 类型用于构造消息。它提供用于追加值以及追加长度前缀子消息的辅助函数，
+// 无需担心提前计算长度前缀。
 //
-// See the documentation and examples for the Builder and String types to get
-// started.
+// 有关入门信息，请参阅 Builder 和 String 类型的文档和示例。
 package cryptobyte
 
-// String represents a string of bytes. It provides methods for parsing
-// fixed-length and length-prefixed values from it.
+// String 表示一个字节字符串。它提供从中解析固定长度和长度前缀值的方法。
 type String []byte
 
-// read advances a String by n bytes and returns them. If less than n bytes
-// remain, it returns nil.
+// read 使 String 前进 n 个字节并返回它们。如果剩余字节少于 n，则返回 nil。
 func (s *String) read(n int) []byte {
 	if len(*s) < n || n < 0 {
 		return nil
@@ -32,13 +26,12 @@ func (s *String) read(n int) []byte {
 	return v
 }
 
-// Skip advances the String by n byte and reports whether it was successful.
+// Skip 使 String 前进 n 个字节并报告是否成功。
 func (s *String) Skip(n int) bool {
 	return s.read(n) != nil
 }
 
-// ReadUint8 decodes an 8-bit value into out and advances over it.
-// It reports whether the read was successful.
+// ReadUint8 将一个 8 位值解码到 out 并跳过它。它报告读取是否成功。
 func (s *String) ReadUint8(out *uint8) bool {
 	v := s.read(1)
 	if v == nil {
@@ -48,8 +41,7 @@ func (s *String) ReadUint8(out *uint8) bool {
 	return true
 }
 
-// ReadUint16 decodes a big-endian, 16-bit value into out and advances over it.
-// It reports whether the read was successful.
+// ReadUint16 将一个大端序 16 位值解码到 out 并跳过它。它报告读取是否成功。
 func (s *String) ReadUint16(out *uint16) bool {
 	v := s.read(2)
 	if v == nil {
@@ -59,8 +51,7 @@ func (s *String) ReadUint16(out *uint16) bool {
 	return true
 }
 
-// ReadUint24 decodes a big-endian, 24-bit value into out and advances over it.
-// It reports whether the read was successful.
+// ReadUint24 将一个大端序 24 位值解码到 out 并跳过它。它报告读取是否成功。
 func (s *String) ReadUint24(out *uint32) bool {
 	v := s.read(3)
 	if v == nil {
@@ -70,8 +61,7 @@ func (s *String) ReadUint24(out *uint32) bool {
 	return true
 }
 
-// ReadUint32 decodes a big-endian, 32-bit value into out and advances over it.
-// It reports whether the read was successful.
+// ReadUint32 将一个大端序 32 位值解码到 out 并跳过它。它报告读取是否成功。
 func (s *String) ReadUint32(out *uint32) bool {
 	v := s.read(4)
 	if v == nil {
@@ -81,8 +71,7 @@ func (s *String) ReadUint32(out *uint32) bool {
 	return true
 }
 
-// ReadUint48 decodes a big-endian, 48-bit value into out and advances over it.
-// It reports whether the read was successful.
+// ReadUint48 将一个大端序 48 位值解码到 out 并跳过它。它报告读取是否成功。
 func (s *String) ReadUint48(out *uint64) bool {
 	v := s.read(6)
 	if v == nil {
@@ -92,8 +81,7 @@ func (s *String) ReadUint48(out *uint64) bool {
 	return true
 }
 
-// ReadUint64 decodes a big-endian, 64-bit value into out and advances over it.
-// It reports whether the read was successful.
+// ReadUint64 将一个大端序 64 位值解码到 out 并跳过它。它报告读取是否成功。
 func (s *String) ReadUint64(out *uint64) bool {
 	v := s.read(8)
 	if v == nil {
@@ -135,28 +123,25 @@ func (s *String) readLengthPrefixed(lenLen int, outChild *String) bool {
 	return true
 }
 
-// ReadUint8LengthPrefixed reads the content of an 8-bit length-prefixed value
-// into out and advances over it. It reports whether the read was successful.
+// ReadUint8LengthPrefixed 读取 8 位长度前缀值的内容到 out 并跳过它。
+// 它报告读取是否成功。
 func (s *String) ReadUint8LengthPrefixed(out *String) bool {
 	return s.readLengthPrefixed(1, out)
 }
 
-// ReadUint16LengthPrefixed reads the content of a big-endian, 16-bit
-// length-prefixed value into out and advances over it. It reports whether the
-// read was successful.
+// ReadUint16LengthPrefixed 读取大端序 16 位长度前缀值的内容到 out 并跳过它。
+// 它报告读取是否成功。
 func (s *String) ReadUint16LengthPrefixed(out *String) bool {
 	return s.readLengthPrefixed(2, out)
 }
 
-// ReadUint24LengthPrefixed reads the content of a big-endian, 24-bit
-// length-prefixed value into out and advances over it. It reports whether
-// the read was successful.
+// ReadUint24LengthPrefixed 读取大端序 24 位长度前缀值的内容到 out 并跳过它。
+// 它报告读取是否成功。
 func (s *String) ReadUint24LengthPrefixed(out *String) bool {
 	return s.readLengthPrefixed(3, out)
 }
 
-// ReadBytes reads n bytes into out and advances over them. It reports
-// whether the read was successful.
+// ReadBytes 读取 n 个字节到 out 并跳过它们。它报告读取是否成功。
 func (s *String) ReadBytes(out *[]byte, n int) bool {
 	v := s.read(n)
 	if v == nil {
@@ -166,8 +151,7 @@ func (s *String) ReadBytes(out *[]byte, n int) bool {
 	return true
 }
 
-// CopyBytes copies len(out) bytes into out and advances over them. It reports
-// whether the copy operation was successful
+// CopyBytes 复制 len(out) 个字节到 out 并跳过它们。它报告复制操作是否成功。
 func (s *String) CopyBytes(out []byte) bool {
 	n := len(out)
 	v := s.read(n)
@@ -177,7 +161,7 @@ func (s *String) CopyBytes(out []byte) bool {
 	return copy(out, v) == n
 }
 
-// Empty reports whether the string does not contain any bytes.
+// Empty 报告字符串是否不包含任何字节。
 func (s String) Empty() bool {
 	return len(s) == 0
 }

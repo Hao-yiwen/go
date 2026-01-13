@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -22,28 +22,26 @@ import (
 )
 
 const (
-	NOT_REG_CLASS = iota // not a register
-	VREG_CLASS           // classify as a vector register; see
-	GREG_CLASS           // classify as a general register
+	NOT_REG_CLASS = iota // 不是寄存器
+	VREG_CLASS           // 分类为向量寄存器
+	GREG_CLASS           // 分类为通用寄存器
 )
 
-// instVariant is a bitmap indicating a variant of an instruction that has
-// optional parameters.
+// instVariant 是一个位图，表示具有可选参数的指令的变体。
 type instVariant uint8
 
 const (
 	instVariantNone instVariant = 0
 
-	// instVariantMasked indicates that this is the masked variant of an
-	// optionally-masked instruction.
+	// instVariantMasked 表示这是可选掩码指令的带掩码变体。
 	instVariantMasked instVariant = 1 << iota
 )
 
 var operandRemarks int
 
-// TODO: Doc. Returns Values with Def domains.
+// TODO: 文档。返回具有 Def 域的 Values。
 func loadXED(xedPath string) []*unify.Value {
-	// TODO: Obviously a bunch more to do here.
+	// TODO: 显然还有很多工作要做。
 
 	db, err := xeddata.NewDatabase(xedPath)
 	if err != nil {
@@ -56,7 +54,7 @@ func loadXED(xedPath string) []*unify.Value {
 		ops  []operand
 		mem  string
 	}
-	// Maps from opcode to opdata(s).
+	// 从操作码到 opdata 的映射。
 	memOps := make(map[string][]opData, 0)
 	otherOps := make(map[string][]opData, 0)
 	appendDefs := func(inst *xeddata.Inst, ops []operand, addFields map[string]string) {
@@ -77,9 +75,9 @@ func loadXED(xedPath string) []*unify.Value {
 
 		switch {
 		case inst.RealOpcode == "N":
-			return // Skip unstable instructions
+			return // 跳过不稳定的指令
 		case !(strings.HasPrefix(inst.Extension, "AVX") || strings.HasPrefix(inst.Extension, "SHA")):
-			// We're only interested in AVX and SHA instructions.
+			// 我们只对 AVX 和 SHA 指令感兴趣。
 			return
 		}
 
@@ -98,8 +96,7 @@ func loadXED(xedPath string) []*unify.Value {
 		var data map[string][]opData
 		mem := checkMem(ops)
 		if mem == "vbcst" {
-			// A pure vreg variant might exist, wait for later to see if we can
-			// merge them
+			// 可能存在纯 vreg 变体，稍后看看是否可以合并它们
 			data = memOps
 		} else {
 			data = otherOps
@@ -118,19 +115,19 @@ func loadXED(xedPath string) []*unify.Value {
 			addFields := map[string]string{}
 			if o.mem == "noMem" {
 				opcode := o.inst.Opcode()
-				// Checking if there is a vbcst variant of this operation exist
-				// First check the opcode
-				// Keep this logic in sync with [decodeOperands]
+				// 检查此操作是否存在 vbcst 变体
+				// 首先检查操作码
+				// 保持此逻辑与 [decodeOperands] 同步
 				if ms, ok := memOps[opcode]; ok {
 					feat1, ok1 := decodeCPUFeature(o.inst)
-					// Then check if there exist such an operation that for all vreg
-					// shapes they are the same at the same index
+					// 然后检查是否存在这样的操作：对于所有 vreg
+					// 形状，它们在相同索引处是相同的
 					var feat1Match, feat2Match string
 					matchIdx := -1
 					var featMismatchCnt int
 				outer:
 					for i, m := range ms {
-						// Their CPU feature should match first
+						// 它们的 CPU 特性应该首先匹配
 						var featMismatch bool
 						feat2, ok2 := decodeCPUFeature(m.inst)
 						if !ok1 || !ok2 {
@@ -149,37 +146,37 @@ func loadXED(xedPath string) []*unify.Value {
 										continue
 									}
 									if v1.vecShape != v2.vecShape {
-										// A mismatch, skip this memOp
+										// 不匹配，跳过此 memOp
 										continue outer
 									}
 								} else {
 									_, ok3 := o.ops[j].(operandVReg)
 									_, ok4 := m.ops[j].(operandMem)
-									// The only difference must be the vreg and mem, no other cases.
+									// 唯一的区别必须是 vreg 和 mem，没有其他情况。
 									if !ok3 || !ok4 {
-										// A mismatch, skip this memOp
+										// 不匹配，跳过此 memOp
 										continue outer
 									}
 								}
 							}
-							// Found a match, break early
+							// 找到匹配，提前退出
 							matchIdx = i
 							feat1Match = feat1
 							feat2Match = feat2
 							if featMismatchCnt > 1 {
-								panic("multiple feature mismatch vbcst memops detected, simdgen failed to distinguish")
+								panic("检测到多个特性不匹配的 vbcst memops，simdgen 无法区分")
 							}
 							if !featMismatch {
-								// Mismatch feat is ok but should prioritize matching cases.
+								// 特性不匹配是可以的，但应优先考虑匹配的情况。
 								break
 							}
 						}
 					}
-					// Remove the match from memOps, it's now merged to this pure vreg operation
+					// 从 memOps 中移除匹配项，它现在已合并到此纯 vreg 操作中
 					if matchIdx != -1 {
 						memOps[opcode] = append(memOps[opcode][:matchIdx], memOps[opcode][matchIdx+1:]...)
-						// Merge is done by adding a new field
-						// Right now we only have vbcst
+						// 通过添加新字段来完成合并
+						// 目前我们只有 vbcst
 						addFields["memFeatures"] = "vbcst"
 						if feat1Match != feat2Match {
 							addFields["memFeaturesData"] = fmt.Sprintf("feat1=%s;feat2=%s", feat1Match, feat2Match)
@@ -237,8 +234,7 @@ func applyQuirks(inst *xeddata.Inst, ops []operand) {
 	opc := inst.Opcode()
 	switch {
 	case maskRequiredRe.MatchString(opc):
-		// The mask on these instructions is marked optional, but the
-		// instruction is pointless without the mask.
+		// 这些指令上的掩码被标记为可选的，但没有掩码该指令就没有意义。
 		for i, op := range ops {
 			if op, ok := op.(operandMask); ok {
 				op.optional = false
@@ -247,7 +243,7 @@ func applyQuirks(inst *xeddata.Inst, ops []operand) {
 		}
 
 	case maskOptionalRe.MatchString(opc):
-		// Conversely, these masks should be marked optional and aren't.
+		// 相反，这些掩码应该被标记为可选的但实际上没有。
 		for i, op := range ops {
 			if op, ok := op.(operandMask); ok && op.action.r {
 				op.optional = true
@@ -261,66 +257,64 @@ type operandCommon struct {
 	action operandAction
 }
 
-// operandAction defines whether this operand is read and/or written.
+// operandAction 定义此操作数是读取和/或写入。
 //
-// TODO: Should this live in [xeddata.Operand]?
+// TODO: 这应该放在 [xeddata.Operand] 中吗？
 type operandAction struct {
-	r  bool // Read
-	w  bool // Written
-	cr bool // Read is conditional (implies r==true)
-	cw bool // Write is conditional (implies w==true)
+	r  bool // 读取
+	w  bool // 写入
+	cr bool // 读取是条件性的（意味着 r==true）
+	cw bool // 写入是条件性的（意味着 w==true）
 }
 
 type operandMem struct {
 	operandCommon
 	vecShape
 	elemBaseType scalarBaseType
-	// The following fields are not flushed to the final output
-	// Supports full-vector broadcasting; implies the operand having a "vv"(vector vector) type specified in width and
-	// the instruction is with attribute TXT=BCASTSTR.
+	// 以下字段不会刷新到最终输出
+	// 支持全向量广播；意味着操作数在宽度中指定了 "vv"（向量向量）类型，
+	// 并且指令具有 TXT=BCASTSTR 属性。
 	vbcst   bool
-	unknown bool // unknown kind
+	unknown bool // 未知类型
 }
 
 type vecShape struct {
-	elemBits  int    // Element size in bits
-	bits      int    // Register width in bits (total vector bits)
-	fixedName string // the fixed register name
+	elemBits  int    // 元素大小（位）
+	bits      int    // 寄存器宽度（位）（总向量位数）
+	fixedName string // 固定寄存器名称
 }
 
-type operandVReg struct { // Vector register
+type operandVReg struct { // 向量寄存器
 	operandCommon
 	vecShape
 	elemBaseType scalarBaseType
 }
 
-type operandGReg struct { // Vector register
+type operandGReg struct { // 通用寄存器
 	operandCommon
 	vecShape
 	elemBaseType scalarBaseType
 }
 
-// operandMask is a vector mask.
+// operandMask 是向量掩码。
 //
-// Regardless of the actual mask representation, the [vecShape] of this operand
-// corresponds to the "bit for bit" type of mask. That is, elemBits gives the
-// element width covered by each mask element, and bits/elemBits gives the total
-// number of mask elements. (bits gives the total number of bits as if this were
-// a bit-for-bit mask, which may be meaningless on its own.)
+// 无论实际掩码表示如何，此操作数的 [vecShape] 都对应于"逐位"类型的掩码。
+// 即，elemBits 给出每个掩码元素覆盖的元素宽度，而 bits/elemBits 给出掩码
+// 元素的总数。（bits 给出总位数，就好像这是一个逐位掩码，它本身可能没有意义。）
 type operandMask struct {
 	operandCommon
 	vecShape
-	// Bits in the mask is w/bits.
+	// 掩码中的位数是 w/bits。
 
-	allMasks bool // If set, size cannot be inferred because all operands are masks.
+	allMasks bool // 如果设置，则无法推断大小，因为所有操作数都是掩码。
 
-	// Mask can be omitted, in which case it defaults to K0/"no mask"
+	// 掩码可以省略，在这种情况下默认为 K0/"无掩码"
 	optional bool
 }
 
 type operandImm struct {
 	operandCommon
-	bits int // Immediate size in bits
+	bits int // 立即数大小（位）
 }
 
 type operand interface {
@@ -360,8 +354,7 @@ func (o operandVReg) addToDef(b *unify.DefBuilder) {
 	b.Add("class", strVal("vreg"))
 	b.Add("bits", strVal(o.bits))
 	b.Add("base", unify.NewValue(baseDomain))
-	// If elemBits == bits, then the vector can be ANY shape. This happens with,
-	// for example, logical ops.
+	// 如果 elemBits == bits，则向量可以是任何形状。例如，逻辑操作就是这种情况。
 	if o.elemBits != o.bits {
 		b.Add("elemBits", strVal(o.elemBits))
 	}
@@ -389,7 +382,7 @@ func (o operandGReg) addToDef(b *unify.DefBuilder) {
 func (o operandMask) addToDef(b *unify.DefBuilder) {
 	b.Add("class", strVal("mask"))
 	if o.allMasks {
-		// If all operands are masks, omit sizes and let unification determine mask sizes.
+		// 如果所有操作数都是掩码，则省略大小并让统一来确定掩码大小。
 		return
 	}
 	b.Add("elemBits", strVal(o.elemBits))
@@ -424,15 +417,13 @@ func decodeOperand(db *xeddata.Database, operand string) (operand, error) {
 	}
 
 	if strings.HasPrefix(op.Name, "EMX_BROADCAST") {
-		// This refers to a set of macros defined in all-state.txt that set a
-		// BCAST operand to various fixed values. But the BCAST operand is
-		// itself suppressed and "internal", so I think we can just ignore this
-		// operand.
+		// 这指的是在 all-state.txt 中定义的一组宏，它们将 BCAST 操作数
+		// 设置为各种固定值。但 BCAST 操作数本身是被抑制的和"内部的"，
+		// 所以我认为我们可以忽略此操作数。
 		return nil, nil
 	}
 
-	// TODO: See xed_decoded_inst_operand_action. This might need to be more
-	// complicated.
+	// TODO: 参见 xed_decoded_inst_operand_action。这可能需要更复杂。
 	action, ok := actionEncoding[op.Action]
 	if !ok {
 		return nil, fmt.Errorf("unknown action %q", op.Action)
@@ -441,19 +432,18 @@ func decodeOperand(db *xeddata.Database, operand string) (operand, error) {
 
 	lhs := op.NameLHS()
 	if strings.HasPrefix(lhs, "MEM") {
-		// looks like XED data has an inconsistency on VPADDD, marking attribute
-		// VPBROADCASTD instead of the canonical BCASTSTR.
+		// 看起来 XED 数据在 VPADDD 上有不一致，标记属性
+		// VPBROADCASTD 而不是规范的 BCASTSTR。
 		if op.Width == "vv" && (op.Attributes["TXT=BCASTSTR"] ||
 			op.Attributes["TXT=VPBROADCASTD"]) {
 			baseType, elemBits, ok := decodeType(op)
 			if !ok {
 				return nil, fmt.Errorf("failed to decode memory width %q", operand)
 			}
-			// This operand has two possible width([bits]):
-			// 1. the same as the other operands
-			// 2. the element width as the other operands (broaccasting)
-			// left it default to 2, later we will set a new field in the operation
-			// to indicate this dual-width property.
+			// 此操作数有两种可能的宽度（[bits]）：
+			// 1. 与其他操作数相同
+			// 2. 其他操作数的元素宽度（广播）
+			// 默认为 2，稍后我们将在操作中设置一个新字段来指示此双宽度属性。
 			shape := vecShape{elemBits: elemBits, bits: elemBits}
 			return operandMem{
 				operandCommon: common,
@@ -463,18 +453,18 @@ func decodeOperand(db *xeddata.Database, operand string) (operand, error) {
 				unknown:       false,
 			}, nil
 		}
-		// TODO: parse op.Width better to handle all cases
-		// Right now this will at least miss VPBROADCAST.
+		// TODO: 更好地解析 op.Width 以处理所有情况
+		// 目前这至少会错过 VPBROADCAST。
 		return operandMem{
 			operandCommon: common,
 			unknown:       true,
 		}, nil
 	} else if strings.HasPrefix(lhs, "REG") {
 		if op.Width == "mskw" {
-			// The mask operand doesn't specify a width. We have to infer it.
+			// 掩码操作数不指定宽度。我们必须推断它。
 			//
-			// XED uses the marker ZEROSTR to indicate that a mask operand is
-			// optional and, if omitted, implies K0, aka "no mask".
+			// XED 使用标记 ZEROSTR 来表示掩码操作数是可选的，
+			// 如果省略，则意味着 K0，即"无掩码"。
 			return operandMask{
 				operandCommon: common,
 				optional:      op.Attributes["TXT=ZEROSTR"],
@@ -496,7 +486,7 @@ func decodeOperand(db *xeddata.Database, operand string) (operand, error) {
 					elemBaseType:  baseType,
 				}, nil
 			}
-			// general register
+			// 通用寄存器
 			m := min(shape.bits, shape.elemBits)
 			shape.bits, shape.elemBits = m, m
 			return operandGReg{
@@ -517,12 +507,12 @@ func decodeOperand(db *xeddata.Database, operand string) (operand, error) {
 		}, nil
 	}
 
-	// TODO: BASE and SEG
+	// TODO: BASE 和 SEG
 	return nil, fmt.Errorf("unknown operand LHS %q in %q", lhs, operand)
 }
 
 func decodeOperands(db *xeddata.Database, operands []string) (ops []operand, err error) {
-	// Decode the XED operand descriptions.
+	// 解码 XED 操作数描述。
 	for _, o := range operands {
 		op, err := decodeOperand(db, o)
 		if err != nil {
@@ -533,8 +523,8 @@ func decodeOperands(db *xeddata.Database, operands []string) (ops []operand, err
 		}
 	}
 
-	// XED doesn't encode the size of mask operands. If there are mask operands,
-	// try to infer their sizes from other operands.
+	// XED 不编码掩码操作数的大小。如果有掩码操作数，
+	// 尝试从其他操作数推断它们的大小。
 	if err := inferMaskSizes(ops); err != nil {
 		return nil, fmt.Errorf("%w in operands %+v", err, operands)
 	}
@@ -543,19 +533,16 @@ func decodeOperands(db *xeddata.Database, operands []string) (ops []operand, err
 }
 
 func inferMaskSizes(ops []operand) error {
-	// This is a heuristic and it falls apart in some cases:
+	// 这是一个启发式方法，在某些情况下会失败：
 	//
-	// - Mask operations like KAND[BWDQ] have *nothing* in the XED to indicate
-	// mask size.
+	// - 像 KAND[BWDQ] 这样的掩码操作在 XED 中*没有*任何东西来指示掩码大小。
 	//
-	// - VINSERT*, VPSLL*, VPSRA*, and VPSRL* and some others naturally have
-	// mixed input sizes and the XED doesn't indicate which operands the mask
-	// applies to.
+	// - VINSERT*、VPSLL*、VPSRA* 和 VPSRL* 以及其他一些自然具有混合输入大小，
+	//   XED 不指示掩码适用于哪些操作数。
 	//
-	// - VPDP* and VP4DP* have really complex mixed operand patterns.
+	// - VPDP* 和 VP4DP* 具有非常复杂的混合操作数模式。
 	//
-	// I think for these we may just have to hand-write a table of which
-	// operands each mask applies to.
+	// 我认为对于这些，我们可能只需要手写一个表来说明每个掩码适用于哪些操作数。
 	inferMask := func(r, w bool) error {
 		var masks []int
 		var rSizes, wSizes, sizes []vecShape
@@ -603,7 +590,7 @@ func inferMaskSizes(ops []operand) error {
 		}
 
 		if len(sizes) == 0 {
-			// If all operands are masks, leave the mask inferrence to the users.
+			// 如果所有操作数都是掩码，则将掩码推断留给用户。
 			if allMasks {
 				for _, i := range masks {
 					m := ops[i].(operandMask)
@@ -617,8 +604,8 @@ func inferMaskSizes(ops []operand) error {
 		shape, ok := singular(sizes)
 		if !ok {
 			if !hasWMask && len(wSizes) == 1 && len(masks) == 1 {
-				// This pattern looks like predicate mask, so its shape should align with the
-				// output. TODO: verify this is a safe assumption.
+				// 此模式看起来像谓词掩码，所以它的形状应该与输出对齐。
+				// TODO: 验证这是一个安全的假设。
 				shape = wSizes[0]
 			} else {
 				return fmt.Errorf("cannot infer mask size: multiple register sizes %v", sizes)
@@ -640,10 +627,10 @@ func inferMaskSizes(ops []operand) error {
 	return nil
 }
 
-// addOperandstoDef adds "in", "inVariant", and "out" to an instruction Def.
+// addOperandsToDef 将 "in"、"inVariant" 和 "out" 添加到指令 Def。
 //
-// Optional mask input operands are added to the inVariant field if
-// variant&instVariantMasked, and omitted otherwise.
+// 如果 variant&instVariantMasked，则可选掩码输入操作数被添加到 inVariant 字段，
+// 否则省略。
 func addOperandsToDef(ops []operand, instDB *unify.DefBuilder, variant instVariant) {
 	var inVals, inVar, outVals []*unify.Value
 	asmPos := 0
@@ -653,19 +640,19 @@ func addOperandsToDef(ops []operand, instDB *unify.DefBuilder, variant instVaria
 		db.Add("asmPos", unify.NewValue(unify.NewStringExact(fmt.Sprint(asmPos))))
 
 		action := op.common().action
-		asmCount := 1 // # of assembly operands; 0 or 1
+		asmCount := 1 // 汇编操作数数量；0 或 1
 		if action.r {
 			inVal := unify.NewValue(db.Build())
-			// If this is an optional mask, put it in the input variant tuple.
+			// 如果这是一个可选掩码，将其放入输入变体元组中。
 			if mask, ok := op.(operandMask); ok && mask.optional {
 				if variant&instVariantMasked != 0 {
 					inVar = append(inVar, inVal)
 				} else {
-					// This operand doesn't appear in the assembly at all.
+					// 此操作数根本不会出现在汇编中。
 					asmCount = 0
 				}
 			} else {
-				// Just a regular input operand.
+				// 只是一个普通的输入操作数。
 				inVals = append(inVals, inVal)
 			}
 		}
@@ -686,8 +673,8 @@ func addOperandsToDef(ops []operand, instDB *unify.DefBuilder, variant instVaria
 	}
 }
 
-// checkMem checks the shapes of memory operand in the operation and returns the shape.
-// Keep this function in sync with [decodeOperand].
+// checkMem 检查操作中内存操作数的形状并返回该形状。
+// 保持此函数与 [decodeOperand] 同步。
 func checkMem(ops []operand) string {
 	memState := "noMem"
 	var mem *operandMem
@@ -704,10 +691,10 @@ func checkMem(ops []operand) string {
 		} else if memCnt > 1 {
 			memState = "tooManyMem"
 		} else {
-			// We only have vbcst case as of now.
-			// This shape has an indication that [bits] fields has two possible value:
-			// 1. The element broadcast width, which is its peer vreg operand's [elemBits] (default val in the parsed XED data)
-			// 2. The full vector width, which is its peer vreg operand's [bits] (godefs should be aware of this)
+			// 目前我们只有 vbcst 情况。
+			// 此形状表示 [bits] 字段有两个可能的值：
+			// 1. 元素广播宽度，即其对等 vreg 操作数的 [elemBits]（解析的 XED 数据中的默认值）
+			// 2. 完整向量宽度，即其对等 vreg 操作数的 [bits]（godefs 应该知道这一点）
 			memState = "vbcst"
 		}
 	}
@@ -739,29 +726,27 @@ func instToUVal1(inst *xeddata.Inst, ops []operand, feature string, variant inst
 	}
 
 	if strings.Contains(inst.Pattern, "ZEROING=0") {
-		// This is an EVEX instruction, but the ".Z" (zero-merging)
-		// instruction flag is NOT valid. EVEX.z must be zero.
+		// 这是一条 EVEX 指令，但 ".Z"（零合并）指令标志无效。
+		// EVEX.z 必须为零。
 		//
-		// This can mean a few things:
+		// 这可能意味着几件事：
 		//
-		// - The output of an instruction is a mask, so merging modes don't
-		// make any sense. E.g., VCMPPS.
+		// - 指令的输出是掩码，所以合并模式没有意义。例如 VCMPPS。
 		//
-		// - There are no masks involved anywhere. (Maybe MASK=0 is also set
-		// in this case?) E.g., VINSERTPS.
+		// - 任何地方都没有涉及掩码。（也许在这种情况下也设置了 MASK=0？）
+		//   例如 VINSERTPS。
 		//
-		// - The operation inherently performs merging. E.g., VCOMPRESSPS
-		// with a mem operand.
+		// - 操作本身执行合并。例如带 mem 操作数的 VCOMPRESSPS。
 		//
-		// There may be other reasons.
+		// 可能还有其他原因。
 		db.Add("zeroing", unify.NewValue(unify.NewStringExact("false")))
 	}
 	pos := unify.Pos{Path: inst.Pos.Path, Line: inst.Pos.Line}
 	return unify.NewValuePos(db.Build(), pos)
 }
 
-// decodeCPUFeature returns the CPU feature name required by inst. These match
-// the names of the "Has*" feature checks in the simd package.
+// decodeCPUFeature 返回 inst 所需的 CPU 特性名称。这些与 simd 包中的
+// "Has*" 特性检查的名称匹配。
 func decodeCPUFeature(inst *xeddata.Inst) (string, bool) {
 	key := cpuFeatureKey{
 		Extension: inst.Extension,
@@ -789,8 +774,8 @@ type cpuFeatureKey struct {
 	Extension, ISASet string
 }
 
-// cpuFeatureMap maps from XED's "EXTENSION" and "ISA_SET" to a CPU feature name
-// that can be used in the SIMD API.
+// cpuFeatureMap 从 XED 的 "EXTENSION" 和 "ISA_SET" 映射到可在 SIMD API 中使用的
+// CPU 特性名称。
 var cpuFeatureMap = map[cpuFeatureKey]string{
 	{"SHA", "SHA"}: "SHA",
 
@@ -799,15 +784,14 @@ var cpuFeatureMap = map[cpuFeatureKey]string{
 	{"AVX2", ""}:             "AVX2",
 	{"AVXAES", ""}:           "AVX, AES",
 
-	// AVX-512 foundational features. We combine all of these into one "AVX512" feature.
+	// AVX-512 基础特性。我们将所有这些组合成一个 "AVX512" 特性。
 	{"AVX512EVEX", "AVX512F"}:  "AVX512",
 	{"AVX512EVEX", "AVX512CD"}: "AVX512",
 	{"AVX512EVEX", "AVX512BW"}: "AVX512",
 	{"AVX512EVEX", "AVX512DQ"}: "AVX512",
-	// AVX512VL doesn't appear explicitly in the ISASet. I guess it's implied by
-	// the vector length suffix.
+	// AVX512VL 不会显式出现在 ISASet 中。我猜它是由向量长度后缀暗示的。
 
-	// AVX-512 extension features
+	// AVX-512 扩展特性
 	{"AVX512EVEX", "AVX512_BITALG"}:     "AVX512BITALG",
 	{"AVX512EVEX", "AVX512_GFNI"}:       "AVX512GFNI",
 	{"AVX512EVEX", "AVX512_VBMI2"}:      "AVX512VBMI2",
@@ -817,13 +801,13 @@ var cpuFeatureMap = map[cpuFeatureKey]string{
 	{"AVX512EVEX", "AVX512_VAES"}:       "AVX512VAES",
 	{"AVX512EVEX", "AVX512_VPCLMULQDQ"}: "AVX512VPCLMULQDQ",
 
-	// AVX 10.2 (not yet supported)
+	// AVX 10.2（尚未支持）
 	{"AVX512EVEX", "AVX10_2_RC"}: "ignore",
 }
 
 var unknownFeatures = map[cpuFeatureKey]map[string]struct{}{}
 
-// hasOptionalMask returns whether there is an optional mask operand in ops.
+// hasOptionalMask 返回 ops 中是否有可选掩码操作数。
 func hasOptionalMask(ops []operand) bool {
 	for _, op := range ops {
 		if op, ok := op.(operandMask); ok && op.optional {
@@ -855,26 +839,26 @@ var fixedRegMap = map[string]fixedReg{
 	"XED_REG_XMM0": {VREG_CLASS, "x0", 128},
 }
 
-// decodeReg returns class (NOT_REG_CLASS, VREG_CLASS, GREG_CLASS, VREG_CLASS_FIXED,
-// GREG_CLASS_FIXED), width in bits and reg name(if fixed).
-// If the operand cannot be decided as a register, then the clas is NOT_REG_CLASS.
+// decodeReg 返回类别（NOT_REG_CLASS、VREG_CLASS、GREG_CLASS、VREG_CLASS_FIXED、
+// GREG_CLASS_FIXED）、位宽和寄存器名称（如果是固定的）。
+// 如果操作数不能确定为寄存器，则类别为 NOT_REG_CLASS。
 func decodeReg(op *xeddata.Operand) (class, width int, name string) {
-	// op.Width tells us the total width, e.g.,:
+	// op.Width 告诉我们总宽度，例如：
 	//
-	//    dq => 128 bits (XMM)
-	//    qq => 256 bits (YMM)
+	//    dq => 128 位（XMM）
+	//    qq => 256 位（YMM）
 	//    mskw => K
-	//    z[iuf?](8|16|32|...) => 512 bits (ZMM)
+	//    z[iuf?](8|16|32|...) => 512 位（ZMM）
 	//
-	// But the encoding is really weird and it's not clear if these *always*
-	// mean XMM/YMM/ZMM or if other irregular things can use these large widths.
-	// Hence, we dig into the register sets themselves.
+	// 但编码确实很奇怪，不清楚这些是否*总是*意味着 XMM/YMM/ZMM，
+	// 或者其他不规则的东西是否可以使用这些大宽度。
+	// 因此，我们深入研究寄存器集本身。
 
 	if !strings.HasPrefix(op.NameLHS(), "REG") {
 		return NOT_REG_CLASS, 0, ""
 	}
-	// TODO: We shouldn't be relying on the macro naming conventions. We should
-	// use all-dec-patterns.txt, but xeddata doesn't support that table right now.
+	// TODO: 我们不应该依赖宏命名约定。我们应该使用 all-dec-patterns.txt，
+	// 但 xeddata 目前不支持该表。
 	rhs := op.NameRHS()
 	if !strings.HasSuffix(rhs, "()") {
 		if fixedReg, ok := fixedRegMap[rhs]; ok {
@@ -899,15 +883,14 @@ func decodeReg(op *xeddata.Operand) (class, width int, name string) {
 
 var xtypeRe = regexp.MustCompile(`^([iuf])([0-9]+)$`)
 
-// scalarBaseType describes the base type of a scalar element. This is a Go
-// type, but without the bit width suffix (with the exception of
-// scalarBaseIntOrUint).
+// scalarBaseType 描述标量元素的基本类型。这是一个 Go 类型，
+// 但没有位宽后缀（scalarBaseIntOrUint 除外）。
 type scalarBaseType int
 
 const (
 	scalarBaseInt scalarBaseType = iota
 	scalarBaseUint
-	scalarBaseIntOrUint // Signed or unsigned is unspecified
+	scalarBaseIntOrUint // 有符号或无符号未指定
 	scalarBaseFloat
 	scalarBaseComplex
 	scalarBaseBFloat
@@ -935,59 +918,57 @@ func (s scalarBaseType) regex() string {
 }
 
 func decodeType(op *xeddata.Operand) (base scalarBaseType, bits int, ok bool) {
-	// The xtype tells you the element type. i8, i16, i32, i64, f32, etc.
+	// xtype 告诉你元素类型。i8、i16、i32、i64、f32 等。
 	//
-	// TODO: Things like AVX2 VPAND have an xtype of u256 because they're
-	// element-width agnostic. Do I map that to all widths, or just omit the
-	// element width and let unification flesh it out? There's no u512
-	// (presumably those are all masked, so elem width matters). These are all
-	// Category: LOGICAL, so maybe we could use that info?
+	// TODO: 像 AVX2 VPAND 这样的东西有一个 u256 的 xtype，因为它们与
+	// 元素宽度无关。我是将其映射到所有宽度，还是只省略元素宽度并让
+	// 统一来充实它？没有 u512（大概那些都是掩码的，所以元素宽度很重要）。
+	// 这些都是 Category: LOGICAL，所以也许我们可以使用该信息？
 
-	// Handle some weird ones.
+	// 处理一些奇怪的情况。
 	switch op.Xtype {
-	// 8-bit float formats as defined by Open Compute Project "OCP 8-bit
-	// Floating Point Specification (OFP8)".
-	case "bf8": // E5M2 float
+	// 由 Open Compute Project "OCP 8-bit Floating Point Specification (OFP8)"
+	// 定义的 8 位浮点格式。
+	case "bf8": // E5M2 浮点
 		return scalarBaseBFloat, 8, true
-	case "hf8": // E4M3 float
+	case "hf8": // E4M3 浮点
 		return scalarBaseHFloat, 8, true
-	case "bf16": // bfloat16 float
+	case "bf16": // bfloat16 浮点
 		return scalarBaseBFloat, 16, true
 	case "2f16":
-		// Complex consisting of 2 float16s. Doesn't exist in Go, but we can say
-		// what it would be.
+		// 由 2 个 float16 组成的复数。在 Go 中不存在，但我们可以说明它会是什么。
 		return scalarBaseComplex, 32, true
 	case "2i8", "2I8":
-		// These just use the lower INT8 in each 16 bit field.
-		// As far as I can tell, "2I8" is a typo.
+		// 这些只使用每个 16 位字段中的低 INT8。
+		// 据我所知，"2I8" 是一个拼写错误。
 		return scalarBaseInt, 8, true
 	case "2u16", "2U16":
-		// some VPDP* has it
-		// TODO: does "z" means it has zeroing?
+		// 一些 VPDP* 有它
+		// TODO: "z" 是否意味着它有零化？
 		return scalarBaseUint, 16, true
 	case "2i16", "2I16":
-		// some VPDP* has it
+		// 一些 VPDP* 有它
 		return scalarBaseInt, 16, true
 	case "4u8", "4U8":
-		// some VPDP* has it
+		// 一些 VPDP* 有它
 		return scalarBaseUint, 8, true
 	case "4i8", "4I8":
-		// some VPDP* has it
+		// 一些 VPDP* 有它
 		return scalarBaseInt, 8, true
 	}
 
-	// The rest follow a simple pattern.
+	// 其余的遵循简单的模式。
 	m := xtypeRe.FindStringSubmatch(op.Xtype)
 	if m == nil {
-		// TODO: Report unrecognized xtype
+		// TODO: 报告无法识别的 xtype
 		return 0, 0, false
 	}
 	bits, _ = strconv.Atoi(m[2])
 	switch m[1] {
 	case "i", "u":
-		// XED is rather inconsistent about what's signed, unsigned, or doesn't
-		// matter, so merge them together and let the Go definitions narrow as
-		// appropriate. Maybe there's a better way to do this.
+		// XED 对于什么是有符号、无符号或无关紧要的情况相当不一致，
+		// 所以将它们合并在一起，让 Go 定义适当地缩小范围。
+		// 也许有更好的方法来做到这一点。
 		return scalarBaseIntOrUint, bits, true
 	case "f":
 		return scalarBaseFloat, bits, true

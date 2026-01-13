@@ -1,20 +1,20 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package generics contains the new syntax supporting generic programming in
+// generics 包包含 the new syntax supporting generic programming in
 // Go.
 package generics
 
-// Variables with an instantiated type should be shown.
+// Variables with an instantiated type 应该是 shown.
 var X Type[int]
 
-// Parameterized types should be shown.
+// Parameterized types 应该是 shown.
 type Type[P any] struct {
 	Field P
 }
 
-// Constructors for parameterized types should be shown.
+// Constructors for parameterized types 应该是 shown.
 func Constructor[lowerCase any]() Type[lowerCase] {
 	return Type[lowerCase]{}
 }
@@ -28,7 +28,7 @@ func (t Type[_]) MethodB() {}
 // MethodC has a lower-case receiver type parameter.
 func (t Type[c]) MethodC() {}
 
-// Constraint is a constraint interface with two type parameters.
+// Constraint 是一个 constraint interface with two type parameters.
 type Constraint[P, Q interface{ string | ~int | Type[int] }] interface {
 	~int | ~byte | Type[string]
 	M() P
@@ -52,7 +52,7 @@ func Func[T Constraint[string, Type[int]]]() {}
 
 // AnotherFunc has an implicit constraint interface.
 //
-// Neither type parameters nor regular parameters should be filtered.
+// Neither type parameters nor regular parameters 应该是 filtered.
 func AnotherFunc[T ~struct{ f int }](_ struct{ f int }) {}
 
 // AFuncType demonstrates filtering of parameters and type parameters. Here we
@@ -61,7 +61,7 @@ func AnotherFunc[T ~struct{ f int }](_ struct{ f int }) {}
 type AFuncType[T ~struct{ f int }] func(_ struct{ f int })
 
 // See issue #49477: type parameters should not be interpreted as named types
-// for the purpose of determining whether a function is a factory function.
+// for the purpose of determining whether a function 是一个 factory function.
 
 // Slice is not a factory function.
 func Slice[T any]() []T {

@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package saferio provides I/O functions that avoid allocating large
-// amounts of memory unnecessarily. This is intended for packages that
-// read data from an [io.Reader] where the size is part of the input
-// data but the input may be corrupt, or may be provided by an
-// untrustworthy attacker.
+// Package saferio 提供避免不必要分配大量
+// 内存的 I/O 函数。这是为从 [io.Reader] 读取数据的包设计的，
+// 其中大小是输入数据的一部分，但输入可能已损坏或
+// 可能由不可信的攻击者提供。
 package saferio
 
 import (
@@ -14,21 +13,20 @@ import (
 	"unsafe"
 )
 
-// chunk is an arbitrary limit on how much memory we are willing
-// to allocate without concern.
+// chunk 是我们愿意无需关心分配多少内存的任意限制。
 const chunk = 10 << 20 // 10M
 
-// ReadData reads n bytes from the input stream, but avoids allocating
-// all n bytes if n is large. This avoids crashing the program by
-// allocating all n bytes in cases where n is incorrect.
+// ReadData 从输入流读取 n 个字节，但避免在 n 很大时分配
+// 所有 n 个字节。这避免了在 n 不正确的情况下
+// 分配所有 n 个字节导致程序崩溃。
 //
-// The error is io.EOF only if no bytes were read.
-// If an io.EOF happens after reading some but not all the bytes,
-// ReadData returns io.ErrUnexpectedEOF.
+// 只有在没有读取字节时，错误才是 io.EOF。
+// 如果 io.EOF 发生在读取一些但不是所有字节之后，
+// ReadData 返回 io.ErrUnexpectedEOF。
 func ReadData(r io.Reader, n uint64) ([]byte, error) {
 	if int64(n) < 0 || n != uint64(int(n)) {
-		// n is too large to fit in int, so we can't allocate
-		// a buffer large enough. Treat this as a read failure.
+		// n 太大了，无法放入 int，所以我们无法分配
+		// 足够大的缓冲区。将此视为读失败。
 		return nil, io.ErrUnexpectedEOF
 	}
 
@@ -61,13 +59,13 @@ func ReadData(r io.Reader, n uint64) ([]byte, error) {
 	return buf, nil
 }
 
-// ReadDataAt reads n bytes from the input stream at off, but avoids
-// allocating all n bytes if n is large. This avoids crashing the program
-// by allocating all n bytes in cases where n is incorrect.
+// ReadDataAt 在偏移量 off 处从输入流读取 n 个字节，但避免在 n 很大时分配
+// 所有 n 个字节。这避免了在 n 不正确的情况下
+// 分配所有 n 个字节导致程序崩溃。
 func ReadDataAt(r io.ReaderAt, n uint64, off int64) ([]byte, error) {
 	if int64(n) < 0 || n != uint64(int(n)) {
-		// n is too large to fit in int, so we can't allocate
-		// a buffer large enough. Treat this as a read failure.
+		// n 太大了，无法放入 int，所以我们无法分配
+		// 足够大的缓冲区。将此视为读失败。
 		return nil, io.ErrUnexpectedEOF
 	}
 
@@ -75,8 +73,8 @@ func ReadDataAt(r io.ReaderAt, n uint64, off int64) ([]byte, error) {
 		buf := make([]byte, n)
 		_, err := r.ReadAt(buf, off)
 		if err != nil {
-			// io.SectionReader can return EOF for n == 0,
-			// but for our purposes that is a success.
+			// io.SectionReader 可以为 n == 0 返回 EOF，
+			// 但对我们的目的而言这是成功的。
 			if err != io.EOF || n > 0 {
 				return nil, err
 			}
@@ -102,12 +100,12 @@ func ReadDataAt(r io.ReaderAt, n uint64, off int64) ([]byte, error) {
 	return buf, nil
 }
 
-// SliceCapWithSize returns the capacity to use when allocating a slice.
-// After the slice is allocated with the capacity, it should be
-// built using append. This will avoid allocating too much memory
-// if the capacity is large and incorrect.
+// SliceCapWithSize 返回分配切片时要使用的容量。
+// 使用该容量分配切片后，应该
+// 使用 append 构建。如果容量很大且不正确，
+// 这将避免分配过多内存。
 //
-// A negative result means that the value is always too big.
+// 负结果意味着该值总是太大。
 func SliceCapWithSize(size, c uint64) int {
 	if int64(c) < 0 || c != uint64(int(c)) {
 		return -1
@@ -124,7 +122,7 @@ func SliceCapWithSize(size, c uint64) int {
 	return int(c)
 }
 
-// SliceCap is like SliceCapWithSize but using generics.
+// SliceCap 像 SliceCapWithSize 但使用泛型。
 func SliceCap[E any](c uint64) int {
 	var v E
 	size := uint64(unsafe.Sizeof(v))

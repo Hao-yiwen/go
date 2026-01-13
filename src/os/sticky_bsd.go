@@ -1,11 +1,11 @@
-// Copyright 2014 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2014 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build aix || darwin || dragonfly || freebsd || (js && wasm) || netbsd || openbsd || solaris || wasip1
 
 package os
 
-// According to sticky(8), neither open(2) nor mkdir(2) will create
-// a file with the sticky bit set.
+// 根据 sticky(8)，open(2) 和 mkdir(2) 都不会创建
+// 设置了 sticky 位的文件。
 const supportsCreateWithStickyBit = false

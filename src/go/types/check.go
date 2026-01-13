@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements the Check function, which drives type-checking.
 
@@ -30,7 +30,7 @@ const tracePos = true
 // gotypesalias controls the use of Alias types.
 // As of Apr 16 2024 they are used by default.
 // To disable their use, set GODEBUG to gotypesalias=0.
-// This GODEBUG flag will be removed in the near future (tentatively Go 1.24).
+// This GODEBUG flag 将是 removed in the near future (tentatively Go 1.24).
 var gotypesalias = godebug.New("gotypesalias")
 
 // _aliasAny changes the behavior of [Scope.Lookup] for "any" in the
@@ -38,7 +38,7 @@ var gotypesalias = godebug.New("gotypesalias")
 //
 // This is necessary because while Alias creation is controlled by
 // [Config._EnableAlias], based on the gotypealias variable, the representation
-// of "any" is a global. In [Scope.Lookup], we select this global
+// of "any" 是一个 global. In [Scope.Lookup], we select this global
 // representation based on the result of [aliasAny], but as a result need to
 // guard against this behavior changing during the type checking pass.
 // Therefore we implement the following rule: any number of goroutines can type
@@ -46,7 +46,7 @@ var gotypesalias = godebug.New("gotypesalias")
 // tries to type check concurrently with a different EnableAlias value, we
 // panic.
 //
-// To achieve this, _aliasAny is a state machine:
+// To achieve this, _aliasAny 是一个 state machine:
 //
 //	0:        no type checking is occurring
 //	negative: type checking is occurring without _EnableAlias set
@@ -71,7 +71,7 @@ type exprInfo struct {
 	val   constant.Value // constant value; or nil (if not a constant)
 }
 
-// An environment represents the environment within which an object is
+// 一个environment represents the environment within which an object is
 // type-checked.
 type environment struct {
 	decl          *declInfo              // package-level declaration whose init expression/function body is checked
@@ -82,21 +82,21 @@ type environment struct {
 	inTParamList  bool                   // set if inside a type parameter list
 	sig           *Signature             // function signature if inside a function; nil otherwise
 	isPanic       map[*ast.CallExpr]bool // set of panic call expressions (used for termination check)
-	hasLabel      bool                   // set if a function makes use of labels (only ~1% of functions); unused outside functions
-	hasCallOrRecv bool                   // set if an expression contains a function call or channel receive operation
+	hasLabel      bool                   // set if a function 使 use of labels (only ~1% of functions); unused outside functions
+	hasCallOrRecv bool                   // set if an expression 包含 a function call or channel receive operation
 
 	// go/types only
 	exprPos token.Pos // if valid, identifiers are looked up as if at position pos (used by CheckExpr, Eval)
 }
 
 // lookupScope looks up name in the current environment and if an object
-// is found it returns the scope containing the object and the object.
+// is found it 返回 scope containing the object and the object.
 // Otherwise it returns (nil, nil).
 //
-// Note that obj.Parent() may be different from the returned scope if the
+// Note that obj.Parent() 可能是 different from the returned scope if the
 // object was inserted into the scope and already had a parent at that
 // time (see Scope.Insert). This can only happen for dot-imported objects
-// whose parent is the scope of the package that exported them.
+// whose parent 是 scope of the package that exported them.
 func (env *environment) lookupScope(name string) (*Scope, Object) {
 	for s := env.scope; s != nil; s = s.parent {
 		if obj := s.Lookup(name); obj != nil && (!env.exprPos.IsValid() || cmpPos(obj.scopePos(), env.exprPos) <= 0) {
@@ -106,13 +106,13 @@ func (env *environment) lookupScope(name string) (*Scope, Object) {
 	return nil, nil
 }
 
-// lookup is like lookupScope but it only returns the object (or nil).
+// lookup is like lookupScope but it only 返回 object (or nil).
 func (env *environment) lookup(name string) Object {
 	_, obj := env.lookupScope(name)
 	return obj
 }
 
-// An importKey identifies an imported package by import path and source directory
+// 一个importKey identifies an imported package by import path and source directory
 // (directory containing the file containing the import). In practice, the directory
 // may always be the same, or may not matter. Given an (import path, directory), an
 // importer must always return the same package (but given two different import paths,
@@ -122,13 +122,13 @@ type importKey struct {
 	path, dir string
 }
 
-// A dotImportKey describes a dot-imported object in the given scope.
+// 一个dotImportKey 描述 a dot-imported object in the given scope.
 type dotImportKey struct {
 	scope *Scope
 	name  string
 }
 
-// An action describes a (delayed) action.
+// 一个action 描述 a (delayed) action.
 type action struct {
 	version goVersion   // applicable language version
 	f       func()      // action to be executed
@@ -136,14 +136,14 @@ type action struct {
 }
 
 // If debug is set, describef sets a printf-formatted description for action a.
-// Otherwise, it is a no-op.
+// Otherwise, it 是一个 no-op.
 func (a *action) describef(pos positioner, format string, args ...any) {
 	if debug {
 		a.desc = &actionDesc{pos, format, args}
 	}
 }
 
-// An actionDesc provides information on an action.
+// 一个actionDesc provides information on an action.
 // For debugging only.
 type actionDesc struct {
 	pos    positioner
@@ -151,8 +151,8 @@ type actionDesc struct {
 	args   []any
 }
 
-// A Checker maintains the state of the type checker.
-// It must be created with [NewChecker].
+// 一个Checker maintains the state 的类型 checker.
+// It 必须是 created with [NewChecker].
 type Checker struct {
 	// package information
 	// (initialized by NewChecker, valid for the life-time of checker)
@@ -162,17 +162,17 @@ type Checker struct {
 	pkg  *Package
 	*Info
 	nextID  uint64                 // unique Id for type parameters (first valid Id is 1)
-	objMap  map[Object]*declInfo   // maps package-level objects and (non-interface) methods to declaration info
+	objMap  map[Object]*declInfo   // 映射 package-level objects and (non-interface) methods to declaration info
 	objList []Object               // source-ordered keys of objMap
-	impMap  map[importKey]*Package // maps (import path, source directory) to (complete or fake) package
+	impMap  map[importKey]*Package // 映射 (import path, source directory) to (complete or fake) package
 	// see TODO in validtype.go
 	// valids instanceLookup // valid *Named (incl. instantiated) types per the validType check
 
-	// pkgPathMap maps package names to the set of distinct import paths we've
+	// pkgPathMap 映射 package names to the set of distinct import paths we've
 	// seen for that name, anywhere in the import graph. It is used for
 	// disambiguating package names in error messages.
 	//
-	// pkgPathMap is allocated lazily, so that we don't pay the price of building
+	// pkgPathMap 是一个llocated lazily, so that we don't pay the price of building
 	// it on the happy path. seenPkgMap tracks the packages that we've already
 	// walked.
 	pkgPathMap map[string]map[string]bool
@@ -180,11 +180,11 @@ type Checker struct {
 
 	// information collected during type-checking of a set of package files
 	// (initialized by Files, valid only for the duration of check.Files;
-	// maps and lists are allocated on demand)
+	// 映射 and lists are allocated on demand)
 	files         []*ast.File               // package files
-	versions      map[*ast.File]string      // maps files to goVersion strings (each file has an entry); shared with Info.FileVersions if present; may be unaltered Config.GoVersion
+	versions      map[*ast.File]string      // 映射 files to goVersion strings (each file has an entry); shared with Info.FileVersions if present; may be unaltered Config.GoVersion
 	imports       []*PkgName                // list of imported packages
-	dotImportMap  map[dotImportKey]*PkgName // maps dot-imported objects to the package they were dot-imported through
+	dotImportMap  map[dotImportKey]*PkgName // 映射 dot-imported objects to the package they were dot-imported through
 	brokenAliases map[*TypeName]bool        // set of aliases with broken (not yet determined) types
 	unionTypeSets map[*Union]*_TypeSet      // computed type sets for union types
 	usedVars      map[*Var]bool             // set of used variables
@@ -192,7 +192,7 @@ type Checker struct {
 	mono          monoGraph                 // graph for detecting non-monomorphizable instantiation loops
 
 	firstErr   error                 // first error encountered
-	methods    map[*TypeName][]*Func // maps package scope type names to associated non-blank (non-interface) methods
+	methods    map[*TypeName][]*Func // 映射 package scope type names to associated non-blank (non-interface) methods
 	untyped    map[ast.Expr]exprInfo // map of expressions without final type
 	delayed    []action              // stack of delayed action segments; segments are processed in FIFO order
 	objPath    []Object              // path of object dependencies during type-checking (for cycle reporting)
@@ -242,7 +242,7 @@ func (check *Checker) validAlias(alias *TypeName, typ Type) {
 	alias.typ = typ
 }
 
-// isBrokenAlias reports whether alias doesn't have a determined type yet.
+// isBrokenAlias 报告whether alias doesn't have a determined type yet.
 func (check *Checker) isBrokenAlias(alias *TypeName) bool {
 	assert(!check.conf._EnableAlias)
 	return check.brokenAliases[alias]
@@ -257,11 +257,11 @@ func (check *Checker) rememberUntyped(e ast.Expr, lhs bool, mode operandMode, ty
 	m[e] = exprInfo{lhs, mode, typ, val}
 }
 
-// later pushes f on to the stack of actions that will be processed later;
+// later pushes f on to the stack of actions that 将是 processed later;
 // either at the end of the current statement, or in case of a local constant
 // or variable declaration, before the constant or variable is in scope
 // (so that f still sees the scope before any new declarations).
-// later returns the pushed action so one can provide a description
+// later 返回the pushed action so one can provide a description
 // via action.describef for debugging, if desired.
 func (check *Checker) later(f func()) *action {
 	i := len(check.delayed)
@@ -292,13 +292,13 @@ type cleaner interface {
 }
 
 // needsCleanup records objects/types that implement the cleanup method
-// which will be called at the end of type-checking.
+// which 将是 called at the end of type-checking.
 func (check *Checker) needsCleanup(c cleaner) {
 	check.cleaners = append(check.cleaners, c)
 }
 
-// NewChecker returns a new [Checker] instance for a given package.
-// [Package] files may be added incrementally via checker.Files.
+// NewChecker 返回a new [Checker] instance for a given package.
+// [Package] files 可能是 added incrementally via checker.Files.
 func NewChecker(conf *Config, fset *token.FileSet, pkg *Package, info *Info) *Checker {
 	// make sure we have a configuration
 	if conf == nil {
@@ -335,7 +335,7 @@ func NewChecker(conf *Config, fset *token.FileSet, pkg *Package, info *Info) *Ch
 // initFiles initializes the files-specific portion of checker.
 // The provided files must all belong to the same package.
 func (check *Checker) initFiles(files []*ast.File) {
-	// start with a clean slate (check.Files may be called multiple times)
+	// start with a clean slate (check.Files 可能是 called multiple times)
 	// TODO(gri): what determines which fields are zeroed out here, vs at the end
 	// of checkFiles?
 	check.files = nil
@@ -398,7 +398,7 @@ func (check *Checker) initFiles(files []*ast.File) {
 		// unlike file versions which are Go language versions only, if valid.)
 		v := check.conf.GoVersion
 
-		// If the file specifies a version, use max(fileVersion, go1.21).
+		// If the file 指定 a version, use max(fileVersion, go1.21).
 		if fileVersion := asGoVersion(file.GoVersion); fileVersion.isValid() {
 			// Go 1.21 introduced the feature of setting the go.mod
 			// go line to an early version of Go and allowing //go:build lines
@@ -442,7 +442,7 @@ func (check *Checker) popPos() {
 	check.posStack = check.posStack[:len(check.posStack)-1]
 }
 
-// A bailout panic is used for early termination.
+// 一个bailout panic is used for early termination.
 type bailout struct{}
 
 func (check *Checker) handleBailout(err *error) {
@@ -580,7 +580,7 @@ func (check *Checker) processDelayed(top int) {
 	// However, it is only processing functions (which
 	// are processed in a delayed fashion) that may
 	// add more actions (such as nested functions), so
-	// this is a sufficiently bounded process.
+	// this 是一个 sufficiently bounded process.
 	savedVersion := check.version
 	for i := top; i < len(check.delayed); i++ {
 		a := &check.delayed[i]
@@ -624,7 +624,7 @@ func (check *Checker) recordCommaOkTypesInSyntax(x ast.Expr, t0, t1 Type) {
 	// nothing to do
 }
 
-// instantiatedIdent determines the identifier of the type instantiated in expr.
+// instantiatedIdent determines the identifier 的类型 instantiated in expr.
 // Helper function for recordInstance in recording.go.
 func instantiatedIdent(expr ast.Expr) *ast.Ident {
 	var selOrIdent ast.Expr

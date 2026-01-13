@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package parser implements a parser for Go source files.
+// parser 包实现了 a parser for Go source files.
 //
 // The [ParseFile] function reads file input from a string, []byte, or
 // io.Reader, and produces an [ast.File] representing the complete
@@ -34,7 +34,7 @@ import (
 	"strings"
 )
 
-// The parser structure holds the parser's internal state.
+// The parser structure 保存 parser's internal state.
 type parser struct {
 	file    *token.File
 	errors  scanner.ErrorList
@@ -117,7 +117,7 @@ func un(p *parser) {
 	p.printTrace(")")
 }
 
-// maxNestLev is the deepest we're willing to recurse during parsing
+// maxNestLev 是 deepest we're willing to recurse during parsing
 const maxNestLev int = 1e5
 
 func incNestLev(p *parser) *parser {
@@ -176,7 +176,7 @@ func (p *parser) next0() {
 	}
 }
 
-// lineFor returns the line of pos, ignoring line directive adjustments.
+// lineFor 返回the line of pos, ignoring line directive adjustments.
 func (p *parser) lineFor(pos token.Pos) int {
 	return p.file.PositionFor(pos, false).Line
 }
@@ -225,15 +225,15 @@ func (p *parser) consumeCommentGroup(n int) (comments *ast.CommentGroup, endline
 // any comment groups encountered, and remember the last lead and
 // line comments.
 //
-// A lead comment is a comment group that starts and ends in a
+// 一个lead comment 是一个 comment group that starts and ends in a
 // line without any other tokens and that is followed by a non-comment
 // token on the line immediately after the comment group.
 //
-// A line comment is a comment group that follows a non-comment
+// 一个line comment 是一个 comment group that follows a non-comment
 // token on the same line, and that has no tokens after it on the line
 // where it ends.
 //
-// Lead and line comments may be considered documentation that is
+// Lead and line comments 可能是 considered documentation that is
 // stored in the AST.
 func (p *parser) next() {
 	p.leadComment = nil
@@ -247,11 +247,11 @@ func (p *parser) next() {
 
 		if p.lineFor(p.pos) == p.lineFor(prev) {
 			// The comment is on same line as the previous token; it
-			// cannot be a lead comment but may be a line comment.
+			// cannot be a lead comment but 可能是 a line comment.
 			comment, endline = p.consumeCommentGroup(0)
 			if p.lineFor(p.pos) != endline || p.tok == token.SEMICOLON || p.tok == token.EOF {
 				// The next token is on a different line, thus
-				// the last comment group is a line comment.
+				// the last comment group 是一个 line comment.
 				p.lineComment = comment
 			}
 		}
@@ -264,13 +264,13 @@ func (p *parser) next() {
 
 		if endline+1 == p.lineFor(p.pos) {
 			// The next token is following on the line immediately after the
-			// comment group, thus the last comment group is a lead comment.
+			// comment group, thus the last comment group 是一个 lead comment.
 			p.leadComment = comment
 		}
 	}
 }
 
-// A bailout panic is raised to indicate early termination. pos and msg are
+// 一个bailout panic is raised to indicate early termination. pos and msg are
 // only populated when bailing out of object resolution.
 type bailout struct {
 	pos token.Pos
@@ -327,8 +327,8 @@ func (p *parser) expect(tok token.Token) token.Pos {
 	return pos
 }
 
-// expect2 is like expect, but it returns an invalid position
-// if the expected token is not found.
+// expect2 is like expect, but it 返回一个 invalid position
+// 如果 expected token is not found.
 func (p *parser) expect2(tok token.Token) (pos token.Pos) {
 	if p.tok == tok {
 		pos = p.pos
@@ -349,7 +349,7 @@ func (p *parser) expectClosing(tok token.Token, context string) token.Pos {
 	return p.expect(tok)
 }
 
-// expectSemi consumes a semicolon and returns the applicable line comment.
+// expectSemi consumes a semicolon and 返回 applicable line comment.
 func (p *parser) expectSemi() (comment *ast.CommentGroup) {
 	switch p.tok {
 	case token.RPAREN, token.RBRACE:
@@ -548,7 +548,7 @@ func (p *parser) parseQualifiedIdent(ident *ast.Ident) ast.Expr {
 	return typ
 }
 
-// If the result is an identifier, it is not resolved.
+// If the result 是一个n identifier, it is not resolved.
 func (p *parser) parseTypeName(ident *ast.Ident) ast.Expr {
 	if p.trace {
 		defer un(trace(p, "TypeName"))
@@ -559,7 +559,7 @@ func (p *parser) parseTypeName(ident *ast.Ident) ast.Expr {
 	}
 
 	if p.tok == token.PERIOD {
-		// ident is a package name
+		// ident 是一个 package name
 		p.next()
 		sel := p.parseIdent()
 		return &ast.SelectorExpr{X: ident, Sel: sel}
@@ -569,7 +569,7 @@ func (p *parser) parseTypeName(ident *ast.Ident) ast.Expr {
 }
 
 // "[" has already been consumed, and lbrack is its position.
-// If len != nil it is the already consumed array length.
+// If len != nil it 是 already consumed array length.
 func (p *parser) parseArrayType(lbrack token.Pos, len ast.Expr) *ast.ArrayType {
 	if p.trace {
 		defer un(trace(p, "ArrayType"))
@@ -858,8 +858,8 @@ func (p *parser) parseParamDecl(name *ast.Ident, typeSetsOK bool) (f field) {
 		return // don't allow ...type "|" ...
 
 	default:
-		// TODO(rfindley): this is incorrect in the case of type parameter lists
-		//                 (should be "']'" in that case)
+		// TODO(rfindley): this is incorrect in the case 类型为 parameter lists
+		//                 (应该是 "']'" in that case)
 		p.errorExpected(p.pos, "')'")
 		p.advance(exprEnd)
 	}
@@ -888,7 +888,7 @@ func (p *parser) parseParameterList(name0 *ast.Ident, typ0 ast.Expr, closing tok
 	}
 
 	// Note: The code below matches the corresponding code in the syntax
-	//       parser closely. Changes must be reflected in either parser.
+	//       parser closely. Changes 必须是 reflected in either parser.
 	//       For the code to match, we use the local []field list that
 	//       corresponds to []syntax.Field. At the end, the list must be
 	//       converted into an []*ast.Field.
@@ -939,7 +939,7 @@ func (p *parser) parseParameterList(name0 *ast.Ident, typ0 ast.Expr, closing tok
 			}
 		}
 		if tparams {
-			// This is the same error handling as below, adjusted for type parameters only.
+			// This 是 same error handling as below, adjusted for type parameters only.
 			// See comment below for details. (go.dev/issue/64534)
 			var errPos token.Pos
 			var msg string
@@ -956,7 +956,7 @@ func (p *parser) parseParameterList(name0 *ast.Ident, typ0 ast.Expr, closing tok
 			p.error(errPos, msg)
 		}
 	} else if named != len(list) {
-		// some named or we're in a type parameter list => all must be named
+		// some named or we're in a type parameter list => all 必须是 named
 		var errPos token.Pos // left-most error position (or invalid)
 		var typ ast.Expr     // current type (from right to left)
 		for i := range list {
@@ -978,11 +978,11 @@ func (p *parser) parseParameterList(name0 *ast.Ident, typ0 ast.Expr, closing tok
 		}
 		if errPos.IsValid() {
 			// Not all parameters are named because named != len(list).
-			// If named == typed, there must be parameters that have no types.
-			// They must be at the end of the parameter list, otherwise types
+			// If named == typed, there 必须是 parameters that have no types.
+			// They 必须是 at the end of the parameter list, 否则 types
 			// would have been filled in by the right-to-left sweep above and
 			// there would be no error.
-			// If tparams is set, the parameter list is a type parameter list.
+			// If tparams is set, the parameter list 是一个 type parameter list.
 			var msg string
 			if named == typed {
 				errPos = p.pos // position error at closing token ) or ]
@@ -1027,7 +1027,7 @@ func (p *parser) parseParameterList(name0 *ast.Ident, typ0 ast.Expr, closing tok
 	}
 
 	// Convert list to []*ast.Field.
-	// If list contains types only, each type gets its own ast.Field.
+	// If list 包含 types only, each type gets its own ast.Field.
 	if named == 0 {
 		// parameter list consists of types only
 		for _, par := range list {
@@ -1200,9 +1200,9 @@ func (p *parser) parseMethodSpec() *ast.Field {
 		}
 	}
 
-	// Comment is added at the callsite: the field below may joined with
+	// Comment 是一个dded at the callsite: the field below may joined with
 	// additional type specs using '|'.
-	// TODO(rfindley) this should be refactored.
+	// TODO(rfindley) this 应该是 refactored.
 	// TODO(rfindley) add more tests for comment handling.
 	return &ast.Field{Doc: doc, Names: idents, Type: typ}
 }
@@ -1467,7 +1467,7 @@ func (p *parser) parseFuncTypeOrLit() ast.Expr {
 	return &ast.FuncLit{Type: typ, Body: body}
 }
 
-// parseOperand may return an expression or a raw type (incl. array
+// parseOperand 可能返回 an expression or a raw type (incl. array
 // types of the form [...]T). Callers must verify the result.
 func (p *parser) parseOperand() ast.Expr {
 	if p.trace {
@@ -1742,7 +1742,7 @@ func (p *parser) parsePrimaryExpr(x ast.Expr) ast.Expr {
 			default:
 				pos := p.pos
 				p.errorExpected(pos, "selector or type assertion")
-				// TODO(rFindley) The check for token.RBRACE below is a targeted fix
+				// TODO(rFindley) The check for token.RBRACE below 是一个 targeted fix
 				//                to error recovery sufficient to make the x/tools tests to
 				//                pass with the new parsing logic introduced for type
 				//                parameters. Remove this once error recovery has been
@@ -1774,7 +1774,7 @@ func (p *parser) parsePrimaryExpr(x ast.Expr) ast.Expr {
 				}
 				// x is possibly a composite literal type
 			case *ast.ArrayType, *ast.StructType, *ast.MapType:
-				// x is a composite literal type
+				// x 是一个 composite literal type
 			default:
 				return x
 			}
@@ -1809,14 +1809,14 @@ func (p *parser) parseUnaryExpr() ast.Expr {
 		p.next()
 
 		// If the next token is token.CHAN we still don't know if it
-		// is a channel type or a receive operation - we only know
+		// 是一个 channel type or a receive operation - we only know
 		// once we have found the end of the unary expression. There
 		// are two cases:
 		//
-		//   <- type  => (<-type) must be channel type
-		//   <- expr  => <-(expr) is a receive from an expression
+		//   <- type  => (<-type) 必须是 channel type
+		//   <- expr  => <-(expr) 是一个 receive from an expression
 		//
-		// In the first case, the arrow must be re-associated with
+		// In the first case, the arrow 必须是 re-associated with
 		// the channel type parsed already:
 		//
 		//   <- (chan type)    =>  (<-chan type)
@@ -1897,7 +1897,7 @@ func (p *parser) parseBinaryExpr(x ast.Expr, prec1 int) ast.Expr {
 	}
 }
 
-// The result may be a type or even a raw type ([...]int).
+// The result 可能是 a type or even a raw type ([...]int).
 func (p *parser) parseExpr() ast.Expr {
 	if p.trace {
 		defer un(trace(p, "Expression"))
@@ -1924,9 +1924,9 @@ const (
 	rangeOk
 )
 
-// parseSimpleStmt returns true as 2nd result if it parsed the assignment
-// of a range clause (with mode == rangeOk). The returned statement is an
-// assignment with a right-hand side that is a single unary expression of
+// parseSimpleStmt 返回true as 2nd result if it parsed the assignment
+// of a range clause (with mode == rangeOk). The returned statement 是一个n
+// assignment with a right-hand side that 是一个 single unary expression of
 // the form "range x". No guarantees are given for the left-hand side.
 func (p *parser) parseSimpleStmt(mode int) (ast.Stmt, bool) {
 	if p.trace {
@@ -1968,16 +1968,16 @@ func (p *parser) parseSimpleStmt(mode int) (ast.Stmt, bool) {
 		colon := p.pos
 		p.next()
 		if label, isIdent := x[0].(*ast.Ident); mode == labelOk && isIdent {
-			// Go spec: The scope of a label is the body of the function
+			// Go spec: The scope of a label 是 body of the function
 			// in which it is declared and excludes the body of any nested
 			// function.
 			stmt := &ast.LabeledStmt{Label: label, Colon: colon, Stmt: p.parseStmt()}
 			return stmt, false
 		}
 		// The label declaration typically starts at x[0].Pos(), but the label
-		// declaration may be erroneous due to a token after that position (and
+		// declaration 可能是 erroneous due to a token after that position (and
 		// before the ':'). If SpuriousErrors is not set, the (only) error
-		// reported for the line is the illegal label error instead of the token
+		// reported for the line 是 illegal label error instead of the token
 		// before the ':' that caused the problem. Thus, use the (latest) colon
 		// position for error reporting.
 		p.error(colon, "illegal label declaration")
@@ -2093,7 +2093,7 @@ func (p *parser) makeExpr(s ast.Stmt, want string) ast.Expr {
 	return &ast.BadExpr{From: s.Pos(), To: s.End()}
 }
 
-// parseIfHeader is an adjusted version of parser.header
+// parseIfHeader 是一个n adjusted version of parser.header
 // in cmd/compile/internal/syntax/parser.go, which has
 // been tuned for better error handling.
 func (p *parser) parseIfHeader() (init ast.Stmt, cond ast.Expr) {
@@ -2253,7 +2253,7 @@ func (p *parser) parseSwitchStmt() ast.Stmt {
 			s1 = s2
 			s2 = nil
 			if p.tok != token.LBRACE {
-				// A TypeSwitchGuard may declare a variable in addition
+				// 一个TypeSwitchGuard may declare a variable in addition
 				// to the variable declared in the initial SimpleStmt.
 				// Introduce extra scope to avoid redeclaration errors:
 				//
@@ -2263,7 +2263,7 @@ func (p *parser) parseSwitchStmt() ast.Stmt {
 				// cannot be accessed and thus is never used, the extra
 				// scope is needed for the correct error message).
 				//
-				// If we don't have a type switch, s2 must be an expression.
+				// If we don't have a type switch, s2 必须是 an expression.
 				// Having the extra nested but empty scope won't affect it.
 				s2, _ = p.parseSimpleStmt(basic)
 			}
@@ -2322,7 +2322,7 @@ func (p *parser) parseCommClause() *ast.CommClause {
 				rhs := p.parseRhs()
 				comm = &ast.AssignStmt{Lhs: lhs, TokPos: pos, Tok: tok, Rhs: []ast.Expr{rhs}}
 			} else {
-				// lhs must be single receive operation
+				// lhs 必须是 single receive operation
 				if len(lhs) > 1 {
 					p.errorExpected(lhs[0].Pos(), "1 expression")
 					// continue with first expression
@@ -2416,7 +2416,7 @@ func (p *parser) parseForStmt() ast.Stmt {
 			return &ast.BadStmt{From: pos, To: body.End()}
 		}
 		// parseSimpleStmt returned a right-hand side that
-		// is a single unary expression of the form "range x"
+		// 是一个 single unary expression of the form "range x"
 		x := as.Rhs[0].(*ast.UnaryExpr).X
 		return &ast.RangeStmt{
 			For:    pos,
@@ -2488,7 +2488,7 @@ func (p *parser) parseStmt() (s ast.Stmt) {
 		s = &ast.EmptyStmt{Semicolon: p.pos, Implicit: p.lit == "\n"}
 		p.next()
 	case token.RBRACE:
-		// a semicolon may be omitted before a closing "}"
+		// a semicolon 可能是 omitted before a closing "}"
 		s = &ast.EmptyStmt{Semicolon: p.pos, Implicit: true}
 	default:
 		// no statement found
@@ -2624,15 +2624,15 @@ func (p *parser) parseTypeSpec(doc *ast.CommentGroup, _ token.Token, _ int) ast.
 			// just be a name, or a more complex expression) which
 			// we can analyze further.
 			//
-			// A type parameter list may have a type bound starting
+			// 一个type parameter list may have a type bound starting
 			// with a "[" as in: P []E. In that case, simply parsing
 			// an expression would lead to an error: P[] is invalid.
 			// But since index or slice expressions are never constant
-			// and thus invalid array length expressions, if the name
-			// is followed by "[" it must be the start of an array or
+			// and thus invalid array length expressions, 如果 name
+			// is followed by "[" it 必须是 the start of an array or
 			// slice constraint. Only if we don't see a "[" do we
 			// need to parse a full expression. Notably, name <- x
-			// is not a concern because name <- x is a statement and
+			// is not a concern because name <- x 是一个 statement and
 			// not an expression.
 			var x ast.Expr = p.parseIdent()
 			if p.tok != token.LBRACK {
@@ -2646,7 +2646,7 @@ func (p *parser) parseTypeSpec(doc *ast.CommentGroup, _ token.Token, _ int) ast.
 			}
 			// Analyze expression x. If we can split x into a type parameter
 			// name, possibly followed by a type parameter type, we consider
-			// this the start of a type parameter list, with some caveats:
+			// th是 start of a type parameter list, with some caveats:
 			// a single name followed by "]" tilts the decision towards an
 			// array declaration; a type parameter type that could also be
 			// an ordinary expression but which is followed by a comma tilts
@@ -2681,7 +2681,7 @@ func (p *parser) parseTypeSpec(doc *ast.CommentGroup, _ token.Token, _ int) ast.
 }
 
 // extractName splits the expression x into (name, expr) if syntactically
-// x can be written as name expr. The split only happens if expr is a type
+// x can be written as name expr. The split only happens if expr 是一个 type
 // element (per the isTypeElem predicate) or if force is set.
 // If x is just a name, the result is (name, nil). If the split succeeds,
 // the result is (name, expr). Otherwise the result is (nil, x).
@@ -2734,8 +2734,8 @@ func extractName(x ast.Expr, force bool) (*ast.Ident, ast.Expr) {
 	return nil, x
 }
 
-// isTypeElem reports whether x is a (possibly parenthesized) type element expression.
-// The result is false if x could be a type element OR an ordinary (value) expression.
+// isTypeElem 报告whether x 是一个 (possibly parenthesized) type element expression.
+// The result 为假 if x could be a type element OR an ordinary (value) expression.
 func isTypeElem(x ast.Expr) bool {
 	switch x := x.(type) {
 	case *ast.ArrayType, *ast.StructType, *ast.FuncType, *ast.InterfaceType, *ast.MapType, *ast.ChanType:
@@ -2944,7 +2944,7 @@ func (p *parser) parseFile() *ast.File {
 	return f
 }
 
-// packIndexExpr returns an IndexExpr x[expr0] or IndexListExpr x[expr0, ...].
+// packIndexExpr 返回an IndexExpr x[expr0] or IndexListExpr x[expr0, ...].
 func packIndexExpr(x ast.Expr, lbrack token.Pos, exprs []ast.Expr, rbrack token.Pos) ast.Expr {
 	switch len(exprs) {
 	case 0:

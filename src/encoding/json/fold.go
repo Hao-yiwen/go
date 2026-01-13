@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build !goexperiment.jsonv2
 
@@ -11,7 +11,7 @@ import (
 	"unicode/utf8"
 )
 
-// foldName returns a folded string such that foldName(x) == foldName(y)
+// foldName 返回a folded string such that foldName(x) == foldName(y)
 // is identical to bytes.EqualFold(x, y).
 func foldName(in []byte) []byte {
 	// This is inlinable to take advantage of "function outlining".
@@ -38,7 +38,7 @@ func appendFoldedName(out, in []byte) []byte {
 	return out
 }
 
-// foldRune is returns the smallest rune for all runes in the same fold set.
+// foldRune is 返回 smallest rune for all runes in the same fold set.
 func foldRune(r rune) rune {
 	for {
 		r2 := unicode.SimpleFold(r)

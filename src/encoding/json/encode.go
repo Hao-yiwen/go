@@ -1,10 +1,10 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build !goexperiment.jsonv2
 
-// Package json implements encoding and decoding of JSON as defined in RFC 7159.
+// json 包实现了 encoding and decoding of JSON as defined in RFC 7159.
 // The mapping between JSON and Go values is described in the documentation for
 // the Marshal and Unmarshal functions.
 //
@@ -20,7 +20,7 @@
 // differing ways.
 //
 // Systems that rely on a JSON object being parsed consistently for security
-// purposes should be careful to understand the behaviors of this parser, as
+// purposes 应该是 careful to understand the behaviors of this parser, as
 // well as how these behaviors may cause interoperability issues with other
 // parser implementations.
 //
@@ -29,9 +29,9 @@
 // interopability issues, but cannot be changed. In particular the following
 // parsing behaviors may cause issues:
 //
-//   - If a JSON object contains duplicate keys, keys are processed in the order
+//   - If a JSON object 包含 duplicate keys, keys are processed in the order
 //     they are observed, meaning later values will replace or be merged into
-//     prior values, depending on the field type (in particular maps and structs
+//     prior values, depending on the field type (in particular 映射 and structs
 //     will have values merged, while other types have values replaced).
 //   - When parsing a JSON object into a Go struct, keys are considered in a
 //     case-insensitive fashion.
@@ -61,55 +61,55 @@ import (
 	_ "unsafe" // for linkname
 )
 
-// Marshal returns the JSON encoding of v.
+// Marshal 返回 v 的 JSON 编码。
 //
-// Marshal traverses the value v recursively.
+// Marshal 递归遍历值 v。
 // If an encountered value implements [Marshaler]
 // and is not a nil pointer, Marshal calls [Marshaler.MarshalJSON]
 // to produce JSON. If no [Marshaler.MarshalJSON] method is present but the
-// value implements [encoding.TextMarshaler] instead, Marshal calls
+// value 实现[encoding.TextMarshaler] instead, Marshal calls
 // [encoding.TextMarshaler.MarshalText] and encodes the result as a JSON string.
 // The nil pointer exception is not strictly necessary
 // but mimics a similar, necessary exception in the behavior of
 // [Unmarshaler.UnmarshalJSON].
 //
-// Otherwise, Marshal uses the following type-dependent default encodings:
+// 否则，Marshal 使用以下类型相关的默认编码：
 //
-// Boolean values encode as JSON booleans.
+// 布尔值编码为 JSON 布尔值。
 //
-// Floating point, integer, and [Number] values encode as JSON numbers.
-// NaN and +/-Inf values will return an [UnsupportedValueError].
+// 浮点数、整数和 [Number] 值编码为 JSON 数字。
+// NaN 和 +/-Inf 值将返回 [UnsupportedValueError]。
 //
-// String values encode as JSON strings coerced to valid UTF-8,
-// replacing invalid bytes with the Unicode replacement rune.
-// So that the JSON will be safe to embed inside HTML <script> tags,
-// the string is encoded using [HTMLEscape],
+// 字符串值编码为强制转换为有效 UTF-8 的 JSON 字符串，
+// 用 Unicode 替换符替换无效字节。
+// 为了使 JSON 可以安全地嵌入到 HTML <script> 标签中，
+// 字符串使用 [HTMLEscape] 进行编码，
 // which replaces "<", ">", "&", U+2028, and U+2029 are escaped
 // to "\u003c","\u003e", "\u0026", "\u2028", and "\u2029".
-// This replacement can be disabled when using an [Encoder],
-// by calling [Encoder.SetEscapeHTML](false).
+// 当使用 [Encoder] 时，可以禁用此替换，
+// 通过调用 [Encoder.SetEscapeHTML](false)。
 //
-// Array and slice values encode as JSON arrays, except that
-// []byte encodes as a base64-encoded string, and a nil slice
-// encodes as the null JSON value.
+// 数组和切片值编码为 JSON 数组，除了
+// []byte 编码为 base64 编码的字符串，nil 切片
+// 编码为 null JSON 值。
 //
-// Struct values encode as JSON objects.
-// Each exported struct field becomes a member of the object, using the
-// field name as the object key, unless the field is omitted for one of the
-// reasons given below.
+// 结构体值编码为 JSON 对象。
+// 每个导出的结构体字段都成为对象的成员，使用
+// 字段名称作为对象键，除非字段因以下原因之一被省略
+// 原因如下。
 //
-// The encoding of each struct field can be customized by the format string
-// stored under the "json" key in the struct field's tag.
+// 每个结构体字段的编码可以由格式字符串自定义
+// 存储在结构体字段标签中的 "json" 键下。
 // The format string gives the name of the field, possibly followed by a
-// comma-separated list of options. The name may be empty in order to
+// comma-separated list of options. The name 可能是 empty in order to
 // specify options without overriding the default field name.
 //
-// The "omitempty" option specifies that the field should be omitted
-// from the encoding if the field has an empty value, defined as
+// The "omitempty" option 指定 the field 应该是 omitted
+// from the encoding 如果 field has an empty value, defined as
 // false, 0, a nil pointer, a nil interface value, and any array,
 // slice, map, or string of length zero.
 //
-// As a special case, if the field tag is "-", the field is always omitted.
+// As a special case, 如果 field tag is "-", the field 是一个lways omitted.
 // Note that a field with name "-" can still be generated using the tag "-,".
 //
 // Examples of struct field tags and their meanings:
@@ -133,16 +133,16 @@ import (
 //	// Field appears in JSON as key "-".
 //	Field int `json:"-,"`
 //
-// The "omitzero" option specifies that the field should be omitted
-// from the encoding if the field has a zero value, according to rules:
+// The "omitzero" option 指定 the field 应该是 omitted
+// from the encoding 如果 field has a zero value, according to rules:
 //
-// 1) If the field type has an "IsZero() bool" method, that will be used to
+// 1) If the field type has an "IsZero() bool" method, that 将是 used to
 // determine whether the value is zero.
 //
-// 2) Otherwise, the value is zero if it is the zero value for its type.
+// 2) Otherwise, the value is zero if it 是 zero value for its type.
 //
-// If both "omitempty" and "omitzero" are specified, the field will be omitted
-// if the value is either empty or zero (or both).
+// If both "omitempty" and "omitzero" are specified, the field 将是 omitted
+// 如果 value is either empty or zero (or both).
 //
 // The "string" option signals that a field is stored as JSON inside a
 // JSON-encoded string. It applies only to fields of string, floating point,
@@ -151,26 +151,26 @@ import (
 //
 //	Int64String int64 `json:",string"`
 //
-// The key name will be used if it's a non-empty string consisting of
+// The key name 将是 used if it's a non-empty string consisting of
 // only Unicode letters, digits, and ASCII punctuation except quotation
 // marks, backslash, and comma.
 //
 // Embedded struct fields are usually marshaled as if their inner exported fields
 // were fields in the outer struct, subject to the usual Go visibility rules amended
 // as described in the next paragraph.
-// An anonymous struct field with a name given in its JSON tag is treated as
+// 一个anonymous struct field with a name given in its JSON tag is treated as
 // having that name, rather than being anonymous.
-// An anonymous struct field of interface type is treated the same as having
+// 一个anonymous struct field of interface type is treated the same as having
 // that type as its name, rather than being anonymous.
 //
 // The Go visibility rules for struct fields are amended for JSON when
 // deciding which field to marshal or unmarshal. If there are
-// multiple fields at the same level, and that level is the least
+// multiple fields at the same level, and that level 是 least
 // nested (and would therefore be the nesting level selected by the
 // usual Go rules), the following extra rules apply:
 //
 // 1) Of those fields, if any are JSON-tagged, only tagged fields are considered,
-// even if there are multiple untagged fields that would otherwise conflict.
+// even if there are multiple untagged fields that would 否则 conflict.
 //
 // 2) If there is exactly one field (tagged or not according to the first rule), that is selected.
 //
@@ -187,15 +187,15 @@ import (
 // subject to the UTF-8 coercion described for string values above:
 //   - keys of any string type are used directly
 //   - keys that implement [encoding.TextMarshaler] are marshaled
-//   - integer keys are converted to strings
+//   - integer keys are 转换为 strings
 //
 // Pointer values encode as the value pointed to.
-// A nil pointer encodes as the null JSON value.
+// 一个nil pointer 编码为 null JSON 值。
 //
 // Interface values encode as the value contained in the interface.
-// A nil interface value encodes as the null JSON value.
+// 一个nil interface value 编码为 null JSON 值。
 //
-// Channel, complex, and function values cannot be encoded in JSON.
+// Channel、复数和函数值无法在 JSON 中编码。
 // Attempting to encode such a value causes Marshal to return
 // an [UnsupportedTypeError].
 //
@@ -216,7 +216,7 @@ func Marshal(v any) ([]byte, error) {
 }
 
 // MarshalIndent is like [Marshal] but applies [Indent] to format the output.
-// Each JSON element in the output will begin on a new line beginning with prefix
+// Each JSON element in the output 将是gin on a new line beginning with prefix
 // followed by one or more copies of indent according to the indentation nesting.
 func MarshalIndent(v any, prefix, indent string) ([]byte, error) {
 	b, err := Marshal(v)
@@ -231,13 +231,13 @@ func MarshalIndent(v any, prefix, indent string) ([]byte, error) {
 	return b2, nil
 }
 
-// Marshaler is the interface implemented by types that
+// Marshaler 是 interface implemented by types that
 // can marshal themselves into valid JSON.
 type Marshaler interface {
 	MarshalJSON() ([]byte, error)
 }
 
-// An UnsupportedTypeError is returned by [Marshal] when attempting
+// 一个UnsupportedTypeError is returned by [Marshal] when attempting
 // to encode an unsupported value type.
 type UnsupportedTypeError struct {
 	Type reflect.Type
@@ -247,7 +247,7 @@ func (e *UnsupportedTypeError) Error() string {
 	return "json: unsupported type: " + e.Type.String()
 }
 
-// An UnsupportedValueError is returned by [Marshal] when attempting
+// 一个UnsupportedValueError is returned by [Marshal] when attempting
 // to encode an unsupported value.
 type UnsupportedValueError struct {
 	Value reflect.Value
@@ -272,7 +272,7 @@ func (e *InvalidUTF8Error) Error() string {
 	return "json: invalid UTF-8 in string: " + strconv.Quote(e.S)
 }
 
-// A MarshalerError represents an error from calling a
+// 一个MarshalerError represents an error from calling a
 // [Marshaler.MarshalJSON] or [encoding.TextMarshaler.MarshalText] method.
 type MarshalerError struct {
 	Type       reflect.Type
@@ -290,12 +290,12 @@ func (e *MarshalerError) Error() string {
 		": " + e.Err.Error()
 }
 
-// Unwrap returns the underlying error.
+// Unwrap 返回the underlying error.
 func (e *MarshalerError) Unwrap() error { return e.Err }
 
 const hex = "0123456789abcdef"
 
-// An encodeState encodes JSON into a bytes.Buffer.
+// 一个encodeState encodes JSON into a bytes.Buffer.
 type encodeState struct {
 	bytes.Buffer // accumulated output
 
@@ -325,7 +325,7 @@ func newEncodeState() *encodeState {
 	return &encodeState{ptrSeen: make(map[any]struct{})}
 }
 
-// jsonError is an error wrapper type for internal use only.
+// jsonError 是一个n error wrapper type for internal use only.
 // Panics with errors are wrapped in jsonError so that the top-level recover
 // can distinguish intentional panics from this package.
 type jsonError struct{ error }
@@ -392,7 +392,7 @@ func typeEncoder(t reflect.Type) encoderFunc {
 
 	// To deal with recursive types, populate the map with an
 	// indirect func before we build it. If the type is recursive,
-	// the second lookup for the type will return the indirect func.
+	// the second lookup for the type 将返回 the indirect func.
 	//
 	// This indirect func is only used for recursive types,
 	// and briefly during racing calls to typeEncoder.
@@ -417,11 +417,11 @@ var (
 )
 
 // newTypeEncoder constructs an encoderFunc for a type.
-// The returned encoder only checks CanAddr when allowAddr is true.
+// The returned encoder only checks CanAddr when allowAddr 为真.
 func newTypeEncoder(t reflect.Type, allowAddr bool) encoderFunc {
 	// If we have a non-pointer value whose type implements
 	// Marshaler with a value receiver, then we're better off taking
-	// the address of the value - otherwise we end up with an
+	// the address of the value - 否则 we end up with an
 	// allocation as we cast the value to an interface.
 	if t.Kind() != reflect.Pointer && allowAddr && reflect.PointerTo(t).Implements(marshalerType) {
 		return newCondAddrEncoder(addrMarshalerEncoder, newTypeEncoder(t, false))
@@ -627,7 +627,7 @@ func stringEncoder(e *encodeState, v reflect.Value, opts encOpts) {
 	}
 	if opts.quoted {
 		b := appendString(nil, v.String(), opts.escapeHTML)
-		e.Write(appendString(e.AvailableBuffer(), b, false)) // no need to escape again since it is already escaped
+		e.Write(appendString(e.AvailableBuffer(), b, false)) // no need to escape again since it 是一个lready escaped
 	} else {
 		e.Write(appendString(e.AvailableBuffer(), v.String(), opts.escapeHTML))
 	}
@@ -937,7 +937,7 @@ func (ce condAddrEncoder) encode(e *encodeState, v reflect.Value, opts encOpts) 
 	}
 }
 
-// newCondAddrEncoder returns an encoder that checks whether its value
+// newCondAddrEncoder 返回an encoder that 检查是否 its value
 // CanAddr and delegates to canAddrEnc if so, else to elseEnc.
 func newCondAddrEncoder(canAddrEnc, elseEnc encoderFunc) encoderFunc {
 	enc := condAddrEncoder{canAddrEnc: canAddrEnc, elseEnc: elseEnc}
@@ -952,7 +952,7 @@ func isValidTag(s string) bool {
 		switch {
 		case strings.ContainsRune("!#$%&()*+-./:;<=>?@[]^_{|}~ ", c):
 			// Backslash and quote chars are reserved, but
-			// otherwise any punctuation chars are allowed
+			// 否则 any punctuation chars are allowed
 			// in a tag name.
 		case !unicode.IsLetter(c) && !unicode.IsDigit(c):
 			return false
@@ -1065,7 +1065,7 @@ func appendString[Bytes []byte | string](dst []byte, src Bytes, escapeHTML bool)
 	return dst
 }
 
-// A field represents a single field found in a struct.
+// 一个field represents a single field found in a struct.
 type field struct {
 	name      string
 	nameBytes []byte // []byte(name)
@@ -1155,7 +1155,7 @@ func typeFields(t reflect.Type) structFields {
 
 				// Only strings, floats, integers, and booleans can be quoted.
 				quoted := false
-				if opts.Contains("string") {
+				if opts.包含("string") {
 					switch ft.Kind() {
 					case reflect.Bool,
 						reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -1177,8 +1177,8 @@ func typeFields(t reflect.Type) structFields {
 						tag:       tagged,
 						index:     index,
 						typ:       ft,
-						omitEmpty: opts.Contains("omitempty"),
-						omitZero:  opts.Contains("omitzero"),
+						omitEmpty: opts.包含("omitempty"),
+						omitZero:  opts.包含("omitzero"),
 						quoted:    quoted,
 					}
 					field.nameBytes = []byte(field.name)
@@ -1314,11 +1314,11 @@ func typeFields(t reflect.Type) structFields {
 // have the same name, to find the single field that dominates the
 // others using Go's embedding rules, modified by the presence of
 // JSON tags. If there are multiple top-level fields, the boolean
-// will be false: This condition is an error in Go and we skip all
+// 将是 false: This condition 是一个n error in Go and we skip all
 // the fields.
 func dominantField(fields []field) (field, bool) {
 	// The fields are sorted in increasing index-length order, then by presence of tag.
-	// That means that the first field is the dominant one. We need only check
+	// That 意味着 the first field 是 dominant one. We need only check
 	// for error cases: two fields at top level, either both tagged or neither tagged.
 	if len(fields) > 1 && len(fields[0].index) == len(fields[1].index) && fields[0].tag == fields[1].tag {
 		return field{}, false

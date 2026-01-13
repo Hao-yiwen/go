@@ -1,11 +1,11 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package strings_test
 
-// Derived from bytes/compare_test.go.
-// Benchmarks omitted since the underlying implementation is identical.
+// 派生自 bytes/compare_test.go。
+// 由于底层实现相同，省略了基准测试。
 
 import (
 	"internal/testenv"
@@ -28,7 +28,7 @@ var compareTests = []struct {
 	{"ab", "x", -1},
 	{"x", "a", 1},
 	{"b", "x", -1},
-	// test runtime·memeq's chunked implementation
+	// 测试 runtime·memeq 的分块实现
 	{"abcdefgh", "abcdefgh", 0},
 	{"abcdefghi", "abcdefghi", 0},
 	{"abcdefghi", "abcdefghj", -1},
@@ -58,13 +58,13 @@ func TestCompareIdenticalString(t *testing.T) {
 }
 
 func TestCompareStrings(t *testing.T) {
-	// unsafeString converts a []byte to a string with no allocation.
-	// The caller must not modify b while the result string is in use.
+	// unsafeString 将 []byte 转换为 string，不进行内存分配。
+	// 在结果字符串使用期间，调用者不得修改 b。
 	unsafeString := func(b []byte) string {
 		return unsafe.String(unsafe.SliceData(b), len(b))
 	}
 
-	lengths := make([]int, 0) // lengths to test in ascending order
+	lengths := make([]int, 0) // 按升序测试的长度
 	for i := 0; i <= 128; i++ {
 		lengths = append(lengths, i)
 	}
@@ -79,12 +79,12 @@ func TestCompareStrings(t *testing.T) {
 	b := make([]byte, n+1)
 	lastLen := 0
 	for _, len := range lengths {
-		// randomish but deterministic data. No 0 or 255.
+		// 随机但确定性的数据。没有 0 或 255。
 		for i := 0; i < len; i++ {
 			a[i] = byte(1 + 31*i%254)
 			b[i] = byte(1 + 31*i%254)
 		}
-		// data past the end is different
+		// 末尾之后的数据是不同的
 		for i := len; i <= n; i++ {
 			a[i] = 8
 			b[i] = 9

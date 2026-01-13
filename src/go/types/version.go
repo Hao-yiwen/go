@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
@@ -10,23 +10,23 @@ import (
 	"internal/goversion"
 )
 
-// A goVersion is a Go language version string of the form "go1.%d"
-// where d is the minor version number. goVersion strings don't
+// 一个goVersion 是一个 Go language version string of the form "go1.%d"
+// where d 是 minor version number. goVersion strings don't
 // contain release numbers ("go1.20.1" is not a valid goVersion).
 type goVersion string
 
-// asGoVersion returns v as a goVersion (e.g., "go1.20.1" becomes "go1.20").
-// If v is not a valid Go version, the result is the empty string.
+// asGoVersion 返回v as a goVersion (e.g., "go1.20.1" becomes "go1.20").
+// If v is not a valid Go version, the result 是 empty string.
 func asGoVersion(v string) goVersion {
 	return goVersion(version.Lang(v))
 }
 
-// isValid reports whether v is a valid Go version.
+// isValid 报告whether v 是一个 valid Go version.
 func (v goVersion) isValid() bool {
 	return v != ""
 }
 
-// cmp returns -1, 0, or +1 depending on whether x < y, x == y, or x > y,
+// cmp 返回-1, 0, or +1 depending on whether x < y, x == y, or x > y,
 // interpreted as Go versions.
 func (x goVersion) cmp(y goVersion) int {
 	return version.Compare(string(x), string(y))
@@ -49,8 +49,8 @@ var (
 	go_current = asGoVersion(fmt.Sprintf("go1.%d", goversion.Version))
 )
 
-// allowVersion reports whether the current effective Go version
-// (which may vary from one file to another) is allowed to use the
+// allowVersion 报告whether the current effective Go version
+// (which may vary from one file to another) 是一个llowed to use the
 // feature version (want).
 func (check *Checker) allowVersion(want goVersion) bool {
 	return !check.version.isValid() || check.version.cmp(want) >= 0

@@ -10,22 +10,22 @@ import (
 	"unsafe"
 )
 
-// These functions cannot have go:noescape annotations,
-// because while ptr does not escape, new does.
-// If new is marked as not escaping, the compiler will make incorrect
-// escape analysis decisions about the pointer value being stored.
+// 这些函数不能有 go:noescape 注解，
+// 因为虽然 ptr 不逃逸，但 new 会逃逸。
+// 如果 new 被标记为不逃逸，编译器将对存储的指针值
+// 做出错误的逃逸分析决策。
 
-// atomicwb performs a write barrier before an atomic pointer write.
-// The caller should guard the call with "if writeBarrier.enabled".
+// atomicwb 在原子指针写入之前执行写屏障。
+// 调用者应该用 "if writeBarrier.enabled" 保护调用。
 //
-// atomicwb should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// atomicwb 应该是一个内部实现细节，
+// 但许多广泛使用的包通过 linkname 访问它。
+// 耻辱榜上的知名成员包括：
 //   - github.com/bytedance/gopkg
 //   - github.com/songzhibin97/gkit
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname atomicwb
 //go:nosplit
@@ -36,7 +36,7 @@ func atomicwb(ptr *unsafe.Pointer, new unsafe.Pointer) {
 	buf[1] = uintptr(new)
 }
 
-// atomicstorep performs *ptr = new atomically and invokes a write barrier.
+// atomicstorep 以原子方式执行 *ptr = new 并调用写屏障。
 //
 //go:nosplit
 func atomicstorep(ptr unsafe.Pointer, new unsafe.Pointer) {
@@ -49,8 +49,8 @@ func atomicstorep(ptr unsafe.Pointer, new unsafe.Pointer) {
 	atomic.StorepNoWB(noescape(ptr), new)
 }
 
-// atomic_storePointer is the implementation of internal/runtime/atomic.UnsafePointer.Store
-// (like StoreNoWB but with the write barrier).
+// atomic_storePointer 是 internal/runtime/atomic.UnsafePointer.Store 的实现
+// （类似 StoreNoWB 但带有写屏障）。
 //
 //go:nosplit
 //go:linkname atomic_storePointer internal/runtime/atomic.storePointer
@@ -58,8 +58,8 @@ func atomic_storePointer(ptr *unsafe.Pointer, new unsafe.Pointer) {
 	atomicstorep(unsafe.Pointer(ptr), new)
 }
 
-// atomic_casPointer is the implementation of internal/runtime/atomic.UnsafePointer.CompareAndSwap
-// (like CompareAndSwapNoWB but with the write barrier).
+// atomic_casPointer 是 internal/runtime/atomic.UnsafePointer.CompareAndSwap 的实现
+// （类似 CompareAndSwapNoWB 但带有写屏障）。
 //
 //go:nosplit
 //go:linkname atomic_casPointer internal/runtime/atomic.casPointer
@@ -73,9 +73,9 @@ func atomic_casPointer(ptr *unsafe.Pointer, old, new unsafe.Pointer) bool {
 	return atomic.Casp1(ptr, old, new)
 }
 
-// Like above, but implement in terms of sync/atomic's uintptr operations.
-// We cannot just call the runtime routines, because the race detector expects
-// to be able to intercept the sync/atomic forms but not the runtime forms.
+// 与上面类似，但用 sync/atomic 的 uintptr 操作实现。
+// 我们不能直接调用运行时例程，因为竞态检测器期望
+// 能够拦截 sync/atomic 形式但不是运行时形式。
 
 //go:linkname sync_atomic_StoreUintptr sync/atomic.StoreUintptr
 func sync_atomic_StoreUintptr(ptr *uintptr, new uintptr)

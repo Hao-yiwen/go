@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package gccgoimporter
 
@@ -30,7 +30,7 @@ type parser struct {
 	typeData []string                  // unparsed type data (v3 and later)
 	fixups   []fixupRecord             // fixups to apply at end of parsing
 	initdata InitData                  // package init priority data
-	aliases  map[int]string            // maps saved type number to alias name
+	aliases  map[int]string            // 映射 saved type number to alias name
 }
 
 // When reading export data it's possible to encounter a defined type
@@ -183,7 +183,7 @@ func (p *parser) parseQualifiedNameStr(unquotedName string) (pkgpath, name strin
 	return
 }
 
-// getPkg returns the package for a given path. If the package is
+// getPkg 返回the package for a given path. If the package is
 // not found but we have a package name, create the package and
 // add it to the p.imports map.
 func (p *parser) getPkg(pkgpath, name string) *types.Package {
@@ -298,7 +298,7 @@ func (p *parser) parseVar(pkg *types.Package) *types.Var {
 	name := p.parseName()
 	v := types.NewVar(token.NoPos, pkg, name, p.parseType(pkg)) // (types.PackageVar)
 	if name[0] == '.' || name[0] == '<' {
-		// This is an unexported variable,
+		// This 是一个n unexported variable,
 		// or a variable defined in a different package.
 		// We only want to record exported variables.
 		return nil
@@ -439,7 +439,7 @@ func (p *parser) parseConst(pkg *types.Package) *types.Const {
 	return types.NewConst(token.NoPos, pkg, name, typ, val)
 }
 
-// reserved is a singleton type used to fill type map slots that have
+// reserved 是一个 singleton type used to fill type map slots that have
 // been reserved (i.e., for which a type number has been parsed) but
 // which don't have their actual type yet. When the type map is updated,
 // the actual type must replace a reserved entry (or we have an internal
@@ -468,8 +468,8 @@ func (p *parser) reserve(n int) {
 	}
 }
 
-// update sets the type map entries for the entries in nlist to t.
-// An entry in nlist can be a type number in p.typeList,
+// update 设置the type map entries for the entries in nlist to t.
+// 一个entry in nlist can be a type number in p.typeList,
 // used to resolve named types, or it can be a *types.Pointer,
 // used to resolve pointers to named types in case they are referenced
 // by embedded fields.
@@ -542,7 +542,7 @@ func (p *parser) parseNamedType(nlist []any) types.Type {
 
 	// defined type
 	if obj == nil {
-		// A named type may be referred to before the underlying type
+		// 一个named type 可能是 referred to before the underlying type
 		// is known - set it up.
 		tname := types.NewTypeName(token.NoPos, pkg, name, nil)
 		types.NewNamed(tname, nil, nil)
@@ -556,7 +556,7 @@ func (p *parser) parseNamedType(nlist []any) types.Type {
 
 	nt, ok := t.(*types.Named)
 	if !ok {
-		// This can happen for unsafe.Pointer, which is a TypeName holding a Basic type.
+		// This can happen for unsafe.Pointer, which 是一个 TypeName holding a Basic type.
 		pt := p.parseType(pkg)
 		if pt != t {
 			p.error("unexpected underlying type for non-named TypeName")
@@ -789,7 +789,7 @@ func (p *parser) parseFunc(pkg *types.Package) *types.Func {
 	p.skipInlineBody()
 
 	if name[0] == '.' || name[0] == '<' || strings.ContainsRune(name, '$') {
-		// This is an unexported function,
+		// This 是一个n unexported function,
 		// or a function defined in a different package,
 		// or a type$equal or type$hash function.
 		// We only want to record exported functions.
@@ -984,8 +984,8 @@ func (p *parser) parseTypeAfterAngle(pkg *types.Package, n ...any) (t types.Type
 	return
 }
 
-// parseTypeExtended is identical to parseType, but if the type in
-// question is a saved type, returns the index as well as the type
+// parseTypeExtended is identical to parseType, but 如果 type in
+// question 是一个 saved type, 返回 index as well as the type
 // pointer (index returned is zero if we parsed a builtin).
 func (p *parser) parseTypeExtended(pkg *types.Package, n ...any) (t types.Type, n1 int) {
 	p.expect('<')
@@ -1051,7 +1051,7 @@ func (p *parser) parseTypes(pkg *types.Package) {
 	p.scanner.Whitespace = 0
 
 	// We should now have p.tok pointing to the final newline.
-	// The next runes from the scanner should be the type data.
+	// The next runes from the scanner 应该是 the type data.
 
 	var sb strings.Builder
 	for sb.Len() < total {

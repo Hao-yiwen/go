@@ -3,38 +3,38 @@
 // license that can be found in the LICENSE file.
 
 /*
-Pack is a simple version of the traditional Unix ar tool.
-It implements only the operations needed by Go.
+Pack 是传统 Unix ar 工具的简单版本。
+它仅实现 Go 所需的操作。
 
-Usage:
+用法：
 
 	go tool pack op file.a [name...]
 
-Pack applies the operation to the archive, using the names as arguments to the operation.
+Pack 将操作应用于存档，使用名称作为操作的参数。
 
-The operation op is given by one of these letters:
+操作 op 由以下字母之一给出：
 
-	c	append files (from the file system) to a new archive
-	p	print files from the archive
-	r	append files (from the file system) to the archive
-	t	list files from the archive
-	x	extract files from the archive
+	c	将文件（来自文件系统）附加到新存档
+	p	从存档打印文件
+	r	将文件（来自文件系统）附加到存档
+	t	列出存档中的文件
+	x	从存档中提取文件
 
-The archive argument to the c command must be non-existent or a
-valid archive file, which will be cleared before adding new entries. It
-is an error if the file exists but is not an archive.
+c 命令的存档参数必须不存在或是
+有效的存档文件，将在添加新条目前清除。如果
+文件存在但不是存档，这是一个错误。
 
-For the p, t, and x commands, listing no names on the command line
-causes the operation to apply to all files in the archive.
+对于 p、t 和 x 命令，在命令行上列出没有名称
+导致操作应用于存档中的所有文件。
 
-In contrast to Unix ar, the r operation always appends to the archive,
-even if a file with the given name already exists in the archive. In this way
-pack's r operation is more like Unix ar's rq operation.
+与 Unix ar 相比，r 操作总是附加到存档，
+即使具有给定名称的文件已在存档中存在。这样
+pack 的 r 操作更像 Unix ar 的 rq 操作。
 
-Adding the letter v to an operation, as in pv or rv, enables verbose operation:
-For the c and r commands, names are printed as files are added.
-For the p command, each file is prefixed by the name on a line by itself.
-For the t command, the listing includes additional file metadata.
-For the x command, names are printed as files are extracted.
+在操作中添加字母 v，如 pv 或 rv，启用详细操作：
+对于 c 和 r 命令，在添加文件时打印名称。
+对于 p 命令，每个文件都以名称为前缀，单独一行。
+对于 t 命令，列表包括额外的文件元数据。
+对于 x 命令，在提取文件时打印名称。
 */
 package main

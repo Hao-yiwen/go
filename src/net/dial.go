@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package net
 
@@ -15,38 +15,37 @@ import (
 )
 
 const (
-	// defaultTCPKeepAliveIdle is a default constant value for TCP_KEEPIDLE.
-	// See go.dev/issue/31510 for details.
+	// defaultTCPKeepAliveIdle 是 TCP_KEEPIDLE 的默认常量值。
+	// 详情参见 go.dev/issue/31510。
 	defaultTCPKeepAliveIdle = 15 * time.Second
 
-	// defaultTCPKeepAliveInterval is a default constant value for TCP_KEEPINTVL.
-	// It is the same as defaultTCPKeepAliveIdle, see go.dev/issue/31510 for details.
+	// defaultTCPKeepAliveInterval 是 TCP_KEEPINTVL 的默认常量值。
+	// 它与 defaultTCPKeepAliveIdle 相同，详情参见 go.dev/issue/31510。
 	defaultTCPKeepAliveInterval = 15 * time.Second
 
-	// defaultTCPKeepAliveCount is a default constant value for TCP_KEEPCNT.
+	// defaultTCPKeepAliveCount 是 TCP_KEEPCNT 的默认常量值。
 	defaultTCPKeepAliveCount = 9
 
-	// For the moment, MultiPath TCP is used by default with listeners, if
-	// available, but not with dialers.
-	// See go.dev/issue/56539
+	// 目前，如果可用，多路径 TCP 默认用于监听器，但不用于拨号器。
+	// 参见 go.dev/issue/56539
 	defaultMPTCPEnabledListen = true
 	defaultMPTCPEnabledDial   = false
 )
 
-// The type of service offered
+// 提供的服务类型
 //
-//	0 == MPTCP disabled
-//	1 == MPTCP enabled
-//	2 == MPTCP enabled on listeners only
-//	3 == MPTCP enabled on dialers only
+//	0 == MPTCP 禁用
+//	1 == MPTCP 启用
+//	2 == 仅在监听器上启用 MPTCP
+//	3 == 仅在拨号器上启用 MPTCP
 var multipathtcp = godebug.New("multipathtcp")
 
-// mptcpStatusDial is a tristate for Multipath TCP on clients,
-// see go.dev/issue/56539
+// mptcpStatusDial 是客户端上多路径 TCP 的三态值，
+// 参见 go.dev/issue/56539
 type mptcpStatusDial uint8
 
 const (
-	// The value 0 is the system default, linked to defaultMPTCPEnabledDial
+	// 值 0 是系统默认值，与 defaultMPTCPEnabledDial 关联
 	mptcpUseDefaultDial mptcpStatusDial = iota
 	mptcpEnabledDial
 	mptcpDisabledDial
@@ -60,7 +59,7 @@ func (m *mptcpStatusDial) get() bool {
 		return false
 	}
 
-	// If MPTCP is forced via GODEBUG=multipathtcp=1
+	// 如果通过 GODEBUG=multipathtcp=1 强制启用 MPTCP
 	if multipathtcp.Value() == "1" || multipathtcp.Value() == "3" {
 		multipathtcp.IncNonDefault()
 
@@ -78,12 +77,12 @@ func (m *mptcpStatusDial) set(use bool) {
 	}
 }
 
-// mptcpStatusListen is a tristate for Multipath TCP on servers,
-// see go.dev/issue/56539
+// mptcpStatusListen 是服务器上多路径 TCP 的三态值，
+// 参见 go.dev/issue/56539
 type mptcpStatusListen uint8
 
 const (
-	// The value 0 is the system default, linked to defaultMPTCPEnabledListen
+	// 值 0 是系统默认值，与 defaultMPTCPEnabledListen 关联
 	mptcpUseDefaultListen mptcpStatusListen = iota
 	mptcpEnabledListen
 	mptcpDisabledListen
@@ -97,8 +96,8 @@ func (m *mptcpStatusListen) get() bool {
 		return false
 	}
 
-	// If MPTCP is disabled via GODEBUG=multipathtcp=0 or only
-	// enabled on dialers, but not on listeners.
+	// 如果通过 GODEBUG=multipathtcp=0 禁用 MPTCP 或
+	// 仅在拨号器上启用，而不在监听器上启用。
 	if multipathtcp.Value() == "0" || multipathtcp.Value() == "3" {
 		multipathtcp.IncNonDefault()
 
@@ -116,117 +115,105 @@ func (m *mptcpStatusListen) set(use bool) {
 	}
 }
 
-// A Dialer contains options for connecting to an address.
+// Dialer 包含连接到地址的选项。
 //
-// The zero value for each field is equivalent to dialing
-// without that option. Dialing with the zero value of Dialer
-// is therefore equivalent to just calling the [Dial] function.
+// 每个字段的零值等同于不使用该选项进行拨号。
+// 因此，使用 Dialer 的零值进行拨号等同于直接调用 [Dial] 函数。
 //
-// It is safe to call Dialer's methods concurrently.
+// 并发调用 Dialer 的方法是安全的。
 type Dialer struct {
-	// Timeout is the maximum amount of time a dial will wait for
-	// a connect to complete. If Deadline is also set, it may fail
-	// earlier.
+	// Timeout 是拨号等待连接完成的最长时间。
+	// 如果同时设置了 Deadline，可能会更早失败。
 	//
-	// The default is no timeout.
+	// 默认值是没有超时。
 	//
-	// When using TCP and dialing a host name with multiple IP
-	// addresses, the timeout may be divided between them.
+	// 当使用 TCP 并拨号具有多个 IP 地址的主机名时，
+	// 超时时间可能会在它们之间分配。
 	//
-	// With or without a timeout, the operating system may impose
-	// its own earlier timeout. For instance, TCP timeouts are
-	// often around 3 minutes.
+	// 无论是否设置超时，操作系统可能会强加自己更早的超时。
+	// 例如，TCP 超时通常约为 3 分钟。
 	Timeout time.Duration
 
-	// Deadline is the absolute point in time after which dials
-	// will fail. If Timeout is set, it may fail earlier.
-	// Zero means no deadline, or dependent on the operating system
-	// as with the Timeout option.
+	// Deadline 是拨号将失败的绝对时间点。
+	// 如果设置了 Timeout，可能会更早失败。
+	// 零值表示没有截止时间，或者像 Timeout 选项一样取决于操作系统。
 	Deadline time.Time
 
-	// LocalAddr is the local address to use when dialing an
-	// address. The address must be of a compatible type for the
-	// network being dialed.
-	// If nil, a local address is automatically chosen.
+	// LocalAddr 是拨号地址时使用的本地地址。
+	// 地址必须是与正在拨号的网络兼容的类型。
+	// 如果为 nil，则自动选择本地地址。
 	LocalAddr Addr
 
-	// DualStack previously enabled RFC 6555 Fast Fallback
-	// support, also known as "Happy Eyeballs", in which IPv4 is
-	// tried soon if IPv6 appears to be misconfigured and
-	// hanging.
+	// DualStack 以前用于启用 RFC 6555 快速回退支持，
+	// 也称为 "Happy Eyeballs"，其中如果 IPv6 似乎配置错误
+	// 并挂起，则很快尝试 IPv4。
 	//
-	// Deprecated: Fast Fallback is enabled by default. To
-	// disable, set FallbackDelay to a negative value.
+	// 已弃用：快速回退默认启用。
+	// 要禁用，请将 FallbackDelay 设置为负值。
 	DualStack bool
 
-	// FallbackDelay specifies the length of time to wait before
-	// spawning a RFC 6555 Fast Fallback connection. That is, this
-	// is the amount of time to wait for IPv6 to succeed before
-	// assuming that IPv6 is misconfigured and falling back to
-	// IPv4.
+	// FallbackDelay 指定在生成 RFC 6555 快速回退连接之前
+	// 等待的时间长度。也就是说，这是在假设 IPv6 配置错误
+	// 并回退到 IPv4 之前等待 IPv6 成功的时间。
 	//
-	// If zero, a default delay of 300ms is used.
-	// A negative value disables Fast Fallback support.
+	// 如果为零，则使用 300 毫秒的默认延迟。
+	// 负值禁用快速回退支持。
 	FallbackDelay time.Duration
 
-	// KeepAlive specifies the interval between keep-alive
-	// probes for an active network connection.
+	// KeepAlive 指定活动网络连接的保活探测之间的间隔。
 	//
-	// KeepAlive is ignored if KeepAliveConfig.Enable is true.
+	// 如果 KeepAliveConfig.Enable 为 true，则忽略 KeepAlive。
 	//
-	// If zero, keep-alive probes are sent with a default value
-	// (currently 15 seconds), if supported by the protocol and operating
-	// system. Network protocols or operating systems that do
-	// not support keep-alive ignore this field.
-	// If negative, keep-alive probes are disabled.
+	// 如果为零，且协议和操作系统支持，则使用默认值
+	// （当前为 15 秒）发送保活探测。
+	// 不支持保活的网络协议或操作系统会忽略此字段。
+	// 如果为负，则禁用保活探测。
 	KeepAlive time.Duration
 
-	// KeepAliveConfig specifies the keep-alive probe configuration
-	// for an active network connection, when supported by the
-	// protocol and operating system.
+	// KeepAliveConfig 指定活动网络连接的保活探测配置，
+	// 当协议和操作系统支持时。
 	//
-	// If KeepAliveConfig.Enable is true, keep-alive probes are enabled.
-	// If KeepAliveConfig.Enable is false and KeepAlive is negative,
-	// keep-alive probes are disabled.
+	// 如果 KeepAliveConfig.Enable 为 true，则启用保活探测。
+	// 如果 KeepAliveConfig.Enable 为 false 且 KeepAlive 为负，
+	// 则禁用保活探测。
 	KeepAliveConfig KeepAliveConfig
 
-	// Resolver optionally specifies an alternate resolver to use.
+	// Resolver 可选地指定要使用的备用解析器。
 	Resolver *Resolver
 
-	// Cancel is an optional channel whose closure indicates that
-	// the dial should be canceled. Not all types of dials support
-	// cancellation.
+	// Cancel 是一个可选通道，其关闭表示应取消拨号。
+	// 并非所有类型的拨号都支持取消。
 	//
-	// Deprecated: Use DialContext instead.
+	// 已弃用：请改用 DialContext。
 	Cancel <-chan struct{}
 
-	// If Control is not nil, it is called after creating the network
-	// connection but before actually dialing.
+	// 如果 Control 不为 nil，它在创建网络连接之后
+	// 但在实际拨号之前被调用。
 	//
-	// Network and address parameters passed to Control function are not
-	// necessarily the ones passed to Dial. Calling Dial with TCP networks
-	// will cause the Control function to be called with "tcp4" or "tcp6",
-	// UDP networks become "udp4" or "udp6", IP networks become "ip4" or "ip6",
-	// and other known networks are passed as-is.
+	// 传递给 Control 函数的网络和地址参数不一定是
+	// 传递给 Dial 的那些。使用 TCP 网络调用 Dial
+	// 将导致 Control 函数被调用时使用 "tcp4" 或 "tcp6"，
+	// UDP 网络变为 "udp4" 或 "udp6"，IP 网络变为 "ip4" 或 "ip6"，
+	// 其他已知网络按原样传递。
 	//
-	// Control is ignored if ControlContext is not nil.
+	// 如果 ControlContext 不为 nil，则忽略 Control。
 	Control func(network, address string, c syscall.RawConn) error
 
-	// If ControlContext is not nil, it is called after creating the network
-	// connection but before actually dialing.
+	// 如果 ControlContext 不为 nil，它在创建网络连接之后
+	// 但在实际拨号之前被调用。
 	//
-	// Network and address parameters passed to ControlContext function are not
-	// necessarily the ones passed to Dial. Calling Dial with TCP networks
-	// will cause the ControlContext function to be called with "tcp4" or "tcp6",
-	// UDP networks become "udp4" or "udp6", IP networks become "ip4" or "ip6",
-	// and other known networks are passed as-is.
+	// 传递给 ControlContext 函数的网络和地址参数不一定是
+	// 传递给 Dial 的那些。使用 TCP 网络调用 Dial
+	// 将导致 ControlContext 函数被调用时使用 "tcp4" 或 "tcp6"，
+	// UDP 网络变为 "udp4" 或 "udp6"，IP 网络变为 "ip4" 或 "ip6"，
+	// 其他已知网络按原样传递。
 	//
-	// If ControlContext is not nil, Control is ignored.
+	// 如果 ControlContext 不为 nil，则忽略 Control。
 	ControlContext func(ctx context.Context, network, address string, c syscall.RawConn) error
 
-	// If mptcpStatus is set to a value allowing Multipath TCP (MPTCP) to be
-	// used, any call to Dial with "tcp(4|6)" as network will use MPTCP if
-	// supported by the operating system.
+	// 如果 mptcpStatus 设置为允许使用多路径 TCP (MPTCP) 的值，
+	// 任何使用 "tcp(4|6)" 作为网络的 Dial 调用将使用 MPTCP
+	// （如果操作系统支持）。
 	mptcpStatus mptcpStatusDial
 }
 
@@ -242,14 +229,14 @@ func minNonzeroTime(a, b time.Time) time.Time {
 	return b
 }
 
-// deadline returns the earliest of:
+// deadline 返回以下最早的时间：
 //   - now+Timeout
 //   - d.Deadline
-//   - the context's deadline
+//   - 上下文的截止时间
 //
-// Or zero, if none of Timeout, Deadline, or context's deadline is set.
+// 如果 Timeout、Deadline 或上下文的截止时间都未设置，则返回零值。
 func (d *Dialer) deadline(ctx context.Context, now time.Time) (earliest time.Time) {
-	if d.Timeout != 0 { // including negative, for historical reasons
+	if d.Timeout != 0 { // 包括负值，出于历史原因
 		earliest = now.Add(d.Timeout)
 	}
 	if d, ok := ctx.Deadline(); ok {
@@ -265,8 +252,8 @@ func (d *Dialer) resolver() *Resolver {
 	return DefaultResolver
 }
 
-// partialDeadline returns the deadline to use for a single address,
-// when multiple addresses are pending.
+// partialDeadline 返回当有多个地址待处理时，
+// 单个地址使用的截止时间。
 func partialDeadline(now, deadline time.Time, addrsRemaining int) (time.Time, error) {
 	if deadline.IsZero() {
 		return deadline, nil
@@ -275,9 +262,9 @@ func partialDeadline(now, deadline time.Time, addrsRemaining int) (time.Time, er
 	if timeRemaining <= 0 {
 		return time.Time{}, errTimeout
 	}
-	// Tentatively allocate equal time to each remaining address.
+	// 暂时为每个剩余地址分配相等的时间。
 	timeout := timeRemaining / time.Duration(addrsRemaining)
-	// If the time per address is too short, steal from the end of the list.
+	// 如果每个地址的时间太短，从列表末尾借用。
 	const saneMinimum = 2 * time.Second
 	if timeout < saneMinimum {
 		if timeRemaining < saneMinimum {
@@ -299,7 +286,7 @@ func (d *Dialer) fallbackDelay() time.Duration {
 
 func parseNetwork(ctx context.Context, network string, needsProto bool) (afnet string, proto int, err error) {
 	i := bytealg.LastIndexByteString(network, ':')
-	if i < 0 { // no colon
+	if i < 0 { // 没有冒号
 		switch network {
 		case "tcp", "tcp4", "tcp6":
 		case "udp", "udp4", "udp6":
@@ -329,9 +316,8 @@ func parseNetwork(ctx context.Context, network string, needsProto bool) (afnet s
 	return "", 0, UnknownNetworkError(network)
 }
 
-// resolveAddrList resolves addr using hint and returns a list of
-// addresses. The result contains at least one address when error is
-// nil.
+// resolveAddrList 使用 hint 解析 addr 并返回地址列表。
+// 当 error 为 nil 时，结果至少包含一个地址。
 func (r *Resolver) resolveAddrList(ctx context.Context, op, network, addr string, hint Addr) (addrList, error) {
 	afnet, _, err := parseNetwork(ctx, network, true)
 	if err != nil {
@@ -401,20 +387,19 @@ func (r *Resolver) resolveAddrList(ctx context.Context, op, network, addr string
 	return naddrs, nil
 }
 
-// MultipathTCP reports whether MPTCP will be used.
+// MultipathTCP 报告是否将使用 MPTCP。
 //
-// This method doesn't check if MPTCP is supported by the operating
-// system or not.
+// 此方法不检查操作系统是否支持 MPTCP。
 func (d *Dialer) MultipathTCP() bool {
 	return d.mptcpStatus.get()
 }
 
-// SetMultipathTCP directs the [Dial] methods to use, or not use, MPTCP,
-// if supported by the operating system. This method overrides the
-// system default and the GODEBUG=multipathtcp=... setting if any.
+// SetMultipathTCP 指示 [Dial] 方法使用或不使用 MPTCP
+// （如果操作系统支持）。此方法覆盖系统默认值
+// 和 GODEBUG=multipathtcp=... 设置（如果有）。
 //
-// If MPTCP is not available on the host or not supported by the server,
-// the Dial methods will fall back to TCP.
+// 如果主机上 MPTCP 不可用或服务器不支持，
+// Dial 方法将回退到 TCP。
 func (d *Dialer) SetMultipathTCP(use bool) {
 	d.mptcpStatus.set(use)
 }

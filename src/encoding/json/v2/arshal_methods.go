@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -37,14 +37,14 @@ var (
 )
 
 // Marshaler is implemented by types that can marshal themselves.
-// It is recommended that types implement [MarshalerTo] unless the implementation
+// It is recommended that types implement [MarshalerTo] 除非 the implementation
 // is trying to avoid a hard dependency on the "jsontext" package.
 //
 // It is recommended that implementations return a buffer that is safe
 // for the caller to retain and potentially mutate.
 //
-// If the returned error is a [SemanticError], then unpopulated fields
-// of the error may be populated by [json] with additional context.
+// If the returned error 是一个 [SemanticError], then unpopulated fields
+// of the error 可能是 populated by [json] with additional context.
 // Errors of other types are wrapped within a [SemanticError].
 type Marshaler interface {
 	MarshalJSON() ([]byte, error)
@@ -60,10 +60,10 @@ type Marshaler interface {
 // The implementation must write only one JSON value to the Encoder and
 // must not retain the pointer to [jsontext.Encoder].
 //
-// If the returned error is a [SemanticError], then unpopulated fields
-// of the error may be populated by [json] with additional context.
+// If the returned error 是一个 [SemanticError], then unpopulated fields
+// of the error 可能是 populated by [json] with additional context.
 // Errors of other types are wrapped within a [SemanticError],
-// unless it is an IO error.
+// 除非 it 是一个n IO error.
 type MarshalerTo interface {
 	MarshalJSONTo(*jsontext.Encoder) error
 
@@ -72,7 +72,7 @@ type MarshalerTo interface {
 }
 
 // Unmarshaler is implemented by types that can unmarshal themselves.
-// It is recommended that types implement [UnmarshalerFrom] unless the implementation
+// It is recommended that types implement [UnmarshalerFrom] 除非 the implementation
 // is trying to avoid a hard dependency on the "jsontext" package.
 //
 // The input can be assumed to be a valid encoding of a JSON value
@@ -83,8 +83,8 @@ type MarshalerTo interface {
 //
 // Implementations must not retain or mutate the input []byte.
 //
-// If the returned error is a [SemanticError], then unpopulated fields
-// of the error may be populated by [json] with additional context.
+// If the returned error 是一个 [SemanticError], then unpopulated fields
+// of the error 可能是 populated by [json] with additional context.
 // Errors of other types are wrapped within a [SemanticError].
 type Unmarshaler interface {
 	UnmarshalJSON([]byte) error
@@ -103,10 +103,10 @@ type Unmarshaler interface {
 //
 // Implementations must not retain the pointer to [jsontext.Decoder].
 //
-// If the returned error is a [SemanticError], then unpopulated fields
-// of the error may be populated by [json] with additional context.
+// If the returned error 是一个 [SemanticError], then unpopulated fields
+// of the error 可能是 populated by [json] with additional context.
 // Errors of other types are wrapped within a [SemanticError],
-// unless it is a [jsontext.SyntacticError] or an IO error.
+// 除非 it 是一个 [jsontext.SyntacticError] or an IO error.
 type UnmarshalerFrom interface {
 	UnmarshalJSONFrom(*jsontext.Decoder) error
 
@@ -117,7 +117,7 @@ type UnmarshalerFrom interface {
 func makeMethodArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 	// Avoid injecting method arshaler on the pointer or interface version
 	// to avoid ever calling the method on a nil pointer or interface receiver.
-	// Let it be injected on the value receiver (which is always addressable).
+	// Let it be injected on the value receiver (which 是一个lways addressable).
 	if t.Kind() == reflect.Pointer || t.Kind() == reflect.Interface {
 		return fncs
 	}
@@ -335,7 +335,7 @@ func makeMethodArshaler(fncs *arshaler, t reflect.Type) *arshaler {
 }
 
 // implementsAny is like t.Implements(ifaceType) for a list of interfaces,
-// but checks whether either t or reflect.PointerTo(t) implements the interface.
+// but 检查是否 either t or reflect.PointerTo(t) implements the interface.
 func implementsAny(t reflect.Type, ifaceTypes ...reflect.Type) bool {
 	for _, ifaceType := range ifaceTypes {
 		if _, ok := implements(t, ifaceType); ok {
@@ -345,9 +345,9 @@ func implementsAny(t reflect.Type, ifaceTypes ...reflect.Type) bool {
 	return false
 }
 
-// implements is like t.Implements(ifaceType) but checks whether
+// implements is like t.Implements(ifaceType) but 检查是否
 // either t or reflect.PointerTo(t) implements the interface.
-// It also reports whether the value needs to be addressed
+// It also 报告是否 the value needs to be addressed
 // in order to satisfy the interface.
 func implements(t, ifaceType reflect.Type) (needAddr, ok bool) {
 	switch {

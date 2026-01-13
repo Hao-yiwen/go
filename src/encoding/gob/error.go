@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package gob
 
@@ -13,7 +13,7 @@ import "fmt"
 // decoding functions and methods that do not return an error either use
 // panic to report an error or are guaranteed error-free.
 
-// A gobError is used to distinguish errors (panics) generated in this package.
+// 一个gobError is used to distinguish errors (panics) generated in this package.
 type gobError struct {
 	err error
 }

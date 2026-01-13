@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build unix || (js && wasm) || wasip1
 
@@ -16,14 +16,14 @@ func init() {
 	osInitMime = initMimeUnix
 }
 
-// See https://specifications.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-0.21.html
-// for the FreeDesktop Shared MIME-info Database specification.
+// 有关 FreeDesktop 共享 MIME-info 数据库规范，请参阅
+// https://specifications.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-0.21.html
 var mimeGlobs = []string{
 	"/usr/local/share/mime/globs2",
 	"/usr/share/mime/globs2",
 }
 
-// Common locations for mime.types files on unix.
+// unix 上 mime.types 文件的常见位置。
 var typeFiles = []string{
 	"/etc/mime.types",
 	"/etc/apache2/mime.types",
@@ -40,7 +40,7 @@ func loadMimeGlobsFile(filename string) error {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		// Each line should be of format: weight:mimetype:glob[:morefields...]
+		// 每行的格式应为：weight:mimetype:glob[:morefields...]
 		fields := strings.Split(scanner.Text(), ":")
 		if len(fields) < 3 || len(fields[0]) < 1 || len(fields[2]) < 3 {
 			continue
@@ -50,21 +50,16 @@ func loadMimeGlobsFile(filename string) error {
 
 		extension := fields[2][1:]
 		if strings.ContainsAny(extension, "?*[") {
-			// Not a bare extension, but a glob. Ignore for now:
-			// - we do not have an implementation for this glob
-			//   syntax (translation to path/filepath.Match could
-			//   be possible)
-			// - support for globs with weight ordering would have
-			//   performance impact to all lookups to support the
-			//   rarely seen glob entries
-			// - trying to match glob metacharacters literally is
-			//   not useful
+			// 不是单纯的扩展名，而是 glob 模式。暂时忽略：
+			// - 我们没有实现这种 glob 语法（可以转换为 path/filepath.Match）
+			// - 支持带权重排序的 glob 会对所有查找产生性能影响，
+			//   而 glob 条目很少见
+			// - 尝试字面匹配 glob 元字符没有用处
 			continue
 		}
 		if _, ok := mimeTypes.Load(extension); ok {
-			// We've already seen this extension.
-			// The file is in weight order, so we keep
-			// the first entry that we see.
+			// 我们已经见过这个扩展名了。
+			// 文件按权重排序，所以我们保留第一个看到的条目。
 			continue
 		}
 
@@ -105,11 +100,11 @@ func loadMimeFile(filename string) {
 func initMimeUnix() {
 	for _, filename := range mimeGlobs {
 		if err := loadMimeGlobsFile(filename); err == nil {
-			return // Stop checking more files if mimetype database is found.
+			return // 如果找到 mimetype 数据库，停止检查更多文件。
 		}
 	}
 
-	// Fallback if no system-generated mimetype database exists.
+	// 如果不存在系统生成的 mimetype 数据库，则回退。
 	for _, filename := range typeFiles {
 		loadMimeFile(filename)
 	}

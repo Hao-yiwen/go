@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package comment
 
@@ -10,14 +10,14 @@ import (
 	"strings"
 )
 
-// An mdPrinter holds the state needed for printing a Doc as Markdown.
+// 一个mdPrinter 保存 state needed for printing a Doc as Markdown.
 type mdPrinter struct {
 	*Printer
 	headingPrefix string
 	raw           bytes.Buffer
 }
 
-// Markdown returns a Markdown formatting of the Doc.
+// Markdown 返回a Markdown formatting of the Doc.
 // See the [Printer] documentation for ways to customize the Markdown output.
 func (p *Printer) Markdown(d *Doc) []byte {
 	mp := &mdPrinter{

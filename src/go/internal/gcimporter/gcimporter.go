@@ -1,8 +1,8 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package gcimporter implements Import for gc-generated object files.
+// gcimporter 包实现了 Import for gc-generated object files.
 package gcimporter // import "go/internal/gcimporter"
 
 import (
@@ -17,7 +17,7 @@ import (
 )
 
 // Import imports a gc-generated package given its import path and srcDir, adds
-// the corresponding package object to the packages map, and returns the object.
+// the corresponding package object to the packages map, and 返回 object.
 // The packages map must contain all packages already imported.
 func Import(fset *token.FileSet, packages map[string]*types.Package, path, srcDir string, lookup func(path string) (io.ReadCloser, error)) (pkg *types.Package, err error) {
 	var rc io.ReadCloser
@@ -30,7 +30,7 @@ func Import(fset *token.FileSet, packages map[string]*types.Package, path, srcDi
 		}
 		id = path
 
-		// No need to re-import if the package was imported completely before.
+		// No need to re-import 如果 package was imported completely before.
 		if pkg = packages[id]; pkg != nil && pkg.Complete() {
 			return
 		}
@@ -49,7 +49,7 @@ func Import(fset *token.FileSet, packages map[string]*types.Package, path, srcDi
 			return nil, err
 		}
 
-		// no need to re-import if the package was imported completely before
+		// no need to re-import 如果 package was imported completely before
 		if pkg = packages[id]; pkg != nil && pkg.Complete() {
 			return
 		}

@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package tabwriter_test
 
@@ -65,13 +65,13 @@ func check(t *testing.T, testname string, minwidth, tabwidth, padding int, padch
 	var w Writer
 	w.Init(&b, minwidth, tabwidth, padding, padchar, flags)
 
-	// write all at once
+	// 一次性写入全部
 	title := testname + " (written all at once)"
 	b.clear()
 	write(t, title, &w, src)
 	verify(t, title, &w, &b, src, expected)
 
-	// write byte-by-byte
+	// 逐字节写入
 	title = testname + " (written byte-by-byte)"
 	b.clear()
 	for i := 0; i < len(src); i++ {
@@ -79,7 +79,7 @@ func check(t *testing.T, testname string, minwidth, tabwidth, padding int, padch
 	}
 	verify(t, title, &w, &b, src, expected)
 
-	// write using Fibonacci slice sizes
+	// 使用斐波那契切片大小写入
 	title = testname + " (written in fibonacci slices)"
 	b.clear()
 	for i, d := 0, 0; i < len(src); {
@@ -158,14 +158,14 @@ var tests = []struct {
 	{
 		"1e esc stripped",
 		8, 0, 1, '.', StripEscape,
-		"abc\xff\tdef", // unterminated escape
+		"abc\xff\tdef", // 未终止的转义
 		"abc\tdef",
 	},
 
 	{
 		"1e esc",
 		8, 0, 1, '.', 0,
-		"abc\xff\tdef", // unterminated escape
+		"abc\xff\tdef", // 未终止的转义
 		"abc\xff\tdef",
 	},
 
@@ -186,14 +186,14 @@ var tests = []struct {
 	{
 		"4a",
 		8, 0, 1, '.', 0,
-		"\t", // '\t' terminates an empty cell on last line - nothing to print
+		"\t", // '\t' 终止最后一行的空单元格 - 没有内容可打印
 		"",
 	},
 
 	{
 		"4b",
 		8, 0, 1, '.', AlignRight,
-		"\t", // '\t' terminates an empty cell on last line - nothing to print
+		"\t", // '\t' 终止最后一行的空单元格 - 没有内容可打印
 		"",
 	},
 
@@ -315,7 +315,7 @@ var tests = []struct {
 	{
 		"9b",
 		1, 0, 0, '.', FilterHTML,
-		"1\t2<!---\f--->\t3\t4\n" + // \f inside HTML is ignored
+		"1\t2<!---\f--->\t3\t4\n" + // HTML 内部的 \f 被忽略
 			"11\t222\t3333\t44444\n",
 
 		"1.2<!---\f--->..3...4\n" +
@@ -325,7 +325,7 @@ var tests = []struct {
 	{
 		"9c",
 		1, 0, 0, '.', 0,
-		"1\t2\t3\t4\f" + // \f causes a newline and flush
+		"1\t2\t3\t4\f" + // \f 导致换行和刷新
 			"11\t222\t3333\t44444\n",
 
 		"1234\n" +
@@ -335,7 +335,7 @@ var tests = []struct {
 	{
 		"9c debug",
 		1, 0, 0, '.', Debug,
-		"1\t2\t3\t4\f" + // \f causes a newline and flush
+		"1\t2\t3\t4\f" + // \f 导致换行和刷新
 			"11\t222\t3333\t44444\n",
 
 		"1|2|3|4\n" +
@@ -511,7 +511,7 @@ var tests = []struct {
 	{
 		"15b",
 		4, 0, 0, '.', DiscardEmptyColumns,
-		"a\t\tb", // htabs - do not discard column
+		"a\t\tb", // htabs - 不丢弃列
 		"a.......b",
 	},
 
@@ -580,7 +580,7 @@ var tests = []struct {
 	{
 		"16c",
 		100, 100, 0, '\t', DiscardEmptyColumns,
-		"a\tb\t\td\n" + // hard tabs - do not discard column
+		"a\tb\t\td\n" + // 硬制表符 - 不丢弃列
 			"a\tb\t\td\te\n" +
 			"a\n" +
 			"a\tb\tc\td\n" +
@@ -596,7 +596,7 @@ var tests = []struct {
 	{
 		"16c debug",
 		100, 100, 0, '\t', DiscardEmptyColumns | Debug,
-		"a\tb\t\td\n" + // hard tabs - do not discard column
+		"a\tb\t\td\n" + // 硬制表符 - 不丢弃列
 			"a\tb\t\td\te\n" +
 			"a\n" +
 			"a\tb\tc\td\n" +
@@ -649,13 +649,13 @@ func TestPanicDuringWrite(t *testing.T) {
 	var p panicWriter
 	w := new(Writer)
 	w.Init(p, 0, 0, 5, ' ', 0)
-	io.WriteString(w, "a\n\n") // the second \n triggers a call to w.Write and thus a panic
+	io.WriteString(w, "a\n\n") // 第二个 \n 触发对 w.Write 的调用，从而引发 panic
 	t.Errorf("failed to panic during Write")
 }
 
 func BenchmarkTable(b *testing.B) {
 	for _, w := range [...]int{1, 10, 100} {
-		// Build a line with w cells.
+		// 构建一个包含 w 个单元格的行。
 		line := bytes.Repeat([]byte("a\t"), w)
 		line = append(line, '\n')
 		for _, h := range [...]int{10, 1000, 100000} {
@@ -663,8 +663,8 @@ func BenchmarkTable(b *testing.B) {
 				b.Run("new", func(b *testing.B) {
 					b.ReportAllocs()
 					for i := 0; i < b.N; i++ {
-						w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // no particular reason for these settings
-						// Write the line h times.
+						w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // 这些设置没有特别的原因
+						// 写入 h 次该行。
 						for j := 0; j < h; j++ {
 							w.Write(line)
 						}
@@ -674,9 +674,9 @@ func BenchmarkTable(b *testing.B) {
 
 				b.Run("reuse", func(b *testing.B) {
 					b.ReportAllocs()
-					w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // no particular reason for these settings
+					w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // 这些设置没有特别的原因
 					for i := 0; i < b.N; i++ {
-						// Write the line h times.
+						// 写入 h 次该行。
 						for j := 0; j < h; j++ {
 							w.Write(line)
 						}
@@ -690,13 +690,13 @@ func BenchmarkTable(b *testing.B) {
 
 func BenchmarkPyramid(b *testing.B) {
 	for _, x := range [...]int{10, 100, 1000} {
-		// Build a line with x cells.
+		// 构建一个包含 x 个单元格的行。
 		line := bytes.Repeat([]byte("a\t"), x)
 		b.Run(fmt.Sprintf("%d", x), func(b *testing.B) {
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // no particular reason for these settings
-				// Write increasing prefixes of that line.
+				w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // 这些设置没有特别的原因
+				// 写入该行递增的前缀。
 				for j := 0; j < x; j++ {
 					w.Write(line[:j*2])
 					w.Write([]byte{'\n'})
@@ -710,15 +710,15 @@ func BenchmarkPyramid(b *testing.B) {
 func BenchmarkRagged(b *testing.B) {
 	var lines [8][]byte
 	for i, w := range [8]int{6, 2, 9, 5, 5, 7, 3, 8} {
-		// Build a line with w cells.
+		// 构建一个包含 w 个单元格的行。
 		lines[i] = bytes.Repeat([]byte("a\t"), w)
 	}
 	for _, h := range [...]int{10, 100, 1000} {
 		b.Run(fmt.Sprintf("%d", h), func(b *testing.B) {
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // no particular reason for these settings
-				// Write the lines in turn h times.
+				w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // 这些设置没有特别的原因
+				// 轮流写入这些行，共 h 次。
 				for j := 0; j < h; j++ {
 					w.Write(lines[j%len(lines)])
 					w.Write([]byte{'\n'})
@@ -745,9 +745,9 @@ lines
 func BenchmarkCode(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // no particular reason for these settings
-		// The code is small, so it's reasonable for the tabwriter user
-		// to write it all at once, or buffer the writes.
+		w := NewWriter(io.Discard, 4, 4, 1, ' ', 0) // 这些设置没有特别的原因
+		// 代码量很小，所以 tabwriter 用户一次性写入全部内容
+		// 或缓冲写入都是合理的。
 		w.Write([]byte(codeSnippet))
 		w.Flush()
 	}

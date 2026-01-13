@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -16,14 +16,14 @@ import (
 )
 
 type simdType struct {
-	Name                    string // The go type name of this simd type, for example Int32x4.
-	Lanes                   int    // The number of elements in this vector/mask.
-	Base                    string // The element's type, like for Int32x4 it will be int32.
-	Fields                  string // The struct fields, it should be right formatted.
-	Type                    string // Either "mask" or "vreg"
-	VectorCounterpart       string // For mask use only: just replacing the "Mask" in [simdType.Name] with "Int"
-	ReshapedVectorWithAndOr string // For mask use only: vector AND and OR are only available in some shape with element width 32.
-	Size                    int    // The size of the vector type
+	Name                    string // 此 simd 类型的 Go 类型名，例如 Int32x4。
+	Lanes                   int    // 此向量/掩码中的元素数量。
+	Base                    string // 元素的类型，例如 Int32x4 的元素类型是 int32。
+	Fields                  string // 结构体字段，应该格式正确。
+	Type                    string // "mask" 或 "vreg"
+	VectorCounterpart       string // 仅用于掩码：将 [simdType.Name] 中的 "Mask" 替换为 "Int"
+	ReshapedVectorWithAndOr string // 仅用于掩码：向量 AND 和 OR 仅在某些元素宽度为 32 的形状中可用。
+	Size                    int    // 向量类型的大小
 }
 
 func (x simdType) ElemBits() int {
@@ -34,12 +34,11 @@ func (x simdType) Article() string {
 	if strings.HasPrefix(x.Name, "Int") {
 		return "an"
 	}
-	return "a" // Float, Uint
+	return "a" // Float、Uint
 }
 
-// LanesContainer returns the smallest int/uint bit size that is
-// large enough to hold one bit for each lane.  E.g., Mask32x4
-// is 4 lanes, and a uint8 is the smallest uint that has 4 bits.
+// LanesContainer 返回足够大以容纳每个通道一位的最小 int/uint 位大小。
+// 例如，Mask32x4 有 4 个通道，而 uint8 是具有 4 位的最小 uint。
 func (x simdType) LanesContainer() int {
 	if x.Lanes > 64 {
 		panic("too many lanes")
@@ -56,9 +55,8 @@ func (x simdType) LanesContainer() int {
 	return 8
 }
 
-// MaskedLoadStoreFilter encodes which simd type type currently
-// get masked loads/stores generated, it is used in two places,
-// this forces coordination.
+// MaskedLoadStoreFilter 编码当前哪些 simd 类型会生成掩码加载/存储，
+// 它在两个地方使用，这强制协调。
 func (x simdType) MaskedLoadStoreFilter() bool {
 	return x.Size == 512 || x.ElemBits() >= 32 && x.Type != "mask"
 }
@@ -97,7 +95,7 @@ func (x simdType) ToBitsDoc() string {
 	if x.Size == 512 || x.ElemBits() == 16 {
 		return fmt.Sprintf("// Asm: KMOV%s, CPU Features: AVX512", x.IntelSizeSuffix())
 	}
-	// 128/256 bit vectors with 8, 32, 64 bit elements
+	// 具有 8、32、64 位元素的 128/256 位向量
 	var asm string
 	var feat string
 	switch x.ElemBits() {
@@ -121,21 +119,21 @@ func (x simdType) ToBitsDoc() string {
 }
 
 func compareSimdTypes(x, y simdType) int {
-	// "vreg" then "mask"
+	// "vreg" 然后 "mask"
 	if c := -compareNatural(x.Type, y.Type); c != 0 {
 		return c
 	}
-	// want "flo" < "int" < "uin" (and then 8 < 16 < 32 < 64),
-	// not "int16" < "int32" < "int64" < "int8")
-	// so limit comparison to first 3 bytes in string.
+	// 想要 "flo" < "int" < "uin"（然后 8 < 16 < 32 < 64），
+	// 而不是 "int16" < "int32" < "int64" < "int8"）
+	// 所以限制比较字符串的前 3 个字节。
 	if c := compareNatural(x.Base[:3], y.Base[:3]); c != 0 {
 		return c
 	}
-	// base type size, 8 < 16 < 32 < 64
+	// 基本类型大小，8 < 16 < 32 < 64
 	if c := x.ElemBits() - y.ElemBits(); c != 0 {
 		return c
 	}
-	// vector size last
+	// 向量大小最后
 	return x.Size - y.Size
 }
 
@@ -450,15 +448,15 @@ func (x {{.Name}}) Or(y {{.Name}}) {{.Name}}
 {{end}}
 `
 
-// parseSIMDTypes groups go simd types by their vector sizes, and
-// returns a map whose key is the vector size, value is the simd type.
+// parseSIMDTypes 按向量大小分组 go simd 类型，
+// 并返回一个 map，其键是向量大小，值是 simd 类型。
 func parseSIMDTypes(ops []Operation) simdTypeMap {
-	// TODO: maybe instead of going over ops, let's try go over types.yaml.
+	// TODO: 也许我们不遍历 ops，而是尝试遍历 types.yaml。
 	ret := map[int][]simdType{}
 	seen := map[string]struct{}{}
 	processArg := func(arg Operand) {
 		if arg.Class == "immediate" || arg.Class == "greg" {
-			// Immediates are not encoded as vector types.
+			// 立即数不编码为向量类型。
 			return
 		}
 		if _, ok := seen[*arg.Go]; ok {
@@ -476,7 +474,7 @@ func parseSIMDTypes(ops []Operation) simdTypeMap {
 			vectorCounterpart := strings.ReplaceAll(*arg.Go, "Mask", "Int")
 			reshapedVectorWithAndOr := fmt.Sprintf("Int32x%d", *arg.Bits/32)
 			ret[*arg.Bits] = append(ret[*arg.Bits], simdType{*arg.Go, lanes, base, fields, arg.Class, vectorCounterpart, reshapedVectorWithAndOr, *arg.Bits})
-			// In case the vector counterpart of a mask is not present, put its vector counterpart typedef into the map as well.
+			// 如果掩码的向量对应物不存在，也将其向量对应物的类型定义放入 map 中。
 			if _, ok := seen[vectorCounterpart]; !ok {
 				seen[vectorCounterpart] = struct{}{}
 				ret[*arg.Bits] = append(ret[*arg.Bits], simdType{vectorCounterpart, lanes, base, fields, "vreg", "", "", *arg.Bits})
@@ -538,7 +536,7 @@ func typesFromTypeMap(typeMap simdTypeMap) []simdType {
 	return m
 }
 
-// writeSIMDTypes generates the simd vector types into a bytes.Buffer
+// writeSIMDTypes 将 simd 向量类型生成到 bytes.Buffer 中
 func writeSIMDTypes(typeMap simdTypeMap) *bytes.Buffer {
 	t := templateOf(simdTypesTemplates, "types_amd64")
 	loadStore := templateOf(simdLoadStoreTemplate, "loadstore_amd64")
@@ -574,7 +572,7 @@ func writeSIMDTypes(typeMap simdTypeMap) *bytes.Buffer {
 				if err := loadStore.ExecuteTemplate(buffer, "loadstore_amd64", typeDef); err != nil {
 					panic(fmt.Errorf("failed to execute loadstore template for type %s: %w", typeDef.Name, err))
 				}
-				// restrict to AVX2 masked loads/stores first.
+				// 首先限制为 AVX2 掩码加载/存储。
 				if typeDef.MaskedLoadStoreFilter() {
 					if err := maskedLoadStore.ExecuteTemplate(buffer, "maskedloadstore_amd64", typeDef); err != nil {
 						panic(fmt.Errorf("failed to execute maskedloadstore template for type %s: %w", typeDef.Name, err))
@@ -592,15 +590,14 @@ func writeSIMDTypes(typeMap simdTypeMap) *bytes.Buffer {
 }
 
 func writeSIMDFeatures(ops []Operation) *bytes.Buffer {
-	// Gather all features
+	// 收集所有特性
 	type featureKey struct {
 		GoArch  string
 		Feature string
 	}
 	featureSet := make(map[featureKey]struct{})
 	for _, op := range ops {
-		// Generate a feature check for each independant feature in a
-		// composite feature.
+		// 为复合特性中的每个独立特性生成特性检查。
 		for feature := range strings.SplitSeq(op.CPUFeature, ",") {
 			feature = strings.TrimSpace(feature)
 			featureSet[featureKey{op.GoArch, feature}] = struct{}{}
@@ -613,8 +610,8 @@ func writeSIMDFeatures(ops []Operation) *bytes.Buffer {
 		return compareNatural(a.Feature, b.Feature)
 	})
 
-	// If we ever have the same feature name on more than one GOARCH, we'll have
-	// to be more careful about this.
+	// 如果我们在多个 GOARCH 上有相同的特性名称，
+	// 我们需要更加小心处理这个问题。
 	t := templateOf(simdFeaturesTemplate, "features")
 
 	buffer := new(bytes.Buffer)
@@ -627,8 +624,7 @@ func writeSIMDFeatures(ops []Operation) *bytes.Buffer {
 	return buffer
 }
 
-// writeSIMDStubs returns two bytes.Buffers containing the declarations for the public
-// and internal-use vector intrinsics.
+// writeSIMDStubs 返回两个 bytes.Buffer，包含公共和内部使用的向量内置函数的声明。
 func writeSIMDStubs(ops []Operation, typeMap simdTypeMap) (f, fI *bytes.Buffer) {
 	t := templateOf(simdStubsTmpl, "simdStubs")
 	f = new(bytes.Buffer)

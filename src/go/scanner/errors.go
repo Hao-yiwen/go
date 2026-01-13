@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package scanner
 
@@ -20,7 +20,7 @@ type Error struct {
 	Msg string
 }
 
-// Error implements the error interface.
+// Error 实现the error interface.
 func (e Error) Error() string {
 	if e.Pos.Filename != "" || e.Pos.IsValid() {
 		// don't print "<unknown position>"
@@ -30,8 +30,8 @@ func (e Error) Error() string {
 	return e.Msg
 }
 
-// ErrorList is a list of *Errors.
-// The zero value for an ErrorList is an empty ErrorList ready to use.
+// ErrorList 是一个 list of *Errors.
+// The zero value for an ErrorList 是一个n empty ErrorList ready to use.
 type ErrorList []*Error
 
 // Add adds an [Error] with given position and error message to an [ErrorList].
@@ -86,7 +86,7 @@ func (p *ErrorList) RemoveMultiples() {
 	*p = (*p)[0:i]
 }
 
-// An [ErrorList] implements the error interface.
+// 一个[ErrorList] implements the error interface.
 func (p ErrorList) Error() string {
 	switch len(p) {
 	case 0:
@@ -97,7 +97,7 @@ func (p ErrorList) Error() string {
 	return fmt.Sprintf("%s (and %d more errors)", p[0], len(p)-1)
 }
 
-// Err returns an error equivalent to this error list.
+// Err 返回an error equivalent to this error list.
 // If the list is empty, Err returns nil.
 func (p ErrorList) Err() error {
 	if len(p) == 0 {
@@ -106,8 +106,8 @@ func (p ErrorList) Err() error {
 	return p
 }
 
-// PrintError is a utility function that prints a list of errors to w,
-// one error per line, if the err parameter is an [ErrorList]. Otherwise
+// PrintError 是一个 utility function that prints a list of errors to w,
+// one error per line, 如果 err parameter 是一个n [ErrorList]. Otherwise
 // it prints the err string.
 func PrintError(w io.Writer, err error) {
 	if list, ok := err.(ErrorList); ok {

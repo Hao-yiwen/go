@@ -1,23 +1,23 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package utf16 implements encoding and decoding of UTF-16 sequences.
+// utf16 包实现 UTF-16 序列的编码和解码。
 package utf16
 
-// The conditions replacementChar==unicode.ReplacementChar and
-// maxRune==unicode.MaxRune are verified in the tests.
-// Defining them locally avoids this package depending on package unicode.
+// 条件 replacementChar==unicode.ReplacementChar 和
+// maxRune==unicode.MaxRune 在测试中已验证。
+// 在本地定义它们可避免此包依赖 unicode 包。
 
 const (
-	replacementChar = '\uFFFD'     // Unicode replacement character
-	maxRune         = '\U0010FFFF' // Maximum valid Unicode code point.
+	replacementChar = '\uFFFD'     // Unicode 替换字符
+	maxRune         = '\U0010FFFF' // 最大有效 Unicode 码点。
 )
 
 const (
-	// 0xd800-0xdc00 encodes the high 10 bits of a pair.
-	// 0xdc00-0xe000 encodes the low 10 bits of a pair.
-	// the value is those 20 bits plus 0x10000.
+	// 0xd800-0xdc00 编码代理对的高 10 位。
+	// 0xdc00-0xe000 编码代理对的低 10 位。
+	// 值是那 20 位加上 0x10000。
 	surr1 = 0xd800
 	surr2 = 0xdc00
 	surr3 = 0xe000
@@ -25,15 +25,14 @@ const (
 	surrSelf = 0x10000
 )
 
-// IsSurrogate reports whether the specified Unicode code point
-// can appear in a surrogate pair.
+// IsSurrogate 报告指定的 Unicode 码点是否可以出现在代理对中。
 func IsSurrogate(r rune) bool {
 	return surr1 <= r && r < surr3
 }
 
-// DecodeRune returns the UTF-16 decoding of a surrogate pair.
-// If the pair is not a valid UTF-16 surrogate pair, DecodeRune returns
-// the Unicode replacement code point U+FFFD.
+// DecodeRune 返回代理对的 UTF-16 解码。
+// 如果该对不是有效的 UTF-16 代理对，DecodeRune 返回
+// Unicode 替换码点 U+FFFD。
 func DecodeRune(r1, r2 rune) rune {
 	if surr1 <= r1 && r1 < surr2 && surr2 <= r2 && r2 < surr3 {
 		return (r1-surr1)<<10 | (r2 - surr2) + surrSelf
@@ -41,9 +40,9 @@ func DecodeRune(r1, r2 rune) rune {
 	return replacementChar
 }
 
-// EncodeRune returns the UTF-16 surrogate pair r1, r2 for the given rune.
-// If the rune is not a valid Unicode code point or does not need encoding,
-// EncodeRune returns U+FFFD, U+FFFD.
+// EncodeRune 返回给定 rune 的 UTF-16 代理对 r1, r2。
+// 如果 rune 不是有效的 Unicode 码点或不需要编码，
+// EncodeRune 返回 U+FFFD, U+FFFD。
 func EncodeRune(r rune) (r1, r2 rune) {
 	if r < surrSelf || r > maxRune {
 		return replacementChar, replacementChar
@@ -52,8 +51,8 @@ func EncodeRune(r rune) (r1, r2 rune) {
 	return surr1 + (r>>10)&0x3ff, surr2 + r&0x3ff
 }
 
-// RuneLen returns the number of 16-bit words in the UTF-16 encoding of the rune.
-// It returns -1 if the rune is not a valid value to encode in UTF-16.
+// RuneLen 返回 rune 的 UTF-16 编码中的 16 位字数。
+// 如果 rune 不是有效的 UTF-16 编码值，则返回 -1。
 func RuneLen(r rune) int {
 	switch {
 	case 0 <= r && r < surr1, surr3 <= r && r < surrSelf:
@@ -65,7 +64,7 @@ func RuneLen(r rune) int {
 	}
 }
 
-// Encode returns the UTF-16 encoding of the Unicode code point sequence s.
+// Encode 返回 Unicode 码点序列 s 的 UTF-16 编码。
 func Encode(s []rune) []uint16 {
 	n := len(s)
 	for _, v := range s {
@@ -78,10 +77,10 @@ func Encode(s []rune) []uint16 {
 	n = 0
 	for _, v := range s {
 		switch RuneLen(v) {
-		case 1: // normal rune
+		case 1: // 普通 rune
 			a[n] = uint16(v)
 			n++
-		case 2: // needs surrogate sequence
+		case 2: // 需要代理序列
 			r1, r2 := EncodeRune(v)
 			a[n] = uint16(r1)
 			a[n+1] = uint16(r2)
@@ -94,48 +93,47 @@ func Encode(s []rune) []uint16 {
 	return a[:n]
 }
 
-// AppendRune appends the UTF-16 encoding of the Unicode code point r
-// to the end of p and returns the extended buffer. If the rune is not
-// a valid Unicode code point, it appends the encoding of U+FFFD.
+// AppendRune 将 Unicode 码点 r 的 UTF-16 编码追加到 p 的末尾
+// 并返回扩展后的缓冲区。如果 rune 不是有效的 Unicode 码点，
+// 它会追加 U+FFFD 的编码。
 func AppendRune(a []uint16, r rune) []uint16 {
-	// This function is inlineable for fast handling of ASCII.
+	// 此函数可内联以快速处理 ASCII。
 	switch {
 	case 0 <= r && r < surr1, surr3 <= r && r < surrSelf:
-		// normal rune
+		// 普通 rune
 		return append(a, uint16(r))
 	case surrSelf <= r && r <= maxRune:
-		// needs surrogate sequence
+		// 需要代理序列
 		r1, r2 := EncodeRune(r)
 		return append(a, uint16(r1), uint16(r2))
 	}
 	return append(a, replacementChar)
 }
 
-// Decode returns the Unicode code point sequence represented
-// by the UTF-16 encoding s.
+// Decode 返回 UTF-16 编码 s 表示的 Unicode 码点序列。
 func Decode(s []uint16) []rune {
-	// Preallocate capacity to hold up to 64 runes.
-	// Decode inlines, so the allocation can live on the stack.
+	// 预分配容量以容纳最多 64 个 rune。
+	// Decode 可内联，因此分配可以在栈上进行。
 	buf := make([]rune, 0, 64)
 	return decode(s, buf)
 }
 
-// decode appends to buf the Unicode code point sequence represented
-// by the UTF-16 encoding s and return the extended buffer.
+// decode 将 UTF-16 编码 s 表示的 Unicode 码点序列追加到 buf
+// 并返回扩展后的缓冲区。
 func decode(s []uint16, buf []rune) []rune {
 	for i := 0; i < len(s); i++ {
 		var ar rune
 		switch r := s[i]; {
 		case r < surr1, surr3 <= r:
-			// normal rune
+			// 普通 rune
 			ar = rune(r)
 		case surr1 <= r && r < surr2 && i+1 < len(s) &&
 			surr2 <= s[i+1] && s[i+1] < surr3:
-			// valid surrogate sequence
+			// 有效的代理序列
 			ar = DecodeRune(rune(r), rune(s[i+1]))
 			i++
 		default:
-			// invalid surrogate sequence
+			// 无效的代理序列
 			ar = replacementChar
 		}
 		buf = append(buf, ar)

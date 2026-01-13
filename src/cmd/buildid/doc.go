@@ -1,19 +1,18 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 /*
-Buildid displays or updates the build ID stored in a Go package or binary.
+Buildid 显示或更新存储在 Go 包或二进制文件中的构建 ID。
 
-Usage:
+用法：
 
 	go tool buildid [-w] file
 
-By default, buildid prints the build ID found in the named file.
-If the -w option is given, buildid rewrites the build ID found in
-the file to accurately record a content hash of the file.
+默认情况下，buildid 打印在指定文件中找到的构建 ID。
+如果给出 -w 选项，buildid 会重写文件中找到的构建 ID，
+以准确记录文件的内容哈希。
 
-This tool is only intended for use by the go command or
-other build systems.
+此工具仅供 go 命令或其他构建系统使用。
 */
 package main

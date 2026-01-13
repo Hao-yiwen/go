@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package hex implements hexadecimal encoding and decoding.
+// hex 包实现十六进制编码和解码。
 package hex
 
 import (
@@ -34,14 +34,13 @@ const (
 		"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
 )
 
-// EncodedLen returns the length of an encoding of n source bytes.
-// Specifically, it returns n * 2.
+// EncodedLen 返回 n 个源字节编码的长度。
+// 具体来说，它返回 n * 2。
 func EncodedLen(n int) int { return n * 2 }
 
-// Encode encodes src into [EncodedLen](len(src))
-// bytes of dst. As a convenience, it returns the number
-// of bytes written to dst, but this value is always [EncodedLen](len(src)).
-// Encode implements hexadecimal encoding.
+// Encode 将 src 编码到 dst 的 [EncodedLen](len(src)) 个字节中。
+// 为方便起见，它返回写入 dst 的字节数，但此值始终为 [EncodedLen](len(src))。
+// Encode 实现十六进制编码。
 func Encode(dst, src []byte) int {
 	j := 0
 	for _, v := range src {
@@ -52,8 +51,7 @@ func Encode(dst, src []byte) int {
 	return len(src) * 2
 }
 
-// AppendEncode appends the hexadecimally encoded src to dst
-// and returns the extended buffer.
+// AppendEncode 将十六进制编码的 src 追加到 dst 并返回扩展后的缓冲区。
 func AppendEncode(dst, src []byte) []byte {
 	n := EncodedLen(len(src))
 	dst = slices.Grow(dst, n)
@@ -61,9 +59,8 @@ func AppendEncode(dst, src []byte) []byte {
 	return dst[:len(dst)+n]
 }
 
-// ErrLength reports an attempt to decode an odd-length input
-// using [Decode] or [DecodeString].
-// The stream-based Decoder returns [io.ErrUnexpectedEOF] instead of ErrLength.
+// ErrLength 报告尝试使用 [Decode] 或 [DecodeString] 解码奇数长度的输入。
+// 基于流的 Decoder 返回 [io.ErrUnexpectedEOF] 而不是 ErrLength。
 var ErrLength = errors.New("encoding/hex: odd length hex string")
 
 // InvalidByteError values describe errors resulting from an invalid byte in a hex string.
@@ -73,16 +70,16 @@ func (e InvalidByteError) Error() string {
 	return fmt.Sprintf("encoding/hex: invalid byte: %#U", rune(e))
 }
 
-// DecodedLen returns the length of a decoding of x source bytes.
+// DecodedLen 返回the length of a decoding of x source bytes.
 // Specifically, it returns x / 2.
 func DecodedLen(x int) int { return x / 2 }
 
 // Decode decodes src into [DecodedLen](len(src)) bytes,
 // returning the actual number of bytes written to dst.
 //
-// Decode expects that src contains only hexadecimal
+// Decode expects that src 包含 only hexadecimal
 // characters and that src has even length.
-// If the input is malformed, Decode returns the number
+// If the input is malformed, Decode 返回 number
 // of bytes decoded before the error.
 func Decode(dst, src []byte) (int, error) {
 	i, j := 0, 1
@@ -103,7 +100,7 @@ func Decode(dst, src []byte) (int, error) {
 	}
 	if len(src)%2 == 1 {
 		// Check for invalid char before reporting bad length,
-		// since the invalid char (if present) is an earlier problem.
+		// since the invalid char (if present) 是一个n earlier problem.
 		if reverseHexTable[src[j-1]] > 0x0f {
 			return i, InvalidByteError(src[j-1])
 		}
@@ -113,8 +110,8 @@ func Decode(dst, src []byte) (int, error) {
 }
 
 // AppendDecode appends the hexadecimally decoded src to dst
-// and returns the extended buffer.
-// If the input is malformed, it returns the partially decoded src and an error.
+// and 返回the extended buffer.
+// If the input is malformed, it 返回 partially decoded src and an error.
 func AppendDecode(dst, src []byte) ([]byte, error) {
 	n := DecodedLen(len(src))
 	dst = slices.Grow(dst, n)
@@ -122,16 +119,16 @@ func AppendDecode(dst, src []byte) ([]byte, error) {
 	return dst[:len(dst)+n], err
 }
 
-// EncodeToString returns the hexadecimal encoding of src.
+// EncodeToString 返回the hexadecimal encoding of src.
 func EncodeToString(src []byte) string {
 	dst := make([]byte, EncodedLen(len(src)))
 	Encode(dst, src)
 	return string(dst)
 }
 
-// DecodeString returns the bytes represented by the hexadecimal string s.
+// DecodeString 返回the bytes represented by the hexadecimal string s.
 //
-// DecodeString expects that src contains only hexadecimal
+// DecodeString expects that src 包含 only hexadecimal
 // characters and that src has even length.
 // If the input is malformed, DecodeString returns
 // the bytes decoded before the error.
@@ -141,7 +138,7 @@ func DecodeString(s string) ([]byte, error) {
 	return dst[:n], err
 }
 
-// Dump returns a string that contains a hex dump of the given data. The format
+// Dump 返回a string that 包含 a hex dump of the given data. The format
 // of the hex dump matches the output of `hexdump -C` on the command line.
 func Dump(data []byte) string {
 	if len(data) == 0 {
@@ -151,7 +148,7 @@ func Dump(data []byte) string {
 	var buf strings.Builder
 	// Dumper will write 79 bytes per complete 16 byte chunk, and at least
 	// 64 bytes for whatever remains. Round the allocation up, since only a
-	// maximum of 15 bytes will be wasted.
+	// maximum of 15 bytes 将是 wasted.
 	buf.Grow((1 + ((len(data) - 1) / 16)) * 79)
 
 	dumper := Dumper(&buf)
@@ -160,7 +157,7 @@ func Dump(data []byte) string {
 	return buf.String()
 }
 
-// bufferSize is the number of hexadecimal characters to buffer in encoder and decoder.
+// bufferSize 是 number of hexadecimal characters to buffer in encoder and decoder.
 const bufferSize = 1024
 
 type encoder struct {
@@ -169,7 +166,7 @@ type encoder struct {
 	out [bufferSize]byte // output buffer
 }
 
-// NewEncoder returns an [io.Writer] that writes lowercase hexadecimal characters to w.
+// NewEncoder 返回an [io.Writer] that writes lowercase hexadecimal characters to w.
 func NewEncoder(w io.Writer) io.Writer {
 	return &encoder{w: w}
 }
@@ -197,7 +194,7 @@ type decoder struct {
 	arr [bufferSize]byte // backing array for in
 }
 
-// NewDecoder returns an [io.Reader] that decodes hexadecimal characters from r.
+// NewDecoder 返回an [io.Reader] that decodes hexadecimal characters from r.
 // NewDecoder expects that r contain only an even number of hexadecimal characters.
 func NewDecoder(r io.Reader) io.Reader {
 	return &decoder{r: r}
@@ -236,7 +233,7 @@ func (d *decoder) Read(p []byte) (n int, err error) {
 	return numDec, nil
 }
 
-// Dumper returns a [io.WriteCloser] that writes a hex dump of all written data to
+// Dumper 返回a [io.WriteCloser] that writes a hex dump of all written data to
 // w. The format of the dump matches the output of `hexdump -C` on the command
 // line.
 func Dumper(w io.Writer) io.WriteCloser {

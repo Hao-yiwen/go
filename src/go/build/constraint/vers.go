@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package constraint
 
@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// GoVersion returns the minimum Go version implied by a given build expression.
-// If the expression can be satisfied without any Go version tags, GoVersion returns an empty string.
+// GoVersion 返回the minimum Go version implied by a given build expression.
+// If the expression can be satisfied without any Go version tags, GoVersion 返回一个 empty string.
 //
 // For example:
 //
@@ -38,7 +38,7 @@ func GoVersion(x Expr) string {
 	return "go1." + strconv.Itoa(v)
 }
 
-// minVersion returns the minimum Go major version (9 for go1.9)
+// minVersion 返回the minimum Go major version (9 for go1.9)
 // implied by expression z, or if sign < 0, by expression !z.
 func minVersion(z Expr, sign int) int {
 	switch z := z.(type) {
@@ -76,9 +76,9 @@ func minVersion(z Expr, sign int) int {
 	}
 }
 
-// andVersion returns the minimum Go version
+// andVersion 返回the minimum Go version
 // implied by the AND of two minimum Go versions,
-// which is the max of the versions.
+// which 是 max of the versions.
 func andVersion(x, y int) int {
 	if x > y {
 		return x
@@ -86,9 +86,9 @@ func andVersion(x, y int) int {
 	return y
 }
 
-// orVersion returns the minimum Go version
+// orVersion 返回the minimum Go version
 // implied by the OR of two minimum Go versions,
-// which is the min of the versions.
+// which 是 min of the versions.
 func orVersion(x, y int) int {
 	if x < y {
 		return x

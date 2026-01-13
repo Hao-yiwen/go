@@ -1,98 +1,88 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package cipher implements standard block cipher modes that can be wrapped
-// around low-level block cipher implementations.
-// See https://csrc.nist.gov/groups/ST/toolkit/BCM/current_modes.html
-// and NIST Special Publication 800-38A.
+// cipher 包实现了可以包装在底层块密码实现外的标准块密码模式。
+// 参见 https://csrc.nist.gov/groups/ST/toolkit/BCM/current_modes.html
+// 和 NIST 特别出版物 800-38A。
 package cipher
 
-// A Block represents an implementation of block cipher
-// using a given key. It provides the capability to encrypt
-// or decrypt individual blocks. The mode implementations
-// extend that capability to streams of blocks.
+// Block 表示使用给定密钥的块密码实现。
+// 它提供加密或解密单个块的能力。
+// 模式实现将该能力扩展到块流。
 type Block interface {
-	// BlockSize returns the cipher's block size.
+	// BlockSize 返回密码的块大小。
 	BlockSize() int
 
-	// Encrypt encrypts the first block in src into dst.
-	// Dst and src must overlap entirely or not at all.
+	// Encrypt 将 src 中的第一个块加密到 dst。
+	// dst 和 src 必须完全重叠或完全不重叠。
 	Encrypt(dst, src []byte)
 
-	// Decrypt decrypts the first block in src into dst.
-	// Dst and src must overlap entirely or not at all.
+	// Decrypt 将 src 中的第一个块解密到 dst。
+	// dst 和 src 必须完全重叠或完全不重叠。
 	Decrypt(dst, src []byte)
 }
 
-// A Stream represents a stream cipher.
+// Stream 表示一个流密码。
 type Stream interface {
-	// XORKeyStream XORs each byte in the given slice with a byte from the
-	// cipher's key stream. Dst and src must overlap entirely or not at all.
+	// XORKeyStream 将给定切片中的每个字节与密码密钥流中的一个字节进行异或。
+	// dst 和 src 必须完全重叠或完全不重叠。
 	//
-	// If len(dst) < len(src), XORKeyStream should panic. It is acceptable
-	// to pass a dst bigger than src, and in that case, XORKeyStream will
-	// only update dst[:len(src)] and will not touch the rest of dst.
+	// 如果 len(dst) < len(src)，XORKeyStream 应该触发 panic。
+	// 传递比 src 更大的 dst 是可接受的，在这种情况下，XORKeyStream
+	// 只会更新 dst[:len(src)]，不会触及 dst 的其余部分。
 	//
-	// Multiple calls to XORKeyStream behave as if the concatenation of
-	// the src buffers was passed in a single run. That is, Stream
-	// maintains state and does not reset at each XORKeyStream call.
+	// 多次调用 XORKeyStream 的行为就像 src 缓冲区的连接
+	// 是在单次运行中传递的一样。也就是说，Stream 维护状态，
+	// 不会在每次 XORKeyStream 调用时重置。
 	XORKeyStream(dst, src []byte)
 }
 
-// A BlockMode represents a block cipher running in a block-based mode (CBC,
-// ECB etc).
+// BlockMode 表示以基于块的模式（CBC、ECB 等）运行的块密码。
 type BlockMode interface {
-	// BlockSize returns the mode's block size.
+	// BlockSize 返回模式的块大小。
 	BlockSize() int
 
-	// CryptBlocks encrypts or decrypts a number of blocks. The length of
-	// src must be a multiple of the block size. Dst and src must overlap
-	// entirely or not at all.
+	// CryptBlocks 加密或解密多个块。src 的长度必须是块大小的倍数。
+	// dst 和 src 必须完全重叠或完全不重叠。
 	//
-	// If len(dst) < len(src), CryptBlocks should panic. It is acceptable
-	// to pass a dst bigger than src, and in that case, CryptBlocks will
-	// only update dst[:len(src)] and will not touch the rest of dst.
+	// 如果 len(dst) < len(src)，CryptBlocks 应该触发 panic。
+	// 传递比 src 更大的 dst 是可接受的，在这种情况下，CryptBlocks
+	// 只会更新 dst[:len(src)]，不会触及 dst 的其余部分。
 	//
-	// Multiple calls to CryptBlocks behave as if the concatenation of
-	// the src buffers was passed in a single run. That is, BlockMode
-	// maintains state and does not reset at each CryptBlocks call.
+	// 多次调用 CryptBlocks 的行为就像 src 缓冲区的连接
+	// 是在单次运行中传递的一样。也就是说，BlockMode 维护状态，
+	// 不会在每次 CryptBlocks 调用时重置。
 	CryptBlocks(dst, src []byte)
 }
 
-// AEAD is a cipher mode providing authenticated encryption with associated
-// data. For a description of the methodology, see
-// https://en.wikipedia.org/wiki/Authenticated_encryption.
+// AEAD 是一种提供带关联数据的认证加密的密码模式。
+// 有关该方法的描述，请参见
+// https://en.wikipedia.org/wiki/Authenticated_encryption。
 type AEAD interface {
-	// NonceSize returns the size of the nonce that must be passed to Seal
-	// and Open.
+	// NonceSize 返回必须传递给 Seal 和 Open 的随机数大小。
 	NonceSize() int
 
-	// Overhead returns the maximum difference between the lengths of a
-	// plaintext and its ciphertext.
+	// Overhead 返回明文与其密文长度之间的最大差值。
 	Overhead() int
 
-	// Seal encrypts and authenticates plaintext, authenticates the
-	// additional data and appends the result to dst, returning the updated
-	// slice. The nonce must be NonceSize() bytes long and unique for all
-	// time, for a given key.
+	// Seal 加密并认证明文，认证附加数据，并将结果追加到 dst，
+	// 返回更新后的切片。对于给定的密钥，随机数必须是 NonceSize()
+	// 字节长，并且在所有时间内都是唯一的。
 	//
-	// To reuse plaintext's storage for the encrypted output, use plaintext[:0]
-	// as dst. Otherwise, the remaining capacity of dst must not overlap plaintext.
-	// dst and additionalData may not overlap.
+	// 要重用明文的存储空间来存放加密输出，请使用 plaintext[:0] 作为 dst。
+	// 否则，dst 的剩余容量不得与明文重叠。
+	// dst 和 additionalData 不能重叠。
 	Seal(dst, nonce, plaintext, additionalData []byte) []byte
 
-	// Open decrypts and authenticates ciphertext, authenticates the
-	// additional data and, if successful, appends the resulting plaintext
-	// to dst, returning the updated slice. The nonce must be NonceSize()
-	// bytes long and both it and the additional data must match the
-	// value passed to Seal.
+	// Open 解密并认证密文，认证附加数据，如果成功，则将结果明文
+	// 追加到 dst，返回更新后的切片。随机数必须是 NonceSize() 字节长，
+	// 它和附加数据都必须与传递给 Seal 的值匹配。
 	//
-	// To reuse ciphertext's storage for the decrypted output, use ciphertext[:0]
-	// as dst. Otherwise, the remaining capacity of dst must not overlap ciphertext.
-	// dst and additionalData may not overlap.
+	// 要重用密文的存储空间来存放解密输出，请使用 ciphertext[:0] 作为 dst。
+	// 否则，dst 的剩余容量不得与密文重叠。
+	// dst 和 additionalData 不能重叠。
 	//
-	// Even if the function fails, the contents of dst, up to its capacity,
-	// may be overwritten.
+	// 即使函数失败，dst 的内容（直到其容量）也可能被覆盖。
 	Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)
 }

@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -16,7 +16,7 @@ import (
 	"encoding/json/internal/jsonwire"
 )
 
-// NOTE: Token is analogous to v1 json.Token.
+// NOTE: Token 是一个nalogous to v1 json.Token.
 
 const (
 	maxInt64  = math.MaxInt64
@@ -29,14 +29,14 @@ const (
 
 var errInvalidToken = errors.New("invalid jsontext.Token")
 
-// Token represents a lexical JSON token, which may be one of the following:
+// Token 表示a lexical JSON token, which 可能是 one of the following:
 //   - a JSON literal (i.e., null, true, or false)
 //   - a JSON string (e.g., "hello, world!")
 //   - a JSON number (e.g., 123.456)
 //   - a begin or end delimiter for a JSON object (i.e., { or } )
 //   - a begin or end delimiter for a JSON array (i.e., [ or ] )
 //
-// A Token cannot represent entire array or object values, while a [Value] can.
+// 一个Token cannot represent entire array or object values, while a [Value] can.
 // There is no Token to represent commas and colons since
 // these structural tokens can be inferred from the surrounding context.
 type Token struct {
@@ -65,7 +65,7 @@ type Token struct {
 	//	╚═════════════════╩════════════╧════════════╧════════════╝
 	//
 	// Notes:
-	//   - For tokens stored in "raw" form, the num field contains the
+	//   - For tokens stored in "raw" form, the num field 包含 the
 	//     absolute offset determined by raw.previousOffsetStart().
 	//     The buffer itself is stored in raw.previousBuffer().
 	//   - JSON literals and structural characters are always in the "raw" form.
@@ -74,17 +74,17 @@ type Token struct {
 	//     have ambiguous representation. Thus, they are always represented
 	//     in the "raw" form.
 
-	// raw contains a reference to the raw decode buffer.
+	// raw 包含 a reference to the raw decode buffer.
 	// If non-nil, then its value takes precedence over str and num.
 	// It is only valid if num == raw.previousOffsetStart().
 	raw *decodeBuffer
 
-	// str is the unescaped JSON string if num is zero.
-	// Otherwise, it is "f", "i", or "u" if num should be interpreted
+	// str 是 unescaped JSON string if num is zero.
+	// Otherwise, it is "f", "i", or "u" if num 应该是 interpreted
 	// as a float64, int64, or uint64, respectively.
 	str string
 
-	// num is a float64, int64, or uint64 stored as a uint64 value.
+	// num 是一个 float64, int64, or uint64 stored as a uint64 value.
 	// It is non-zero for any JSON number in the "exact" form.
 	num uint64
 }
@@ -122,8 +122,8 @@ func Bool(b bool) Token {
 }
 
 // String constructs a Token representing a JSON string.
-// The provided string should contain valid UTF-8, otherwise invalid characters
-// may be mangled as the Unicode replacement character.
+// The provided string should contain valid UTF-8, 否则 invalid characters
+// 可能是 mangled as the Unicode replacement character.
 func String(s string) Token {
 	if len(s) == 0 {
 		return zeroString
@@ -132,7 +132,7 @@ func String(s string) Token {
 }
 
 // Float constructs a Token representing a JSON number.
-// The values NaN, +Inf, and -Inf will be represented
+// The values NaN, +Inf, and -Inf 将是 represented
 // as a JSON string with the values "NaN", "Infinity", and "-Infinity".
 func Float(n float64) Token {
 	switch {
@@ -164,7 +164,7 @@ func Uint(n uint64) Token {
 	return Token{str: "u", num: uint64(n)}
 }
 
-// Clone makes a copy of the Token such that its value remains valid
+// Clone 使 a copy of the Token such that its value remains valid
 // even after a subsequent [Decoder.Read] call.
 func (t Token) Clone() Token {
 	// TODO: Allow caller to avoid any allocations?
@@ -198,8 +198,8 @@ func (t Token) Clone() Token {
 	return t
 }
 
-// Bool returns the value for a JSON boolean.
-// It panics if the token kind is not a JSON boolean.
+// Bool 返回the value for a JSON boolean.
+// It panics 如果 token kind is not a JSON boolean.
 func (t Token) Bool() bool {
 	switch t.raw {
 	case True.raw:
@@ -232,12 +232,12 @@ func (t Token) appendString(dst []byte, flags *jsonflags.Flags) ([]byte, error) 
 	panic("invalid JSON token kind: " + t.Kind().String())
 }
 
-// String returns the unescaped string value for a JSON string.
-// For other JSON kinds, this returns the raw JSON representation.
+// String 返回the unescaped string value for a JSON string.
+// For other JSON kinds, this 返回 raw JSON representation.
 func (t Token) String() string {
 	// This is inlinable to take advantage of "function outlining".
-	// This avoids an allocation for the string(b) conversion
-	// if the caller does not use the string in an escaping manner.
+	// Th是一个voids an allocation for the string(b) conversion
+	// 如果 caller does not use the string in an escaping manner.
 	// See https://blog.filippo.io/efficient-go-apis-with-the-inliner/
 	s, b := t.string()
 	if len(b) > 0 {
@@ -301,8 +301,8 @@ func (t Token) appendNumber(dst []byte, flags *jsonflags.Flags) ([]byte, error) 
 	panic("invalid JSON token kind: " + t.Kind().String())
 }
 
-// Float returns the floating-point value for a JSON number.
-// It returns a NaN, +Inf, or -Inf value for any JSON string
+// Float 返回the floating-point value for a JSON number.
+// It 返回a NaN, +Inf, or -Inf value for any JSON string
 // with the values "NaN", "Infinity", or "-Infinity".
 // It panics for all other cases.
 func (t Token) Float() float64 {
@@ -343,11 +343,11 @@ func (t Token) Float() float64 {
 	panic("invalid JSON token kind: " + t.Kind().String())
 }
 
-// Int returns the signed integer value for a JSON number.
+// Int 返回the signed integer value for a JSON number.
 // The fractional component of any number is ignored (truncation toward zero).
-// Any number beyond the representation of an int64 will be saturated
+// Any number beyond the representation of an int64 将是 saturated
 // to the closest representable value.
-// It panics if the token kind is not a JSON number.
+// It panics 如果 token kind is not a JSON number.
 func (t Token) Int() int64 {
 	if raw := t.raw; raw != nil {
 		// Handle raw integer value.
@@ -385,7 +385,7 @@ func (t Token) Int() int64 {
 		}
 	}
 
-	// Handle JSON number that is a floating-point value.
+	// Handle JSON number that 是一个 floating-point value.
 	if t.Kind() == '0' {
 		switch fv := t.Float(); {
 		case fv >= maxInt64:
@@ -400,14 +400,14 @@ func (t Token) Int() int64 {
 	panic("invalid JSON token kind: " + t.Kind().String())
 }
 
-// Uint returns the unsigned integer value for a JSON number.
+// Uint 返回the unsigned integer value for a JSON number.
 // The fractional component of any number is ignored (truncation toward zero).
-// Any number beyond the representation of an uint64 will be saturated
+// Any number beyond the representation of an uint64 将是 saturated
 // to the closest representable value.
-// It panics if the token kind is not a JSON number.
+// It panics 如果 token kind is not a JSON number.
 func (t Token) Uint() uint64 {
-	// NOTE: This accessor returns 0 for any negative JSON number,
-	// which might be surprising, but is at least consistent with the behavior
+	// NOTE: Th是一个ccessor returns 0 for any negative JSON number,
+	// which might be surprising, but 是一个t least consistent with the behavior
 	// of saturating out-of-bounds numbers to the closest representable number.
 
 	if raw := t.raw; raw != nil {
@@ -439,7 +439,7 @@ func (t Token) Uint() uint64 {
 		}
 	}
 
-	// Handle JSON number that is a floating-point value.
+	// Handle JSON number that 是一个 floating-point value.
 	if t.Kind() == '0' {
 		switch fv := t.Float(); {
 		case fv >= maxUint64:
@@ -454,7 +454,7 @@ func (t Token) Uint() uint64 {
 	panic("invalid JSON token kind: " + t.Kind().String())
 }
 
-// Kind returns the token kind.
+// Kind 返回the token kind.
 func (t Token) Kind() Kind {
 	switch {
 	case t.raw != nil:
@@ -472,9 +472,9 @@ func (t Token) Kind() Kind {
 	}
 }
 
-// A Kind represents the kind of a JSON token.
+// 一个Kind represents the kind of a JSON token.
 //
-// Kind represents each possible JSON token kind with a single byte,
+// Kind 表示each possible JSON token kind with a single byte,
 // which is conveniently the first byte of that kind's grammar
 // with the restriction that numbers always be represented with '0'.
 type Kind byte
@@ -547,6 +547,6 @@ var normKind = [256]Kind{
 // normalize coalesces all possible starting characters of a number as just '0',
 // and converts all invalid kinds to 0.
 func (k Kind) normalize() Kind {
-	// A lookup table keeps the inlining cost as low as possible.
+	// 一个lookup table keeps the inlining cost as low as possible.
 	return normKind[k]
 }

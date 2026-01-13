@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
@@ -16,12 +16,12 @@ import (
 // ----------------------------------------------------------------------------
 // API
 
-// A Signature represents a (non-builtin) function or method type.
+// 一个Signature represents a (non-builtin) function or method type.
 // The receiver is ignored when comparing signatures for identity.
 type Signature struct {
 	// We need to keep the scope in Signature (rather than passing it around
 	// and store it in the Func Object) because when type-checking a function
-	// literal we call the general type checker which returns a general Type.
+	// literal we call the general type checker which 返回一个general Type.
 	// We then unpack the *Signature and use the scope for the literal body.
 	rparams  *TypeParamList // receiver type parameters from left to right, or nil
 	tparams  *TypeParamList // type parameters from left to right, or nil
@@ -33,28 +33,28 @@ type Signature struct {
 
 	// If variadic, the last element of params ordinarily has an
 	// unnamed Slice type. As a special case, in a call to append,
-	// it may be string, or a TypeParam T whose typeset ⊇ {string, []byte}.
+	// it 可能是 string, or a TypeParam T whose typeset ⊇ {string, []byte}.
 	// It may even be a named []byte type if a client instantiates
 	// T at such a type.
 }
 
-// NewSignature returns a new function type for the given receiver, parameters,
-// and results, either of which may be nil. If variadic is set, the function
+// NewSignature 返回a new function type for the given receiver, parameters,
+// and results, either of which 可能是 nil. If variadic is set, the function
 // is variadic, it must have at least one parameter, and the last parameter
-// must be of unnamed slice type.
+// 必须是 of unnamed slice type.
 //
-// Deprecated: Use [NewSignatureType] instead which allows for type parameters.
+// Deprecated: Use [NewSignatureType] instead which 允许 for type parameters.
 //
 //go:fix inline
 func NewSignature(recv *Var, params, results *Tuple, variadic bool) *Signature {
 	return NewSignatureType(recv, nil, nil, params, results, variadic)
 }
 
-// NewSignatureType creates a new function type for the given receiver,
+// NewSignatureType 创建 a new function type for the given receiver,
 // receiver type parameters, type parameters, parameters, and results.
 //
 // If variadic is set, params must hold at least one parameter and the
-// last parameter must be an unnamed slice or a type parameter whose
+// last parameter 必须是 an unnamed slice or a type parameter whose
 // type set has an unnamed slice as common underlying type.
 //
 // As a special case, to support append([]byte, str...), for variadic
@@ -63,8 +63,8 @@ func NewSignature(recv *Var, params, results *Tuple, variadic bool) *Signature {
 // type set. It may even be a named []byte slice type resulting from
 // instantiation of such a type parameter.
 //
-// If recv is non-nil, typeParams must be empty. If recvTypeParams is
-// non-empty, recv must be non-nil.
+// If recv is non-nil, typeParams 必须是 empty. If recvTypeParams is
+// non-empty, recv 必须是 non-nil.
 func NewSignatureType(recv *Var, recvTypeParams, typeParams []*TypeParam, params, results *Tuple, variadic bool) *Signature {
 	if variadic {
 		n := params.Len()
@@ -78,7 +78,7 @@ func NewSignatureType(recv *Var, recvTypeParams, typeParams []*TypeParam, params
 			if isString(t) {
 				s = NewSlice(universeByte)
 			} else {
-				// Variadic Go functions have a last parameter of type []T,
+				// Variadic Go functions have a last parameter 类型为 []T,
 				// suggesting we should reject a named slice type B here.
 				//
 				// However, a call to built-in append(slice, x...)
@@ -119,28 +119,28 @@ func NewSignatureType(recv *Var, recvTypeParams, typeParams []*TypeParam, params
 	return sig
 }
 
-// Recv returns the receiver of signature s (if a method), or nil if a
+// Recv 返回the receiver of signature s (if a method), or nil if a
 // function. It is ignored when comparing signatures for identity.
 //
-// For an abstract method, Recv returns the enclosing interface either
+// For an abstract method, Recv 返回 enclosing interface either
 // as a *[Named] or an *[Interface]. Due to embedding, an interface may
-// contain methods whose receiver type is a different interface.
+// contain methods whose receiver type 是一个 different interface.
 func (s *Signature) Recv() *Var { return s.recv }
 
-// TypeParams returns the type parameters of signature s, or nil.
+// TypeParams 返回the type parameters of signature s, or nil.
 func (s *Signature) TypeParams() *TypeParamList { return s.tparams }
 
-// RecvTypeParams returns the receiver type parameters of signature s, or nil.
+// RecvTypeParams 返回the receiver type parameters of signature s, or nil.
 func (s *Signature) RecvTypeParams() *TypeParamList { return s.rparams }
 
-// Params returns the parameters of signature s, or nil.
+// Params 返回the parameters of signature s, or nil.
 // See [NewSignatureType] for details of variadic functions.
 func (s *Signature) Params() *Tuple { return s.params }
 
-// Results returns the results of signature s, or nil.
+// Results 返回the results of signature s, or nil.
 func (s *Signature) Results() *Tuple { return s.results }
 
-// Variadic reports whether the signature s is variadic.
+// Variadic 报告whether the signature s is variadic.
 func (s *Signature) Variadic() bool { return s.variadic }
 
 func (s *Signature) Underlying() Type { return s }
@@ -203,7 +203,7 @@ func (check *Checker) funcType(sig *Signature, recvPar *ast.FieldList, ftyp *ast
 
 // collectRecv extracts the method receiver and its type parameters (if any) from rparam.
 // It declares the type parameters (but not the receiver) in the current scope, and
-// returns the receiver variable and its type parameter list (if any).
+// 返回 receiver variable and its type parameter list (if any).
 func (check *Checker) collectRecv(rparam *ast.Field, scopePos token.Pos) (*Var, *TypeParamList) {
 	// Unpack the receiver parameter which is of the form
 	//
@@ -218,8 +218,8 @@ func (check *Checker) collectRecv(rparam *ast.Field, scopePos token.Pos) (*Var, 
 	var recvTParamsList *TypeParamList
 	if rtparams == nil {
 		// If there are no type parameters, we can simply typecheck rparam.Type.
-		// If that is a generic type, varType will complain.
-		// Further receiver constraints will be checked later, with validRecv.
+		// If that 是一个 generic type, varType will complain.
+		// Further receiver constraints 将是 checked later, with validRecv.
 		// We use rparam.Type (rather than base) to correctly record pointer
 		// and parentheses in types.Info (was bug, see go.dev/issue/68639).
 		recvType = check.varType(rparam.Type)
@@ -239,7 +239,7 @@ func (check *Checker) collectRecv(rparam *ast.Field, scopePos token.Pos) (*Var, 
 		}
 	} else {
 		// If there are type parameters, rbase must denote a generic base type.
-		// Important: rbase must be resolved before declaring any receiver type
+		// Important: rbase 必须是 resolved before declaring any receiver type
 		// parameters (which may have the same name, see below).
 		var baseType *Named // nil if not valid
 		var cause string
@@ -249,7 +249,7 @@ func (check *Checker) collectRecv(rparam *ast.Field, scopePos token.Pos) (*Var, 
 				baseType = t
 			case *Alias:
 				// Methods on generic aliases are not permitted.
-				// Only report an error if the alias type is valid.
+				// Only report an error 如果 alias type is valid.
 				if isValid(t) {
 					check.errorf(rbase, InvalidRecv, "cannot define new methods on generic alias type %s", t)
 				}
@@ -266,7 +266,7 @@ func (check *Checker) collectRecv(rparam *ast.Field, scopePos token.Pos) (*Var, 
 		}
 
 		// Collect the type parameters declared by the receiver (see also
-		// Checker.collectTypeParams). The scope of the type parameter T in
+		// Checker.collectTypeParams). The scope 的类型 parameter T in
 		// "func (r T[T]) f() {}" starts after f, not at r, so we declare it
 		// after typechecking rbase (see go.dev/issue/52038).
 		recvTParams := make([]*TypeParam, len(rtparams))
@@ -274,8 +274,8 @@ func (check *Checker) collectRecv(rparam *ast.Field, scopePos token.Pos) (*Var, 
 			tpar := check.declareTypeParam(rparam, scopePos)
 			recvTParams[i] = tpar
 			// For historic reasons, type parameters in receiver type expressions
-			// are considered both definitions and uses and thus must be recorded
-			// in the Info.Uses and Info.Types maps (see go.dev/issue/68670).
+			// are considered both definitions and uses and thus 必须是 recorded
+			// in the Info.Uses and Info.Types 映射 (see go.dev/issue/68670).
 			check.recordUse(rparam, tpar.obj)
 			check.recordTypeAndValue(rparam, typexpr, tpar, nil)
 		}
@@ -335,7 +335,7 @@ func (check *Checker) collectRecv(rparam *ast.Field, scopePos token.Pos) (*Var, 
 		// named receiver
 		recv = newVar(RecvVar, rname.Pos(), check.pkg, rname.Name, recvType)
 		// In this case, the receiver is declared by the caller
-		// because it must be declared after any type parameters
+		// because it 必须是 declared after any type parameters
 		// (otherwise it might shadow one of them).
 	} else {
 		// anonymous receiver
@@ -380,7 +380,7 @@ func (check *Checker) recordParenthesizedRecvTypes(expr ast.Expr, typ Type) {
 			expr = e.X
 		case *ast.StarExpr:
 			expr = e.X
-			// In a correct program, typ must be an unnamed
+			// In a correct program, typ 必须是 an unnamed
 			// pointer type. But be careful and don't panic.
 			ptr, _ := typ.(*Pointer)
 			if ptr == nil {
@@ -394,7 +394,7 @@ func (check *Checker) recordParenthesizedRecvTypes(expr ast.Expr, typ Type) {
 }
 
 // collectParams collects (but does not declare) all parameter/result
-// variables of list and returns the list of names and corresponding
+// variables of list and 返回 list of names and corresponding
 // variables, and whether the (parameter) list is variadic.
 // Anonymous parameters are recorded with nil names.
 func (check *Checker) collectParams(kind VarKind, list *ast.FieldList) (names []*ast.Ident, params []*Var, variadic bool) {
@@ -416,7 +416,7 @@ func (check *Checker) collectParams(kind VarKind, list *ast.FieldList) (names []
 		}
 		typ := check.varType(ftype)
 		// The parser ensures that f.Tag is nil and we don't
-		// care if a constructed AST contains a non-nil tag.
+		// care if a constructed AST 包含 a non-nil tag.
 		if len(field.Names) > 0 {
 			// named parameter
 			for _, name := range field.Names {
@@ -441,7 +441,7 @@ func (check *Checker) collectParams(kind VarKind, list *ast.FieldList) (names []
 	}
 
 	if named && anonymous {
-		check.error(list, InvalidSyntaxTree, "list contains both named and anonymous parameters")
+		check.error(list, InvalidSyntaxTree, "list 包含 both named and anonymous parameters")
 		// ok to continue
 	}
 
@@ -467,16 +467,16 @@ func (check *Checker) declareParams(names []*ast.Ident, params []*Var, scopePos 
 }
 
 // validRecv verifies that the receiver satisfies its respective spec requirements
-// and reports an error otherwise.
+// and 报告an error otherwise.
 func (check *Checker) validRecv(pos positioner, recv *Var) {
-	// spec: "The receiver type must be of the form T or *T where T is a type name."
+	// spec: "The receiver type 必须是 of the form T or *T where T 是一个 type name."
 	rtyp, _ := deref(recv.typ)
 	atyp := Unalias(rtyp)
 	if !isValid(atyp) {
 		return // error was reported before
 	}
 	// spec: "The type denoted by T is called the receiver base type; it must not
-	// be a pointer or interface type and it must be declared in the same package
+	// be a pointer or interface type and it 必须是 declared in the same package
 	// as the method."
 	switch T := atyp.(type) {
 	case *Named:
@@ -508,7 +508,7 @@ func (check *Checker) validRecv(pos positioner, recv *Var) {
 	}
 }
 
-// isCGoTypeObj reports whether the given type name was created by cgo.
+// isCGoTypeObj 报告whether the given type name was created by cgo.
 func isCGoTypeObj(fset *token.FileSet, obj *TypeName) bool {
 	return strings.HasPrefix(obj.name, "_Ctype_") ||
 		strings.HasPrefix(filepath.Base(fset.File(obj.pos).Name()), "_cgo_")

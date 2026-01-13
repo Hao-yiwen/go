@@ -1,12 +1,11 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// DWARF debug information entry parser.
-// An entry is a sequence of data items of a given format.
-// The first word in the entry is an index into what DWARF
-// calls the ``abbreviation table.''  An abbreviation is really
-// just a type descriptor: it's an array of attribute tag/value format pairs.
+// DWARF 调试信息条目解析器。
+// 条目是给定格式的数据项序列。
+// 条目中的第一个字是 DWARF 所谓的"缩写表"的索引。
+// 缩写实际上只是一个类型描述符：它是属性标签/值格式对的数组。
 
 package dwarf
 
@@ -17,7 +16,7 @@ import (
 	"strconv"
 )
 
-// a single entry's description: a sequence of attributes
+// 单个条目的描述：属性序列
 type abbrev struct {
 	tag      Tag
 	children bool
@@ -28,14 +27,13 @@ type afield struct {
 	attr  Attr
 	fmt   format
 	class Class
-	val   int64 // for formImplicitConst
+	val   int64 // 用于 formImplicitConst
 }
 
-// a map from entry format ids to their descriptions
+// 从条目格式 ID 到其描述的映射
 type abbrevTable map[uint32]abbrev
 
-// parseAbbrev returns the abbreviation table that starts at byte off
-// in the .debug_abbrev section.
+// parseAbbrev 返回从 .debug_abbrev 节中字节偏移 off 处开始的缩写表。
 func (d *Data) parseAbbrev(off uint64, vers int) (abbrevTable, error) {
 	if m, ok := d.abbrevCache[off]; ok {
 		return m, nil
@@ -49,19 +47,18 @@ func (d *Data) parseAbbrev(off uint64, vers int) (abbrevTable, error) {
 	}
 	b := makeBuf(d, unknownFormat{}, "abbrev", 0, data)
 
-	// Error handling is simplified by the buf getters
-	// returning an endless stream of 0s after an error.
+	// 错误处理通过 buf 的 getter 在错误后返回无尽的 0 流来简化。
 	m := make(abbrevTable)
 	for {
-		// Table ends with id == 0.
+		// 表以 id == 0 结束。
 		id := uint32(b.uint())
 		if id == 0 {
 			break
 		}
 
-		// Walk over attributes, counting.
+		// 遍历属性，进行计数。
 		n := 0
-		b1 := b // Read from copy of b.
+		b1 := b // 从 b 的副本读取。
 		b1.uint()
 		b1.uint8()
 		for {
@@ -79,7 +76,7 @@ func (d *Data) parseAbbrev(off uint64, vers int) (abbrevTable, error) {
 			return nil, b1.err
 		}
 
-		// Walk over attributes again, this time writing them down.
+		// 再次遍历属性，这次记录它们。
 		var a abbrev
 		a.tag = Tag(b.uint())
 		a.children = b.uint8() != 0
@@ -104,9 +101,8 @@ func (d *Data) parseAbbrev(off uint64, vers int) (abbrevTable, error) {
 	return m, nil
 }
 
-// attrIsExprloc indicates attributes that allow exprloc values that
-// are encoded as block values in DWARF 2 and 3. See DWARF 4, Figure
-// 20.
+// attrIsExprloc 指示在 DWARF 2 和 3 中编码为块值的允许 exprloc 值的属性。
+// 参见 DWARF 4，图 20。
 var attrIsExprloc = map[Attr]bool{
 	AttrLocation:      true,
 	AttrByteSize:      true,
@@ -130,8 +126,8 @@ var attrIsExprloc = map[Attr]bool{
 	AttrStride:        true,
 }
 
-// attrPtrClass indicates the *ptr class of attributes that have
-// encoding formSecOffset in DWARF 4 or formData* in DWARF 2 and 3.
+// attrPtrClass 指示在 DWARF 4 中具有 formSecOffset 编码或在 DWARF 2 和 3 中
+// 具有 formData* 编码的属性的 *ptr 类。
 var attrPtrClass = map[Attr]Class{
 	AttrLocation:      ClassLocListPtr,
 	AttrStmtList:      ClassLinePtr,
@@ -146,16 +142,15 @@ var attrPtrClass = map[Attr]Class{
 	AttrUseLocation:   ClassLocListPtr,
 	AttrVtableElemLoc: ClassLocListPtr,
 	AttrRanges:        ClassRangeListPtr,
-	// The following are new in DWARF 5.
+	// 以下是 DWARF 5 中新增的。
 	AttrStrOffsetsBase: ClassStrOffsetsPtr,
 	AttrAddrBase:       ClassAddrPtr,
 	AttrRnglistsBase:   ClassRngListsPtr,
 	AttrLoclistsBase:   ClassLocListPtr,
 }
 
-// formToClass returns the DWARF 4 Class for the given form. If the
-// DWARF version is less then 4, it will disambiguate some forms
-// depending on the attribute.
+// formToClass 返回给定格式的 DWARF 4 Class。如果 DWARF 版本低于 4，
+// 它将根据属性消除某些格式的歧义。
 func formToClass(form format, attr Attr, vers int, b *buf) Class {
 	switch form {
 	default:
@@ -169,23 +164,19 @@ func formToClass(form format, attr Attr, vers int, b *buf) Class {
 		return ClassAddress
 
 	case formDwarfBlock1, formDwarfBlock2, formDwarfBlock4, formDwarfBlock:
-		// In DWARF 2 and 3, ClassExprLoc was encoded as a
-		// block. DWARF 4 distinguishes ClassBlock and
-		// ClassExprLoc, but there are no attributes that can
-		// be both, so we also promote ClassBlock values in
-		// DWARF 4 that should be ClassExprLoc in case
-		// producers get this wrong.
+		// 在 DWARF 2 和 3 中，ClassExprLoc 被编码为块。
+		// DWARF 4 区分 ClassBlock 和 ClassExprLoc，但没有属性可以同时是两者，
+		// 所以我们也会将 DWARF 4 中应该是 ClassExprLoc 的 ClassBlock 值提升，
+		// 以防生产者搞错。
 		if attrIsExprloc[attr] {
 			return ClassExprLoc
 		}
 		return ClassBlock
 
 	case formData1, formData2, formData4, formData8, formSdata, formUdata, formData16, formImplicitConst:
-		// In DWARF 2 and 3, ClassPtr was encoded as a
-		// constant. Unlike ClassExprLoc/ClassBlock, some
-		// DWARF 4 attributes need to distinguish Class*Ptr
-		// from ClassConstant, so we only do this promotion
-		// for versions 2 and 3.
+		// 在 DWARF 2 和 3 中，ClassPtr 被编码为常量。
+		// 与 ClassExprLoc/ClassBlock 不同，某些 DWARF 4 属性需要区分
+		// Class*Ptr 和 ClassConstant，所以我们只对版本 2 和 3 进行此提升。
 		if class, ok := attrPtrClass[attr]; vers < 4 && ok {
 			return class
 		}
@@ -204,9 +195,8 @@ func formToClass(form format, attr Attr, vers int, b *buf) Class {
 		return ClassString
 
 	case formSecOffset:
-		// DWARF 4 defines four *ptr classes, but doesn't
-		// distinguish them in the encoding. Disambiguate
-		// these classes using the attribute.
+		// DWARF 4 定义了四个 *ptr 类，但在编码中不区分它们。
+		// 使用属性来消除这些类的歧义。
 		if class, ok := attrPtrClass[attr]; ok {
 			return class
 		}
@@ -229,20 +219,20 @@ func formToClass(form format, attr Attr, vers int, b *buf) Class {
 	}
 }
 
-// An Entry is a sequence of attribute/value pairs.
+// Entry 是属性/值对的序列。
 type Entry struct {
-	Offset   Offset // offset of Entry in DWARF info
-	Tag      Tag    // tag (kind of Entry)
-	Children bool   // whether Entry is followed by children
+	Offset   Offset // Entry 在 DWARF info 中的偏移量
+	Tag      Tag    // 标签（Entry 的类型）
+	Children bool   // Entry 后面是否跟有子项
 	Field    []Field
 }
 
-// A Field is a single attribute/value pair in an [Entry].
+// Field 是 [Entry] 中的单个属性/值对。
 //
-// A value can be one of several "attribute classes" defined by DWARF.
-// The Go types corresponding to each class are:
+// 值可以是 DWARF 定义的几种"属性类"之一。
+// 每个类对应的 Go 类型如下：
 //
-//	DWARF class       Go type        Class
+//	DWARF 类           Go 类型         Class
 //	-----------       -------        -----
 //	address           uint64         ClassAddress
 //	block             []byte         ClassBlock
@@ -258,115 +248,90 @@ type Entry struct {
 //	macptr            int64          ClassMacPtr
 //	rangelistptr      int64          ClassRangeListPtr
 //
-// For unrecognized or vendor-defined attributes, [Class] may be
-// [ClassUnknown].
+// 对于无法识别或供应商定义的属性，[Class] 可能是 [ClassUnknown]。
 type Field struct {
 	Attr  Attr
 	Val   any
 	Class Class
 }
 
-// A Class is the DWARF 4 class of an attribute value.
+// Class 是属性值的 DWARF 4 类。
 //
-// In general, a given attribute's value may take on one of several
-// possible classes defined by DWARF, each of which leads to a
-// slightly different interpretation of the attribute.
+// 通常，给定属性的值可以采用 DWARF 定义的几种可能类之一，
+// 每种类都会导致对属性的略微不同的解释。
 //
-// DWARF version 4 distinguishes attribute value classes more finely
-// than previous versions of DWARF. The reader will disambiguate
-// coarser classes from earlier versions of DWARF into the appropriate
-// DWARF 4 class. For example, DWARF 2 uses "constant" for constants
-// as well as all types of section offsets, but the reader will
-// canonicalize attributes in DWARF 2 files that refer to section
-// offsets to one of the Class*Ptr classes, even though these classes
-// were only defined in DWARF 3.
+// DWARF 版本 4 比以前的 DWARF 版本更精细地区分属性值类。
+// 读取器将把早期 DWARF 版本中较粗糙的类消除歧义为适当的 DWARF 4 类。
+// 例如，DWARF 2 对常量和所有类型的节偏移量都使用"constant"，
+// 但读取器会将 DWARF 2 文件中引用节偏移量的属性规范化为 Class*Ptr 类之一，
+// 即使这些类只在 DWARF 3 中定义。
 type Class int
 
 const (
-	// ClassUnknown represents values of unknown DWARF class.
+	// ClassUnknown 表示未知 DWARF 类的值。
 	ClassUnknown Class = iota
 
-	// ClassAddress represents values of type uint64 that are
-	// addresses on the target machine.
+	// ClassAddress 表示 uint64 类型的值，这些值是目标机器上的地址。
 	ClassAddress
 
-	// ClassBlock represents values of type []byte whose
-	// interpretation depends on the attribute.
+	// ClassBlock 表示 []byte 类型的值，其解释取决于属性。
 	ClassBlock
 
-	// ClassConstant represents values of type int64 that are
-	// constants. The interpretation of this constant depends on
-	// the attribute.
+	// ClassConstant 表示 int64 类型的常量值。此常量的解释取决于属性。
 	ClassConstant
 
-	// ClassExprLoc represents values of type []byte that contain
-	// an encoded DWARF expression or location description.
+	// ClassExprLoc 表示包含编码的 DWARF 表达式或位置描述的 []byte 类型值。
 	ClassExprLoc
 
-	// ClassFlag represents values of type bool.
+	// ClassFlag 表示 bool 类型的值。
 	ClassFlag
 
-	// ClassLinePtr represents values that are an int64 offset
-	// into the "line" section.
+	// ClassLinePtr 表示 "line" 节中 int64 偏移量的值。
 	ClassLinePtr
 
-	// ClassLocListPtr represents values that are an int64 offset
-	// into the "loclist" section.
+	// ClassLocListPtr 表示 "loclist" 节中 int64 偏移量的值。
 	ClassLocListPtr
 
-	// ClassMacPtr represents values that are an int64 offset into
-	// the "mac" section.
+	// ClassMacPtr 表示 "mac" 节中 int64 偏移量的值。
 	ClassMacPtr
 
-	// ClassRangeListPtr represents values that are an int64 offset into
-	// the "rangelist" section.
+	// ClassRangeListPtr 表示 "rangelist" 节中 int64 偏移量的值。
 	ClassRangeListPtr
 
-	// ClassReference represents values that are an Offset offset
-	// of an Entry in the info section (for use with Reader.Seek).
-	// The DWARF specification combines ClassReference and
-	// ClassReferenceSig into class "reference".
+	// ClassReference 表示 info 节中 Entry 的 Offset 偏移量值
+	// （用于 Reader.Seek）。DWARF 规范将 ClassReference 和
+	// ClassReferenceSig 合并为 "reference" 类。
 	ClassReference
 
-	// ClassReferenceSig represents values that are a uint64 type
-	// signature referencing a type Entry.
+	// ClassReferenceSig 表示引用类型 Entry 的 uint64 类型签名值。
 	ClassReferenceSig
 
-	// ClassString represents values that are strings. If the
-	// compilation unit specifies the AttrUseUTF8 flag (strongly
-	// recommended), the string value will be encoded in UTF-8.
-	// Otherwise, the encoding is unspecified.
+	// ClassString 表示字符串值。如果编译单元指定了 AttrUseUTF8 标志
+	// （强烈推荐），字符串值将以 UTF-8 编码。否则，编码未指定。
 	ClassString
 
-	// ClassReferenceAlt represents values of type int64 that are
-	// an offset into the DWARF "info" section of an alternate
-	// object file.
+	// ClassReferenceAlt 表示 int64 类型的值，是备用目标文件
+	// DWARF "info" 节中的偏移量。
 	ClassReferenceAlt
 
-	// ClassStringAlt represents values of type int64 that are an
-	// offset into the DWARF string section of an alternate object
-	// file.
+	// ClassStringAlt 表示 int64 类型的值，是备用目标文件
+	// DWARF 字符串节中的偏移量。
 	ClassStringAlt
 
-	// ClassAddrPtr represents values that are an int64 offset
-	// into the "addr" section.
+	// ClassAddrPtr 表示 "addr" 节中 int64 偏移量的值。
 	ClassAddrPtr
 
-	// ClassLocList represents values that are an int64 offset
-	// into the "loclists" section.
+	// ClassLocList 表示 "loclists" 节中 int64 偏移量的值。
 	ClassLocList
 
-	// ClassRngList represents values that are a uint64 offset
-	// from the base of the "rnglists" section.
+	// ClassRngList 表示从 "rnglists" 节基址起的 uint64 偏移量值。
 	ClassRngList
 
-	// ClassRngListsPtr represents values that are an int64 offset
-	// into the "rnglists" section. These are used as the base for
-	// ClassRngList values.
+	// ClassRngListsPtr 表示 "rnglists" 节中 int64 偏移量的值。
+	// 这些用作 ClassRngList 值的基址。
 	ClassRngListsPtr
 
-	// ClassStrOffsetsPtr represents values that are an int64
-	// offset into the "str_offsets" section.
+	// ClassStrOffsetsPtr 表示 "str_offsets" 节中 int64 偏移量的值。
 	ClassStrOffsetsPtr
 )
 
@@ -376,11 +341,9 @@ func (i Class) GoString() string {
 	return "dwarf." + i.String()
 }
 
-// Val returns the value associated with attribute [Attr] in [Entry],
-// or nil if there is no such attribute.
+// Val 返回 [Entry] 中与属性 [Attr] 关联的值，如果没有此属性则返回 nil。
 //
-// A common idiom is to merge the check for nil return with
-// the check that the value has the expected dynamic type, as in:
+// 常见的惯用法是将 nil 返回检查与值具有预期动态类型的检查合并，如：
 //
 //	v, ok := e.Val(AttrSibling).(int64)
 func (e *Entry) Val(a Attr) any {
@@ -390,8 +353,7 @@ func (e *Entry) Val(a Attr) any {
 	return nil
 }
 
-// AttrField returns the [Field] associated with attribute [Attr] in
-// [Entry], or nil if there is no such attribute.
+// AttrField 返回 [Entry] 中与属性 [Attr] 关联的 [Field]，如果没有此属性则返回 nil。
 func (e *Entry) AttrField(a Attr) *Field {
 	for i, f := range e.Field {
 		if f.Attr == a {
@@ -401,12 +363,11 @@ func (e *Entry) AttrField(a Attr) *Field {
 	return nil
 }
 
-// An Offset represents the location of an [Entry] within the DWARF info.
-// (See [Reader.Seek].)
+// Offset 表示 [Entry] 在 DWARF info 中的位置。
+// （参见 [Reader.Seek]。）
 type Offset uint32
 
-// Entry reads a single entry from buf, decoding
-// according to the given abbreviation table.
+// entry 从 buf 读取单个条目，根据给定的缩写表进行解码。
 func (b *buf) entry(cu *Entry, u *unit) *Entry {
 	atab, ubase, vers := u.atable, u.base, u.vers
 	off := b.off
@@ -498,7 +459,7 @@ func (b *buf) entry(cu *Entry, u *unit) *Entry {
 		default:
 			b.error("unknown entry attr format 0x" + strconv.FormatInt(int64(fmt), 16))
 
-		// address
+		// 地址
 		case formAddr:
 			val = b.addr()
 		case formAddrx, formAddrx1, formAddrx2, formAddrx3, formAddrx4:
@@ -532,7 +493,7 @@ func (b *buf) entry(cu *Entry, u *unit) *Entry {
 				return nil
 			}
 
-		// block
+		// 块
 		case formDwarfBlock1:
 			val = b.bytes(int(b.uint8()))
 		case formDwarfBlock2:
@@ -542,7 +503,7 @@ func (b *buf) entry(cu *Entry, u *unit) *Entry {
 		case formDwarfBlock:
 			val = b.bytes(int(b.uint()))
 
-		// constant
+		// 常量
 		case formData1:
 			val = int64(b.uint8())
 		case formData2:
@@ -560,16 +521,15 @@ func (b *buf) entry(cu *Entry, u *unit) *Entry {
 		case formImplicitConst:
 			val = a.field[i].val
 
-		// flag
+		// 标志
 		case formFlag:
 			val = b.uint8() == 1
-		// New in DWARF 4.
+		// DWARF 4 中新增。
 		case formFlagPresent:
-			// The attribute is implicitly indicated as present, and no value is
-			// encoded in the debugging information entry itself.
+			// 属性被隐式指示为存在，且调试信息条目本身中没有编码值。
 			val = true
 
-		// reference to other entry
+		// 对其他条目的引用
 		case formRefAddr:
 			vers := b.format.version()
 			if vers == 0 {
@@ -597,11 +557,11 @@ func (b *buf) entry(cu *Entry, u *unit) *Entry {
 		case formRefUdata:
 			val = Offset(b.uint()) + ubase
 
-		// string
+		// 字符串
 		case formString:
 			val = b.string()
 		case formStrp, formLineStrp:
-			var off uint64 // offset into .debug_str
+			var off uint64 // .debug_str 中的偏移量
 			is64, known := b.format.dwarf64()
 			if !known {
 				b.error("unknown size for DW_FORM_strp/line_strp")
@@ -675,9 +635,9 @@ func (b *buf) entry(cu *Entry, u *unit) *Entry {
 				val = b.uint32()
 			}
 
-		// lineptr, loclistptr, macptr, rangelistptr
-		// New in DWARF 4, but clang can generate them with -gdwarf-2.
-		// Section reference, replacing use of formData4 and formData8.
+		// lineptr、loclistptr、macptr、rangelistptr
+		// DWARF 4 中新增，但 clang 可以用 -gdwarf-2 生成它们。
+		// 节引用，替代 formData4 和 formData8 的使用。
 		case formSecOffset, formGnuRefAlt, formGnuStrpAlt:
 			is64, known := b.format.dwarf64()
 			if !known {
@@ -689,25 +649,25 @@ func (b *buf) entry(cu *Entry, u *unit) *Entry {
 			}
 
 		// exprloc
-		// New in DWARF 4.
+		// DWARF 4 中新增。
 		case formExprloc:
 			val = b.bytes(int(b.uint()))
 
-		// reference
-		// New in DWARF 4.
+		// 引用
+		// DWARF 4 中新增。
 		case formRefSig8:
-			// 64-bit type signature.
+			// 64 位类型签名。
 			val = b.uint64()
 		case formRefSup4:
 			val = b.uint32()
 		case formRefSup8:
 			val = b.uint64()
 
-		// loclist
+		// 位置列表
 		case formLoclistx:
 			val = b.uint()
 
-		// rnglist
+		// 范围列表
 		case formRnglistx:
 			off := b.uint()
 
@@ -723,43 +683,41 @@ func (b *buf) entry(cu *Entry, u *unit) *Entry {
 	return e
 }
 
-// A Reader allows reading [Entry] structures from a DWARF “info” section.
-// The [Entry] structures are arranged in a tree. The [Reader.Next] function
-// return successive entries from a pre-order traversal of the tree.
-// If an entry has children, its Children field will be true, and the children
-// follow, terminated by an [Entry] with [Tag] 0.
+// Reader 允许从 DWARF "info" 节读取 [Entry] 结构。
+// [Entry] 结构被安排成树形结构。[Reader.Next] 函数从树的前序遍历中返回连续的条目。
+// 如果条目有子项，其 Children 字段将为 true，子项随后跟随，
+// 以 [Tag] 为 0 的 [Entry] 结束。
 type Reader struct {
 	b            buf
 	d            *Data
 	err          error
 	unit         int
-	lastUnit     bool   // set if last entry returned by Next is TagCompileUnit/TagPartialUnit
-	lastChildren bool   // .Children of last entry returned by Next
-	lastSibling  Offset // .Val(AttrSibling) of last entry returned by Next
-	cu           *Entry // current compilation unit
+	lastUnit     bool   // 如果 Next 返回的最后一个条目是 TagCompileUnit/TagPartialUnit 则设置
+	lastChildren bool   // Next 返回的最后一个条目的 .Children
+	lastSibling  Offset // Next 返回的最后一个条目的 .Val(AttrSibling)
+	cu           *Entry // 当前编译单元
 }
 
-// Reader returns a new Reader for [Data].
-// The reader is positioned at byte offset 0 in the DWARF “info” section.
+// Reader 为 [Data] 返回一个新的 Reader。
+// 读取器定位在 DWARF "info" 节的字节偏移 0 处。
 func (d *Data) Reader() *Reader {
 	r := &Reader{d: d}
 	r.Seek(0)
 	return r
 }
 
-// AddressSize returns the size in bytes of addresses in the current compilation
-// unit.
+// AddressSize 返回当前编译单元中地址的字节大小。
 func (r *Reader) AddressSize() int {
 	return r.d.unit[r.unit].asize
 }
 
-// ByteOrder returns the byte order in the current compilation unit.
+// ByteOrder 返回当前编译单元中的字节序。
 func (r *Reader) ByteOrder() binary.ByteOrder {
 	return r.b.order
 }
 
-// Seek positions the [Reader] at offset off in the encoded entry stream.
-// Offset 0 can be used to denote the first entry.
+// Seek 将 [Reader] 定位到编码条目流中的偏移 off 处。
+// 偏移 0 可用于表示第一个条目。
 func (r *Reader) Seek(off Offset) {
 	d := r.d
 	r.err = nil
@@ -790,14 +748,14 @@ func (r *Reader) Seek(off Offset) {
 	r.collectDwarf5BaseOffsets(u)
 }
 
-// maybeNextUnit advances to the next unit if this one is finished.
+// maybeNextUnit 如果当前单元已完成则前进到下一个单元。
 func (r *Reader) maybeNextUnit() {
 	for len(r.b.data) == 0 && r.unit+1 < len(r.d.unit) {
 		r.nextUnit()
 	}
 }
 
-// nextUnit advances to the next unit.
+// nextUnit 前进到下一个单元。
 func (r *Reader) nextUnit() {
 	r.unit++
 	u := &r.d.unit[r.unit]
@@ -816,10 +774,9 @@ func (r *Reader) collectDwarf5BaseOffsets(u *unit) {
 	}
 }
 
-// Next reads the next entry from the encoded entry stream.
-// It returns nil, nil when it reaches the end of the section.
-// It returns an error if the current offset is invalid or the data at the
-// offset cannot be decoded as a valid [Entry].
+// Next 从编码的条目流中读取下一个条目。
+// 当到达节末尾时返回 nil, nil。
+// 如果当前偏移无效或偏移处的数据无法解码为有效的 [Entry]，则返回错误。
 func (r *Reader) Next() (*Entry, error) {
 	if r.err != nil {
 		return nil, r.err
@@ -850,18 +807,16 @@ func (r *Reader) Next() (*Entry, error) {
 	return e, nil
 }
 
-// SkipChildren skips over the child entries associated with
-// the last [Entry] returned by [Reader.Next]. If that [Entry] did not have
-// children or [Reader.Next] has not been called, SkipChildren is a no-op.
+// SkipChildren 跳过与 [Reader.Next] 返回的最后一个 [Entry] 关联的子条目。
+// 如果该 [Entry] 没有子项或尚未调用 [Reader.Next]，则 SkipChildren 是空操作。
 func (r *Reader) SkipChildren() {
 	if r.err != nil || !r.lastChildren {
 		return
 	}
 
-	// If the last entry had a sibling attribute,
-	// that attribute gives the offset of the next
-	// sibling, so we can avoid decoding the
-	// child subtrees.
+	// 如果最后一个条目有兄弟属性，
+	// 该属性给出下一个兄弟的偏移量，
+	// 因此我们可以避免解码子树。
 	if r.lastSibling >= r.b.off {
 		r.Seek(r.lastSibling)
 		return
@@ -883,30 +838,23 @@ func (r *Reader) SkipChildren() {
 	}
 }
 
-// clone returns a copy of the reader. This is used by the typeReader
-// interface.
+// clone 返回读取器的副本。这由 typeReader 接口使用。
 func (r *Reader) clone() typeReader {
 	return r.d.Reader()
 }
 
-// offset returns the current buffer offset. This is used by the
-// typeReader interface.
+// offset 返回当前缓冲区偏移量。这由 typeReader 接口使用。
 func (r *Reader) offset() Offset {
 	return r.b.off
 }
 
-// SeekPC returns the [Entry] for the compilation unit that includes pc,
-// and positions the reader to read the children of that unit.  If pc
-// is not covered by any unit, SeekPC returns [ErrUnknownPC] and the
-// position of the reader is undefined.
+// SeekPC 返回包含 pc 的编译单元的 [Entry]，并将读取器定位以读取该单元的子项。
+// 如果 pc 不被任何单元覆盖，SeekPC 返回 [ErrUnknownPC] 且读取器位置未定义。
 //
-// Because compilation units can describe multiple regions of the
-// executable, in the worst case SeekPC must search through all the
-// ranges in all the compilation units. Each call to SeekPC starts the
-// search at the compilation unit of the last call, so in general
-// looking up a series of PCs will be faster if they are sorted. If
-// the caller wishes to do repeated fast PC lookups, it should build
-// an appropriate index using the Ranges method.
+// 因为编译单元可以描述可执行文件的多个区域，最坏情况下 SeekPC 必须搜索
+// 所有编译单元中的所有范围。每次调用 SeekPC 都从上次调用的编译单元开始搜索，
+// 因此通常如果 PC 是排序的，查找一系列 PC 会更快。如果调用者希望重复快速查找 PC，
+// 应使用 Ranges 方法构建适当的索引。
 func (r *Reader) SeekPC(pc uint64) (*Entry, error) {
 	unit := r.unit
 	for i := 0; i < len(r.d.unit); i++ {
@@ -941,9 +889,9 @@ func (r *Reader) SeekPC(pc uint64) (*Entry, error) {
 	return nil, ErrUnknownPC
 }
 
-// Ranges returns the PC ranges covered by e, a slice of [low,high) pairs.
-// Only some entry types, such as [TagCompileUnit] or [TagSubprogram], have PC
-// ranges; for others, this will return nil with no error.
+// Ranges 返回 e 覆盖的 PC 范围，是 [low,high) 对的切片。
+// 只有某些条目类型（如 [TagCompileUnit] 或 [TagSubprogram]）具有 PC 范围；
+// 对于其他类型，这将返回 nil 且无错误。
 func (d *Data) Ranges(e *Entry) ([][2]uint64, error) {
 	var ret [][2]uint64
 
@@ -975,7 +923,7 @@ func (d *Data) Ranges(e *Entry) ([][2]uint64, error) {
 	}
 
 	if u != nil && u.vers >= 5 && d.rngLists != nil {
-		// DWARF version 5 and later
+		// DWARF 版本 5 及更高版本
 		field := e.AttrField(AttrRanges)
 		if field == nil {
 			return ret, nil
@@ -1008,7 +956,7 @@ func (d *Data) Ranges(e *Entry) ([][2]uint64, error) {
 		}
 	}
 
-	// DWARF version 2 through 4
+	// DWARF 版本 2 到 4
 	ranges, rangesOK := e.Val(AttrRanges).(int64)
 	if rangesOK && d.ranges != nil {
 		_, base, err := d.baseAddressForEntry(e)
@@ -1021,11 +969,10 @@ func (d *Data) Ranges(e *Entry) ([][2]uint64, error) {
 	return ret, nil
 }
 
-// baseAddressForEntry returns the initial base address to be used when
-// looking up the range list of entry e.
-// DWARF specifies that this should be the lowpc attribute of the enclosing
-// compilation unit, however comments in gdb/dwarf2read.c say that some
-// versions of GCC use the entrypc attribute, so we check that too.
+// baseAddressForEntry 返回查找条目 e 的范围列表时使用的初始基地址。
+// DWARF 规定这应该是包含的编译单元的 lowpc 属性，
+// 但是 gdb/dwarf2read.c 中的注释说某些版本的 GCC 使用 entrypc 属性，
+// 所以我们也检查那个。
 func (d *Data) baseAddressForEntry(e *Entry) (*Entry, uint64, error) {
 	var cu *Entry
 	if e.Tag == TagCompileUnit {
@@ -1075,8 +1022,7 @@ func (d *Data) dwarf2Ranges(u *unit, base uint64, ranges int64, ret [][2]uint64)
 	return ret, nil
 }
 
-// dwarf5Ranges interprets a debug_rnglists sequence, see DWARFv5 section
-// 2.17.3 (page 53).
+// dwarf5Ranges 解释 debug_rnglists 序列，参见 DWARFv5 第 2.17.3 节（第 53 页）。
 func (d *Data) dwarf5Ranges(u *unit, cu *Entry, base uint64, ranges int64, ret [][2]uint64) ([][2]uint64, error) {
 	if ranges < 0 || ranges > int64(len(d.rngLists)) {
 		return nil, fmt.Errorf("invalid rnglist offset %d (max %d)", ranges, len(d.ranges))
@@ -1149,7 +1095,7 @@ func (d *Data) dwarf5Ranges(u *unit, cu *Entry, base uint64, ranges int64, ret [
 	}
 }
 
-// debugAddr returns the address at idx in debug_addr
+// debugAddr 返回 debug_addr 中索引 idx 处的地址
 func (d *Data) debugAddr(format dataFormat, addrBase, idx uint64) (uint64, error) {
 	off := idx*uint64(format.addrsize()) + addrBase
 

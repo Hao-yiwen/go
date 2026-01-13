@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package adler32
 
@@ -20,7 +20,7 @@ func TestHashInterface(t *testing.T) {
 var golden = []struct {
 	out       uint32
 	in        string
-	halfState string // marshaled hash state after first half of in written, used by TestGoldenMarshal
+	halfState string // 写入 in 的前半部分后序列化的哈希状态，用于 TestGoldenMarshal
 }{
 	{0x00000001, "", "adl\x01\x00\x00\x00\x01"},
 	{0x00620062, "a", "adl\x01\x00\x00\x00\x01"},
@@ -67,8 +67,8 @@ var golden = []struct {
 	{0x110588ee, strings.Repeat("ABCDEFGHIJKLMNOPQRSTUVWXYZ", 1e4), "adl\x01e\xd2\xc4p"},
 }
 
-// checksum is a slow but simple implementation of the Adler-32 checksum.
-// It is a straight port of the sample code in RFC 1950 section 9.
+// checksum 是 Adler-32 校验和的一个慢速但简单的实现。
+// 它是 RFC 1950 第 9 节示例代码的直接移植。
 func checksum(p []byte) uint32 {
 	s1, s2 := uint32(1), uint32(0)
 	for _, x := range p {

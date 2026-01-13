@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -35,7 +35,7 @@ var (
 
 func TestGolden(t *testing.T) {
 	if *flagCheck {
-		// slow, not worth repeating in -check
+		// 速度慢，不值得在 -check 模式下重复运行
 		t.Skip("skipping with -check set")
 	}
 
@@ -54,7 +54,7 @@ func TestGolden(t *testing.T) {
 			continue
 		}
 
-		// TODO(gri) remove extra pkg directory eventually
+		// TODO(gri) 最终移除额外的 pkg 目录
 		goldenFile := filepath.Join("testdata", "src", "pkg", fi.Name(), "golden.txt")
 		w := NewWalker(nil, "testdata/src/pkg")
 		pkg, err := w.import_(fi.Name())
@@ -100,7 +100,7 @@ func TestGolden(t *testing.T) {
 
 func TestCompareAPI(t *testing.T) {
 	if *flagCheck {
-		// not worth repeating in -check
+		// 不值得在 -check 模式下重复运行
 		t.Skip("skipping with -check set")
 	}
 
@@ -140,10 +140,9 @@ func TestCompareAPI(t *testing.T) {
 			out:       "",
 		},
 
-		// Test that a feature required on a subset of ports is implicitly satisfied
-		// by the same feature being implemented on all ports. That is, it shouldn't
-		// say "pkg syscall (darwin-amd64), type RawSockaddrInet6 struct" is missing.
-		// See https://go.dev/issue/4303.
+		// 测试在部分平台上要求的功能可以被在所有平台上实现的相同功能隐式满足。
+		// 也就是说，不应该报告 "pkg syscall (darwin-amd64), type RawSockaddrInet6 struct" 缺失。
+		// 参见 https://go.dev/issue/4303。
 		{
 			name: "contexts reconverging after api/next/* update",
 			features: []string{
@@ -152,8 +151,8 @@ func TestCompareAPI(t *testing.T) {
 			},
 			required: []string{
 				"A",
-				"pkg syscall (darwin-amd64), type RawSockaddrInet6 struct", // api/go1.n.txt
-				"pkg syscall, type RawSockaddrInet6 struct",                // api/next/n.txt
+				"pkg syscall (darwin-amd64), type RawSockaddrInet6 struct", // api/go1.n.txt 文件
+				"pkg syscall, type RawSockaddrInet6 struct",                // api/next/n.txt 文件
 			},
 			ok:  true,
 			out: "",
@@ -186,7 +185,7 @@ func TestCompareAPI(t *testing.T) {
 
 func TestSkipInternal(t *testing.T) {
 	if *flagCheck {
-		// not worth repeating in -check
+		// 不值得在 -check 模式下重复运行
 		t.Skip("skipping with -check set")
 	}
 
@@ -229,7 +228,7 @@ func BenchmarkAll(b *testing.B) {
 }
 
 var warmupCache = sync.OnceFunc(func() {
-	// Warm up the import cache in parallel.
+	// 并行预热导入缓存。
 	var wg sync.WaitGroup
 	for _, context := range contexts {
 		context := context
@@ -247,7 +246,7 @@ func TestIssue21181(t *testing.T) {
 		t.Skip("skipping with -short")
 	}
 	if *flagCheck {
-		// slow, not worth repeating in -check
+		// 速度慢，不值得在 -check 模式下重复运行
 		t.Skip("skipping with -check set")
 	}
 	testenv.MustHaveGoBuild(t)
@@ -269,7 +268,7 @@ func TestIssue29837(t *testing.T) {
 		t.Skip("skipping with -short")
 	}
 	if *flagCheck {
-		// slow, not worth repeating in -check
+		// 速度慢，不值得在 -check 模式下重复运行
 		t.Skip("skipping with -check set")
 	}
 	testenv.MustHaveGoBuild(t)
@@ -287,7 +286,7 @@ func TestIssue29837(t *testing.T) {
 
 func TestIssue41358(t *testing.T) {
 	if *flagCheck {
-		// slow, not worth repeating in -check
+		// 速度慢，不值得在 -check 模式下重复运行
 		t.Skip("skipping with -check set")
 	}
 	testenv.MustHaveGoBuild(t)
@@ -308,7 +307,7 @@ func TestIssue64958(t *testing.T) {
 		t.Skip("skipping with -short")
 	}
 	if *flagCheck {
-		// slow, not worth repeating in -check
+		// 速度慢，不值得在 -check 模式下重复运行
 		t.Skip("skipping with -check set")
 	}
 	testenv.MustHaveGoBuild(t)

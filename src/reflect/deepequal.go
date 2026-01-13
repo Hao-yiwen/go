@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Deep equality test via reflection
+// 通过反射进行深度相等测试
 
 package reflect
 
@@ -11,19 +11,17 @@ import (
 	"unsafe"
 )
 
-// During deepValueEqual, must keep track of checks that are
-// in progress. The comparison algorithm assumes that all
-// checks in progress are true when it reencounters them.
-// Visited comparisons are stored in a map indexed by visit.
+// 在 deepValueEqual 期间，必须跟踪正在进行的检查。
+// 比较算法假设当再次遇到正在进行的检查时，它们都为真。
+// 已访问的比较存储在以 visit 为索引的 map 中。
 type visit struct {
 	a1  unsafe.Pointer
 	a2  unsafe.Pointer
 	typ Type
 }
 
-// Tests for deep equality using reflected types. The map argument tracks
-// comparisons that have already been seen, which allows short circuiting on
-// recursive types.
+// 使用反射类型测试深度相等。map 参数跟踪已经见过的比较，
+// 这允许在递归类型上进行短路处理。
 func deepValueEqual(v1, v2 Value, visited map[visit]bool) bool {
 	if !v1.IsValid() || !v2.IsValid() {
 		return v1.IsValid() == v2.IsValid()
@@ -32,34 +30,32 @@ func deepValueEqual(v1, v2 Value, visited map[visit]bool) bool {
 		return false
 	}
 
-	// We want to avoid putting more in the visited map than we need to.
-	// For any possible reference cycle that might be encountered,
-	// hard(v1, v2) needs to return true for at least one of the types in the cycle,
-	// and it's safe and valid to get Value's internal pointer.
+	// 我们希望避免在 visited map 中放入超过需要的内容。
+	// 对于可能遇到的任何引用循环，hard(v1, v2) 需要对循环中的
+	// 至少一种类型返回 true，并且获取 Value 的内部指针是安全有效的。
 	hard := func(v1, v2 Value) bool {
 		switch v1.Kind() {
 		case Pointer:
 			if !v1.typ().Pointers() {
-				// not-in-heap pointers can't be cyclic.
-				// At least, all of our current uses of internal/runtime/sys.NotInHeap
-				// have that property. The runtime ones aren't cyclic (and we don't use
-				// DeepEqual on them anyway), and the cgo-generated ones are
-				// all empty structs.
+				// 不在堆中的指针不可能是循环的。
+				// 至少，我们当前对 internal/runtime/sys.NotInHeap 的所有使用
+				// 都具有这个特性。运行时的不是循环的（而且我们也不会对它们
+				// 使用 DeepEqual），cgo 生成的都是空结构体。
 				return false
 			}
 			fallthrough
 		case Map, Slice, Interface:
-			// Nil pointers cannot be cyclic. Avoid putting them in the visited map.
+			// nil 指针不可能是循环的。避免将它们放入 visited map。
 			return !v1.IsNil() && !v2.IsNil()
 		}
 		return false
 	}
 
 	if hard(v1, v2) {
-		// For a Pointer or Map value, we need to check flagIndir,
-		// which we do by calling the pointer method.
-		// For Slice or Interface, flagIndir is always set,
-		// and using v.ptr suffices.
+		// 对于 Pointer 或 Map 值，我们需要检查 flagIndir，
+		// 我们通过调用 pointer 方法来做到这一点。
+		// 对于 Slice 或 Interface，flagIndir 始终被设置，
+		// 使用 v.ptr 就足够了。
 		ptrval := func(v Value) unsafe.Pointer {
 			switch v.Kind() {
 			case Pointer, Map:
@@ -71,19 +67,19 @@ func deepValueEqual(v1, v2 Value, visited map[visit]bool) bool {
 		addr1 := ptrval(v1)
 		addr2 := ptrval(v2)
 		if uintptr(addr1) > uintptr(addr2) {
-			// Canonicalize order to reduce number of entries in visited.
-			// Assumes non-moving garbage collector.
+			// 规范化顺序以减少 visited 中的条目数量。
+			// 假设是非移动的垃圾收集器。
 			addr1, addr2 = addr2, addr1
 		}
 
-		// Short circuit if references are already seen.
+		// 如果引用已经被看到过，则短路。
 		typ := v1.Type()
 		v := visit{addr1, addr2, typ}
 		if visited[v] {
 			return true
 		}
 
-		// Remember for later.
+		// 记住以备后用。
 		visited[v] = true
 	}
 
@@ -105,7 +101,7 @@ func deepValueEqual(v1, v2 Value, visited map[visit]bool) bool {
 		if v1.UnsafePointer() == v2.UnsafePointer() {
 			return true
 		}
-		// Special case for []byte, which is common.
+		// []byte 的特殊情况，这很常见。
 		if v1.Type().Elem().Kind() == Uint8 {
 			return bytealg.Equal(v1.Bytes(), v2.Bytes())
 		}
@@ -155,7 +151,7 @@ func deepValueEqual(v1, v2 Value, visited map[visit]bool) bool {
 		if v1.IsNil() && v2.IsNil() {
 			return true
 		}
-		// Can't do better than this:
+		// 没法做得更好了：
 		return false
 	case Int, Int8, Int16, Int32, Int64:
 		return v1.Int() == v2.Int()
@@ -170,62 +166,59 @@ func deepValueEqual(v1, v2 Value, visited map[visit]bool) bool {
 	case Complex64, Complex128:
 		return v1.Complex() == v2.Complex()
 	default:
-		// Normal equality suffices
+		// 普通的相等比较就足够了
 		return valueInterface(v1, false) == valueInterface(v2, false)
 	}
 }
 
-// DeepEqual reports whether x and y are “deeply equal,” defined as follows.
-// Two values of identical type are deeply equal if one of the following cases applies.
-// Values of distinct types are never deeply equal.
+// DeepEqual 报告 x 和 y 是否"深度相等"，定义如下。
+// 如果以下情况之一适用，则两个相同类型的值深度相等。
+// 不同类型的值永远不会深度相等。
 //
-// Array values are deeply equal when their corresponding elements are deeply equal.
+// 当数组值的对应元素深度相等时，数组值深度相等。
 //
-// Struct values are deeply equal if their corresponding fields,
-// both exported and unexported, are deeply equal.
+// 如果结构体值的对应字段（包括导出和未导出的）深度相等，则结构体值深度相等。
 //
-// Func values are deeply equal if both are nil; otherwise they are not deeply equal.
+// 如果两个函数值都是 nil，则它们深度相等；否则它们不深度相等。
 //
-// Interface values are deeply equal if they hold deeply equal concrete values.
+// 如果接口值持有深度相等的具体值，则接口值深度相等。
 //
-// Map values are deeply equal when all of the following are true:
-// they are both nil or both non-nil, they have the same length,
-// and either they are the same map object or their corresponding keys
-// (matched using Go equality) map to deeply equal values.
+// 当以下所有条件都为真时，map 值深度相等：
+// 它们都是 nil 或都不是 nil，它们具有相同的长度，
+// 并且它们是同一个 map 对象或它们的对应键（使用 Go 相等性匹配）
+// 映射到深度相等的值。
 //
-// Pointer values are deeply equal if they are equal using Go's == operator
-// or if they point to deeply equal values.
+// 如果指针值使用 Go 的 == 运算符相等，或者它们指向深度相等的值，
+// 则指针值深度相等。
 //
-// Slice values are deeply equal when all of the following are true:
-// they are both nil or both non-nil, they have the same length,
-// and either they point to the same initial entry of the same underlying array
-// (that is, &x[0] == &y[0]) or their corresponding elements (up to length) are deeply equal.
-// Note that a non-nil empty slice and a nil slice (for example, []byte{} and []byte(nil))
-// are not deeply equal.
+// 当以下所有条件都为真时，切片值深度相等：
+// 它们都是 nil 或都不是 nil，它们具有相同的长度，
+// 并且它们指向同一底层数组的同一初始条目（即 &x[0] == &y[0]）
+// 或它们的对应元素（直到长度）深度相等。
+// 注意，非 nil 的空切片和 nil 切片（例如 []byte{} 和 []byte(nil)）
+// 不是深度相等的。
 //
-// Other values - numbers, bools, strings, and channels - are deeply equal
-// if they are equal using Go's == operator.
+// 其他值 - 数字、布尔值、字符串和通道 - 如果使用 Go 的 == 运算符相等，
+// 则它们深度相等。
 //
-// In general DeepEqual is a recursive relaxation of Go's == operator.
-// However, this idea is impossible to implement without some inconsistency.
-// Specifically, it is possible for a value to be unequal to itself,
-// either because it is of func type (uncomparable in general)
-// or because it is a floating-point NaN value (not equal to itself in floating-point comparison),
-// or because it is an array, struct, or interface containing
-// such a value.
-// On the other hand, pointer values are always equal to themselves,
-// even if they point at or contain such problematic values,
-// because they compare equal using Go's == operator, and that
-// is a sufficient condition to be deeply equal, regardless of content.
-// DeepEqual has been defined so that the same short-cut applies
-// to slices and maps: if x and y are the same slice or the same map,
-// they are deeply equal regardless of content.
+// 一般来说，DeepEqual 是 Go 的 == 运算符的递归放松。
+// 然而，这个想法不可能在没有一些不一致的情况下实现。
+// 具体来说，一个值可能与自身不相等，
+// 要么因为它是 func 类型（通常不可比较），
+// 要么因为它是浮点 NaN 值（在浮点比较中不等于自身），
+// 要么因为它是包含这样值的数组、结构体或接口。
+// 另一方面，指针值始终等于自身，
+// 即使它们指向或包含这样有问题的值，
+// 因为它们使用 Go 的 == 运算符比较相等，这是深度相等的充分条件，
+// 与内容无关。
+// DeepEqual 被定义为使得相同的快捷方式适用于切片和 map：
+// 如果 x 和 y 是同一个切片或同一个 map，
+// 则无论内容如何，它们都深度相等。
 //
-// As DeepEqual traverses the data values it may find a cycle. The
-// second and subsequent times that DeepEqual compares two pointer
-// values that have been compared before, it treats the values as
-// equal rather than examining the values to which they point.
-// This ensures that DeepEqual terminates.
+// 当 DeepEqual 遍历数据值时，它可能会发现循环。
+// 第二次及后续 DeepEqual 比较之前已经比较过的两个指针值时，
+// 它将这些值视为相等，而不是检查它们所指向的值。
+// 这确保了 DeepEqual 会终止。
 func DeepEqual(x, y any) bool {
 	if x == nil || y == nil {
 		return x == y

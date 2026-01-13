@@ -1,6 +1,6 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2016 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build gc && !purego
 
@@ -23,8 +23,8 @@ var (
 	useAVX2 = cpu.X86.HasAVX2 && cpu.X86.HasBMI2
 )
 
-// setupState writes a ChaCha20 input matrix to state. See
-// https://tools.ietf.org/html/rfc7539#section-2.3.
+// setupState 将 ChaCha20 输入矩阵写入 state。
+// 参见 https://tools.ietf.org/html/rfc7539#section-2.3。
 func setupState(state *[16]uint32, key *[32]byte, nonce []byte) {
 	state[0] = 0x61707865
 	state[1] = 0x3320646e

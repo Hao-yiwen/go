@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -8,8 +8,8 @@ package internal
 
 import "errors"
 
-// NotForPublicUse is a marker type that an API is for internal use only.
-// It does not perfectly prevent usage of that API, but helps to restrict usage.
+// NotForPublicUse 是一个 marker type that an API is for internal use only.
+// It 执行not perfectly prevent usage of that API, but helps to restrict usage.
 // Anything with this marker is not covered by the Go compatibility agreement.
 type NotForPublicUse struct{}
 

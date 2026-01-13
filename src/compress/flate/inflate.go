@@ -1,10 +1,9 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package flate implements the DEFLATE compressed data format, described in
-// RFC 1951.  The [compress/gzip] and [compress/zlib] packages implement access
-// to DEFLATE-based file formats.
+// Package flate 实现 RFC 1951 中描述的 DEFLATE 压缩数据格式。
+// [compress/gzip] 和 [compress/zlib] 包实现对基于 DEFLATE 的文件格式的访问。
 package flate
 
 import (
@@ -16,83 +15,75 @@ import (
 )
 
 const (
-	maxCodeLen = 16 // max length of Huffman code
-	// The next three numbers come from the RFC section 3.2.7, with the
-	// additional proviso in section 3.2.5 which implies that distance codes
-	// 30 and 31 should never occur in compressed data.
+	maxCodeLen = 16 // Huffman 码的最大长度
+	// 接下来的三个数字来自 RFC 第 3.2.7 节，
+	// 附加第 3.2.5 节中的条款，暗示距离码 30 和 31 永远不应出现在压缩数据中。
 	maxNumLit  = 286
 	maxNumDist = 30
-	numCodes   = 19 // number of codes in Huffman meta-code
+	numCodes   = 19 // Huffman 元码中的码数
 )
 
-// Initialize the fixedHuffmanDecoder only once upon first use.
+// 仅在首次使用时初始化 fixedHuffmanDecoder 一次。
 var fixedOnce sync.Once
 var fixedHuffmanDecoder huffmanDecoder
 
-// A CorruptInputError reports the presence of corrupt input at a given offset.
+// CorruptInputError 报告在给定偏移量处存在损坏的输入。
 type CorruptInputError int64
 
 func (e CorruptInputError) Error() string {
 	return "flate: corrupt input before offset " + strconv.FormatInt(int64(e), 10)
 }
 
-// An InternalError reports an error in the flate code itself.
+// InternalError 报告 flate 代码本身中的错误。
 type InternalError string
 
 func (e InternalError) Error() string { return "flate: internal error: " + string(e) }
 
-// A ReadError reports an error encountered while reading input.
+// ReadError 报告在读取输入时遇到的错误。
 //
-// Deprecated: No longer returned.
+// 已弃用：不再返回。
 type ReadError struct {
-	Offset int64 // byte offset where error occurred
-	Err    error // error returned by underlying Read
+	Offset int64 // 发生错误的字节偏移量
+	Err    error // 底层 Read 返回的错误
 }
 
 func (e *ReadError) Error() string {
 	return "flate: read error at offset " + strconv.FormatInt(e.Offset, 10) + ": " + e.Err.Error()
 }
 
-// A WriteError reports an error encountered while writing output.
+// WriteError 报告在写入输出时遇到的错误。
 //
-// Deprecated: No longer returned.
+// 已弃用：不再返回。
 type WriteError struct {
-	Offset int64 // byte offset where error occurred
-	Err    error // error returned by underlying Write
+	Offset int64 // 发生错误的字节偏移量
+	Err    error // 底层 Write 返回的错误
 }
 
 func (e *WriteError) Error() string {
 	return "flate: write error at offset " + strconv.FormatInt(e.Offset, 10) + ": " + e.Err.Error()
 }
 
-// Resetter resets a ReadCloser returned by [NewReader] or [NewReaderDict]
-// to switch to a new underlying [Reader]. This permits reusing a ReadCloser
-// instead of allocating a new one.
+// Resetter 重置由 [NewReader] 或 [NewReaderDict] 返回的 ReadCloser
+// 以切换到新的底层 [Reader]。这允许重用 ReadCloser 而不是分配新的。
 type Resetter interface {
-	// Reset discards any buffered data and resets the Resetter as if it was
-	// newly initialized with the given reader.
+	// Reset 丢弃任何缓冲数据并重置 Resetter，就像它是用给定的 reader 新初始化的一样。
 	Reset(r io.Reader, dict []byte) error
 }
 
-// The data structure for decoding Huffman tables is based on that of
-// zlib. There is a lookup table of a fixed bit width (huffmanChunkBits),
-// For codes smaller than the table width, there are multiple entries
-// (each combination of trailing bits has the same value). For codes
-// larger than the table width, the table contains a link to an overflow
-// table. The width of each entry in the link table is the maximum code
-// size minus the chunk width.
+// 解码 Huffman 表的数据结构基于 zlib。有一个固定位宽的查找表（huffmanChunkBits），
+// 对于小于表宽度的码，有多个条目（每个尾随位的组合具有相同的值）。
+// 对于大于表宽度的码，表包含指向溢出表的链接。
+// 链接表中每个条目的宽度是最大码大小减去块宽度。
 //
-// Note that you can do a lookup in the table even without all bits
-// filled. Since the extra bits are zero, and the DEFLATE Huffman codes
-// have the property that shorter codes come before longer ones, the
-// bit length estimate in the result is a lower bound on the actual
-// number of bits.
+// 注意，即使没有填充所有位，你也可以在表中进行查找。
+// 由于额外的位是零，并且 DEFLATE Huffman 码具有较短码在较长码之前的属性，
+// 结果中的位长度估计是实际位数的下界。
 //
-// See the following:
+// 见以下内容：
 //	https://github.com/madler/zlib/raw/master/doc/algorithm.txt
 
-// chunk & 15 is number of bits
-// chunk >> 4 is value, including table link
+// chunk & 15 是位数
+// chunk >> 4 是值，包括表链接
 
 const (
 	huffmanChunkBits  = 9
@@ -102,29 +93,25 @@ const (
 )
 
 type huffmanDecoder struct {
-	min      int                      // the minimum code length
-	chunks   [huffmanNumChunks]uint32 // chunks as described above
-	links    [][]uint32               // overflow links
-	linkMask uint32                   // mask the width of the link table
+	min      int                      // 最小码长
+	chunks   [huffmanNumChunks]uint32 // 如上所述的块
+	links    [][]uint32               // 溢出链接
+	linkMask uint32                   // 链接表宽度的掩码
 }
 
-// Initialize Huffman decoding tables from array of code lengths.
-// Following this function, h is guaranteed to be initialized into a complete
-// tree (i.e., neither over-subscribed nor under-subscribed). The exception is a
-// degenerate case where the tree has only a single symbol with length 1. Empty
-// trees are permitted.
+// 从码长数组初始化 Huffman 解码表。
+// 在此函数之后，h 保证被初始化为完整的树（即既不过度订阅也不欠订阅）。
+// 例外是退化情况，其中树只有一个长度为 1 的单个符号。允许空树。
 func (h *huffmanDecoder) init(lengths []int) bool {
-	// Sanity enables additional runtime tests during Huffman
-	// table construction. It's intended to be used during
-	// development to supplement the currently ad-hoc unit tests.
+	// Sanity 在 Huffman 表构建期间启用额外的运行时测试。
+	// 它旨在开发期间使用，以补充当前的临时单元测试。
 	const sanity = false
 
 	if h.min != 0 {
 		*h = huffmanDecoder{}
 	}
 
-	// Count number of codes of each length,
-	// compute min and max length.
+	// 计算每个长度的码数，计算最小和最大长度。
 	var count [maxCodeLen]int
 	var min, max int
 	for _, n := range lengths {
@@ -140,13 +127,11 @@ func (h *huffmanDecoder) init(lengths []int) bool {
 		count[n]++
 	}
 
-	// Empty tree. The decompressor.huffSym function will fail later if the tree
-	// is used. Technically, an empty tree is only valid for the HDIST tree and
-	// not the HCLEN and HLIT tree. However, a stream with an empty HCLEN tree
-	// is guaranteed to fail since it will attempt to use the tree to decode the
-	// codes for the HLIT and HDIST trees. Similarly, an empty HLIT tree is
-	// guaranteed to fail later since the compressed data section must be
-	// composed of at least one symbol (the end-of-block marker).
+	// 空树。如果使用该树，decompressor.huffSym 函数稍后会失败。
+	// 从技术上讲，空树仅对 HDIST 树有效，而不是 HCLEN 和 HLIT 树。
+	// 然而，具有空 HCLEN 树的流保证会失败，因为它将尝试使用该树来解码
+	// HLIT 和 HDIST 树的码。类似地，空 HLIT 树保证稍后会失败，
+	// 因为压缩数据部分必须至少由一个符号（块结束标记）组成。
 	if max == 0 {
 		return true
 	}
@@ -159,11 +144,9 @@ func (h *huffmanDecoder) init(lengths []int) bool {
 		code += count[i]
 	}
 
-	// Check that the coding is complete (i.e., that we've
-	// assigned all 2-to-the-max possible bit sequences).
-	// Exception: To be compatible with zlib, we also need to
-	// accept degenerate single-code codings. See also
-	// TestDegenerateHuffmanCoding.
+	// 检查编码是否完整（即我们已分配所有 2 的 max 次方种可能的位序列）。
+	// 例外：为了与 zlib 兼容，我们还需要接受退化的单码编码。
+	// 另见 TestDegenerateHuffmanCoding。
 	if code != 1<<uint(max) && !(code == 1 && max == 1) {
 		return false
 	}
@@ -173,7 +156,7 @@ func (h *huffmanDecoder) init(lengths []int) bool {
 		numLinks := 1 << (uint(max) - huffmanChunkBits)
 		h.linkMask = uint32(numLinks - 1)
 
-		// create link tables
+		// 创建链接表
 		link := nextcode[huffmanChunkBits+1] >> 1
 		h.links = make([][]uint32, huffmanNumChunks-link)
 		for j := uint(link); j < huffmanNumChunks; j++ {
@@ -199,11 +182,8 @@ func (h *huffmanDecoder) init(lengths []int) bool {
 		reverse >>= uint(16 - n)
 		if n <= huffmanChunkBits {
 			for off := reverse; off < len(h.chunks); off += 1 << uint(n) {
-				// We should never need to overwrite
-				// an existing chunk. Also, 0 is
-				// never a valid chunk, because the
-				// lower 4 "count" bits should be
-				// between 1 and 15.
+				// 我们永远不需要覆盖现有的块。
+				// 此外，0 永远不是有效的块，因为低 4 位 "count" 位应该在 1 到 15 之间。
 				if sanity && h.chunks[off] != 0 {
 					panic("impossible: overwriting existing chunk")
 				}
@@ -212,8 +192,7 @@ func (h *huffmanDecoder) init(lengths []int) bool {
 		} else {
 			j := reverse & (huffmanNumChunks - 1)
 			if sanity && h.chunks[j]&huffmanCountMask != huffmanChunkBits+1 {
-				// Longer codes should have been
-				// associated with a link table above.
+				// 更长的码应该已经与上面的链接表关联。
 				panic("impossible: not an indirect chunk")
 			}
 			value := h.chunks[j] >> huffmanValueShift
@@ -229,14 +208,12 @@ func (h *huffmanDecoder) init(lengths []int) bool {
 	}
 
 	if sanity {
-		// Above we've sanity checked that we never overwrote
-		// an existing entry. Here we additionally check that
-		// we filled the tables completely.
+		// 上面我们已经检查过我们从未覆盖现有条目。
+		// 这里我们另外检查我们是否完全填充了表。
 		for i, chunk := range h.chunks {
 			if chunk == 0 {
-				// As an exception, in the degenerate
-				// single-code case, we allow odd
-				// chunks to be missing.
+				// 作为例外，在退化的单码情况下，
+				// 我们允许奇数块缺失。
 				if code == 1 && i%2 == 1 {
 					continue
 				}
@@ -255,40 +232,39 @@ func (h *huffmanDecoder) init(lengths []int) bool {
 	return true
 }
 
-// The actual read interface needed by [NewReader].
-// If the passed in [io.Reader] does not also have ReadByte,
-// the [NewReader] will introduce its own buffering.
+// [NewReader] 所需的实际读取接口。
+// 如果传入的 [io.Reader] 没有 ReadByte，
+// [NewReader] 将引入自己的缓冲。
 type Reader interface {
 	io.Reader
 	io.ByteReader
 }
 
-// Decompress state.
+// 解压缩状态。
 type decompressor struct {
-	// Input source.
+	// 输入源。
 	r       Reader
-	rBuf    *bufio.Reader // created if provided io.Reader does not implement io.ByteReader
+	rBuf    *bufio.Reader // 如果提供的 io.Reader 未实现 io.ByteReader 则创建
 	roffset int64
 
-	// Input bits, in top of b.
+	// 输入位，在 b 的顶部。
 	b  uint32
 	nb uint
 
-	// Huffman decoders for literal/length, distance.
+	// 用于字面量/长度、距离的 Huffman 解码器。
 	h1, h2 huffmanDecoder
 
-	// Length arrays used to define Huffman codes.
+	// 用于定义 Huffman 码的长度数组。
 	bits     *[maxNumLit + maxNumDist]int
 	codebits *[numCodes]int
 
-	// Output history, buffer.
+	// 输出历史记录，缓冲区。
 	dict dictDecoder
 
-	// Temporary buffer (avoids repeated allocation).
+	// 临时缓冲区（避免重复分配）。
 	buf [4]byte
 
-	// Next step in the decompression,
-	// and decompression state.
+	// 解压缩的下一步，以及解压缩状态。
 	step      func(*decompressor)
 	stepState int
 	final     bool

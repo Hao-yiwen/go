@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package html
 
@@ -10,76 +10,76 @@ import (
 )
 
 type unescapeTest struct {
-	// A short description of the test case.
+	// 测试用例的简短描述。
 	desc string
-	// The HTML text.
+	// HTML 文本。
 	html string
-	// The unescaped text.
+	// 反转义后的文本。
 	unescaped string
 }
 
 var unescapeTests = []unescapeTest{
-	// Handle no entities.
+	// 处理无实体的情况。
 	{
 		"copy",
 		"A\ttext\nstring",
 		"A\ttext\nstring",
 	},
-	// Handle simple named entities.
+	// 处理简单的命名实体。
 	{
 		"simple",
 		"&amp; &gt; &lt;",
 		"& > <",
 	},
-	// Handle hitting the end of the string.
+	// 处理到达字符串末尾的情况。
 	{
 		"stringEnd",
 		"&amp &amp",
 		"& &",
 	},
-	// Handle entities with two codepoints.
+	// 处理具有两个码点的实体。
 	{
 		"multiCodepoint",
 		"text &gesl; blah",
 		"text \u22db\ufe00 blah",
 	},
-	// Handle decimal numeric entities.
+	// 处理十进制数字实体。
 	{
 		"decimalEntity",
 		"Delta = &#916; ",
 		"Delta = Δ ",
 	},
-	// Handle hexadecimal numeric entities.
+	// 处理十六进制数字实体。
 	{
 		"hexadecimalEntity",
 		"Lambda = &#x3bb; = &#X3Bb ",
 		"Lambda = λ = λ ",
 	},
-	// Handle numeric early termination.
+	// 处理数字提前终止的情况。
 	{
 		"numericEnds",
 		"&# &#x &#128;43 &copy = &#169f = &#xa9",
 		"&# &#x €43 © = ©f = ©",
 	},
-	// Handle numeric ISO-8859-1 entity replacements.
+	// 处理数字 ISO-8859-1 实体替换。
 	{
 		"numericReplacements",
 		"Footnote&#x87;",
 		"Footnote‡",
 	},
-	// Handle single ampersand.
+	// 处理单个 & 符号。
 	{
 		"copySingleAmpersand",
 		"&",
 		"&",
 	},
-	// Handle ampersand followed by non-entity.
+	// 处理 & 符号后跟非实体的情况。
 	{
 		"copyAmpersandNonEntity",
 		"text &test",
 		"text &test",
 	},
-	// Handle "&#".
+	// 处理 "&#" 的情况。
 	{
 		"copyAmpersandHash",
 		"text &#",

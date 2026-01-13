@@ -1,8 +1,8 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// The package e is a go/doc test for embedded methods.
+// The package e 是一个 go/doc test for embedded methods.
 package e
 
 // ----------------------------------------------------------------------------
@@ -66,7 +66,7 @@ type T4 struct {
 }
 
 // ----------------------------------------------------------------------------
-// Don't show embedded methods of exported anonymous fields unless AllMethods
+// Don't show embedded methods of exported anonymous fields 除非 AllMethods
 // is set.
 
 type T4 struct{}
@@ -114,7 +114,7 @@ type u5 struct {
 }
 
 // ----------------------------------------------------------------------------
-// A higher-level embedded type (and its methods) wins over the same type (and
+// 一个higher-level embedded type (and its methods) wins over the same type (and
 // its methods) embedded at a lower level.
 
 type V1 struct {

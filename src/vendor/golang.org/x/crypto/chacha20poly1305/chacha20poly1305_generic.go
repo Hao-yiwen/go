@@ -1,6 +1,6 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2016 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package chacha20poly1305
 
@@ -40,7 +40,7 @@ func (c *chacha20poly1305) sealGeneric(dst, nonce, plaintext, additionalData []b
 	var polyKey [32]byte
 	s, _ := chacha20.NewUnauthenticatedCipher(c.key[:], nonce)
 	s.XORKeyStream(polyKey[:], polyKey[:])
-	s.SetCounter(1) // set the counter to 1, skipping 32 bytes
+	s.SetCounter(1) // 将计数器设置为 1，跳过 32 字节
 	s.XORKeyStream(ciphertext, plaintext)
 
 	p := poly1305.New(&polyKey)
@@ -60,7 +60,7 @@ func (c *chacha20poly1305) openGeneric(dst, nonce, ciphertext, additionalData []
 	var polyKey [32]byte
 	s, _ := chacha20.NewUnauthenticatedCipher(c.key[:], nonce)
 	s.XORKeyStream(polyKey[:], polyKey[:])
-	s.SetCounter(1) // set the counter to 1, skipping 32 bytes
+	s.SetCounter(1) // 将计数器设置为 1，跳过 32 字节
 
 	p := poly1305.New(&polyKey)
 	writeWithPadding(p, additionalData)

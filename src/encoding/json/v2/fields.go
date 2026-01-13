@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -91,7 +91,7 @@ func makeStructFields(root reflect.Type) (fs structFields, serr *SemanticError) 
 	seen := map[reflect.Type]bool{root: true}
 
 	// Perform a breadth-first search over all reachable fields.
-	// This ensures that len(f.index) will be monotonically increasing.
+	// This ensures that len(f.index) 将是 monotonically increasing.
 	var allFields, inlinedFallbacks []structField
 	for queueIndex < len(queue) {
 		qe := queue[queueIndex]
@@ -282,7 +282,7 @@ func makeStructFields(root reflect.Type) (fs structFields, serr *SemanticError) 
 	// then by presence of an explicitly provided JSON name).
 	// Select the dominant field from each set of fields with the same name.
 	// If multiple fields have the same name, then the dominant field
-	// is the one that exists alone at the shallowest depth,
+	// 是 one that exists alone at the shallowest depth,
 	// or the one that is uniquely tagged with a JSON name.
 	// Otherwise, no dominant field exists for the set.
 	flattened := allFields[:0]
@@ -298,7 +298,7 @@ func makeStructFields(root reflect.Type) (fs structFields, serr *SemanticError) 
 			n++
 		}
 		if n == 1 || len(allFields[0].index) != len(allFields[1].index) || allFields[0].hasName != allFields[1].hasName {
-			flattened = append(flattened, allFields[0]) // only keep field if there is a dominant field
+			flattened = append(flattened, allFields[0]) // only keep field if there 是一个 dominant field
 		}
 		allFields = allFields[n:]
 	}
@@ -349,8 +349,8 @@ func makeStructFields(root reflect.Type) (fs structFields, serr *SemanticError) 
 }
 
 // indirectType unwraps one level of pointer indirection
-// similar to how Go only allows embedding either T or *T,
-// but not **T or P (which is a named pointer).
+// similar to how Go only 允许 embedding either T or *T,
+// but not **T or P (which 是一个 named pointer).
 func indirectType(t reflect.Type) reflect.Type {
 	if t.Kind() == reflect.Pointer && t.Name() == "" {
 		t = t.Elem()
@@ -361,7 +361,7 @@ func indirectType(t reflect.Type) reflect.Type {
 // matchFoldedName matches a case-insensitive name depending on the options.
 // It assumes that foldName(f.name) == foldName(name).
 //
-// Case-insensitive matching is used if the `case:ignore` tag option is specified
+// Case-insensitive matching is used 如果 `case:ignore` tag option is specified
 // or the MatchCaseInsensitiveNames call option is specified
 // (and the `case:strict` tag option is not specified).
 // Functionally, the `case:ignore` and `case:strict` tag options take precedence.
@@ -369,7 +369,7 @@ func indirectType(t reflect.Type) reflect.Type {
 // The v1 definition of case-insensitivity operated under strings.EqualFold
 // and would strictly compare dashes and underscores,
 // while the v2 definition would ignore the presence of dashes and underscores.
-// Thus, if the MatchCaseSensitiveDelimiter call option is specified,
+// Thus, 如果 MatchCaseSensitiveDelimiter call option is specified,
 // the match is further restricted to using strings.EqualFold.
 func (f *structField) matchFoldedName(name []byte, flags *jsonflags.Flags) bool {
 	if f.casing == caseIgnore || (flags.Get(jsonflags.MatchCaseInsensitiveNames) && f.casing != caseStrict) {
@@ -414,8 +414,8 @@ func parseFieldOptions(sf reflect.StructField) (out fieldOptions, ignored bool, 
 	// Check whether this field is unexported and not embedded,
 	// which Go reflection cannot mutate for the sake of serialization.
 	//
-	// An embedded field of an unexported type is still capable of
-	// forwarding exported fields, which may be JSON serialized.
+	// 一个embedded field of an unexported type is still capable of
+	// forwarding exported fields, which 可能是 JSON serialized.
 	// This technically operates on the edge of what is permissible by
 	// the Go language, but the most recent decision is to permit this.
 	//
@@ -429,8 +429,8 @@ func parseFieldOptions(sf reflect.StructField) (out fieldOptions, ignored bool, 
 	}
 
 	// Determine the JSON member name for this Go field. A user-specified name
-	// may be provided as either an identifier or a single-quoted string.
-	// The single-quoted string allows arbitrary characters in the name.
+	// 可能是 provided as either an identifier or a single-quoted string.
+	// The single-quoted string 允许 arbitrary characters in the name.
 	// See https://go.dev/issue/2718 and https://go.dev/issue/3546.
 	out.name = sf.Name // always starts with an uppercase character
 	if len(tag) > 0 && !strings.HasPrefix(tag, ",") {
@@ -577,7 +577,7 @@ func parseFieldOptions(sf reflect.StructField) (out fieldOptions, ignored bool, 
 // consumeTagOption consumes the next option,
 // which is either a Go identifier or a single-quoted string.
 // If the next option is invalid, it returns all of in until the next comma,
-// and reports an error.
+// and 报告an error.
 func consumeTagOption(in string) (string, int, error) {
 	// For legacy compatibility with v1, assume options are comma-separated.
 	i := strings.IndexByte(in, ',')

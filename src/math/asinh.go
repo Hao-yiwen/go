@@ -1,38 +1,36 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
-// The original C code, the long comment, and the constants
-// below are from FreeBSD's /usr/src/lib/msun/src/s_asinh.c
-// and came with this notice. The go code is a simplified
-// version of the original C.
+// 原始 C 代码、长注释以及下面的常量
+// 来自 FreeBSD 的 /usr/src/lib/msun/src/s_asinh.c
+// 并附带以下声明。Go 代码是原始 C 代码的简化版本。
 //
 // ====================================================
-// Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+// 版权所有 (C) 1993 Sun Microsystems, Inc. 保留所有权利。
 //
-// Developed at SunPro, a Sun Microsystems, Inc. business.
-// Permission to use, copy, modify, and distribute this
-// software is freely granted, provided that this notice
-// is preserved.
+// 由 SunPro（Sun Microsystems, Inc. 的一个业务部门）开发。
+// 允许自由使用、复制、修改和分发本软件，
+// 前提是保留此声明。
 // ====================================================
 //
 //
 // asinh(x)
-// Method :
-//	Based on
+// 方法：
+//	基于
 //	        asinh(x) = sign(x) * log [ |x| + sqrt(x*x+1) ]
-//	we have
-//	asinh(x) := x  if  1+x*x=1,
-//	         := sign(x)*(log(x)+ln2) for large |x|, else
-//	         := sign(x)*log(2|x|+1/(|x|+sqrt(x*x+1))) if|x|>2, else
+//	我们有
+//	asinh(x) := x  如果  1+x*x=1,
+//	         := sign(x)*(log(x)+ln2) 对于大的 |x|，否则
+//	         := sign(x)*log(2|x|+1/(|x|+sqrt(x*x+1))) 如果 |x|>2，否则
 //	         := sign(x)*log1p(|x| + x**2/(1 + sqrt(1+x**2)))
 //
 
-// Asinh returns the inverse hyperbolic sine of x.
+// Asinh 返回 x 的反双曲正弦值。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Asinh(±0) = ±0
 //	Asinh(±Inf) = ±Inf
@@ -50,7 +48,7 @@ func asinh(x float64) float64 {
 		NearZero = 1.0 / (1 << 28)            // 2**-28
 		Large    = 1 << 28                    // 2**28
 	)
-	// special cases
+	// 特殊情况
 	if IsNaN(x) || IsInf(x, 0) {
 		return x
 	}

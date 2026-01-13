@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package strings
 
@@ -9,26 +9,25 @@ import (
 	"sync"
 )
 
-// Replacer replaces a list of strings with replacements.
-// It is safe for concurrent use by multiple goroutines.
+// Replacer 用替换项替换字符串列表。
+// 它对于多个 goroutine 并发使用是安全的。
 type Replacer struct {
-	once   sync.Once // guards buildOnce method
+	once   sync.Once // 保护 buildOnce 方法
 	r      replacer
 	oldnew []string
 }
 
-// replacer is the interface that a replacement algorithm needs to implement.
+// replacer 是替换算法需要实现的接口。
 type replacer interface {
 	Replace(s string) string
 	WriteString(w io.Writer, s string) (n int, err error)
 }
 
-// NewReplacer returns a new [Replacer] from a list of old, new string
-// pairs. Replacements are performed in the order they appear in the
-// target string, without overlapping matches. The old string
-// comparisons are done in argument order.
+// NewReplacer 从旧、新字符串对的列表返回一个新的 [Replacer]。
+// 替换按照它们在目标字符串中出现的顺序执行，不会有重叠匹配。
+// 旧字符串的比较按参数顺序进行。
 //
-// NewReplacer panics if given an odd number of arguments.
+// 如果给定奇数个参数，NewReplacer 会 panic。
 func NewReplacer(oldnew ...string) *Replacer {
 	if len(oldnew)%2 == 1 {
 		panic("strings.NewReplacer: odd argument count")
@@ -62,8 +61,8 @@ func (b *Replacer) build() replacer {
 		for i := range r {
 			r[i] = byte(i)
 		}
-		// The first occurrence of old->new map takes precedence
-		// over the others with the same old string.
+		// old->new 映射的第一次出现优先于
+		// 具有相同旧字符串的其他出现。
 		for i := len(oldnew) - 2; i >= 0; i -= 2 {
 			o := oldnew[i][0]
 			n := oldnew[i+1][0]
@@ -73,16 +72,16 @@ func (b *Replacer) build() replacer {
 	}
 
 	r := byteStringReplacer{toReplace: make([]string, 0, len(oldnew)/2)}
-	// The first occurrence of old->new map takes precedence
-	// over the others with the same old string.
+	// old->new 映射的第一次出现优先于
+	// 具有相同旧字符串的其他出现。
 	for i := len(oldnew) - 2; i >= 0; i -= 2 {
 		o := oldnew[i][0]
 		n := oldnew[i+1]
-		// To avoid counting repetitions multiple times.
+		// 避免多次计算重复项。
 		if r.replacements[o] == nil {
-			// We need to use string([]byte{o}) instead of string(o),
-			// to avoid utf8 encoding of o.
-			// E. g. byte(150) produces string of length 2.
+			// 我们需要使用 string([]byte{o}) 而不是 string(o)，
+			// 以避免对 o 进行 utf8 编码。
+			// 例如，byte(150) 会产生长度为 2 的字符串。
 			r.toReplace = append(r.toReplace, string([]byte{o}))
 		}
 		r.replacements[o] = []byte(n)
@@ -91,21 +90,21 @@ func (b *Replacer) build() replacer {
 	return &r
 }
 
-// Replace returns a copy of s with all replacements performed.
+// Replace 返回执行所有替换后的 s 的副本。
 func (r *Replacer) Replace(s string) string {
 	r.once.Do(r.buildOnce)
 	return r.r.Replace(s)
 }
 
-// WriteString writes s to w with all replacements performed.
+// WriteString 将执行所有替换后的 s 写入 w。
 func (r *Replacer) WriteString(w io.Writer, s string) (n int, err error) {
 	r.once.Do(r.buildOnce)
 	return r.r.WriteString(w, s)
 }
 
-// trieNode is a node in a lookup trie for prioritized key/value pairs. Keys
-// and values may be empty. For example, the trie containing keys "ax", "ay",
-// "bcbc", "x" and "xy" could have eight nodes:
+// trieNode 是用于优先级键/值对的查找 trie 中的节点。键
+// 和值可能为空。例如，包含键 "ax"、"ay"、
+// "bcbc"、"x" 和 "xy" 的 trie 可能有八个节点：
 //
 //	n0  -
 //	n1  a-
@@ -116,42 +115,41 @@ func (r *Replacer) WriteString(w io.Writer, s string) (n int, err error) {
 //	n6  x+
 //	n7  .y+
 //
-// n0 is the root node, and its children are n1, n4 and n6; n1's children are
-// n2 and n3; n4's child is n5; n6's child is n7. Nodes n0, n1 and n4 (marked
-// with a trailing "-") are partial keys, and nodes n2, n3, n5, n6 and n7
-// (marked with a trailing "+") are complete keys.
+// n0 是根节点，其子节点是 n1、n4 和 n6；n1 的子节点是
+// n2 和 n3；n4 的子节点是 n5；n6 的子节点是 n7。节点 n0、n1 和 n4（用
+// 尾随 "-" 标记）是部分键，节点 n2、n3、n5、n6 和 n7
+// （用尾随 "+" 标记）是完整键。
 type trieNode struct {
-	// value is the value of the trie node's key/value pair. It is empty if
-	// this node is not a complete key.
+	// value 是 trie 节点键/值对的值。如果
+	// 此节点不是完整键，则为空。
 	value string
-	// priority is the priority (higher is more important) of the trie node's
-	// key/value pair; keys are not necessarily matched shortest- or longest-
-	// first. Priority is positive if this node is a complete key, and zero
-	// otherwise. In the example above, positive/zero priorities are marked
-	// with a trailing "+" or "-".
+	// priority 是 trie 节点键/值对的优先级（越高越重要）；
+	// 键不一定按最短或最长优先匹配。
+	// 如果此节点是完整键，则优先级为正，否则为零。
+	// 在上面的示例中，正/零优先级用尾随 "+" 或 "-" 标记。
 	priority int
 
-	// A trie node may have zero, one or more child nodes:
-	//  * if the remaining fields are zero, there are no children.
-	//  * if prefix and next are non-zero, there is one child in next.
-	//  * if table is non-zero, it defines all the children.
+	// 一个 trie 节点可能有零个、一个或多个子节点：
+	//  * 如果其余字段为零，则没有子节点。
+	//  * 如果 prefix 和 next 非零，则 next 中有一个子节点。
+	//  * 如果 table 非零，它定义了所有子节点。
 	//
-	// Prefixes are preferred over tables when there is one child, but the
-	// root node always uses a table for lookup efficiency.
+	// 当只有一个子节点时，优先使用前缀而不是表，但
+	// 根节点总是使用表以提高查找效率。
 
-	// prefix is the difference in keys between this trie node and the next.
-	// In the example above, node n4 has prefix "cbc" and n4's next node is n5.
-	// Node n5 has no children and so has zero prefix, next and table fields.
+	// prefix 是此 trie 节点与下一个节点之间的键差异。
+	// 在上面的示例中，节点 n4 的前缀是 "cbc"，n4 的下一个节点是 n5。
+	// 节点 n5 没有子节点，因此 prefix、next 和 table 字段都为零。
 	prefix string
 	next   *trieNode
 
-	// table is a lookup table indexed by the next byte in the key, after
-	// remapping that byte through genericReplacer.mapping to create a dense
-	// index. In the example above, the keys only use 'a', 'b', 'c', 'x' and
-	// 'y', which remap to 0, 1, 2, 3 and 4. All other bytes remap to 5, and
-	// genericReplacer.tableSize will be 5. Node n0's table will be
-	// []*trieNode{ 0:n1, 1:n4, 3:n6 }, where the 0, 1 and 3 are the remapped
-	// 'a', 'b' and 'x'.
+	// table 是按键中下一个字节索引的查找表，在
+	// 通过 genericReplacer.mapping 重新映射该字节以创建密集
+	// 索引之后。在上面的示例中，键只使用 'a'、'b'、'c'、'x' 和
+	// 'y'，它们分别映射到 0、1、2、3 和 4。所有其他字节映射到 5，
+	// genericReplacer.tableSize 将为 5。节点 n0 的表将是
+	// []*trieNode{ 0:n1, 1:n4, 3:n6 }，其中 0、1 和 3 是重新映射的
+	// 'a'、'b' 和 'x'。
 	table []*trieNode
 }
 
@@ -165,8 +163,8 @@ func (t *trieNode) add(key, val string, priority int, r *genericReplacer) {
 	}
 
 	if t.prefix != "" {
-		// Need to split the prefix among multiple nodes.
-		var n int // length of the longest common prefix
+		// 需要在多个节点之间分割前缀。
+		var n int // 最长公共前缀的长度
 		for ; n < len(t.prefix) && n < len(key); n++ {
 			if t.prefix[n] != key[n] {
 				break
@@ -175,9 +173,9 @@ func (t *trieNode) add(key, val string, priority int, r *genericReplacer) {
 		if n == len(t.prefix) {
 			t.next.add(key[n:], val, priority, r)
 		} else if n == 0 {
-			// First byte differs, start a new lookup table here. Looking up
-			// what is currently t.prefix[0] will lead to prefixNode, and
-			// looking up key[0] will lead to keyNode.
+			// 第一个字节不同，在这里开始一个新的查找表。查找
+			// 当前 t.prefix[0] 将导向 prefixNode，
+			// 查找 key[0] 将导向 keyNode。
 			var prefixNode *trieNode
 			if len(t.prefix) == 1 {
 				prefixNode = t.next
@@ -195,7 +193,7 @@ func (t *trieNode) add(key, val string, priority int, r *genericReplacer) {
 			t.next = nil
 			keyNode.add(key[1:], val, priority, r)
 		} else {
-			// Insert new node after the common section of the prefix.
+			// 在前缀的公共部分之后插入新节点。
 			next := &trieNode{
 				prefix: t.prefix[n:],
 				next:   t.next,
@@ -205,7 +203,7 @@ func (t *trieNode) add(key, val string, priority int, r *genericReplacer) {
 			next.add(key[n:], val, priority, r)
 		}
 	} else if t.table != nil {
-		// Insert into existing table.
+		// 插入到现有表中。
 		m := r.mapping[key[0]]
 		if t.table[m] == nil {
 			t.table[m] = new(trieNode)
@@ -219,8 +217,8 @@ func (t *trieNode) add(key, val string, priority int, r *genericReplacer) {
 }
 
 func (r *genericReplacer) lookup(s string, ignoreRoot bool) (val string, keylen int, found bool) {
-	// Iterate down the trie to the end, and grab the value and keylen with
-	// the highest priority.
+	// 沿着 trie 向下迭代到末尾，并获取具有
+	// 最高优先级的值和键长度。
 	bestPriority := 0
 	node := &r.root
 	n := 0
@@ -254,20 +252,20 @@ func (r *genericReplacer) lookup(s string, ignoreRoot bool) (val string, keylen 
 	return
 }
 
-// genericReplacer is the fully generic algorithm.
-// It's used as a fallback when nothing faster can be used.
+// genericReplacer 是完全通用的算法。
+// 当没有更快的方法可用时，它作为后备使用。
 type genericReplacer struct {
 	root trieNode
-	// tableSize is the size of a trie node's lookup table. It is the number
-	// of unique key bytes.
+	// tableSize 是 trie 节点查找表的大小。它是
+	// 唯一键字节的数量。
 	tableSize int
-	// mapping maps from key bytes to a dense index for trieNode.table.
+	// mapping 将键字节映射到 trieNode.table 的密集索引。
 	mapping [256]byte
 }
 
 func makeGenericReplacer(oldnew []string) *genericReplacer {
 	r := new(genericReplacer)
-	// Find each byte used, then assign them each an index.
+	// 找到每个使用的字节，然后为每个分配一个索引。
 	for i := 0; i < len(oldnew); i += 2 {
 		key := oldnew[i]
 		for j := 0; j < len(key); j++ {
@@ -288,7 +286,7 @@ func makeGenericReplacer(oldnew []string) *genericReplacer {
 			index++
 		}
 	}
-	// Ensure root node uses a lookup table (for performance).
+	// 确保根节点使用查找表（为了性能）。
 	r.root.table = make([]*trieNode, r.tableSize)
 
 	for i := 0; i < len(oldnew); i += 2 {
@@ -299,13 +297,13 @@ func makeGenericReplacer(oldnew []string) *genericReplacer {
 
 type appendSliceWriter []byte
 
-// Write writes to the buffer to satisfy [io.Writer].
+// Write 写入缓冲区以满足 [io.Writer] 接口。
 func (w *appendSliceWriter) Write(p []byte) (int, error) {
 	*w = append(*w, p...)
 	return len(p), nil
 }
 
-// WriteString writes to the buffer without string->[]byte->string allocations.
+// WriteString 写入缓冲区，不进行 string->[]byte->string 的分配。
 func (w *appendSliceWriter) WriteString(s string) (int, error) {
 	*w = append(*w, s...)
 	return len(s), nil
@@ -338,7 +336,7 @@ func (r *genericReplacer) WriteString(w io.Writer, s string) (n int, err error) 
 	var last, wn int
 	var prevMatchEmpty bool
 	for i := 0; i <= len(s); {
-		// Fast path: s[i] is not a prefix of any pattern.
+		// 快速路径：s[i] 不是任何模式的前缀。
 		if i != len(s) && r.root.priority == 0 {
 			index := int(r.mapping[s[i]])
 			if index == r.tableSize || r.root.table[index] == nil {
@@ -347,7 +345,7 @@ func (r *genericReplacer) WriteString(w io.Writer, s string) (n int, err error) 
 			}
 		}
 
-		// Ignore the empty match iff the previous loop found the empty match.
+		// 仅当上一次循环找到空匹配时，才忽略空匹配。
 		val, keylen, match := r.lookup(s[i:], prevMatchEmpty)
 		prevMatchEmpty = match && keylen == 0
 		if match {
@@ -374,11 +372,11 @@ func (r *genericReplacer) WriteString(w io.Writer, s string) (n int, err error) 
 	return
 }
 
-// singleStringReplacer is the implementation that's used when there is only
-// one string to replace (and that string has more than one byte).
+// singleStringReplacer 是当只有一个字符串需要替换时使用的实现
+// （且该字符串超过一个字节）。
 type singleStringReplacer struct {
 	finder *stringFinder
-	// value is the new string that replaces that pattern when it's found.
+	// value 是找到模式时用于替换的新字符串。
 	value string
 }
 
@@ -432,13 +430,13 @@ func (r *singleStringReplacer) WriteString(w io.Writer, s string) (n int, err er
 	return
 }
 
-// byteReplacer is the implementation that's used when all the "old"
-// and "new" values are single ASCII bytes.
-// The array contains replacement bytes indexed by old byte.
+// byteReplacer 是当所有 "old" 和 "new" 值都是单个 ASCII 字节时
+// 使用的实现。
+// 该数组包含按旧字节索引的替换字节。
 type byteReplacer [256]byte
 
 func (r *byteReplacer) Replace(s string) string {
-	var buf []byte // lazily allocated
+	var buf []byte // 延迟分配
 	for i := 0; i < len(s); i++ {
 		b := s[i]
 		if r[b] != b {
@@ -486,35 +484,35 @@ func (r *byteReplacer) WriteString(w io.Writer, s string) (n int, err error) {
 	return n, nil
 }
 
-// byteStringReplacer is the implementation that's used when all the
-// "old" values are single ASCII bytes but the "new" values vary in size.
+// byteStringReplacer 是当所有 "old" 值都是单个 ASCII 字节
+// 但 "new" 值大小不同时使用的实现。
 type byteStringReplacer struct {
-	// replacements contains replacement byte slices indexed by old byte.
-	// A nil []byte means that the old byte should not be replaced.
+	// replacements 包含按旧字节索引的替换字节切片。
+	// nil []byte 表示不应替换旧字节。
 	replacements [256][]byte
-	// toReplace keeps a list of bytes to replace. Depending on length of toReplace
-	// and length of target string it may be faster to use Count, or a plain loop.
-	// We store single byte as a string, because Count takes a string.
+	// toReplace 保存要替换的字节列表。根据 toReplace 的长度
+	// 和目标字符串的长度，使用 Count 或普通循环可能更快。
+	// 我们将单个字节存储为字符串，因为 Count 接受字符串。
 	toReplace []string
 }
 
-// countCutOff controls the ratio of a string length to a number of replacements
-// at which (*byteStringReplacer).Replace switches algorithms.
-// For strings with higher ration of length to replacements than that value,
-// we call Count, for each replacement from toReplace.
-// For strings, with a lower ratio we use simple loop, because of Count overhead.
-// countCutOff is an empirically determined overhead multiplier.
-// TODO(tocarip) revisit once we have register-based abi/mid-stack inlining.
+// countCutOff 控制字符串长度与替换次数的比率，
+// (*byteStringReplacer).Replace 在该比率处切换算法。
+// 对于长度与替换次数比率高于该值的字符串，
+// 我们对 toReplace 中的每个替换调用 Count。
+// 对于比率较低的字符串，由于 Count 的开销，我们使用简单循环。
+// countCutOff 是经验确定的开销乘数。
+// TODO(tocarip) 一旦我们有基于寄存器的 abi/中间栈内联，重新审视此问题。
 const countCutOff = 8
 
 func (r *byteStringReplacer) Replace(s string) string {
 	newSize := len(s)
 	anyChanges := false
-	// Is it faster to use Count?
+	// 使用 Count 会更快吗？
 	if len(r.toReplace)*countCutOff <= len(s) {
 		for _, x := range r.toReplace {
 			if c := Count(s, x); c != 0 {
-				// The -1 is because we are replacing 1 byte with len(replacements[b]) bytes.
+				// -1 是因为我们用 len(replacements[b]) 字节替换 1 字节。
 				newSize += c * (len(r.replacements[x[0]]) - 1)
 				anyChanges = true
 			}
@@ -524,7 +522,7 @@ func (r *byteStringReplacer) Replace(s string) string {
 		for i := 0; i < len(s); i++ {
 			b := s[i]
 			if r.replacements[b] != nil {
-				// See above for explanation of -1
+				// 参见上面对 -1 的解释
 				newSize += len(r.replacements[b]) - 1
 				anyChanges = true
 			}

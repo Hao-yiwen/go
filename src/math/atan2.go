@@ -1,14 +1,13 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
-// Atan2 returns the arc tangent of y/x, using
-// the signs of the two to determine the quadrant
-// of the return value.
+// Atan2 返回 y/x 的反正切值，使用两者的符号
+// 来确定返回值所在的象限。
 //
-// Special cases are (in order):
+// 特殊情况（按顺序）：
 //
 //	Atan2(y, NaN) = NaN
 //	Atan2(NaN, x) = NaN
@@ -35,7 +34,7 @@ func Atan2(y, x float64) float64 {
 }
 
 func atan2(y, x float64) float64 {
-	// special cases
+	// 特殊情况
 	switch {
 	case IsNaN(y) || IsNaN(x):
 		return NaN()
@@ -65,7 +64,7 @@ func atan2(y, x float64) float64 {
 		return Copysign(Pi/2, y)
 	}
 
-	// Call atan and determine the quadrant.
+	// 调用 atan 并确定象限。
 	q := Atan(y / x)
 	if x < 0 {
 		if q <= 0 {

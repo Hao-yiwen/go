@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package reflect
 
@@ -20,12 +20,12 @@ func (t *rtype) Key() Type {
 	return toType(tt.Key)
 }
 
-// MapOf returns the map type with the given key and element types.
-// For example, if k represents int and e represents string,
-// MapOf(k, e) represents map[int]string.
+// MapOf 返回具有给定键和元素类型的 map 类型。
+// 例如，如果 k 表示 int，e 表示 string，
+// MapOf(k, e) 表示 map[int]string。
 //
-// If the key type is not a valid map key type (that is, if it does
-// not implement Go's == operator), MapOf panics.
+// 如果键类型不是有效的 map 键类型（即，如果它没有
+// 实现 Go 的 == 运算符），MapOf 会 panic。
 func MapOf(key, elem Type) Type {
 	ktyp := key.common()
 	etyp := elem.common()
@@ -34,13 +34,13 @@ func MapOf(key, elem Type) Type {
 		panic("reflect.MapOf: invalid key type " + stringFor(ktyp))
 	}
 
-	// Look in cache.
+	// 在缓存中查找。
 	ckey := cacheKey{Map, ktyp, etyp, 0}
 	if mt, ok := lookupCache.Load(ckey); ok {
 		return mt.(Type)
 	}
 
-	// Look in known types.
+	// 在已知类型中查找。
 	s := "map[" + stringFor(ktyp) + "]" + stringFor(etyp)
 	for _, tt := range typesByString(s) {
 		mt := (*abi.MapType)(unsafe.Pointer(tt))
@@ -52,9 +52,9 @@ func MapOf(key, elem Type) Type {
 
 	group, slot := groupAndSlotOf(key, elem)
 
-	// Make a map type.
-	// Note: flag values must match those used in the TMAP case
-	// in ../cmd/compile/internal/reflectdata/reflect.go:writeType.
+	// 创建一个 map 类型。
+	// 注意：flag 值必须与 ../cmd/compile/internal/reflectdata/reflect.go:writeType
+	// 中 TMAP 情况使用的值匹配。
 	var imap any = (map[unsafe.Pointer]unsafe.Pointer)(nil)
 	mt := **(**abi.MapType)(unsafe.Pointer(&imap))
 	mt.Str = resolveReflectName(newName(s, "", false, false))
@@ -96,6 +96,7 @@ func groupAndSlotOf(ktyp, etyp Type) (Type, Type) {
 	//         elem elemType
 	//     }
 	// }
+	// （保留原始注释结构以说明 group 类型的布局）
 
 	if ktyp.Size() > abi.MapMaxKeyBytes {
 		ktyp = PointerTo(ktyp)
@@ -132,21 +133,18 @@ func groupAndSlotOf(ktyp, etyp Type) (Type, Type) {
 
 var stringType = rtypeOf("")
 
-// MapIndex returns the value associated with key in the map v.
-// It panics if v's Kind is not [Map].
-// It returns the zero Value if key is not found in the map or if v represents a nil map.
-// As in Go, the key's value must be assignable to the map's key type.
+// MapIndex 返回 map v 中与 key 关联的值。
+// 如果 v 的 Kind 不是 [Map]，它会 panic。
+// 如果在 map 中找不到 key 或者 v 表示一个 nil map，它返回零值 Value。
+// 与 Go 中一样，key 的值必须可赋值给 map 的键类型。
 func (v Value) MapIndex(key Value) Value {
 	v.mustBe(Map)
 	tt := (*abi.MapType)(unsafe.Pointer(v.typ()))
 
-	// Do not require key to be exported, so that DeepEqual
-	// and other programs can use all the keys returned by
-	// MapKeys as arguments to MapIndex. If either the map
-	// or the key is unexported, though, the result will be
-	// considered unexported. This is consistent with the
-	// behavior for structs, which allow read but not write
-	// of unexported fields.
+	// 不要求 key 是导出的，这样 DeepEqual 和其他程序可以使用
+	// MapKeys 返回的所有键作为 MapIndex 的参数。但是，如果 map
+	// 或 key 是未导出的，结果将被视为未导出。这与结构体的行为
+	// 一致，结构体允许读取但不允许写入未导出的字段。
 
 	var e unsafe.Pointer
 	if (tt.Key == stringType || key.kind() == String) && tt.Key == key.typ() && tt.Elem.Size() <= abi.MapMaxElemBytes {
@@ -171,7 +169,7 @@ func (v Value) MapIndex(key Value) Value {
 	return copyVal(typ, fl, e)
 }
 
-// Equivalent to runtime.mapIterStart.
+// 等同于 runtime.mapIterStart。
 //
 //go:noinline
 func mapIterStart(t *abi.MapType, m *maps.Map, it *maps.Iter) {
@@ -184,7 +182,7 @@ func mapIterStart(t *abi.MapType, m *maps.Map, it *maps.Iter) {
 	it.Next()
 }
 
-// Equivalent to runtime.mapIterNext.
+// 等同于 runtime.mapIterNext。
 //
 //go:noinline
 func mapIterNext(it *maps.Iter) {
@@ -196,10 +194,9 @@ func mapIterNext(it *maps.Iter) {
 	it.Next()
 }
 
-// MapKeys returns a slice containing all the keys present in the map,
-// in unspecified order.
-// It panics if v's Kind is not [Map].
-// It returns an empty slice if v represents a nil map.
+// MapKeys 返回包含 map 中所有键的切片，顺序不确定。
+// 如果 v 的 Kind 不是 [Map]，它会 panic。
+// 如果 v 表示一个 nil map，它返回空切片。
 func (v Value) MapKeys() []Value {
 	v.mustBe(Map)
 	tt := (*abi.MapType)(unsafe.Pointer(v.typ()))
@@ -207,9 +204,8 @@ func (v Value) MapKeys() []Value {
 
 	fl := v.flag.ro() | flag(keyType.Kind())
 
-	// Escape analysis can't see that the map doesn't escape. It sees an
-	// escape from maps.IterStart, via assignment into it, even though it
-	// doesn't escape this function.
+	// 逃逸分析看不出 map 不会逃逸。它看到从 maps.IterStart 逃逸，
+	// 通过赋值进入它，尽管它并没有逃逸这个函数。
 	mptr := abi.NoEscape(v.pointer())
 	m := (*maps.Map)(mptr)
 	mlen := int(0)
@@ -223,9 +219,8 @@ func (v Value) MapKeys() []Value {
 	for i = 0; i < len(a); i++ {
 		key := it.Key()
 		if key == nil {
-			// Someone deleted an entry from the map since we
-			// called maplen above. It's a data race, but nothing
-			// we can do about it.
+			// 自从我们上面调用 maplen 以来，有人从 map 中删除了一个条目。
+			// 这是一个数据竞争，但我们对此无能为力。
 			break
 		}
 		a[i] = copyVal(keyType, fl, key)
@@ -234,14 +229,14 @@ func (v Value) MapKeys() []Value {
 	return a[:i]
 }
 
-// A MapIter is an iterator for ranging over a map.
-// See [Value.MapRange].
+// MapIter 是用于遍历 map 的迭代器。
+// 参见 [Value.MapRange]。
 type MapIter struct {
 	m     Value
 	hiter maps.Iter
 }
 
-// Key returns the key of iter's current map entry.
+// Key 返回 iter 当前 map 条目的键。
 func (iter *MapIter) Key() Value {
 	if !iter.hiter.Initialized() {
 		panic("MapIter.Key called before Next")
@@ -256,11 +251,11 @@ func (iter *MapIter) Key() Value {
 	return copyVal(ktype, iter.m.flag.ro()|flag(ktype.Kind()), iterkey)
 }
 
-// SetIterKey assigns to v the key of iter's current map entry.
-// It is equivalent to v.Set(iter.Key()), but it avoids allocating a new Value.
-// As in Go, the key must be assignable to v's type and
-// must not be derived from an unexported field.
-// It panics if [Value.CanSet] returns false.
+// SetIterKey 将 iter 当前 map 条目的键赋值给 v。
+// 它等同于 v.Set(iter.Key())，但避免分配新的 Value。
+// 与 Go 中一样，键必须可赋值给 v 的类型，
+// 且不能派生自未导出的字段。
+// 如果 [Value.CanSet] 返回 false，它会 panic。
 func (v Value) SetIterKey(iter *MapIter) {
 	if !iter.hiter.Initialized() {
 		panic("reflect: Value.SetIterKey called before Next")
@@ -279,13 +274,13 @@ func (v Value) SetIterKey(iter *MapIter) {
 	t := (*abi.MapType)(unsafe.Pointer(iter.m.typ()))
 	ktype := t.Key
 
-	iter.m.mustBeExported() // do not let unexported m leak
+	iter.m.mustBeExported() // 不要让未导出的 m 泄漏
 	key := Value{ktype, iterkey, iter.m.flag | flag(ktype.Kind()) | flagIndir}
 	key = key.assignTo("reflect.MapIter.SetKey", v.typ(), target)
 	typedmemmove(v.typ(), v.ptr, key.ptr)
 }
 
-// Value returns the value of iter's current map entry.
+// Value 返回 iter 当前 map 条目的值。
 func (iter *MapIter) Value() Value {
 	if !iter.hiter.Initialized() {
 		panic("MapIter.Value called before Next")
@@ -300,11 +295,11 @@ func (iter *MapIter) Value() Value {
 	return copyVal(vtype, iter.m.flag.ro()|flag(vtype.Kind()), iterelem)
 }
 
-// SetIterValue assigns to v the value of iter's current map entry.
-// It is equivalent to v.Set(iter.Value()), but it avoids allocating a new Value.
-// As in Go, the value must be assignable to v's type and
-// must not be derived from an unexported field.
-// It panics if [Value.CanSet] returns false.
+// SetIterValue 将 iter 当前 map 条目的值赋值给 v。
+// 它等同于 v.Set(iter.Value())，但避免分配新的 Value。
+// 与 Go 中一样，值必须可赋值给 v 的类型，
+// 且不能派生自未导出的字段。
+// 如果 [Value.CanSet] 返回 false，它会 panic。
 func (v Value) SetIterValue(iter *MapIter) {
 	if !iter.hiter.Initialized() {
 		panic("reflect: Value.SetIterValue called before Next")
@@ -323,15 +318,15 @@ func (v Value) SetIterValue(iter *MapIter) {
 	t := (*abi.MapType)(unsafe.Pointer(iter.m.typ()))
 	vtype := t.Elem
 
-	iter.m.mustBeExported() // do not let unexported m leak
+	iter.m.mustBeExported() // 不要让未导出的 m 泄漏
 	elem := Value{vtype, iterelem, iter.m.flag | flag(vtype.Kind()) | flagIndir}
 	elem = elem.assignTo("reflect.MapIter.SetValue", v.typ(), target)
 	typedmemmove(v.typ(), v.ptr, elem.ptr)
 }
 
-// Next advances the map iterator and reports whether there is another
-// entry. It returns false when iter is exhausted; subsequent
-// calls to [MapIter.Key], [MapIter.Value], or [MapIter.Next] will panic.
+// Next 推进 map 迭代器并报告是否还有另一个条目。
+// 当 iter 耗尽时返回 false；后续调用 [MapIter.Key]、
+// [MapIter.Value] 或 [MapIter.Next] 会 panic。
 func (iter *MapIter) Next() bool {
 	if !iter.m.IsValid() {
 		panic("MapIter.Next called on an iterator that does not have an associated map Value")
@@ -349,10 +344,10 @@ func (iter *MapIter) Next() bool {
 	return iter.hiter.Key() != nil
 }
 
-// Reset modifies iter to iterate over v.
-// It panics if v's Kind is not [Map] and v is not the zero Value.
-// Reset(Value{}) causes iter to not to refer to any map,
-// which may allow the previously iterated-over map to be garbage collected.
+// Reset 修改 iter 以遍历 v。
+// 如果 v 的 Kind 不是 [Map] 且 v 不是零值，它会 panic。
+// Reset(Value{}) 使 iter 不再引用任何 map，
+// 这可能允许先前迭代的 map 被垃圾回收。
 func (iter *MapIter) Reset(v Value) {
 	if v.IsValid() {
 		v.mustBe(Map)
@@ -361,14 +356,14 @@ func (iter *MapIter) Reset(v Value) {
 	iter.hiter = maps.Iter{}
 }
 
-// MapRange returns a range iterator for a map.
-// It panics if v's Kind is not [Map].
+// MapRange 返回 map 的 range 迭代器。
+// 如果 v 的 Kind 不是 [Map]，它会 panic。
 //
-// Call [MapIter.Next] to advance the iterator, and [MapIter.Key]/[MapIter.Value] to access each entry.
-// [MapIter.Next] returns false when the iterator is exhausted.
-// MapRange follows the same iteration semantics as a range statement.
+// 调用 [MapIter.Next] 推进迭代器，调用 [MapIter.Key]/[MapIter.Value] 访问每个条目。
+// 当迭代器耗尽时 [MapIter.Next] 返回 false。
+// MapRange 遵循与 range 语句相同的迭代语义。
 //
-// Example:
+// 示例：
 //
 //	iter := reflect.ValueOf(m).MapRange()
 //	for iter.Next() {
@@ -377,22 +372,21 @@ func (iter *MapIter) Reset(v Value) {
 //		...
 //	}
 func (v Value) MapRange() *MapIter {
-	// This is inlinable to take advantage of "function outlining".
-	// The allocation of MapIter can be stack allocated if the caller
-	// does not allow it to escape.
-	// See https://blog.filippo.io/efficient-go-apis-with-the-inliner/
+	// 这是可内联的，以利用"函数外联"。
+	// 如果调用者不允许它逃逸，MapIter 的分配可以在栈上分配。
+	// 参见 https://blog.filippo.io/efficient-go-apis-with-the-inliner/
 	if v.kind() != Map {
 		v.panicNotMap()
 	}
 	return &MapIter{m: v}
 }
 
-// SetMapIndex sets the element associated with key in the map v to elem.
-// It panics if v's Kind is not [Map].
-// If elem is the zero Value, SetMapIndex deletes the key from the map.
-// Otherwise if v holds a nil map, SetMapIndex will panic.
-// As in Go, key's elem must be assignable to the map's key type,
-// and elem's value must be assignable to the map's elem type.
+// SetMapIndex 将 map v 中与 key 关联的元素设置为 elem。
+// 如果 v 的 Kind 不是 [Map]，它会 panic。
+// 如果 elem 是零值 Value，SetMapIndex 会从 map 中删除 key。
+// 否则，如果 v 持有一个 nil map，SetMapIndex 会 panic。
+// 与 Go 中一样，key 的值必须可赋值给 map 的键类型，
+// elem 的值必须可赋值给 map 的元素类型。
 func (v Value) SetMapIndex(key, elem Value) {
 	v.mustBe(Map)
 	v.mustBeExported()
@@ -439,9 +433,8 @@ func (v Value) SetMapIndex(key, elem Value) {
 	mapassign(v.typ(), v.pointer(), k, e)
 }
 
-// Force slow panicking path not inlined, so it won't add to the
-// inlining budget of the caller.
-// TODO: undo when the inliner is no longer bottom-up only.
+// 强制慢速 panic 路径不内联，这样它就不会增加调用者的内联预算。
+// TODO: 当内联器不再仅是自底向上时撤销此操作。
 //
 //go:noinline
 func (f flag) panicNotMap() {

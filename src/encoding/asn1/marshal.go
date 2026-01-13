@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package asn1
 
@@ -20,9 +20,9 @@ var (
 	byteFFEncoder encoder = byteEncoder(0xff)
 )
 
-// encoder represents an ASN.1 element that is waiting to be marshaled.
+// encoder 表示an ASN.1 element that is waiting to be marshaled.
 type encoder interface {
-	// Len returns the number of bytes needed to marshal this element.
+	// Len 返回 number of bytes needed to marshal this element.
 	Len() int
 	// Encode encodes this element by writing Len() bytes to dst.
 	Encode(dst []byte)
@@ -108,7 +108,7 @@ func (s setEncoder) Encode(dst []byte) {
 	// Since we are using bytes.Compare to compare TLV encodings we
 	// don't need to right pad s[i] and s[j] to the same length as
 	// suggested in X690. If len(s[i]) < len(s[j]) the length octet of
-	// s[i], which is the first determining byte, will inherently be
+	// s[i], which 是 first determining byte, will inherently be
 	// smaller than the length octet of s[j]. This lets us skip the
 	// padding step.
 	slices.SortFunc(l, bytes.Compare)
@@ -121,7 +121,7 @@ func (s setEncoder) Encode(dst []byte) {
 }
 
 type taggedEncoder struct {
-	// scratch contains temporary space for encoding the tag and length of
+	// scratch 包含 temporary space for encoding the tag and length of
 	// an element in order to avoid extra allocations.
 	scratch [8]byte
 	tag     encoder
@@ -198,7 +198,7 @@ func makeBigInt(n *big.Int) (encoder, error) {
 	}
 
 	if n.Sign() < 0 {
-		// A negative number has to be converted to two's-complement
+		// 一个negative number has to be 转换为 two's-complement
 		// form. So we'll invert and subtract 1. If the
 		// most-significant-bit isn't set then we'll need to pad the
 		// beginning with 0xff in order to keep the number negative.
@@ -313,11 +313,11 @@ func makePrintableString(s string) (e encoder, err error) {
 		// The asterisk is often used in PrintableString, even though
 		// it is invalid. If a PrintableString was specifically
 		// requested then the asterisk is permitted by this code.
-		// Ampersand is allowed in parsing due a handful of CA
+		// Ampersand 是一个llowed in parsing due a handful of CA
 		// certificates, however when making new certificates
 		// it is rejected.
 		if !isPrintable(s[i], allowAsterisk, rejectAmpersand) {
-			return nil, StructuralError{"PrintableString contains invalid character"}
+			return nil, StructuralError{"PrintableString 包含 invalid character"}
 		}
 	}
 
@@ -327,7 +327,7 @@ func makePrintableString(s string) (e encoder, err error) {
 func makeIA5String(s string) (e encoder, err error) {
 	for i := 0; i < len(s); i++ {
 		if s[i] > 127 {
-			return nil, StructuralError{"IA5String contains invalid character"}
+			return nil, StructuralError{"IA5String 包含 invalid character"}
 		}
 	}
 
@@ -337,7 +337,7 @@ func makeIA5String(s string) (e encoder, err error) {
 func makeNumericString(s string) (e encoder, err error) {
 	for i := 0; i < len(s); i++ {
 		if !isNumeric(s[i]) {
-			return nil, StructuralError{"NumericString contains invalid character"}
+			return nil, StructuralError{"NumericString 包含 invalid character"}
 		}
 	}
 
@@ -489,7 +489,7 @@ func makeBody(value reflect.Value, params fieldParameters) (e encoder, err error
 
 		for i := 0; i < t.NumField(); i++ {
 			if !t.Field(i).IsExported() {
-				return nil, StructuralError{"struct contains unexported fields"}
+				return nil, StructuralError{"struct 包含 unexported fields"}
 			}
 		}
 
@@ -500,7 +500,7 @@ func makeBody(value reflect.Value, params fieldParameters) (e encoder, err error
 			return bytesEncoder(nil), nil
 		}
 
-		// If the first element of the structure is a non-empty
+		// If the first element of the structure 是一个 non-empty
 		// RawContents, then we don't bother serializing the rest.
 		if t.Field(0).Type == rawContentsType {
 			s := v.Field(0)
@@ -580,7 +580,7 @@ func makeField(v reflect.Value, params fieldParameters) (e encoder, err error) {
 	if !v.IsValid() {
 		return nil, fmt.Errorf("asn1: cannot marshal nil value")
 	}
-	// If the field is an interface{} then recurse into it.
+	// If the field 是一个n interface{} then recurse into it.
 	if v.Kind() == reflect.Interface && v.Type().NumMethod() == 0 {
 		return makeField(v.Elem(), params)
 	}
@@ -637,9 +637,9 @@ func makeField(v reflect.Value, params fieldParameters) (e encoder, err error) {
 	switch tag {
 	case TagPrintableString:
 		if params.stringType == 0 {
-			// This is a string without an explicit string type. We'll use
-			// a PrintableString if the character set in the string is
-			// sufficiently limited, otherwise we'll use a UTF8String.
+			// This 是一个 string without an explicit string type. We'll use
+			// a PrintableString 如果 character set in the string is
+			// sufficiently limited, 否则 we'll use a UTF8String.
 			for _, r := range v.String() {
 				if r >= utf8.RuneSelf || !isPrintable(byte(r), rejectAsterisk, rejectAmpersand) {
 					if !utf8.ValidString(v.String()) {
@@ -666,7 +666,7 @@ func makeField(v reflect.Value, params fieldParameters) (e encoder, err error) {
 		tag = TagSet
 	}
 
-	// makeField can be called for a slice that should be treated as a SET
+	// makeField can be called for a slice that 应该是 treated as a SET
 	// but doesn't have params.set set, for instance when using a slice
 	// with the SET type name suffix. In this case getUniversalType returns
 	// TagSet, but makeBody doesn't know about that so will treat the slice
@@ -720,7 +720,7 @@ func makeField(v reflect.Value, params fieldParameters) (e encoder, err error) {
 	return t, nil
 }
 
-// Marshal returns the ASN.1 encoding of val.
+// Marshal 返回the ASN.1 encoding of val.
 //
 // In addition to the struct tags recognized by Unmarshal, the following can be
 // used:
@@ -736,8 +736,8 @@ func Marshal(val any) ([]byte, error) {
 	return MarshalWithParams(val, "")
 }
 
-// MarshalWithParams allows field parameters to be specified for the
-// top-level element. The form of the params is the same as the field tags.
+// MarshalWithParams 允许field parameters to be specified for the
+// top-level element. The form of the params 是 same as the field tags.
 func MarshalWithParams(val any, params string) ([]byte, error) {
 	e, err := makeField(reflect.ValueOf(val), parseFieldParameters(params))
 	if err != nil {

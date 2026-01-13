@@ -1,18 +1,18 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2016 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package ed25519 implements the Ed25519 signature algorithm. See
-// https://ed25519.cr.yp.to/.
+// ed25519 包实现了 Ed25519 签名算法。参见
+// https://ed25519.cr.yp.to/。
 //
-// These functions are also compatible with the “Ed25519” function defined in
-// RFC 8032. However, unlike RFC 8032's formulation, this package's private key
-// representation includes a public key suffix to make multiple signing
-// operations with the same key more efficient. This package refers to the RFC
-// 8032 private key as the “seed”.
+// 这些函数也与 RFC 8032 中定义的 "Ed25519" 函数兼容。
+// 然而，与 RFC 8032 的表述不同，此包的私钥
+// 表示包含公钥后缀，以使多个签名
+// 使用同一密钥更高效。此包将 RFC
+// 8032 私钥称为 "种子"。
 //
-// Operations involving private keys are implemented using constant-time
-// algorithms.
+// 涉及私钥的操作使用常数时间
+// 算法实现。
 package ed25519
 
 import (
@@ -30,23 +30,23 @@ import (
 )
 
 const (
-	// PublicKeySize is the size, in bytes, of public keys as used in this package.
+	// PublicKeySize 是此包中使用的公钥的字节大小。
 	PublicKeySize = 32
-	// PrivateKeySize is the size, in bytes, of private keys as used in this package.
+	// PrivateKeySize 是此包中使用的私钥的字节大小。
 	PrivateKeySize = 64
-	// SignatureSize is the size, in bytes, of signatures generated and verified by this package.
+	// SignatureSize 是此包生成和验证的签名的字节大小。
 	SignatureSize = 64
-	// SeedSize is the size, in bytes, of private key seeds. These are the private key representations used by RFC 8032.
+	// SeedSize 是私钥种子的字节大小。这些是 RFC 8032 使用的私钥表示。
 	SeedSize = 32
 )
 
-// PublicKey is the type of Ed25519 public keys.
+// PublicKey 是 Ed25519 公钥的类型。
 type PublicKey []byte
 
-// Any methods implemented on PublicKey might need to also be implemented on
-// PrivateKey, as the latter embeds the former and will expose its methods.
+// 在 PublicKey 上实现的任何方法可能也需要在
+// PrivateKey 上实现，因为后者嵌入了前者并将公开其方法。
 
-// Equal reports whether pub and x have the same value.
+// Equal 报告 pub 和 x 是否具有相同的值。
 func (pub PublicKey) Equal(x crypto.PublicKey) bool {
 	xx, ok := x.(PublicKey)
 	if !ok {
@@ -55,17 +55,17 @@ func (pub PublicKey) Equal(x crypto.PublicKey) bool {
 	return subtle.ConstantTimeCompare(pub, xx) == 1
 }
 
-// PrivateKey is the type of Ed25519 private keys. It implements [crypto.Signer].
+// PrivateKey 是 Ed25519 私钥的类型。它实现了 [crypto.Signer]。
 type PrivateKey []byte
 
-// Public returns the [PublicKey] corresponding to priv.
+// Public 返回与 priv 对应的 [PublicKey]。
 func (priv PrivateKey) Public() crypto.PublicKey {
 	publicKey := make([]byte, PublicKeySize)
 	copy(publicKey, priv[32:])
 	return PublicKey(publicKey)
 }
 
-// Equal reports whether priv and x have the same value.
+// Equal 报告 priv 和 x 是否具有相同的值。
 func (priv PrivateKey) Equal(x crypto.PrivateKey) bool {
 	xx, ok := x.(PrivateKey)
 	if !ok {
@@ -74,26 +74,26 @@ func (priv PrivateKey) Equal(x crypto.PrivateKey) bool {
 	return subtle.ConstantTimeCompare(priv, xx) == 1
 }
 
-// Seed returns the private key seed corresponding to priv. It is provided for
-// interoperability with RFC 8032. RFC 8032's private keys correspond to seeds
-// in this package.
+// Seed 返回与 priv 对应的私钥种子。提供此方法是为了
+// 与 RFC 8032 互操作。RFC 8032 的私钥对应于
+// 此包中的种子。
 func (priv PrivateKey) Seed() []byte {
 	return append(make([]byte, 0, SeedSize), priv[:SeedSize]...)
 }
 
-// privateKeyCache uses a pointer to the first byte of underlying storage as a
-// key, because [PrivateKey] is a slice header passed around by value.
+// privateKeyCache 使用指向底层存储的第一个字节的指针作为
+// 键，因为 [PrivateKey] 是按值传递的切片头。
 var privateKeyCache fips140cache.Cache[byte, ed25519.PrivateKey]
 
-// Sign signs the given message with priv. rand is ignored and can be nil.
+// Sign 使用 priv 对给定的消息进行签名。rand 被忽略，可以为 nil。
 //
-// If opts.HashFunc() is [crypto.SHA512], the pre-hashed variant Ed25519ph is used
-// and message is expected to be a SHA-512 hash, otherwise opts.HashFunc() must
-// be [crypto.Hash](0) and the message must not be hashed, as Ed25519 performs two
-// passes over messages to be signed.
+// 如果 opts.HashFunc() 是 [crypto.SHA512]，则使用预哈希的变体 Ed25519ph
+// 并期望消息是 SHA-512 哈希，否则 opts.HashFunc() 必须
+// 是 [crypto.Hash](0) 并且消息不能被哈希，因为 Ed25519 对
+// 要签名的消息执行两次传递。
 //
-// A value of type [Options] can be used as opts, or crypto.Hash(0) or
-// crypto.SHA512 directly to select plain Ed25519 or Ed25519ph, respectively.
+// [Options] 类型的值可以用作 opts，或者可以直接使用 crypto.Hash(0) 或
+// crypto.SHA512 来分别选择纯 Ed25519 或 Ed25519ph。
 func (priv PrivateKey) Sign(rand io.Reader, message []byte, opts crypto.SignerOpts) (signature []byte, err error) {
 	k, err := privateKeyCache.Get(&priv[0], func() (*ed25519.PrivateKey, error) {
 		return ed25519.NewPrivateKey(priv)
@@ -123,14 +123,14 @@ func (priv PrivateKey) Sign(rand io.Reader, message []byte, opts crypto.SignerOp
 	}
 }
 
-// Options can be used with [PrivateKey.Sign] or [VerifyWithOptions]
-// to select Ed25519 variants.
+// Options 可与 [PrivateKey.Sign] 或 [VerifyWithOptions]
+// 一起使用来选择 Ed25519 变体。
 type Options struct {
-	// Hash can be zero for regular Ed25519, or crypto.SHA512 for Ed25519ph.
+	// Hash 对于常规 Ed25519 可以为零，或对于 Ed25519ph 为 crypto.SHA512。
 	Hash crypto.Hash
 
-	// Context, if not empty, selects Ed25519ctx or provides the context string
-	// for Ed25519ph. It can be at most 255 bytes in length.
+	// Context（如果不为空）选择 Ed25519ctx 或为 Ed25519ph 提供上下文字符串。
+	// 其长度最多为 255 个字节。
 	Context string
 }
 
@@ -139,15 +139,15 @@ func (o *Options) HashFunc() crypto.Hash { return o.Hash }
 
 var cryptocustomrand = godebug.New("cryptocustomrand")
 
-// GenerateKey generates a public/private key pair using entropy from random.
+// GenerateKey 使用来自 random 的熵生成公钥/私钥对。
 //
-// If random is nil, a secure random source is used. (Before Go 1.26, a custom
-// [crypto/rand.Reader] was used if set by the application. That behavior can be
-// restored with GODEBUG=cryptocustomrand=1. This setting will be removed in a
-// future Go release. Instead, use [testing/cryptotest.SetGlobalRandom].)
+// 如果 random 为 nil，则使用安全的随机源。(在 Go 1.26 之前，
+// 如果应用程序设置了自定义 [crypto/rand.Reader]，则会使用它。
+// 该行为可以通过 GODEBUG=cryptocustomrand=1 恢复。此设置将
+// 在未来的 Go 版本中移除。改为使用 [testing/cryptotest.SetGlobalRandom]。)
 //
-// The output of this function is deterministic, and equivalent to reading
-// [SeedSize] bytes from random, and passing them to [NewKeyFromSeed].
+// 此函数的输出是确定性的，等价于从 random 读取
+// [SeedSize] 字节，并将它们传递给 [NewKeyFromSeed]。
 func GenerateKey(random io.Reader) (PublicKey, PrivateKey, error) {
 	if random == nil {
 		if cryptocustomrand.Value() == "1" {
@@ -170,12 +170,12 @@ func GenerateKey(random io.Reader) (PublicKey, PrivateKey, error) {
 	return publicKey, privateKey, nil
 }
 
-// NewKeyFromSeed calculates a private key from a seed. It will panic if
-// len(seed) is not [SeedSize]. This function is provided for interoperability
-// with RFC 8032. RFC 8032's private keys correspond to seeds in this
-// package.
+// NewKeyFromSeed 从种子计算私钥。如果
+// len(seed) 不是 [SeedSize]，它将发生恐慌。提供此函数是为了与
+// RFC 8032 互操作。RFC 8032 的私钥对应于此
+// 包中的种子。
 func NewKeyFromSeed(seed []byte) PrivateKey {
-	// Outline the function body so that the returned key can be stack-allocated.
+	// 概述函数体，以便返回的密钥可以是堆栈分配的。
 	privateKey := make([]byte, PrivateKeySize)
 	newKeyFromSeed(privateKey, seed)
 	return privateKey
@@ -184,17 +184,17 @@ func NewKeyFromSeed(seed []byte) PrivateKey {
 func newKeyFromSeed(privateKey, seed []byte) {
 	k, err := ed25519.NewPrivateKeyFromSeed(seed)
 	if err != nil {
-		// NewPrivateKeyFromSeed only returns an error if the seed length is incorrect.
+		// NewPrivateKeyFromSeed 仅在种子长度不正确时返回错误。
 		panic("ed25519: bad seed length: " + strconv.Itoa(len(seed)))
 	}
 	copy(privateKey, k.Bytes())
 }
 
-// Sign signs the message with privateKey and returns a signature. It will
-// panic if len(privateKey) is not [PrivateKeySize].
+// Sign 使用 privateKey 对消息进行签名并返回签名。如果
+// len(privateKey) 不是 [PrivateKeySize]，它将发生恐慌。
 func Sign(privateKey PrivateKey, message []byte) []byte {
-	// Outline the function body so that the returned signature can be
-	// stack-allocated.
+	// 概述函数体，以便返回的签名可以是
+	// 堆栈分配的。
 	signature := make([]byte, SignatureSize)
 	sign(signature, privateKey, message)
 	return signature
@@ -213,26 +213,26 @@ func sign(signature []byte, privateKey PrivateKey, message []byte) {
 	copy(signature, sig)
 }
 
-// Verify reports whether sig is a valid signature of message by publicKey. It
-// will panic if len(publicKey) is not [PublicKeySize].
+// Verify 报告 sig 是否是 publicKey 对消息的有效签名。如果
+// len(publicKey) 不是 [PublicKeySize]，它将发生恐慌。
 //
-// The inputs are not considered confidential, and may leak through timing side
-// channels, or if an attacker has control of part of the inputs.
+// 输入不被视为机密，可能会泄露通过计时侧
+// 信道，或如果攻击者控制了部分输入。
 func Verify(publicKey PublicKey, message, sig []byte) bool {
 	return VerifyWithOptions(publicKey, message, sig, &Options{Hash: crypto.Hash(0)}) == nil
 }
 
-// VerifyWithOptions reports whether sig is a valid signature of message by
-// publicKey. A valid signature is indicated by returning a nil error. It will
-// panic if len(publicKey) is not [PublicKeySize].
+// VerifyWithOptions 报告 sig 是否是 publicKey 对消息的有效签名。
+// 有效签名通过返回 nil 错误来指示。如果
+// len(publicKey) 不是 [PublicKeySize]，它将发生恐慌。
 //
-// If opts.Hash is [crypto.SHA512], the pre-hashed variant Ed25519ph is used and
-// message is expected to be a SHA-512 hash, otherwise opts.Hash must be
-// [crypto.Hash](0) and the message must not be hashed, as Ed25519 performs two
-// passes over messages to be signed.
+// 如果 opts.Hash 是 [crypto.SHA512]，则使用预哈希的变体 Ed25519ph，
+// 并期望消息是 SHA-512 哈希，否则 opts.Hash 必须是
+// [crypto.Hash](0) 并且消息不能被哈希，因为 Ed25519 对
+// 要签名的消息执行两次传递。
 //
-// The inputs are not considered confidential, and may leak through timing side
-// channels, or if an attacker has control of part of the inputs.
+// 输入不被视为机密，可能会泄露通过计时侧
+// 信道，或如果攻击者控制了部分输入。
 func VerifyWithOptions(publicKey PublicKey, message, sig []byte, opts *Options) error {
 	if l := len(publicKey); l != PublicKeySize {
 		panic("ed25519: bad public key length: " + strconv.Itoa(l))

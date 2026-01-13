@@ -1,17 +1,16 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 /*
-Package hmac implements the Keyed-Hash Message Authentication Code (HMAC) as
-defined in U.S. Federal Information Processing Standards Publication 198.
-An HMAC is a cryptographic hash that uses a key to sign a message.
-The receiver verifies the hash by recomputing it using the same key.
+hmac 包实现了密钥哈希消息认证码（HMAC），
+如美国联邦信息处理标准出版物 198 中所定义。
+HMAC 是一种使用密钥对消息进行签名的加密哈希。
+接收方通过使用相同的密钥重新计算哈希来验证。
 
-Receivers should be careful to use Equal to compare MACs in order to avoid
-timing side-channels:
+接收方应注意使用 Equal 来比较 MAC，以避免时序侧信道攻击：
 
-	// ValidMAC reports whether messageMAC is a valid HMAC tag for message.
+	// ValidMAC 报告 messageMAC 是否是 message 的有效 HMAC 标签。
 	func ValidMAC(message, messageMAC, key []byte) bool {
 		mac := hmac.New(sha256.New, key)
 		mac.Write(message)
@@ -30,19 +29,18 @@ import (
 	"hash"
 )
 
-// New returns a new HMAC hash using the given [hash.Hash] type and key.
-// New functions like [crypto/sha256.New] can be used as h.
-// h must return a new Hash every time it is called.
-// Note that unlike other hash implementations in the standard library,
-// the returned Hash does not implement [encoding.BinaryMarshaler]
-// or [encoding.BinaryUnmarshaler].
+// New 使用给定的 [hash.Hash] 类型和密钥返回一个新的 HMAC 哈希。
+// 像 [crypto/sha256.New] 这样的 New 函数可以用作 h。
+// h 每次被调用时都必须返回一个新的 Hash。
+// 请注意，与标准库中的其他哈希实现不同，返回的 Hash
+// 不实现 [encoding.BinaryMarshaler] 或 [encoding.BinaryUnmarshaler]。
 func New(h func() hash.Hash, key []byte) hash.Hash {
 	if boring.Enabled {
 		hm := boring.NewHMAC(h, key)
 		if hm != nil {
 			return hm
 		}
-		// BoringCrypto did not recognize h, so fall through to standard Go code.
+		// BoringCrypto 无法识别 h，因此回退到标准 Go 代码。
 	}
 	h = fips140hash.UnwrapNew(h)
 	if fips140only.Enforced() {
@@ -56,10 +54,9 @@ func New(h func() hash.Hash, key []byte) hash.Hash {
 	return hmac.New(h, key)
 }
 
-// Equal compares two MACs for equality without leaking timing information.
+// Equal 比较两个 MAC 是否相等，而不泄露时序信息。
 func Equal(mac1, mac2 []byte) bool {
-	// We don't have to be constant time if the lengths of the MACs are
-	// different as that suggests that a completely different hash function
-	// was used.
+	// 如果 MAC 的长度不同，我们不必保持常量时间，
+	// 因为这表明使用了完全不同的哈希函数。
 	return subtle.ConstantTimeCompare(mac1, mac2) == 1
 }

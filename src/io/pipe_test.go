@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package io_test
 
@@ -25,7 +25,7 @@ func checkWrite(t *testing.T, w Writer, data []byte, c chan int) {
 	c <- 0
 }
 
-// Test a single read/write pair.
+// 测试单个读/写对。
 func TestPipe1(t *testing.T) {
 	c := make(chan int)
 	r, w := Pipe()
@@ -57,7 +57,7 @@ func reader(t *testing.T, r Reader, c chan int) {
 	}
 }
 
-// Test a sequence of read/write pairs.
+// 测试一系列读/写对。
 func TestPipe2(t *testing.T) {
 	c := make(chan int)
 	r, w := Pipe()
@@ -89,7 +89,7 @@ type pipeReturn struct {
 	err error
 }
 
-// Test a large write that requires multiple reads to satisfy.
+// 测试需要多次读取才能满足的大写入。
 func writer(w WriteCloser, buf []byte, c chan pipeReturn) {
 	n, err := w.Write(buf)
 	w.Close()
@@ -112,7 +112,7 @@ func TestPipe3(t *testing.T) {
 			t.Fatalf("read: %v", err)
 		}
 
-		// only final two reads should be short - 1 byte, then 0
+		// 只有最后两次读取应该是短的 - 1 字节，然后 0
 		expect := n
 		if n == 128 {
 			expect = 1
@@ -141,7 +141,7 @@ func TestPipe3(t *testing.T) {
 	}
 }
 
-// Test read after/before writer close.
+// 测试 writer 关闭之后/之前的读取。
 
 type closer interface {
 	CloseWithError(error) error
@@ -209,7 +209,7 @@ func TestPipeReadClose(t *testing.T) {
 	}
 }
 
-// Test close on Read side during Read.
+// 测试在 Read 期间关闭 Read 端。
 func TestPipeReadClose2(t *testing.T) {
 	c := make(chan int, 1)
 	r, _ := Pipe()
@@ -221,7 +221,7 @@ func TestPipeReadClose2(t *testing.T) {
 	}
 }
 
-// Test write after/before reader close.
+// 测试 reader 关闭之后/之前的写入。
 
 func TestPipeWriteClose(t *testing.T) {
 	for _, tt := range pipeTests {
@@ -250,7 +250,7 @@ func TestPipeWriteClose(t *testing.T) {
 	}
 }
 
-// Test close on Write side during Write.
+// 测试在 Write 期间关闭 Write 端。
 func TestPipeWriteClose2(t *testing.T) {
 	c := make(chan int, 1)
 	_, w := Pipe()
@@ -353,7 +353,7 @@ func TestPipeConcurrent(t *testing.T) {
 
 		for i := 0; i < count; i++ {
 			go func() {
-				time.Sleep(time.Millisecond) // Increase probability of race
+				time.Sleep(time.Millisecond) // 增加竞态的概率
 				if n, err := w.Write([]byte(input)); n != len(input) || err != nil {
 					t.Errorf("Write() = (%d, %v); want (%d, nil)", n, err, len(input))
 				}
@@ -367,8 +367,8 @@ func TestPipeConcurrent(t *testing.T) {
 			}
 		}
 
-		// Since each Write is fully gated, if multiple Read calls were needed,
-		// the contents of Write should still appear together in the output.
+		// 由于每次 Write 都是完全受控的，如果需要多次 Read 调用，
+		// Write 的内容仍应在输出中一起出现。
 		got := string(buf)
 		want := strings.Repeat(input, count)
 		if got != want {
@@ -382,7 +382,7 @@ func TestPipeConcurrent(t *testing.T) {
 		c := make(chan []byte, count*len(input)/readSize)
 		for i := 0; i < cap(c); i++ {
 			go func() {
-				time.Sleep(time.Millisecond) // Increase probability of race
+				time.Sleep(time.Millisecond) // 增加竞态的概率
 				buf := make([]byte, readSize)
 				if n, err := r.Read(buf); n != readSize || err != nil {
 					t.Errorf("Read() = (%d, %v); want (%d, nil)", n, err, readSize)
@@ -397,8 +397,8 @@ func TestPipeConcurrent(t *testing.T) {
 			}
 		}
 
-		// Since each read is independent, the only guarantee about the output
-		// is that it is a permutation of the input in readSized groups.
+		// 由于每次读取都是独立的，对输出的唯一保证是
+		// 它是 readSize 大小分组的输入的一个排列。
 		got := make([]byte, 0, count*len(input))
 		for i := 0; i < cap(c); i++ {
 			got = append(got, (<-c)...)
@@ -432,8 +432,8 @@ func TestPipeAllocations(t *testing.T) {
 		rSink, wSink = Pipe()
 	})
 
-	// go.dev/cl/473535 claimed Pipe() should only do 2 allocations,
-	// plus the 2 escaping to heap for simulating real world usages.
+	// go.dev/cl/473535 声称 Pipe() 应该只进行 2 次分配，
+	// 加上 2 次逃逸到堆上以模拟真实世界的使用情况。
 	expectedAllocs := 4
 	if int(numAllocs) > expectedAllocs {
 		t.Fatalf("too many allocations for io.Pipe() call: %f", numAllocs)

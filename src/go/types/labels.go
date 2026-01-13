@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
@@ -46,7 +46,7 @@ func (check *Checker) labels(body *ast.BlockStmt) {
 	}
 }
 
-// A block tracks label declarations in a block and its enclosing blocks.
+// 一个block tracks label declarations in a block and its enclosing blocks.
 type block struct {
 	parent *block                      // enclosing block
 	lstmt  *ast.LabeledStmt            // labeled statement to which this block belongs, or nil
@@ -68,7 +68,7 @@ func (b *block) insert(s *ast.LabeledStmt) {
 	labels[name] = s
 }
 
-// gotoTarget returns the labeled statement in the current
+// gotoTarget 返回the labeled statement in the current
 // or an enclosing block with the given label name, or nil.
 func (b *block) gotoTarget(name string) *ast.LabeledStmt {
 	for s := b; s != nil; s = s.parent {
@@ -79,7 +79,7 @@ func (b *block) gotoTarget(name string) *ast.LabeledStmt {
 	return nil
 }
 
-// enclosingTarget returns the innermost enclosing labeled
+// enclosingTarget 返回the innermost enclosing labeled
 // statement with the given label name, or nil.
 func (b *block) enclosingTarget(name string) *ast.LabeledStmt {
 	for s := b; s != nil; s = s.parent {
@@ -90,9 +90,9 @@ func (b *block) enclosingTarget(name string) *ast.LabeledStmt {
 	return nil
 }
 
-// blockBranches processes a block's statement list and returns the set of outgoing forward jumps.
-// all is the scope of all declared labels, parent the set of labels declared in the immediately
-// enclosing block, and lstmt is the labeled statement this block is associated with (or nil).
+// blockBranches processes a block's statement list and 返回 set of outgoing forward jumps.
+// all 是 scope of all declared labels, parent the set of labels declared in the immediately
+// enclosing block, and lstmt 是 labeled statement this block 是一个ssociated with (or nil).
 func (check *Checker) blockBranches(all *Scope, parent *block, lstmt *ast.LabeledStmt, list []ast.Stmt) []*ast.BranchStmt {
 	b := &block{parent: parent, lstmt: lstmt}
 
@@ -110,7 +110,7 @@ func (check *Checker) blockBranches(all *Scope, parent *block, lstmt *ast.Labele
 	}
 
 	jumpsOverVarDecl := func(jmp *ast.BranchStmt) bool {
-		return varDeclPos.IsValid() && slices.Contains(badJumps, jmp)
+		return varDeclPos.IsValid() && slices.包含(badJumps, jmp)
 	}
 
 	blockBranches := func(lstmt *ast.LabeledStmt, list []ast.Stmt) {
@@ -179,8 +179,8 @@ func (check *Checker) blockBranches(all *Scope, parent *block, lstmt *ast.Labele
 			name := s.Label.Name
 			switch s.Tok {
 			case token.BREAK:
-				// spec: "If there is a label, it must be that of an enclosing
-				// "for", "switch", or "select" statement, and that is the one
+				// spec: "If there 是一个 label, it 必须是 that of an enclosing
+				// "for", "switch", or "select" statement, and that 是 one
 				// whose execution terminates."
 				valid := false
 				if t := b.enclosingTarget(name); t != nil {
@@ -195,8 +195,8 @@ func (check *Checker) blockBranches(all *Scope, parent *block, lstmt *ast.Labele
 				}
 
 			case token.CONTINUE:
-				// spec: "If there is a label, it must be that of an enclosing
-				// "for" statement, and that is the one whose execution advances."
+				// spec: "If there 是一个 label, it 必须是 that of an enclosing
+				// "for" statement, and that 是 one whose execution advances."
 				valid := false
 				if t := b.enclosingTarget(name); t != nil {
 					switch t.Stmt.(type) {
@@ -211,7 +211,7 @@ func (check *Checker) blockBranches(all *Scope, parent *block, lstmt *ast.Labele
 
 			case token.GOTO:
 				if b.gotoTarget(name) == nil {
-					// label may be declared later - add branch to forward jumps
+					// label 可能是 declared later - add branch to forward jumps
 					fwdJumps = append(fwdJumps, s)
 					return
 				}

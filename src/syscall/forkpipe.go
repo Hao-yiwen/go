@@ -1,13 +1,12 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build aix || darwin
 
 package syscall
 
-// forkExecPipe opens a pipe and non-atomically sets O_CLOEXEC on both file
-// descriptors.
+// forkExecPipe 打开一个管道，并非原子地在两个文件描述符上设置 O_CLOEXEC。
 func forkExecPipe(p []int) error {
 	err := Pipe(p)
 	if err != nil {

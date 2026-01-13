@@ -15,7 +15,7 @@ const (
 	upperhex = "0123456789ABCDEF"
 )
 
-// contains reports whether the string contains the byte c.
+// contains 报告字符串是否包含字节 c。
 func contains(s string, c byte) bool {
 	return index(s, c) != -1
 }
@@ -29,8 +29,8 @@ func quoteRuneWith(r rune, quote byte, ASCIIonly, graphicOnly bool) string {
 }
 
 func appendQuotedWith(buf []byte, s string, quote byte, ASCIIonly, graphicOnly bool) []byte {
-	// Often called with big strings, so preallocate. If there's quoting,
-	// this is conservative but still helps a lot.
+	// 经常被调用来处理大字符串，所以预分配。如果有引用，
+	// 这是保守的但仍然有很大帮助。
 	if cap(buf)-len(buf) < len(s) {
 		nBuf := make([]byte, len(buf), len(buf)+1+len(s)+1)
 		copy(nBuf, buf)
@@ -62,7 +62,7 @@ func appendQuotedRuneWith(buf []byte, r rune, quote byte, ASCIIonly, graphicOnly
 }
 
 func appendEscapedRune(buf []byte, r rune, quote byte, ASCIIonly, graphicOnly bool) []byte {
-	if r == rune(quote) || r == '\\' { // always backslashed
+	if r == rune(quote) || r == '\\' { // 总是反斜杠转义
 		buf = append(buf, '\\')
 		buf = append(buf, byte(r))
 		return buf

@@ -1,8 +1,8 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2015 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Minimal RFC 6724 address selection.
+// 最小化的 RFC 6724 地址选择实现。
 
 package net
 
@@ -38,9 +38,8 @@ func sortByRFC6724withSrcs(addrs []IPAddr, srcs []netip.Addr) {
 	}
 }
 
-// srcAddrs tries to UDP-connect to each address to see if it has a
-// route. (This doesn't send any packets). The destination port
-// number is irrelevant.
+// srcAddrs 尝试通过 UDP 连接到每个地址，以检查是否有路由。
+// （这不会发送任何数据包）。目标端口号无关紧要。
 func srcAddrs(addrs []IPAddr) []netip.Addr {
 	srcs := make([]netip.Addr, len(addrs))
 	dst := UDPAddr{Port: 53}
@@ -83,10 +82,9 @@ type byRFC6724Info struct {
 	srcAttr  ipAttr
 }
 
-// compareByRFC6724 compares two byRFC6724Info records and returns an integer
-// indicating the order. It follows the algorithm and variable names from
-// RFC 6724 section 6. Returns -1 if a is preferred, 1 if b is preferred,
-// and 0 if they are equal.
+// compareByRFC6724 比较两个 byRFC6724Info 记录并返回一个表示顺序的整数。
+// 它遵循 RFC 6724 第 6 节中的算法和变量名。
+// 如果优先选择 a 则返回 -1，如果优先选择 b 则返回 1，如果相等则返回 0。
 func compareByRFC6724(a, b byRFC6724Info) int {
 	DA := a.addr.IP
 	DB := b.addr.IP
@@ -100,12 +98,11 @@ func compareByRFC6724(a, b byRFC6724Info) int {
 	const preferDA = -1
 	const preferDB = 1
 
-	// Rule 1: Avoid unusable destinations.
-	// If DB is known to be unreachable or if Source(DB) is undefined, then
-	// prefer DA.  Similarly, if DA is known to be unreachable or if
-	// Source(DA) is undefined, then prefer DB.
+	// 规则 1：避免不可用的目的地。
+	// 如果 DB 已知不可达或 Source(DB) 未定义，则优先选择 DA。
+	// 类似地，如果 DA 已知不可达或 Source(DA) 未定义，则优先选择 DB。
 	if !SourceDA.IsValid() && !SourceDB.IsValid() {
-		return 0 // "equal"
+		return 0 // "相等"
 	}
 	if !SourceDB.IsValid() {
 		return preferDA
@@ -114,10 +111,10 @@ func compareByRFC6724(a, b byRFC6724Info) int {
 		return preferDB
 	}
 
-	// Rule 2: Prefer matching scope.
-	// If Scope(DA) = Scope(Source(DA)) and Scope(DB) <> Scope(Source(DB)),
-	// then prefer DA.  Similarly, if Scope(DA) <> Scope(Source(DA)) and
-	// Scope(DB) = Scope(Source(DB)), then prefer DB.
+	// 规则 2：优先选择匹配的作用域。
+	// 如果 Scope(DA) = Scope(Source(DA)) 且 Scope(DB) <> Scope(Source(DB))，
+	// 则优先选择 DA。类似地，如果 Scope(DA) <> Scope(Source(DA)) 且
+	// Scope(DB) = Scope(Source(DB))，则优先选择 DB。
 	if attrDA.Scope == attrSourceDA.Scope && attrDB.Scope != attrSourceDB.Scope {
 		return preferDA
 	}
@@ -125,25 +122,23 @@ func compareByRFC6724(a, b byRFC6724Info) int {
 		return preferDB
 	}
 
-	// Rule 3: Avoid deprecated addresses.
-	// If Source(DA) is deprecated and Source(DB) is not, then prefer DB.
-	// Similarly, if Source(DA) is not deprecated and Source(DB) is
-	// deprecated, then prefer DA.
+	// 规则 3：避免已弃用的地址。
+	// 如果 Source(DA) 已弃用而 Source(DB) 未弃用，则优先选择 DB。
+	// 类似地，如果 Source(DA) 未弃用而 Source(DB) 已弃用，则优先选择 DA。
 
-	// TODO(bradfitz): implement? low priority for now.
+	// TODO(bradfitz): 是否实现？目前优先级较低。
 
-	// Rule 4: Prefer home addresses.
-	// If Source(DA) is simultaneously a home address and care-of address
-	// and Source(DB) is not, then prefer DA.  Similarly, if Source(DB) is
-	// simultaneously a home address and care-of address and Source(DA) is
-	// not, then prefer DB.
+	// 规则 4：优先选择归属地址。
+	// 如果 Source(DA) 同时是归属地址和转交地址而 Source(DB) 不是，
+	// 则优先选择 DA。类似地，如果 Source(DB) 同时是归属地址和转交地址
+	// 而 Source(DA) 不是，则优先选择 DB。
 
-	// TODO(bradfitz): implement? low priority for now.
+	// TODO(bradfitz): 是否实现？目前优先级较低。
 
-	// Rule 5: Prefer matching label.
-	// If Label(Source(DA)) = Label(DA) and Label(Source(DB)) <> Label(DB),
-	// then prefer DA.  Similarly, if Label(Source(DA)) <> Label(DA) and
-	// Label(Source(DB)) = Label(DB), then prefer DB.
+	// 规则 5：优先选择匹配的标签。
+	// 如果 Label(Source(DA)) = Label(DA) 且 Label(Source(DB)) <> Label(DB)，
+	// 则优先选择 DA。类似地，如果 Label(Source(DA)) <> Label(DA) 且
+	// Label(Source(DB)) = Label(DB)，则优先选择 DB。
 	if attrSourceDA.Label == attrDA.Label &&
 		attrSourceDB.Label != attrDB.Label {
 		return preferDA
@@ -153,9 +148,9 @@ func compareByRFC6724(a, b byRFC6724Info) int {
 		return preferDB
 	}
 
-	// Rule 6: Prefer higher precedence.
-	// If Precedence(DA) > Precedence(DB), then prefer DA.  Similarly, if
-	// Precedence(DA) < Precedence(DB), then prefer DB.
+	// 规则 6：优先选择更高优先级。
+	// 如果 Precedence(DA) > Precedence(DB)，则优先选择 DA。
+	// 类似地，如果 Precedence(DA) < Precedence(DB)，则优先选择 DB。
 	if attrDA.Precedence > attrDB.Precedence {
 		return preferDA
 	}
@@ -163,16 +158,15 @@ func compareByRFC6724(a, b byRFC6724Info) int {
 		return preferDB
 	}
 
-	// Rule 7: Prefer native transport.
-	// If DA is reached via an encapsulating transition mechanism (e.g.,
-	// IPv6 in IPv4) and DB is not, then prefer DB.  Similarly, if DB is
-	// reached via encapsulation and DA is not, then prefer DA.
+	// 规则 7：优先选择原生传输。
+	// 如果 DA 通过封装过渡机制到达（例如 IPv6 in IPv4）而 DB 不是，
+	// 则优先选择 DB。类似地，如果 DB 通过封装到达而 DA 不是，则优先选择 DA。
 
-	// TODO(bradfitz): implement? low priority for now.
+	// TODO(bradfitz): 是否实现？目前优先级较低。
 
-	// Rule 8: Prefer smaller scope.
-	// If Scope(DA) < Scope(DB), then prefer DA.  Similarly, if Scope(DA) >
-	// Scope(DB), then prefer DB.
+	// 规则 8：优先选择较小的作用域。
+	// 如果 Scope(DA) < Scope(DB)，则优先选择 DA。
+	// 类似地，如果 Scope(DA) > Scope(DB)，则优先选择 DB。
 	if attrDA.Scope < attrDB.Scope {
 		return preferDA
 	}
@@ -180,15 +174,14 @@ func compareByRFC6724(a, b byRFC6724Info) int {
 		return preferDB
 	}
 
-	// Rule 9: Use the longest matching prefix.
-	// When DA and DB belong to the same address family (both are IPv6 or
-	// both are IPv4 [but see below]): If CommonPrefixLen(Source(DA), DA) >
-	// CommonPrefixLen(Source(DB), DB), then prefer DA.  Similarly, if
-	// CommonPrefixLen(Source(DA), DA) < CommonPrefixLen(Source(DB), DB),
-	// then prefer DB.
+	// 规则 9：使用最长匹配前缀。
+	// 当 DA 和 DB 属于同一地址族（都是 IPv6 或都是 IPv4 [但见下文]）时：
+	// 如果 CommonPrefixLen(Source(DA), DA) > CommonPrefixLen(Source(DB), DB)，
+	// 则优先选择 DA。类似地，如果 CommonPrefixLen(Source(DA), DA) <
+	// CommonPrefixLen(Source(DB), DB)，则优先选择 DB。
 	//
-	// However, applying this rule to IPv4 addresses causes
-	// problems (see issues 13283 and 18518), so limit to IPv6.
+	// 然而，将此规则应用于 IPv4 地址会导致问题
+	// （参见 issues 13283 和 18518），因此仅限于 IPv6。
 	if DA.To4() == nil && DB.To4() == nil {
 		commonA := commonPrefixLen(SourceDA, DA)
 		commonB := commonPrefixLen(SourceDB, DB)
@@ -201,10 +194,10 @@ func compareByRFC6724(a, b byRFC6724Info) int {
 		}
 	}
 
-	// Rule 10: Otherwise, leave the order unchanged.
-	// If DA preceded DB in the original list, prefer DA.
-	// Otherwise, prefer DB.
-	return 0 // "equal"
+	// 规则 10：否则，保持顺序不变。
+	// 如果 DA 在原始列表中位于 DB 之前，则优先选择 DA。
+	// 否则，优先选择 DB。
+	return 0 // "相等"
 }
 
 type policyTableEntry struct {
@@ -215,8 +208,8 @@ type policyTableEntry struct {
 
 type policyTable []policyTableEntry
 
-// RFC 6724 section 2.1.
-// Items are sorted by the size of their Prefix.Mask.Size,
+// RFC 6724 第 2.1 节。
+// 条目按其 Prefix.Mask.Size 的大小排序，
 var rfc6724policyTable = policyTable{
 	{
 		// "::1/128"
@@ -226,7 +219,7 @@ var rfc6724policyTable = policyTable{
 	},
 	{
 		// "::ffff:0:0/96"
-		// IPv4-compatible, etc.
+		// IPv4 兼容地址等。
 		Prefix:     netip.PrefixFrom(netip.AddrFrom16([16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}), 96),
 		Precedence: 35,
 		Label:      4,
@@ -239,14 +232,14 @@ var rfc6724policyTable = policyTable{
 	},
 	{
 		// "2001::/32"
-		// Teredo
+		// Teredo 隧道
 		Prefix:     netip.PrefixFrom(netip.AddrFrom16([16]byte{0x20, 0x01}), 32),
 		Precedence: 5,
 		Label:      5,
 	},
 	{
 		// "2002::/16"
-		// 6to4
+		// 6to4 隧道
 		Prefix:     netip.PrefixFrom(netip.AddrFrom16([16]byte{0x20, 0x02}), 16),
 		Precedence: 30,
 		Label:      2,
@@ -277,11 +270,10 @@ var rfc6724policyTable = policyTable{
 	},
 }
 
-// Classify returns the policyTableEntry of the entry with the longest
-// matching prefix that contains ip.
-// The table t must be sorted from largest mask size to smallest.
+// Classify 返回包含 ip 的最长匹配前缀的 policyTableEntry 条目。
+// 表 t 必须按掩码大小从大到小排序。
 func (t policyTable) Classify(ip netip.Addr) policyTableEntry {
-	// Prefix.Contains() will not match an IPv6 prefix for an IPv4 address.
+	// Prefix.Contains() 不会将 IPv6 前缀与 IPv4 地址匹配。
 	if ip.Is4() {
 		ip = netip.AddrFrom16(ip.As16())
 	}
@@ -293,7 +285,7 @@ func (t policyTable) Classify(ip netip.Addr) policyTableEntry {
 	return policyTableEntry{}
 }
 
-// RFC 6724 section 3.1.
+// RFC 6724 第 3.1 节。
 type scope uint8
 
 const (
@@ -314,24 +306,22 @@ func classifyScope(ip netip.Addr) scope {
 	if ipv6 && ip.IsMulticast() {
 		return scope(ipv6AsBytes[1] & 0xf)
 	}
-	// Site-local addresses are defined in RFC 3513 section 2.5.6
-	// (and deprecated in RFC 3879).
+	// 站点本地地址在 RFC 3513 第 2.5.6 节中定义
+	// （并在 RFC 3879 中被弃用）。
 	if ipv6 && ipv6AsBytes[0] == 0xfe && ipv6AsBytes[1]&0xc0 == 0xc0 {
 		return scopeSiteLocal
 	}
 	return scopeGlobal
 }
 
-// commonPrefixLen reports the length of the longest prefix (looking
-// at the most significant, or leftmost, bits) that the
-// two addresses have in common, up to the length of a's prefix (i.e.,
-// the portion of the address not including the interface ID).
+// commonPrefixLen 报告两个地址共有的最长前缀的长度（从最高有效位
+// 或最左边的位开始），最多到 a 的前缀长度（即不包括接口 ID 的地址部分）。
 //
-// If a or b is an IPv4 address as an IPv6 address, the IPv4 addresses
-// are compared (with max common prefix length of 32).
-// If a and b are different IP versions, 0 is returned.
+// 如果 a 或 b 是作为 IPv6 地址的 IPv4 地址，则比较 IPv4 地址
+// （最大公共前缀长度为 32）。
+// 如果 a 和 b 是不同的 IP 版本，则返回 0。
 //
-// See https://tools.ietf.org/html/rfc6724#section-2.2
+// 参见 https://tools.ietf.org/html/rfc6724#section-2.2
 func commonPrefixLen(a netip.Addr, b IP) (cpl int) {
 	if b4 := b.To4(); b4 != nil {
 		b = b4
@@ -340,7 +330,7 @@ func commonPrefixLen(a netip.Addr, b IP) (cpl int) {
 	if len(aAsSlice) != len(b) {
 		return 0
 	}
-	// If IPv6, only up to the prefix (first 64 bits)
+	// 如果是 IPv6，只比较前缀部分（前 64 位）
 	if len(aAsSlice) > 8 {
 		aAsSlice = aAsSlice[:8]
 		b = b[:8]

@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package path_test
 
@@ -16,7 +16,7 @@ type PathTest struct {
 }
 
 var cleantests = []PathTest{
-	// Already clean
+	// 已经是干净的
 	{"", "."},
 	{"abc", "abc"},
 	{"abc/def", "abc/def"},
@@ -28,7 +28,7 @@ var cleantests = []PathTest{
 	{"/abc", "/abc"},
 	{"/", "/"},
 
-	// Remove trailing slash
+	// 移除尾部斜杠
 	{"abc/", "abc"},
 	{"abc/def/", "abc/def"},
 	{"a/b/c/", "a/b/c"},
@@ -37,19 +37,19 @@ var cleantests = []PathTest{
 	{"../../", "../.."},
 	{"/abc/", "/abc"},
 
-	// Remove doubled slash
+	// 移除重复斜杠
 	{"abc//def//ghi", "abc/def/ghi"},
 	{"//abc", "/abc"},
 	{"///abc", "/abc"},
 	{"//abc//", "/abc"},
 	{"abc//", "abc"},
 
-	// Remove . elements
+	// 移除 . 元素
 	{"abc/./def", "abc/def"},
 	{"/./abc/def", "/abc/def"},
 	{"abc/.", "abc"},
 
-	// Remove .. elements
+	// 移除 .. 元素
 	{"abc/def/ghi/../jkl", "abc/def/jkl"},
 	{"abc/def/../ghi/../jkl", "abc/jkl"},
 	{"abc/def/..", "abc"},
@@ -59,7 +59,7 @@ var cleantests = []PathTest{
 	{"/abc/def/../../..", "/"},
 	{"abc/def/../../../ghi/jkl/../../../mno", "../../mno"},
 
-	// Combinations
+	// 组合
 	{"abc/./../def", "def"},
 	{"abc//./../def", "def"},
 	{"abc/../../././../def", "../../def"},
@@ -119,14 +119,14 @@ type JoinTest struct {
 }
 
 var jointests = []JoinTest{
-	// zero parameters
+	// 零参数
 	{[]string{}, ""},
 
-	// one parameter
+	// 一个参数
 	{[]string{""}, ""},
 	{[]string{"a"}, "a"},
 
-	// two parameters
+	// 两个参数
 	{[]string{"a", "b"}, "a/b"},
 	{[]string{"a", ""}, "a"},
 	{[]string{"", "b"}, "b"},
@@ -166,7 +166,7 @@ func TestExt(t *testing.T) {
 }
 
 var basetests = []PathTest{
-	// Already clean
+	// 已经是干净的
 	{"", "."},
 	{".", "."},
 	{"/.", "."},

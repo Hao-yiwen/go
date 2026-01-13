@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package syscall
 
@@ -29,13 +29,12 @@ const (
 	NameDnsDomain        = 12
 )
 
-// This function returns 1 byte BOOLEAN rather than the 4 byte BOOL.
+// 此函数返回 1 字节的 BOOLEAN 而不是 4 字节的 BOOL。
 // https://learn.microsoft.com/en-gb/archive/blogs/drnick/windows-and-upn-format-credentials
 //sys	TranslateName(accName *uint16, accNameFormat uint32, desiredNameFormat uint32, translatedName *uint16, nSize *uint32) (err error) [failretval&0xff==0] = secur32.TranslateNameW
 //sys	GetUserNameEx(nameFormat uint32, nameBuffre *uint16, nSize *uint32) (err error) [failretval&0xff==0] = secur32.GetUserNameExW
 
-// TranslateAccountName converts a directory service
-// object name from one format to another.
+// TranslateAccountName 将目录服务对象名称从一种格式转换为另一种格式。
 func TranslateAccountName(username string, from, to uint32, initSize int) (string, error) {
 	u, e := UTF16PtrFromString(username)
 	if e != nil {
@@ -58,7 +57,7 @@ func TranslateAccountName(username string, from, to uint32, initSize int) (strin
 }
 
 const (
-	// do not reorder
+	// 不要重新排序
 	NetSetupUnknownStatus = iota
 	NetSetupUnjoined
 	NetSetupWorkgroupName
@@ -77,7 +76,7 @@ type UserInfo10 struct {
 //sys	NetApiBufferFree(buf *byte) (neterr error) = netapi32.NetApiBufferFree
 
 const (
-	// do not reorder
+	// 不要重新排序
 	SidTypeUser = 1 + iota
 	SidTypeGroup
 	SidTypeDomain
@@ -97,12 +96,11 @@ const (
 //sys	GetLengthSid(sid *SID) (len uint32) = advapi32.GetLengthSid
 //sys	CopySid(destSidLen uint32, destSid *SID, srcSid *SID) (err error) = advapi32.CopySid
 
-// The security identifier (SID) structure is a variable-length
-// structure used to uniquely identify users or groups.
+// 安全标识符 (SID) 结构是一种可变长度结构，
+// 用于唯一标识用户或组。
 type SID struct{}
 
-// StringToSid converts a string-format security identifier
-// sid into a valid, functional sid.
+// StringToSid 将字符串格式的安全标识符 sid 转换为有效的、可用的 sid。
 func StringToSid(s string) (*SID, error) {
 	var sid *SID
 	p, e := UTF16PtrFromString(s)
@@ -117,9 +115,8 @@ func StringToSid(s string) (*SID, error) {
 	return sid.Copy()
 }
 
-// LookupSID retrieves a security identifier sid for the account
-// and the name of the domain on which the account was found.
-// System specify target computer to search.
+// LookupSID 检索帐户的安全标识符 sid 和找到该帐户的域名。
+// System 指定要搜索的目标计算机。
 func LookupSID(system, account string) (sid *SID, domain string, accType uint32, err error) {
 	if len(account) == 0 {
 		return nil, "", 0, EINVAL
@@ -154,8 +151,7 @@ func LookupSID(system, account string) (sid *SID, domain string, accType uint32,
 	}
 }
 
-// String converts sid to a string format
-// suitable for display, storage, or transmission.
+// String 将 sid 转换为适合显示、存储或传输的字符串格式。
 func (sid *SID) String() (string, error) {
 	var s *uint16
 	e := ConvertSidToStringSid(sid, &s)
@@ -166,12 +162,12 @@ func (sid *SID) String() (string, error) {
 	return utf16PtrToString(s), nil
 }
 
-// Len returns the length, in bytes, of a valid security identifier sid.
+// Len 返回有效安全标识符 sid 的长度（以字节为单位）。
 func (sid *SID) Len() int {
 	return int(GetLengthSid(sid))
 }
 
-// Copy creates a duplicate of security identifier sid.
+// Copy 创建安全标识符 sid 的副本。
 func (sid *SID) Copy() (*SID, error) {
 	b := make([]byte, sid.Len())
 	sid2 := (*SID)(unsafe.Pointer(&b[0]))
@@ -182,9 +178,8 @@ func (sid *SID) Copy() (*SID, error) {
 	return sid2, nil
 }
 
-// LookupAccount retrieves the name of the account for this sid
-// and the name of the first domain on which this sid is found.
-// System specify target computer to search for.
+// LookupAccount 检索此 sid 的帐户名称和找到此 sid 的第一个域的名称。
+// System 指定要搜索的目标计算机。
 func (sid *SID) LookupAccount(system string) (account, domain string, accType uint32, err error) {
 	var sys *uint16
 	if len(system) > 0 {
@@ -212,7 +207,7 @@ func (sid *SID) LookupAccount(system string) (account, domain string, accType ui
 }
 
 const (
-	// do not reorder
+	// 不要重新排序
 	TOKEN_ASSIGN_PRIMARY = 1 << iota
 	TOKEN_DUPLICATE
 	TOKEN_IMPERSONATE
@@ -242,7 +237,7 @@ const (
 )
 
 const (
-	// do not reorder
+	// 不要重新排序
 	TokenUser = 1 + iota
 	TokenGroups
 	TokenPrivileges
@@ -291,17 +286,14 @@ type Tokenprimarygroup struct {
 //sys	GetTokenInformation(t Token, infoClass uint32, info *byte, infoLen uint32, returnedLen *uint32) (err error) = advapi32.GetTokenInformation
 //sys	GetUserProfileDirectory(t Token, dir *uint16, dirLen *uint32) (err error) = userenv.GetUserProfileDirectoryW
 
-// An access token contains the security information for a logon session.
-// The system creates an access token when a user logs on, and every
-// process executed on behalf of the user has a copy of the token.
-// The token identifies the user, the user's groups, and the user's
-// privileges. The system uses the token to control access to securable
-// objects and to control the ability of the user to perform various
-// system-related operations on the local computer.
+// 访问令牌包含登录会话的安全信息。
+// 当用户登录时，系统会创建一个访问令牌，代表用户执行的每个进程
+// 都有该令牌的副本。令牌标识用户、用户的组和用户的权限。
+// 系统使用令牌来控制对可保护对象的访问，
+// 以及控制用户在本地计算机上执行各种系统相关操作的能力。
 type Token Handle
 
-// OpenCurrentProcessToken opens the access token
-// associated with current process.
+// OpenCurrentProcessToken 打开与当前进程关联的访问令牌。
 func OpenCurrentProcessToken() (Token, error) {
 	p, e := GetCurrentProcess()
 	if e != nil {
@@ -315,12 +307,12 @@ func OpenCurrentProcessToken() (Token, error) {
 	return t, nil
 }
 
-// Close releases access to access token.
+// Close 释放对访问令牌的访问。
 func (t Token) Close() error {
 	return CloseHandle(Handle(t))
 }
 
-// getInfo retrieves a specified type of information about an access token.
+// getInfo 检索关于访问令牌的指定类型信息。
 func (t Token) getInfo(class uint32, initSize int) (unsafe.Pointer, error) {
 	n := uint32(initSize)
 	for {
@@ -338,7 +330,7 @@ func (t Token) getInfo(class uint32, initSize int) (unsafe.Pointer, error) {
 	}
 }
 
-// GetTokenUser retrieves access token t user account information.
+// GetTokenUser 检索访问令牌 t 的用户帐户信息。
 func (t Token) GetTokenUser() (*Tokenuser, error) {
 	i, e := t.getInfo(TokenUser, 50)
 	if e != nil {
@@ -347,9 +339,9 @@ func (t Token) GetTokenUser() (*Tokenuser, error) {
 	return (*Tokenuser)(i), nil
 }
 
-// GetTokenPrimaryGroup retrieves access token t primary group information.
-// A pointer to a SID structure representing a group that will become
-// the primary group of any objects created by a process using this access token.
+// GetTokenPrimaryGroup 检索访问令牌 t 的主组信息。
+// 返回指向 SID 结构的指针，表示将成为使用此访问令牌的进程
+// 创建的任何对象的主组的组。
 func (t Token) GetTokenPrimaryGroup() (*Tokenprimarygroup, error) {
 	i, e := t.getInfo(TokenPrimaryGroup, 50)
 	if e != nil {
@@ -358,8 +350,7 @@ func (t Token) GetTokenPrimaryGroup() (*Tokenprimarygroup, error) {
 	return (*Tokenprimarygroup)(i), nil
 }
 
-// GetUserProfileDirectory retrieves path to the
-// root directory of the access token t user's profile.
+// GetUserProfileDirectory 检索访问令牌 t 用户配置文件根目录的路径。
 func (t Token) GetUserProfileDirectory() (string, error) {
 	n := uint32(100)
 	for {

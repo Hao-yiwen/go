@@ -1,8 +1,8 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// MakeFunc implementation.
+// MakeFunc 实现。
 
 package reflect
 
@@ -12,38 +12,32 @@ import (
 	"unsafe"
 )
 
-// makeFuncImpl is the closure value implementing the function
-// returned by MakeFunc.
-// The first three words of this type must be kept in sync with
-// methodValue and runtime.reflectMethodValue.
-// Any changes should be reflected in all three.
+// makeFuncImpl 是实现 MakeFunc 返回的函数的闭包值。
+// 此类型的前三个字必须与 methodValue 和 runtime.reflectMethodValue 保持同步。
+// 任何更改都应反映在这三者中。
 type makeFuncImpl struct {
 	makeFuncCtxt
 	ftyp *funcType
 	fn   func([]Value) []Value
 }
 
-// MakeFunc returns a new function of the given [Type]
-// that wraps the function fn. When called, that new function
-// does the following:
+// MakeFunc 返回一个给定 [Type] 的新函数，该函数包装了函数 fn。
+// 当调用时，这个新函数执行以下操作：
 //
-//   - converts its arguments to a slice of Values.
-//   - runs results := fn(args).
-//   - returns the results as a slice of Values, one per formal result.
+//   - 将其参数转换为 Value 切片。
+//   - 运行 results := fn(args)。
+//   - 将结果作为 Value 切片返回，每个形式结果对应一个。
 //
-// The implementation fn can assume that the argument [Value] slice
-// has the number and type of arguments given by typ.
-// If typ describes a variadic function, the final Value is itself
-// a slice representing the variadic arguments, as in the
-// body of a variadic function. The result Value slice returned by fn
-// must have the number and type of results given by typ.
+// 实现函数 fn 可以假设参数 [Value] 切片具有 typ 给出的参数数量和类型。
+// 如果 typ 描述一个可变参数函数，最后一个 Value 本身就是一个
+// 表示可变参数的切片，就像在可变参数函数体中一样。
+// fn 返回的结果 Value 切片必须具有 typ 给出的结果数量和类型。
 //
-// The [Value.Call] method allows the caller to invoke a typed function
-// in terms of Values; in contrast, MakeFunc allows the caller to implement
-// a typed function in terms of Values.
+// [Value.Call] 方法允许调用者以 Value 的形式调用类型化函数；
+// 相反，MakeFunc 允许调用者以 Value 的形式实现类型化函数。
 //
-// The Examples section of the documentation includes an illustration
-// of how to use MakeFunc to build a swap function for different types.
+// 文档的示例部分包含了如何使用 MakeFunc
+// 为不同类型构建交换函数的说明。
 func MakeFunc(typ Type, fn func(args []Value) (results []Value)) Value {
 	if typ.Kind() != Func {
 		panic("reflect: call of MakeFunc with non-Func type")
@@ -54,7 +48,7 @@ func MakeFunc(typ Type, fn func(args []Value) (results []Value)) Value {
 
 	code := abi.FuncPCABI0(makeFuncStub)
 
-	// makeFuncImpl contains a stack map for use by the runtime
+	// makeFuncImpl 包含一个供运行时使用的栈映射
 	_, _, abid := funcLayout(ftyp, nil)
 
 	impl := &makeFuncImpl{
@@ -71,45 +65,41 @@ func MakeFunc(typ Type, fn func(args []Value) (results []Value)) Value {
 	return Value{t, unsafe.Pointer(impl), flag(Func)}
 }
 
-// makeFuncStub is an assembly function that is the code half of
-// the function returned from MakeFunc. It expects a *callReflectFunc
-// as its context register, and its job is to invoke callReflect(ctxt, frame)
-// where ctxt is the context register and frame is a pointer to the first
-// word in the passed-in argument frame.
+// makeFuncStub 是一个汇编函数，是 MakeFunc 返回的函数的代码部分。
+// 它期望一个 *callReflectFunc 作为其上下文寄存器，
+// 它的工作是调用 callReflect(ctxt, frame)，
+// 其中 ctxt 是上下文寄存器，frame 是指向传入参数帧中第一个字的指针。
 func makeFuncStub()
 
-// The first 3 words of this type must be kept in sync with
-// makeFuncImpl and runtime.reflectMethodValue.
-// Any changes should be reflected in all three.
+// 此类型的前 3 个字必须与 makeFuncImpl 和 runtime.reflectMethodValue 保持同步。
+// 任何更改都应反映在这三者中。
 type methodValue struct {
 	makeFuncCtxt
 	method int
 	rcvr   Value
 }
 
-// makeMethodValue converts v from the rcvr+method index representation
-// of a method value to an actual method func value, which is
-// basically the receiver value with a special bit set, into a true
-// func value - a value holding an actual func. The output is
-// semantically equivalent to the input as far as the user of package
-// reflect can tell, but the true func representation can be handled
-// by code like Convert and Interface and Assign.
+// makeMethodValue 将 v 从方法值的 rcvr+method 索引表示
+// （基本上是设置了特殊位的接收者值）转换为真正的 func 值
+// （持有实际 func 的值）。就 reflect 包的用户所能看到的而言，
+// 输出在语义上等同于输入，但真正的 func 表示可以被
+// Convert、Interface 和 Assign 等代码处理。
 func makeMethodValue(op string, v Value) Value {
 	if v.flag&flagMethod == 0 {
 		panic("reflect: internal error: invalid use of makeMethodValue")
 	}
 
-	// Ignoring the flagMethod bit, v describes the receiver, not the method type.
+	// 忽略 flagMethod 位，v 描述的是接收者，而不是方法类型。
 	fl := v.flag & (flagRO | flagAddr | flagIndir)
 	fl |= flag(v.typ().Kind())
 	rcvr := Value{v.typ(), v.ptr, fl}
 
-	// v.Type returns the actual type of the method value.
+	// v.Type 返回方法值的实际类型。
 	ftyp := (*funcType)(unsafe.Pointer(v.Type().(*rtype)))
 
 	code := methodValueCallCodePtr()
 
-	// methodValue contains a stack map for use by the runtime
+	// methodValue 包含一个供运行时使用的栈映射
 	_, _, abid := funcLayout(ftyp, nil)
 	fv := &methodValue{
 		makeFuncCtxt: makeFuncCtxt{
@@ -122,9 +112,9 @@ func makeMethodValue(op string, v Value) Value {
 		rcvr:   rcvr,
 	}
 
-	// Cause panic if method is not appropriate.
-	// The panic would still happen during the call if we omit this,
-	// but we want Interface() and other operations to fail early.
+	// 如果方法不合适则引发 panic。
+	// 如果我们省略这个，panic 仍然会在调用期间发生，
+	// 但我们希望 Interface() 和其他操作尽早失败。
 	methodReceiver(op, fv.rcvr, fv.method)
 
 	return Value{ftyp.Common(), unsafe.Pointer(fv), v.flag&flagRO | flag(Func)}
@@ -134,48 +124,44 @@ func methodValueCallCodePtr() uintptr {
 	return abi.FuncPCABI0(methodValueCall)
 }
 
-// methodValueCall is an assembly function that is the code half of
-// the function returned from makeMethodValue. It expects a *methodValue
-// as its context register, and its job is to invoke callMethod(ctxt, frame)
-// where ctxt is the context register and frame is a pointer to the first
-// word in the passed-in argument frame.
+// methodValueCall 是一个汇编函数，是 makeMethodValue 返回的函数的代码部分。
+// 它期望一个 *methodValue 作为其上下文寄存器，
+// 它的工作是调用 callMethod(ctxt, frame)，
+// 其中 ctxt 是上下文寄存器，frame 是指向传入参数帧中第一个字的指针。
 func methodValueCall()
 
-// This structure must be kept in sync with runtime.reflectMethodValue.
-// Any changes should be reflected in all both.
+// 此结构必须与 runtime.reflectMethodValue 保持同步。
+// 任何更改都应反映在两者中。
 type makeFuncCtxt struct {
 	fn      uintptr
-	stack   *bitVector // ptrmap for both stack args and results
-	argLen  uintptr    // just args
+	stack   *bitVector // 栈参数和结果的指针映射
+	argLen  uintptr    // 仅参数
 	regPtrs abi.IntArgRegBitmap
 }
 
-// moveMakeFuncArgPtrs uses ctxt.regPtrs to copy integer pointer arguments
-// in args.Ints to args.Ptrs where the GC can see them.
+// moveMakeFuncArgPtrs 使用 ctxt.regPtrs 将 args.Ints 中的整数指针参数
+// 复制到 args.Ptrs 中，GC 可以在那里看到它们。
 //
-// This is similar to what reflectcallmove does in the runtime, except
-// that happens on the return path, whereas this happens on the call path.
+// 这与运行时中 reflectcallmove 的功能类似，
+// 只是那个发生在返回路径上，而这个发生在调用路径上。
 //
-// nosplit because pointers are being held in uintptr slots in args, so
-// having our stack scanned now could lead to accidentally freeing
-// memory.
+// nosplit 是因为指针被保存在 args 的 uintptr 槽中，
+// 所以现在扫描我们的栈可能会导致意外释放内存。
 //
 //go:nosplit
 func moveMakeFuncArgPtrs(ctxt *makeFuncCtxt, args *abi.RegArgs) {
 	for i, arg := range args.Ints {
-		// Avoid write barriers! Because our write barrier enqueues what
-		// was there before, we might enqueue garbage.
-		// Also avoid bounds checks, we don't have the stack space for it.
-		// (Normally the prove pass removes them, but for -N builds we
-		// use too much stack.)
-		// ptr := &args.Ptrs[i] (but cast from *unsafe.Pointer to *uintptr)
+		// 避免写屏障！因为我们的写屏障会将之前存在的内容入队，
+		// 我们可能会将垃圾入队。
+		// 同时避免边界检查，我们没有足够的栈空间。
+		// （通常 prove pass 会移除它们，但对于 -N 构建我们使用太多栈。）
+		// ptr := &args.Ptrs[i]（但从 *unsafe.Pointer 转换为 *uintptr）
 		ptr := (*uintptr)(add(unsafe.Pointer(unsafe.SliceData(args.Ptrs[:])), uintptr(i)*goarch.PtrSize, "always in [0:IntArgRegs]"))
 		if ctxt.regPtrs.Get(i) {
 			*ptr = arg
 		} else {
-			// We *must* zero this space ourselves because it's defined in
-			// assembly code and the GC will scan these pointers. Otherwise,
-			// there will be garbage here.
+			// 我们*必须*自己将此空间清零，因为它是在汇编代码中定义的，
+			// GC 会扫描这些指针。否则，这里会有垃圾。
 			*ptr = 0
 		}
 	}

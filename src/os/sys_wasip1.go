@@ -1,11 +1,11 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build wasip1
 
 package os
 
-// supportsCloseOnExec reports whether the platform supports the
-// O_CLOEXEC flag.
+// supportsCloseOnExec 报告平台是否支持
+// O_CLOEXEC 标志。
 const supportsCloseOnExec = false

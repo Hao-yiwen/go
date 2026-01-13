@@ -1,10 +1,10 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package gif implements a GIF image decoder and encoder.
+// gif 包实现了 GIF 图像解码器和编码器。
 //
-// The GIF specification is at https://www.w3.org/Graphics/GIF/spec-gif89a.txt.
+// GIF 规范位于 https://www.w3.org/Graphics/GIF/spec-gif89a.txt。
 package gif
 
 import (

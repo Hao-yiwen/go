@@ -7,5 +7,5 @@
 package runtime
 
 func checkfds() {
-	// Nothing to do on non-Unix platforms.
+	// 在非 Unix 平台上无需执行任何操作。
 }

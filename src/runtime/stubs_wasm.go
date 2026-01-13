@@ -4,13 +4,12 @@
 
 package runtime
 
-// pause sets SP to newsp and pauses the execution of Go's WebAssembly
-// code until an event is triggered, or call back into Go.
+// pause 将 SP 设置为 newsp 并暂停 Go 的 WebAssembly 代码的执行，
+// 直到触发事件或回调到 Go。
 //
-// Note: the epilogue of pause pops 8 bytes from the stack, so when
-// returning to the host, the SP is newsp+8.
-// If we want to set the SP such that when it calls back into Go, the
-// Go function appears to be called from pause's caller's caller, then
-// call pause with newsp = internal/runtime/sys.GetCallerSP()-16 (another 8 is
-// the return PC pushed to the stack).
+// 注意：pause 的尾声从堆栈中弹出 8 个字节，因此当返回到主机时，
+// SP 是 newsp+8。
+// 如果我们想设置 SP，使得当它回调到 Go 时，Go 函数看起来是从
+// pause 的调用者的调用者调用的，然后使用 newsp = internal/runtime/sys.GetCallerSP()-16
+// 调用 pause（另外 8 字节是推送到堆栈的返回 PC）。
 func pause(newsp uintptr)

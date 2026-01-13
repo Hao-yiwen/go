@@ -1,14 +1,14 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Constants
+// 常量
 
 package dwarf
 
 //go:generate stringer -type Attr -trimprefix=Attr
 
-// An Attr identifies the attribute type in a DWARF [Entry.Field].
+// Attr 标识 DWARF [Entry.Field] 中的属性类型。
 type Attr uint32
 
 const (
@@ -71,7 +71,7 @@ const (
 	AttrVarParam       Attr = 0x4B
 	AttrVirtuality     Attr = 0x4C
 	AttrVtableElemLoc  Attr = 0x4D
-	// The following are new in DWARF 3.
+	// 以下是 DWARF 3 中新增的。
 	AttrAllocated     Attr = 0x4E
 	AttrAssociated    Attr = 0x4F
 	AttrDataLocation  Attr = 0x50
@@ -99,14 +99,14 @@ const (
 	AttrElemental     Attr = 0x66
 	AttrPure          Attr = 0x67
 	AttrRecursive     Attr = 0x68
-	// The following are new in DWARF 4.
+	// 以下是 DWARF 4 中新增的。
 	AttrSignature      Attr = 0x69
 	AttrMainSubprogram Attr = 0x6A
 	AttrDataBitOffset  Attr = 0x6B
 	AttrConstExpr      Attr = 0x6C
 	AttrEnumClass      Attr = 0x6D
 	AttrLinkageName    Attr = 0x6E
-	// The following are new in DWARF 5.
+	// 以下是 DWARF 5 中新增的。
 	AttrStringLengthBitSize  Attr = 0x6F
 	AttrStringLengthByteSize Attr = 0x70
 	AttrRank                 Attr = 0x71
@@ -145,11 +145,11 @@ func (a Attr) GoString() string {
 	return "dwarf." + a.String()
 }
 
-// A format is a DWARF data encoding format.
+// format 是 DWARF 数据编码格式。
 type format uint32
 
 const (
-	// value formats
+	// 值格式
 	formAddr        format = 0x01
 	formDwarfBlock2 format = 0x03
 	formDwarfBlock4 format = 0x04
@@ -171,12 +171,12 @@ const (
 	formRef8        format = 0x14
 	formRefUdata    format = 0x15
 	formIndirect    format = 0x16
-	// The following are new in DWARF 4.
+	// 以下是 DWARF 4 中新增的。
 	formSecOffset   format = 0x17
 	formExprloc     format = 0x18
 	formFlagPresent format = 0x19
 	formRefSig8     format = 0x20
-	// The following are new in DWARF 5.
+	// 以下是 DWARF 5 中新增的。
 	formStrx          format = 0x1A
 	formAddrx         format = 0x1B
 	formRefSup4       format = 0x1C
@@ -195,7 +195,7 @@ const (
 	formAddrx2        format = 0x2A
 	formAddrx3        format = 0x2B
 	formAddrx4        format = 0x2C
-	// Extensions for multi-file compression (.dwz)
+	// 多文件压缩扩展（.dwz）
 	// http://www.dwarfstd.org/ShowIssue.php?issue=120604.1
 	formGnuRefAlt  format = 0x1f20
 	formGnuStrpAlt format = 0x1f21
@@ -203,7 +203,7 @@ const (
 
 //go:generate stringer -type Tag -trimprefix=Tag
 
-// A Tag is the classification (the type) of an [Entry].
+// Tag 是 [Entry] 的分类（类型）。
 type Tag uint32
 
 const (
@@ -254,7 +254,7 @@ const (
 	TagVariantPart            Tag = 0x33
 	TagVariable               Tag = 0x34
 	TagVolatileType           Tag = 0x35
-	// The following are new in DWARF 3.
+	// 以下是 DWARF 3 中新增的。
 	TagDwarfProcedure  Tag = 0x36
 	TagRestrictType    Tag = 0x37
 	TagInterfaceType   Tag = 0x38
@@ -263,14 +263,14 @@ const (
 	TagUnspecifiedType Tag = 0x3B
 	TagPartialUnit     Tag = 0x3C
 	TagImportedUnit    Tag = 0x3D
-	TagMutableType     Tag = 0x3E // Later removed from DWARF.
+	TagMutableType     Tag = 0x3E // 后来从 DWARF 中移除。
 	TagCondition       Tag = 0x3F
 	TagSharedType      Tag = 0x40
-	// The following are new in DWARF 4.
+	// 以下是 DWARF 4 中新增的。
 	TagTypeUnit            Tag = 0x41
 	TagRvalueReferenceType Tag = 0x42
 	TagTemplateAlias       Tag = 0x43
-	// The following are new in DWARF 5.
+	// 以下是 DWARF 5 中新增的。
 	TagCoarrayType       Tag = 0x44
 	TagGenericSubrange   Tag = 0x45
 	TagDynamicType       Tag = 0x46
@@ -288,28 +288,27 @@ func (t Tag) GoString() string {
 	return "dwarf." + t.String()
 }
 
-// Location expression operators.
-// The debug info encodes value locations like 8(R3)
-// as a sequence of these op codes.
-// This package does not implement full expressions;
-// the opPlusUconst operator is expected by the type parser.
+// 位置表达式操作符。
+// 调试信息将值位置（如 8(R3)）编码为这些操作码的序列。
+// 此包不实现完整的表达式；
+// 类型解析器需要 opPlusUconst 操作符。
 const (
-	opAddr       = 0x03 /* 1 op, const addr */
+	opAddr       = 0x03 /* 1 个操作数，常量地址 */
 	opDeref      = 0x06
-	opConst1u    = 0x08 /* 1 op, 1 byte const */
-	opConst1s    = 0x09 /*	" signed */
-	opConst2u    = 0x0A /* 1 op, 2 byte const  */
-	opConst2s    = 0x0B /*	" signed */
-	opConst4u    = 0x0C /* 1 op, 4 byte const */
-	opConst4s    = 0x0D /*	" signed */
-	opConst8u    = 0x0E /* 1 op, 8 byte const */
-	opConst8s    = 0x0F /*	" signed */
-	opConstu     = 0x10 /* 1 op, LEB128 const */
-	opConsts     = 0x11 /*	" signed */
+	opConst1u    = 0x08 /* 1 个操作数，1 字节常量 */
+	opConst1s    = 0x09 /*	" 有符号 */
+	opConst2u    = 0x0A /* 1 个操作数，2 字节常量 */
+	opConst2s    = 0x0B /*	" 有符号 */
+	opConst4u    = 0x0C /* 1 个操作数，4 字节常量 */
+	opConst4s    = 0x0D /*	" 有符号 */
+	opConst8u    = 0x0E /* 1 个操作数，8 字节常量 */
+	opConst8s    = 0x0F /*	" 有符号 */
+	opConstu     = 0x10 /* 1 个操作数，LEB128 常量 */
+	opConsts     = 0x11 /*	" 有符号 */
 	opDup        = 0x12
 	opDrop       = 0x13
 	opOver       = 0x14
-	opPick       = 0x15 /* 1 op, 1 byte stack index */
+	opPick       = 0x15 /* 1 个操作数，1 字节栈索引 */
 	opSwap       = 0x16
 	opRot        = 0x17
 	opXderef     = 0x18
@@ -323,13 +322,13 @@ const (
 	opNot        = 0x20
 	opOr         = 0x21
 	opPlus       = 0x22
-	opPlusUconst = 0x23 /* 1 op, ULEB128 addend */
+	opPlusUconst = 0x23 /* 1 个操作数，ULEB128 加数 */
 	opShl        = 0x24
 	opShr        = 0x25
 	opShra       = 0x26
 	opXor        = 0x27
-	opSkip       = 0x2F /* 1 op, signed 2-byte constant */
-	opBra        = 0x28 /* 1 op, signed 2-byte constant */
+	opSkip       = 0x2F /* 1 个操作数，有符号 2 字节常量 */
+	opBra        = 0x28 /* 1 个操作数，有符号 2 字节常量 */
 	opEq         = 0x29
 	opGe         = 0x2A
 	opGt         = 0x2B
@@ -337,30 +336,30 @@ const (
 	opLt         = 0x2D
 	opNe         = 0x2E
 	opLit0       = 0x30
-	/* OpLitN = OpLit0 + N for N = 0..31 */
+	/* OpLitN = OpLit0 + N，其中 N = 0..31 */
 	opReg0 = 0x50
-	/* OpRegN = OpReg0 + N for N = 0..31 */
-	opBreg0 = 0x70 /* 1 op, signed LEB128 constant */
-	/* OpBregN = OpBreg0 + N for N = 0..31 */
-	opRegx       = 0x90 /* 1 op, ULEB128 register */
-	opFbreg      = 0x91 /* 1 op, SLEB128 offset */
-	opBregx      = 0x92 /* 2 op, ULEB128 reg; SLEB128 off */
-	opPiece      = 0x93 /* 1 op, ULEB128 size of piece */
-	opDerefSize  = 0x94 /* 1-byte size of data retrieved */
-	opXderefSize = 0x95 /* 1-byte size of data retrieved */
+	/* OpRegN = OpReg0 + N，其中 N = 0..31 */
+	opBreg0 = 0x70 /* 1 个操作数，有符号 LEB128 常量 */
+	/* OpBregN = OpBreg0 + N，其中 N = 0..31 */
+	opRegx       = 0x90 /* 1 个操作数，ULEB128 寄存器 */
+	opFbreg      = 0x91 /* 1 个操作数，SLEB128 偏移量 */
+	opBregx      = 0x92 /* 2 个操作数，ULEB128 寄存器；SLEB128 偏移量 */
+	opPiece      = 0x93 /* 1 个操作数，ULEB128 片段大小 */
+	opDerefSize  = 0x94 /* 1 字节检索数据大小 */
+	opXderefSize = 0x95 /* 1 字节检索数据大小 */
 	opNop        = 0x96
-	// The following are new in DWARF 3.
+	// 以下是 DWARF 3 中新增的。
 	opPushObjAddr    = 0x97
-	opCall2          = 0x98 /* 2-byte offset of DIE */
-	opCall4          = 0x99 /* 4-byte offset of DIE */
-	opCallRef        = 0x9A /* 4- or 8- byte offset of DIE */
+	opCall2          = 0x98 /* DIE 的 2 字节偏移量 */
+	opCall4          = 0x99 /* DIE 的 4 字节偏移量 */
+	opCallRef        = 0x9A /* DIE 的 4 或 8 字节偏移量 */
 	opFormTLSAddress = 0x9B
 	opCallFrameCFA   = 0x9C
 	opBitPiece       = 0x9D
-	// The following are new in DWARF 4.
+	// 以下是 DWARF 4 中新增的。
 	opImplicitValue = 0x9E
 	opStackValue    = 0x9F
-	// The following a new in DWARF 5.
+	// 以下是 DWARF 5 中新增的。
 	opImplicitPointer = 0xA0
 	opAddrx           = 0xA1
 	opConstx          = 0xA2
@@ -371,10 +370,10 @@ const (
 	opXderefType      = 0xA7
 	opConvert         = 0xA8
 	opReinterpret     = 0xA9
-	/* 0xE0-0xFF reserved for user-specific */
+	/* 0xE0-0xFF 保留给用户特定用途 */
 )
 
-// Basic type encodings -- the value for AttrEncoding in a TagBaseType Entry.
+// 基本类型编码 -- TagBaseType Entry 中 AttrEncoding 的值。
 const (
 	encAddress      = 0x01
 	encBoolean      = 0x02
@@ -384,7 +383,7 @@ const (
 	encSignedChar   = 0x06
 	encUnsigned     = 0x07
 	encUnsignedChar = 0x08
-	// The following are new in DWARF 3.
+	// 以下是 DWARF 3 中新增的。
 	encImaginaryFloat = 0x09
 	encPackedDecimal  = 0x0A
 	encNumericString  = 0x0B
@@ -392,14 +391,14 @@ const (
 	encSignedFixed    = 0x0D
 	encUnsignedFixed  = 0x0E
 	encDecimalFloat   = 0x0F
-	// The following are new in DWARF 4.
+	// 以下是 DWARF 4 中新增的。
 	encUTF = 0x10
-	// The following are new in DWARF 5.
+	// 以下是 DWARF 5 中新增的。
 	encUCS   = 0x11
 	encASCII = 0x12
 )
 
-// Statement program standard opcode encodings.
+// 语句程序标准操作码编码。
 const (
 	lnsCopy           = 1
 	lnsAdvancePC      = 2
@@ -417,7 +416,7 @@ const (
 	lnsSetISA           = 12
 )
 
-// Statement program extended opcode encodings.
+// 语句程序扩展操作码编码。
 const (
 	lneEndSequence = 1
 	lneSetAddress  = 2
@@ -427,8 +426,8 @@ const (
 	lneSetDiscriminator = 4
 )
 
-// Line table directory and file name entry formats.
-// These are new in DWARF 5.
+// 行表目录和文件名条目格式。
+// 这些是 DWARF 5 中新增的。
 const (
 	lnctPath           = 0x01
 	lnctDirectoryIndex = 0x02
@@ -437,8 +436,8 @@ const (
 	lnctMD5            = 0x05
 )
 
-// Location list entry codes.
-// These are new in DWARF 5.
+// 位置列表条目代码。
+// 这些是 DWARF 5 中新增的。
 const (
 	lleEndOfList       = 0x00
 	lleBaseAddressx    = 0x01
@@ -451,8 +450,8 @@ const (
 	lleStartLength     = 0x08
 )
 
-// Unit header unit type encodings.
-// These are new in DWARF 5.
+// 单元头单元类型编码。
+// 这些是 DWARF 5 中新增的。
 const (
 	utCompile      = 0x01
 	utType         = 0x02
@@ -462,7 +461,7 @@ const (
 	utSplitType    = 0x06
 )
 
-// Opcodes for DWARFv5 debug_rnglists section.
+// DWARFv5 debug_rnglists 节的操作码。
 const (
 	rleEndOfList    = 0x0
 	rleBaseAddressx = 0x1

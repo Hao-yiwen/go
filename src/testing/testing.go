@@ -1,29 +1,26 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package testing provides support for automated testing of Go packages.
-// It is intended to be used in concert with the "go test" command, which automates
-// execution of any function of the form
+// Package testing 提供对 Go 包自动化测试的支持。
+// 它旨在与 "go test" 命令配合使用，该命令自动执行
+// 以下形式的任何函数
 //
 //	func TestXxx(*testing.T)
 //
-// where Xxx does not start with a lowercase letter. The function name
-// serves to identify the test routine.
+// 其中 Xxx 不以小写字母开头。函数名用于标识测试例程。
 //
-// Within these functions, use [T.Error], [T.Fail] or related methods to signal failure.
+// 在这些函数中，使用 [T.Error]、[T.Fail] 或相关方法来表示失败。
 //
-// To write a new test suite, create a file that
-// contains the TestXxx functions as described here,
-// and give that file a name ending in "_test.go".
-// The file will be excluded from regular
-// package builds but will be included when the "go test" command is run.
+// 要编写新的测试套件，请创建一个包含此处描述的 TestXxx 函数的文件，
+// 并将该文件命名为以 "_test.go" 结尾。
+// 该文件将从常规包构建中排除，但在运行 "go test" 命令时将被包含。
 //
-// The test file can be in the same package as the one being tested,
-// or in a corresponding package with the suffix "_test".
+// 测试文件可以与被测试的包在同一个包中，
+// 也可以在带有 "_test" 后缀的对应包中。
 //
-// If the test file is in the same package, it may refer to unexported
-// identifiers within the package, as in this example:
+// 如果测试文件在同一个包中，它可以引用包内的未导出标识符，
+// 如下例所示：
 //
 //	package abs
 //
@@ -36,9 +33,8 @@
 //	    }
 //	}
 //
-// If the file is in a separate "_test" package, the package being tested
-// must be imported explicitly and only its exported identifiers may be used.
-// This is known as "black box" testing.
+// 如果文件在单独的 "_test" 包中，被测试的包必须显式导入，
+// 并且只能使用其导出的标识符。这被称为"黑盒"测试。
 //
 //	package abs_test
 //
@@ -55,20 +51,20 @@
 //	    }
 //	}
 //
-// For more detail, run [go help test] and [go help testflag].
+// 有关更多详细信息，请运行 [go help test] 和 [go help testflag]。
 //
-// # Benchmarks
+// # 基准测试
 //
-// Functions of the form
+// 以下形式的函数
 //
 //	func BenchmarkXxx(*testing.B)
 //
-// are considered benchmarks, and are executed by the "go test" command when
-// its -bench flag is provided. Benchmarks are run sequentially.
+// 被视为基准测试，当提供 -bench 标志时由 "go test" 命令执行。
+// 基准测试按顺序运行。
 //
-// For a description of the testing flags, see [go help testflag].
+// 有关测试标志的描述，请参见 [go help testflag]。
 //
-// A sample benchmark function looks like this:
+// 示例基准测试函数如下所示：
 //
 //	func BenchmarkRandInt(b *testing.B) {
 //	    for b.Loop() {
@@ -76,15 +72,14 @@
 //	    }
 //	}
 //
-// The output
+// 输出
 //
 //	BenchmarkRandInt-8   	68453040	        17.8 ns/op
 //
-// means that the body of the loop ran 68453040 times at a speed of 17.8 ns per loop.
+// 表示循环体以每次循环 17.8 ns 的速度运行了 68453040 次。
 //
-// Only the body of the loop is timed, so benchmarks may do expensive
-// setup before calling b.Loop, which will not be counted toward the
-// benchmark measurement:
+// 只有循环体被计时，因此基准测试可以在调用 b.Loop 之前进行
+// 昂贵的设置，这不会计入基准测试测量：
 //
 //	func BenchmarkBigLen(b *testing.B) {
 //	    big := NewBig()
@@ -93,9 +88,8 @@
 //	    }
 //	}
 //
-// If a benchmark needs to test performance in a parallel setting, it may use
-// the RunParallel helper function; such benchmarks are intended to be used with
-// the go test -cpu flag:
+// 如果基准测试需要在并行设置中测试性能，它可以使用
+// RunParallel 辅助函数；这类基准测试旨在与 go test -cpu 标志一起使用：
 //
 //	func BenchmarkTemplateParallel(b *testing.B) {
 //	    templ := template.Must(template.New("test").Parse("Hello, {{.}}!"))
@@ -108,18 +102,15 @@
 //	    })
 //	}
 //
-// A detailed specification of the benchmark results format is given
-// in https://go.dev/design/14313-benchmark-format.
+// 基准测试结果格式的详细规范在
+// https://go.dev/design/14313-benchmark-format 中给出。
 //
-// There are standard tools for working with benchmark results at
-// [golang.org/x/perf/cmd].
-// In particular, [golang.org/x/perf/cmd/benchstat] performs
-// statistically robust A/B comparisons.
+// 有用于处理基准测试结果的标准工具，位于 [golang.org/x/perf/cmd]。
+// 特别是，[golang.org/x/perf/cmd/benchstat] 执行统计上稳健的 A/B 比较。
 //
-// # b.N-style benchmarks
+// # b.N 风格的基准测试
 //
-// Prior to the introduction of [B.Loop], benchmarks were written in a
-// different style using B.N. For example:
+// 在引入 [B.Loop] 之前，基准测试使用 B.N 以不同的风格编写。例如：
 //
 //	func BenchmarkRandInt(b *testing.B) {
 //	    for range b.N {
@@ -127,14 +118,11 @@
 //	    }
 //	}
 //
-// In this style of benchmark, the benchmark function must run
-// the target code b.N times. The benchmark function is called
-// multiple times with b.N adjusted until the benchmark function
-// lasts long enough to be timed reliably. This also means any setup
-// done before the loop may be run several times.
+// 在这种风格的基准测试中，基准测试函数必须运行目标代码 b.N 次。
+// 基准测试函数会被多次调用，调整 b.N 直到基准测试函数持续足够长的时间
+// 以可靠地计时。这也意味着循环之前完成的任何设置可能会运行多次。
 //
-// If a benchmark needs some expensive setup before running, the timer
-// should be explicitly reset:
+// 如果基准测试在运行前需要一些昂贵的设置，应该显式重置计时器：
 //
 //	func BenchmarkBigLen(b *testing.B) {
 //	    big := NewBig()
@@ -144,15 +132,13 @@
 //	    }
 //	}
 //
-// New benchmarks should prefer using [B.Loop], which is more robust
-// and more efficient.
+// 新的基准测试应该优先使用 [B.Loop]，它更健壮、更高效。
 //
-// # Examples
+// # 示例
 //
-// The package also runs and verifies example code. Example functions may
-// include a concluding line comment that begins with "Output:" and is compared with
-// the standard output of the function when the tests are run. (The comparison
-// ignores leading and trailing space.) These are examples of an example:
+// 该包还运行和验证示例代码。示例函数可以包含一个以 "Output:" 开头的
+// 结尾行注释，在运行测试时与函数的标准输出进行比较。
+// （比较忽略前导和尾随空格。）以下是示例的示例：
 //
 //	func ExampleHello() {
 //	    fmt.Println("hello")
@@ -167,8 +153,7 @@
 //	    // goodbye
 //	}
 //
-// The comment prefix "Unordered output:" is like "Output:", but matches any
-// line order:
+// 注释前缀 "Unordered output:" 类似于 "Output:"，但匹配任何行顺序：
 //
 //	func ExamplePerm() {
 //	    for _, value := range Perm(5) {
@@ -181,42 +166,38 @@
 //	    // 0
 //	}
 //
-// Example functions without output comments are compiled but not executed.
+// 没有输出注释的示例函数会被编译但不会被执行。
 //
-// The naming convention to declare examples for the package, a function F, a type T and
-// method M on type T are:
+// 为包、函数 F、类型 T 和类型 T 上的方法 M 声明示例的命名约定是：
 //
 //	func Example() { ... }
 //	func ExampleF() { ... }
 //	func ExampleT() { ... }
 //	func ExampleT_M() { ... }
 //
-// Multiple example functions for a package/type/function/method may be provided by
-// appending a distinct suffix to the name. The suffix must start with a
-// lower-case letter.
+// 可以通过在名称后附加不同的后缀来为包/类型/函数/方法提供多个示例函数。
+// 后缀必须以小写字母开头。
 //
 //	func Example_suffix() { ... }
 //	func ExampleF_suffix() { ... }
 //	func ExampleT_suffix() { ... }
 //	func ExampleT_M_suffix() { ... }
 //
-// The entire test file is presented as the example when it contains a single
-// example function, at least one other function, type, variable, or constant
-// declaration, and no test or benchmark functions.
+// 当测试文件包含单个示例函数、至少一个其他函数、类型、变量或常量声明，
+// 且没有测试或基准测试函数时，整个测试文件将作为示例呈现。
 //
-// # Fuzzing
+// # 模糊测试
 //
-// 'go test' and the testing package support fuzzing, a testing technique where
-// a function is called with randomly generated inputs to find bugs not
-// anticipated by unit tests.
+// 'go test' 和 testing 包支持模糊测试，这是一种测试技术，
+// 使用随机生成的输入调用函数以发现单元测试未预料到的错误。
 //
-// Functions of the form
+// 以下形式的函数
 //
 //	func FuzzXxx(*testing.F)
 //
-// are considered fuzz tests.
+// 被视为模糊测试。
 //
-// For example:
+// 例如：
 //
 //	func FuzzHex(f *testing.F) {
 //	  for _, seed := range [][]byte{{}, {0}, {9}, {0xa}, {0xf}, {1, 2, 3, 4}} {

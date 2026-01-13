@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package build
 
@@ -38,7 +38,7 @@ func newImportReader(name string, r io.Reader) *importReader {
 	// Remove leading UTF-8 BOM.
 	// Per https://golang.org/ref/spec#Source_code_representation:
 	// a compiler may ignore a UTF-8-encoded byte order mark (U+FEFF)
-	// if it is the first Unicode code point in the source text.
+	// if it 是 first Unicode code point in the source text.
 	if leadingBytes, err := b.Peek(3); err == nil && bytes.Equal(leadingBytes, bom) {
 		b.Discard(3)
 	}
@@ -109,7 +109,7 @@ func (r *importReader) readRest() {
 	}
 }
 
-// peekByte returns the next byte from the input reader but does not advance beyond it.
+// peekByte 返回the next byte from the input reader but does not advance beyond it.
 // If skipSpace is set, peekByte skips leading spaces and comments.
 func (r *importReader) peekByte(skipSpace bool) byte {
 	if r.err != nil {
@@ -243,7 +243,7 @@ func (r *importReader) readImport() {
 // readComments is like io.ReadAll, except that it only reads the leading
 // block of comments in the file.
 //
-// readComments should be an internal detail,
+// readComments 应该是 an internal detail,
 // but widely used packages access it using linkname.
 // Notable members of the hall of shame include:
 //   - github.com/bazelbuild/bazel-gazelle
@@ -267,7 +267,7 @@ func readComments(f io.Reader) ([]byte, error) {
 // If info.fset is non-nil, readGoInfo parses the file and sets info.parsed, info.parseErr,
 // info.imports and info.embeds.
 //
-// It only returns an error if there are problems reading the file,
+// It only 返回一个 error if there are problems reading the file,
 // not for syntax errors in the file itself.
 func readGoInfo(f io.Reader, info *fileInfo) error {
 	r := newImportReader(info.name, f)
@@ -396,7 +396,7 @@ func readGoInfo(f io.Reader, info *fileInfo) error {
 	return nil
 }
 
-// isValidImport checks if the import is a valid import using the more strict
+// isValidImport 检查 the import 是一个 valid import using the more strict
 // checks allowed by the implementation restriction in https://go.dev/ref/spec#Import_declarations.
 // It was ported from the function of the same name that was removed from the
 // parser in CL 424855, when the parser stopped doing these checks.

@@ -1,11 +1,11 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Parse "zoneinfo" time zone file.
-// This is a fairly standard file format used on OS X, Linux, BSD, Sun, and others.
-// See tzfile(5), https://en.wikipedia.org/wiki/Zoneinfo,
-// and ftp://munnari.oz.au/pub/oldtz/
+// 解析 "zoneinfo" 时区文件。
+// 这是一种在 OS X、Linux、BSD、Sun 等系统上使用的相当标准的文件格式。
+// 参见 tzfile(5)、https://en.wikipedia.org/wiki/Zoneinfo
+// 和 ftp://munnari.oz.au/pub/oldtz/
 
 package time
 
@@ -14,26 +14,24 @@ import (
 	"internal/bytealg"
 	"runtime"
 	"syscall"
-	_ "unsafe" // for linkname
+	_ "unsafe" // 用于 linkname
 )
 
-// registerLoadFromEmbeddedTZData is called by the time/tzdata package,
-// if it is imported.
+// registerLoadFromEmbeddedTZData 在 time/tzdata 包被导入时由该包调用。
 //
 //go:linkname registerLoadFromEmbeddedTZData
 func registerLoadFromEmbeddedTZData(f func(string) (string, error)) {
 	loadFromEmbeddedTZData = f
 }
 
-// loadFromEmbeddedTZData is used to load a specific tzdata file
-// from tzdata information embedded in the binary itself.
-// This is set when the time/tzdata package is imported,
-// via registerLoadFromEmbeddedTzdata.
+// loadFromEmbeddedTZData 用于从嵌入二进制文件本身的 tzdata 信息中
+// 加载特定的 tzdata 文件。
+// 当 time/tzdata 包被导入时，通过 registerLoadFromEmbeddedTzdata 设置此项。
 var loadFromEmbeddedTZData func(zipname string) (string, error)
 
-// maxFileSize is the max permitted size of files read by readFile.
-// As reference, the zoneinfo.zip distributed by Go is ~350 KB,
-// so 10MB is overkill.
+// maxFileSize 是 readFile 读取的文件的最大允许大小。
+// 作为参考，Go 分发的 zoneinfo.zip 约 350 KB，
+// 所以 10MB 是过度的。
 const maxFileSize = 10 << 20
 
 type fileSizeError string
@@ -42,14 +40,14 @@ func (f fileSizeError) Error() string {
 	return "time: file " + string(f) + " is too large"
 }
 
-// Copies of io.Seek* constants to avoid importing "io":
+// io.Seek* 常量的副本，以避免导入 "io"：
 const (
 	seekStart   = 0
 	seekCurrent = 1
 	seekEnd     = 2
 )
 
-// Simple I/O interface to binary blob of data.
+// 二进制数据块的简单 I/O 接口。
 type dataIO struct {
 	p     []byte
 	error bool
@@ -94,14 +92,14 @@ func (d *dataIO) byte() (n byte, ok bool) {
 	return p[0], true
 }
 
-// rest returns the rest of the data in the buffer.
+// rest 返回缓冲区中的剩余数据。
 func (d *dataIO) rest() []byte {
 	r := d.p
 	d.p = nil
 	return r
 }
 
-// Make a string by stopping at the first NUL
+// 通过在第一个 NUL 处停止来创建字符串
 func byteString(p []byte) string {
 	if i := bytealg.IndexByte(p, 0); i != -1 {
 		p = p[:i]
@@ -111,19 +109,19 @@ func byteString(p []byte) string {
 
 var errBadData = errors.New("malformed time zone information")
 
-// LoadLocationFromTZData returns a Location with the given name
-// initialized from the IANA Time Zone database-formatted data.
-// The data should be in the format of a standard IANA time zone file
-// (for example, the content of /etc/localtime on Unix systems).
+// LoadLocationFromTZData 返回一个具有给定名称的 Location，
+// 该 Location 从 IANA 时区数据库格式的数据初始化。
+// 数据应该是标准 IANA 时区文件的格式
+// （例如，Unix 系统上 /etc/localtime 的内容）。
 func LoadLocationFromTZData(name string, data []byte) (*Location, error) {
 	d := dataIO{data, false}
 
-	// 4-byte magic "TZif"
+	// 4 字节魔数 "TZif"
 	if magic := d.read(4); string(magic) != "TZif" {
 		return nil, errBadData
 	}
 
-	// 1-byte version, then 15 bytes of padding
+	// 1 字节版本，然后是 15 字节的填充
 	var version int
 	var p []byte
 	if p = d.read(16); len(p) != 16 {
@@ -141,13 +139,13 @@ func LoadLocationFromTZData(name string, data []byte) (*Location, error) {
 		}
 	}
 
-	// six big-endian 32-bit integers:
-	//	number of UTC/local indicators
-	//	number of standard/wall indicators
-	//	number of leap seconds
-	//	number of transition times
-	//	number of local time zones
-	//	number of characters of time zone abbrev strings
+	// 六个大端序 32 位整数：
+	//	UTC/本地指示符的数量
+	//	标准/墙上时间指示符的数量
+	//	闰秒的数量
+	//	转换时间的数量
+	//	本地时区的数量
+	//	时区缩写字符串的字符数
 	const (
 		NUTCLocal = iota
 		NStdWall
@@ -168,14 +166,13 @@ func LoadLocationFromTZData(name string, data []byte) (*Location, error) {
 		n[i] = int(nn)
 	}
 
-	// If we have version 2 or 3, then the data is first written out
-	// in a 32-bit format, then written out again in a 64-bit format.
-	// Skip the 32-bit format and read the 64-bit one, as it can
-	// describe a broader range of dates.
+	// 如果我们有版本 2 或 3，那么数据首先以 32 位格式写出，
+	// 然后以 64 位格式再次写出。
+	// 跳过 32 位格式并读取 64 位格式，因为它可以描述更广泛的日期范围。
 
 	is64 := false
 	if version > 1 {
-		// Skip the 32-bit data.
+		// 跳过 32 位数据。
 		skip := n[NTime]*4 +
 			n[NTime] +
 			n[NZone]*6 +
@@ -183,13 +180,13 @@ func LoadLocationFromTZData(name string, data []byte) (*Location, error) {
 			n[NLeap]*8 +
 			n[NStdWall] +
 			n[NUTCLocal]
-		// Skip the version 2 header that we just read.
+		// 跳过我们刚刚读取的版本 2 头部。
 		skip += 4 + 16
 		d.read(skip)
 
 		is64 = true
 
-		// Read the counts again, they can differ.
+		// 再次读取计数，它们可能不同。
 		for i := 0; i < 6; i++ {
 			nn, ok := d.big4()
 			if !ok {
@@ -207,30 +204,30 @@ func LoadLocationFromTZData(name string, data []byte) (*Location, error) {
 		size = 8
 	}
 
-	// Transition times.
+	// 转换时间。
 	txtimes := dataIO{d.read(n[NTime] * size), false}
 
-	// Time zone indices for transition times.
+	// 转换时间的时区索引。
 	txzones := d.read(n[NTime])
 
-	// Zone info structures
+	// 时区信息结构
 	zonedata := dataIO{d.read(n[NZone] * 6), false}
 
-	// Time zone abbreviations.
+	// 时区缩写。
 	abbrev := d.read(n[NChar])
 
-	// Leap-second time pairs
+	// 闰秒时间对
 	d.read(n[NLeap] * (size + 4))
 
-	// Whether tx times associated with local time types
-	// are specified as standard time or wall time.
+	// 与本地时间类型关联的 tx 时间是否
+	// 指定为标准时间或墙上时间。
 	isstd := d.read(n[NStdWall])
 
-	// Whether tx times associated with local time types
-	// are specified as UTC or local time.
+	// 与本地时间类型关联的 tx 时间是否
+	// 指定为 UTC 或本地时间。
 	isutc := d.read(n[NUTCLocal])
 
-	if d.error { // ran out of data
+	if d.error { // 数据用尽
 		return nil, errBadData
 	}
 
@@ -240,13 +237,13 @@ func LoadLocationFromTZData(name string, data []byte) (*Location, error) {
 		extend = string(rest[1 : len(rest)-1])
 	}
 
-	// Now we can build up a useful data structure.
-	// First the zone information.
+	// 现在我们可以构建一个有用的数据结构。
+	// 首先是时区信息。
 	//	utcoff[4] isdst[1] nameindex[1]
 	nzone := n[NZone]
 	if nzone == 0 {
-		// Reject tzdata files with no zones. There's nothing useful in them.
-		// This also avoids a panic later when we add and then use a fake transition (golang.org/issue/29437).
+		// 拒绝没有时区的 tzdata 文件。它们没有任何用处。
+		// 这也避免了稍后当我们添加并使用虚假转换时的 panic（golang.org/issue/29437）。
 		return nil, errBadData
 	}
 	zones := make([]zone, nzone)
@@ -270,16 +267,16 @@ func LoadLocationFromTZData(name string, data []byte) (*Location, error) {
 		}
 		zones[i].name = byteString(abbrev[b:])
 		if runtime.GOOS == "aix" && len(name) > 8 && (name[:8] == "Etc/GMT+" || name[:8] == "Etc/GMT-") {
-			// There is a bug with AIX 7.2 TL 0 with files in Etc,
-			// GMT+1 will return GMT-1 instead of GMT+1 or -01.
+			// AIX 7.2 TL 0 的 Etc 目录中的文件存在一个 bug，
+			// GMT+1 将返回 GMT-1 而不是 GMT+1 或 -01。
 			if name != "Etc/GMT+0" {
-				// GMT+0 is OK
+				// GMT+0 是正常的
 				zones[i].name = name[4:]
 			}
 		}
 	}
 
-	// Now the transition time info.
+	// 现在是转换时间信息。
 	tx := make([]zoneTrans, n[NTime])
 	for i := range tx {
 		var n int64
@@ -310,16 +307,16 @@ func LoadLocationFromTZData(name string, data []byte) (*Location, error) {
 	}
 
 	if len(tx) == 0 {
-		// Build fake transition to cover all time.
-		// This happens in fixed locations like "Etc/GMT0".
+		// 构建虚假转换以覆盖所有时间。
+		// 这发生在像 "Etc/GMT0" 这样的固定位置。
 		tx = append(tx, zoneTrans{when: alpha, index: 0})
 	}
 
-	// Committed to succeed.
+	// 承诺成功。
 	l := &Location{zone: zones, tx: tx, name: name, extend: extend}
 
-	// Fill in the cache with information about right now,
-	// since that will be the most common lookup.
+	// 用关于现在的信息填充缓存，
+	// 因为这将是最常见的查找。
 	sec, _, _ := runtimeNow()
 	for i := range tx {
 		if tx[i].when <= sec && (i+1 == len(tx) || sec < tx[i+1].when) {
@@ -329,12 +326,12 @@ func LoadLocationFromTZData(name string, data []byte) (*Location, error) {
 			if i+1 < len(tx) {
 				l.cacheEnd = tx[i+1].when
 			} else if l.extend != "" {
-				// If we're at the end of the known zone transitions,
-				// try the extend string.
+				// 如果我们在已知时区转换的末尾，
+				// 尝试 extend 字符串。
 				if name, offset, estart, eend, isDST, ok := tzset(l.extend, l.cacheStart, sec); ok {
 					l.cacheStart = estart
 					l.cacheEnd = eend
-					// Find the zone that is returned by tzset to avoid allocation if possible.
+					// 找到 tzset 返回的时区以尽可能避免分配。
 					if zoneIdx := findZone(l.zone, name, offset, isDST); zoneIdx != -1 {
 						l.cacheZone = &l.zone[zoneIdx]
 					} else {
@@ -362,8 +359,8 @@ func findZone(zones []zone, name string, offset int, isDST bool) int {
 	return -1
 }
 
-// loadTzinfoFromDirOrZip returns the contents of the file with the given name
-// in dir. dir can either be an uncompressed zip file, or a directory.
+// loadTzinfoFromDirOrZip 返回 dir 中具有给定名称的文件的内容。
+// dir 可以是未压缩的 zip 文件，或者是目录。
 func loadTzinfoFromDirOrZip(dir, name string) ([]byte, error) {
 	if len(dir) > 4 && dir[len(dir)-4:] == ".zip" {
 		return loadTzinfoFromZip(dir, name)
@@ -374,15 +371,14 @@ func loadTzinfoFromDirOrZip(dir, name string) ([]byte, error) {
 	return readFile(name)
 }
 
-// There are 500+ zoneinfo files. Rather than distribute them all
-// individually, we ship them in an uncompressed zip file.
-// Used this way, the zip file format serves as a commonly readable
-// container for the individual small files. We choose zip over tar
-// because zip files have a contiguous table of contents, making
-// individual file lookups faster, and because the per-file overhead
-// in a zip file is considerably less than tar's 512 bytes.
+// 有 500 多个 zoneinfo 文件。我们不是单独分发它们，
+// 而是将它们放在一个未压缩的 zip 文件中。
+// 这样使用时，zip 文件格式充当各个小文件的通用可读容器。
+// 我们选择 zip 而不是 tar，因为 zip 文件具有连续的目录表，
+// 使得单个文件查找更快，而且 zip 文件的每文件开销
+// 比 tar 的 512 字节少得多。
 
-// get4 returns the little-endian 32-bit value in b.
+// get4 返回 b 中的小端序 32 位值。
 func get4(b []byte) int {
 	if len(b) < 4 {
 		return 0
@@ -390,7 +386,7 @@ func get4(b []byte) int {
 	return int(b[0]) | int(b[1])<<8 | int(b[2])<<16 | int(b[3])<<24
 }
 
-// get2 returns the little-endian 16-bit value in b.
+// get2 返回 b 中的小端序 16 位值。
 func get2(b []byte) int {
 	if len(b) < 2 {
 		return 0
@@ -398,8 +394,8 @@ func get2(b []byte) int {
 	return int(b[0]) | int(b[1])<<8
 }
 
-// loadTzinfoFromZip returns the contents of the file with the given name
-// in the given uncompressed zip file.
+// loadTzinfoFromZip 返回给定未压缩 zip 文件中
+// 具有给定名称的文件的内容。
 func loadTzinfoFromZip(zipfile, name string) ([]byte, error) {
 	fd, err := open(zipfile)
 	if err != nil {
@@ -430,7 +426,7 @@ func loadTzinfoFromZip(zipfile, name string) ([]byte, error) {
 	}
 
 	for i := 0; i < n; i++ {
-		// zip entry layout:
+		// zip 条目布局：
 		//	0	magic[4]
 		//	4	madevers[1]
 		//	5	madeos[1]
@@ -451,7 +447,7 @@ func loadTzinfoFromZip(zipfile, name string) ([]byte, error) {
 		//	38	eattr[4]
 		//	42	off[4]
 		//	46	name[namelen]
-		//	46+namelen+xlen+fclen - next header
+		//	46+namelen+xlen+fclen - 下一个头部
 		//
 		if get4(buf) != zcheader {
 			break
@@ -471,7 +467,7 @@ func loadTzinfoFromZip(zipfile, name string) ([]byte, error) {
 			return nil, errors.New("unsupported compression for " + name + " in " + zipfile)
 		}
 
-		// zip per-file header layout:
+		// zip 每文件头部布局：
 		//	0	magic[4]
 		//	4	extvers[1]
 		//	5	extos[1]
@@ -485,7 +481,7 @@ func loadTzinfoFromZip(zipfile, name string) ([]byte, error) {
 		//	26	namelen[2]
 		//	28	xlen[2]
 		//	30	name[namelen]
-		//	30+namelen+xlen - file data
+		//	30+namelen+xlen - 文件数据
 		//
 		buf = make([]byte, zheadersize+namelen)
 		if err := preadn(fd, buf, off); err != nil ||
@@ -508,15 +504,14 @@ func loadTzinfoFromZip(zipfile, name string) ([]byte, error) {
 	return nil, syscall.ENOENT
 }
 
-// loadTzinfoFromTzdata returns the time zone information of the time zone
-// with the given name, from a tzdata database file as they are typically
-// found on android.
+// loadTzinfoFromTzdata 从 tzdata 数据库文件返回
+// 具有给定名称的时区的时区信息，
+// 这些文件通常在 android 上找到。
 var loadTzinfoFromTzdata func(file, name string) ([]byte, error)
 
-// loadTzinfo returns the time zone information of the time zone
-// with the given name, from a given source. A source may be a
-// timezone database directory, tzdata database file or an uncompressed
-// zip file, containing the contents of such a directory.
+// loadTzinfo 从给定源返回具有给定名称的时区的时区信息。
+// 源可以是时区数据库目录、tzdata 数据库文件或
+// 包含此类目录内容的未压缩 zip 文件。
 func loadTzinfo(name string, source string) ([]byte, error) {
 	if len(source) >= 6 && source[len(source)-6:] == "tzdata" {
 		return loadTzinfoFromTzdata(source, name)
@@ -524,10 +519,10 @@ func loadTzinfo(name string, source string) ([]byte, error) {
 	return loadTzinfoFromDirOrZip(source, name)
 }
 
-// loadLocation returns the Location with the given name from one of
-// the specified sources. See loadTzinfo for a list of supported sources.
-// The first timezone data matching the given name that is successfully loaded
-// and parsed is returned as a Location.
+// loadLocation 从指定的源之一返回具有给定名称的 Location。
+// 有关支持的源列表，请参阅 loadTzinfo。
+// 成功加载和解析的与给定名称匹配的第一个时区数据
+// 作为 Location 返回。
 func loadLocation(name string, sources []string) (z *Location, firstErr error) {
 	for _, source := range sources {
 		zoneData, err := loadTzinfo(name, source)
@@ -568,10 +563,10 @@ func loadLocation(name string, sources []string) (z *Location, firstErr error) {
 	return nil, errors.New("unknown time zone " + name)
 }
 
-// readFile reads and returns the content of the named file.
-// It is a trivial implementation of os.ReadFile, reimplemented
-// here to avoid depending on io/ioutil or os.
-// It returns an error if name exceeds maxFileSize bytes.
+// readFile 读取并返回命名文件的内容。
+// 它是 os.ReadFile 的简单实现，在这里重新实现
+// 以避免依赖 io/ioutil 或 os。
+// 如果 name 超过 maxFileSize 字节，它将返回错误。
 func readFile(name string) ([]byte, error) {
 	f, err := open(name)
 	if err != nil {

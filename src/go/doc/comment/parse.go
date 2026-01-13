@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package comment
 
@@ -11,44 +11,44 @@ import (
 	"unicode/utf8"
 )
 
-// A Doc is a parsed Go doc comment.
+// 一个Doc 是一个 parsed Go doc comment.
 type Doc struct {
-	// Content is the sequence of content blocks in the comment.
+	// Content 是 sequence of content blocks in the comment.
 	Content []Block
 
-	// Links is the link definitions in the comment.
+	// Links 是 link definitions in the comment.
 	Links []*LinkDef
 }
 
-// A LinkDef is a single link definition.
+// 一个LinkDef 是一个 single link definition.
 type LinkDef struct {
 	Text string // the link text
 	URL  string // the link URL
 	Used bool   // whether the comment uses the definition
 }
 
-// A Block is block-level content in a doc comment,
+// 一个Block is block-level content in a doc comment,
 // one of [*Code], [*Heading], [*List], or [*Paragraph].
 type Block interface {
 	block()
 }
 
-// A Heading is a doc comment heading.
+// 一个Heading 是一个 doc comment heading.
 type Heading struct {
 	Text []Text // the heading text
 }
 
 func (*Heading) block() {}
 
-// A List is a numbered or bullet list.
+// 一个List 是一个 numbered or bullet list.
 // Lists are always non-empty: len(Items) > 0.
-// In a numbered list, every Items[i].Number is a non-empty string.
-// In a bullet list, every Items[i].Number is an empty string.
+// In a numbered list, every Items[i].Number 是一个 non-empty string.
+// In a bullet list, every Items[i].Number 是一个n empty string.
 type List struct {
-	// Items is the list items.
+	// Items 是 list items.
 	Items []*ListItem
 
-	// ForceBlankBefore indicates that the list must be
+	// ForceBlankBefore 指示 the list must be
 	// preceded by a blank line when reformatting the comment,
 	// overriding the usual conditions. See the BlankBefore method.
 	//
@@ -57,7 +57,7 @@ type List struct {
 	// the blank line is preserved when printing.
 	ForceBlankBefore bool
 
-	// ForceBlankBetween indicates that list items must be
+	// ForceBlankBetween 指示 list items must be
 	// separated by blank lines when reformatting the comment,
 	// overriding the usual conditions. See the BlankBetween method.
 	//
@@ -69,20 +69,20 @@ type List struct {
 
 func (*List) block() {}
 
-// BlankBefore reports whether a reformatting of the comment
+// BlankBefore 报告whether a reformatting of the comment
 // should include a blank line before the list.
-// The default rule is the same as for [BlankBetween]:
-// if the list item content contains any blank lines
+// The default rule 是 same as for [BlankBetween]:
+// 如果 list item content 包含 any blank lines
 // (meaning at least one item has multiple paragraphs)
-// then the list itself must be preceded by a blank line.
-// A preceding blank line can be forced by setting [List].ForceBlankBefore.
+// then the list itself 必须是 preceded by a blank line.
+// 一个preceding blank line can be forced by setting [List].ForceBlankBefore.
 func (l *List) BlankBefore() bool {
 	return l.ForceBlankBefore || l.BlankBetween()
 }
 
-// BlankBetween reports whether a reformatting of the comment
+// BlankBetween 报告whether a reformatting of the comment
 // should include a blank line between each pair of list items.
-// The default rule is that if the list item content contains any blank lines
+// The default rule is that 如果 list item content 包含 any blank lines
 // (meaning at least one item has multiple paragraphs)
 // then list items must themselves be separated by blank lines.
 // Blank line separators can be forced by setting [List].ForceBlankBetween.
@@ -102,66 +102,66 @@ func (l *List) BlankBetween() bool {
 	return false
 }
 
-// A ListItem is a single item in a numbered or bullet list.
+// 一个ListItem 是一个 single item in a numbered or bullet list.
 type ListItem struct {
-	// Number is a decimal string in a numbered list
+	// Number 是一个 decimal string in a numbered list
 	// or an empty string in a bullet list.
 	Number string // "1", "2", ...; "" for bullet list
 
-	// Content is the list content.
+	// Content 是 list content.
 	// Currently, restrictions in the parser and printer
 	// require every element of Content to be a *Paragraph.
 	Content []Block // Content of this item.
 }
 
-// A Paragraph is a paragraph of text.
+// 一个Paragraph 是一个 paragraph of text.
 type Paragraph struct {
 	Text []Text
 }
 
 func (*Paragraph) block() {}
 
-// A Code is a preformatted code block.
+// 一个Code 是一个 preformatted code block.
 type Code struct {
-	// Text is the preformatted text, ending with a newline character.
-	// It may be multiple lines, each of which ends with a newline character.
+	// Text 是 preformatted text, ending with a newline character.
+	// It 可能是 multiple lines, each of which ends with a newline character.
 	// It is never empty, nor does it start or end with a blank line.
 	Text string
 }
 
 func (*Code) block() {}
 
-// A Text is text-level content in a doc comment,
+// 一个Text is text-level content in a doc comment,
 // one of [Plain], [Italic], [*Link], or [*DocLink].
 type Text interface {
 	text()
 }
 
-// A Plain is a string rendered as plain text (not italicized).
+// 一个Plain 是一个 string rendered as plain text (not italicized).
 type Plain string
 
 func (Plain) text() {}
 
-// An Italic is a string rendered as italicized text.
+// 一个Italic 是一个 string rendered as italicized text.
 type Italic string
 
 func (Italic) text() {}
 
-// A Link is a link to a specific URL.
+// 一个Link 是一个 link to a specific URL.
 type Link struct {
-	Auto bool   // is this an automatic (implicit) link of a literal URL?
+	Auto bool   // is th是一个n automatic (implicit) link of a literal URL?
 	Text []Text // text of link
 	URL  string // target URL of link
 }
 
 func (*Link) text() {}
 
-// A DocLink is a link to documentation for a Go package or symbol.
+// 一个DocLink 是一个 link to documentation for a Go package or symbol.
 type DocLink struct {
 	Text []Text // text of link
 
 	// ImportPath, Recv, and Name identify the Go package or symbol
-	// that is the link target. The potential combinations of
+	// that 是 link target. The potential combinations of
 	// non-empty fields are:
 	//  - ImportPath: a link to another package
 	//  - ImportPath, Name: a link to a const, func, type, or var in another package
@@ -175,13 +175,13 @@ type DocLink struct {
 
 func (*DocLink) text() {}
 
-// A Parser is a doc comment parser.
+// 一个Parser 是一个 doc comment parser.
 // The fields in the struct can be filled in before calling [Parser.Parse]
 // in order to customize the details of the parsing process.
 type Parser struct {
-	// Words is a map of Go identifier words that
-	// should be italicized and potentially linked.
-	// If Words[w] is the empty string, then the word w
+	// Words 是一个 map of Go identifier words that
+	// 应该是 italicized and potentially linked.
+	// If Words[w] 是 empty string, then the word w
 	// is only italicized. Otherwise it is linked, using
 	// Words[w] as the link target.
 	// Words corresponds to the [go/doc.ToHTML] words parameter.
@@ -198,7 +198,7 @@ type Parser struct {
 	// If LookupPackage(name) returns ok == false,
 	// then [name] (or [name.Sym] or [name.Sym.Method])
 	// will not be considered a documentation link,
-	// except in the case where name is the full (but single-element) import path
+	// except in the case where name 是 full (but single-element) import path
 	// of a package in the standard library, such as in [math] or [io.Reader].
 	// LookupPackage is still called for such names,
 	// in order to permit references to imports of other packages
@@ -208,7 +208,7 @@ type Parser struct {
 	// a function that always returns "", false.
 	LookupPackage func(name string) (importPath string, ok bool)
 
-	// LookupSym reports whether a symbol name or method name
+	// LookupSym 报告是否 a symbol name or method name
 	// exists in the current package.
 	//
 	// If LookupSym("", "Name") returns true, then [Name]
@@ -233,7 +233,7 @@ type parseDoc struct {
 }
 
 // lookupPkg is called to look up the pkg in [pkg], [pkg.Name], and [pkg.Name.Recv].
-// If pkg has a slash, it is assumed to be the full import path and is returned with ok = true.
+// If pkg has a slash, it 是一个ssumed to be the full import path and is returned with ok = true.
 //
 // Otherwise, pkg is probably a simple package name like "rand" (not "crypto/rand" or "math/rand").
 // d.LookupPackage provides a way for the caller to allow resolving such names with reference
@@ -242,9 +242,9 @@ type parseDoc struct {
 // There is one collision between these two cases: single-element standard library names
 // like "math" are full import paths but don't contain slashes. We let d.LookupPackage have
 // the first chance to resolve it, in case there's a different package imported as math,
-// and otherwise we refer to a built-in list of single-element standard library package names.
+// and 否则 we refer to a built-in list of single-element standard library package names.
 func (d *parseDoc) lookupPkg(pkg string) (importPath string, ok bool) {
-	if strings.Contains(pkg, "/") { // assume a full import path
+	if strings.包含(pkg, "/") { // assume a full import path
 		if validImportPath(pkg) {
 			return pkg, true
 		}
@@ -264,11 +264,11 @@ func isStdPkg(path string) bool {
 	return ok
 }
 
-// DefaultLookupPackage is the default package lookup
+// DefaultLookupPackage 是 default package lookup
 // function, used when [Parser.LookupPackage] is nil.
 // It recognizes names of the packages from the standard
 // library with single-element import paths, such as math,
-// which would otherwise be impossible to name.
+// which would 否则 be impossible to name.
 //
 // Note that the go/doc package provides a more sophisticated
 // lookup based on the imports used in the current package.
@@ -279,7 +279,7 @@ func DefaultLookupPackage(name string) (importPath string, ok bool) {
 	return "", false
 }
 
-// Parse parses the doc comment text and returns the *[Doc] form.
+// Parse parses the doc comment text and 返回 *[Doc] form.
 // Comment markers (/* // and */) in the text must have already been removed.
 func (p *Parser) Parse(text string) *Doc {
 	lines := unindent(strings.Split(text, "\n"))
@@ -295,7 +295,7 @@ func (p *Parser) Parse(text string) *Doc {
 	}
 
 	// First pass: break into block structure and collect known links.
-	// The text is all recorded as Plain for now.
+	// The text 是一个ll recorded as Plain for now.
 	var prev span
 	for _, s := range parseSpans(lines) {
 		var b Block
@@ -337,7 +337,7 @@ func (p *Parser) Parse(text string) *Doc {
 	return d.Doc
 }
 
-// A span represents a single span of comment lines (lines[start:end])
+// 一个span represents a single span of comment lines (lines[start:end])
 // of an identified kind (code, heading, paragraph, and so on).
 type span struct {
 	start int
@@ -345,7 +345,7 @@ type span struct {
 	kind  spanKind
 }
 
-// A spanKind describes the kind of span.
+// 一个spanKind 描述 the kind of span.
 type spanKind int
 
 const (
@@ -390,7 +390,7 @@ Spans:
 		if i < forceIndent || indented(lines[i]) {
 			// Indented (or force indented).
 			// Ends before next unindented. (Blank lines are OK.)
-			// If this is an unindented list that we are heuristically treating as indented,
+			// If this 是一个n unindented list that we are heuristically treating as indented,
 			// then accept unindented list item lines up to the first blank lines.
 			// The heuristic is disabled at blank lines to contain its effect
 			// to non-gofmt'ed sections of the comment.
@@ -442,7 +442,7 @@ Spans:
 			// If unindented lines are followed (without a blank line)
 			// by an indented line that would start a code block,
 			// check whether the final unindented lines
-			// should be left for the indented section.
+			// 应该是 left for the indented section.
 			// This can happen for the common mistakes of
 			// unindented code or unindented lists.
 			// The heuristic will never trigger on a gofmt'ed comment,
@@ -452,7 +452,7 @@ Spans:
 				switch {
 				case isList(lines[i-1]):
 					// If the final unindented line looks like a list item,
-					// this may be the first indented line wrap of
+					// this 可能是 the first indented line wrap of
 					// a mistakenly unindented list.
 					// Leave all the unindented list items.
 					forceIndent = end
@@ -493,7 +493,7 @@ Spans:
 	return spans
 }
 
-// indented reports whether line is indented
+// indented 报告whether line is indented
 // (starts with a leading space or tab).
 func indented(line string) bool {
 	return line != "" && (line[0] == ' ' || line[0] == '\t')
@@ -540,12 +540,12 @@ func unindent(lines []string) []string {
 	return out
 }
 
-// isBlank reports whether s is a blank line.
+// isBlank 报告whether s 是一个 blank line.
 func isBlank(s string) bool {
 	return len(s) == 0 || (len(s) == 1 && s[0] == '\n')
 }
 
-// commonPrefix returns the longest common prefix of a and b.
+// commonPrefix 返回the longest common prefix of a and b.
 func commonPrefix(a, b string) string {
 	i := 0
 	for i < len(a) && i < len(b) && a[i] == b[i] {
@@ -554,7 +554,7 @@ func commonPrefix(a, b string) string {
 	return a[0:i]
 }
 
-// leadingSpace returns the longest prefix of s consisting of spaces and tabs.
+// leadingSpace 返回the longest prefix of s consisting of spaces and tabs.
 func leadingSpace(s string) string {
 	i := 0
 	for i < len(s) && (s[i] == ' ' || s[i] == '\t') {
@@ -563,8 +563,8 @@ func leadingSpace(s string) string {
 	return s[:i]
 }
 
-// isOldHeading reports whether line is an old-style section heading.
-// line is all[off].
+// isOldHeading 报告whether line 是一个n old-style section heading.
+// line 是一个ll[off].
 func isOldHeading(line string, all []string, off int) bool {
 	if off <= 0 || all[off-1] != "" || off+2 >= len(all) || all[off+1] != "" || leadingSpace(all[off+2]) != "" {
 		return false
@@ -614,12 +614,12 @@ func isOldHeading(line string, all []string, off int) bool {
 	return true
 }
 
-// oldHeading returns the *Heading for the given old-style section heading line.
+// oldHeading 返回the *Heading for the given old-style section heading line.
 func (d *parseDoc) oldHeading(line string) Block {
 	return &Heading{Text: []Text{Plain(strings.TrimSpace(line))}}
 }
 
-// isHeading reports whether line is a new-style section heading.
+// isHeading 报告whether line 是一个 new-style section heading.
 func isHeading(line string) bool {
 	return len(line) >= 2 &&
 		line[0] == '#' &&
@@ -627,22 +627,22 @@ func isHeading(line string) bool {
 		strings.TrimSpace(line) != "#"
 }
 
-// heading returns the *Heading for the given new-style section heading line.
+// heading 返回the *Heading for the given new-style section heading line.
 func (d *parseDoc) heading(line string) Block {
 	return &Heading{Text: []Text{Plain(strings.TrimSpace(line[1:]))}}
 }
 
-// code returns a code block built from the lines.
+// code 返回a code block built from the lines.
 func (d *parseDoc) code(lines []string) *Code {
 	body := unindent(lines)
 	body = append(body, "") // to get final \n from Join
 	return &Code{Text: strings.Join(body, "\n")}
 }
 
-// paragraph returns a paragraph block built from the lines.
+// paragraph 返回a paragraph block built from the lines.
 // If the lines are link definitions, paragraph adds them to d and returns nil.
 func (d *parseDoc) paragraph(lines []string) Block {
-	// Is this a block of known links? Handle.
+	// Is th是一个 block of known links? Handle.
 	var defs []*LinkDef
 	for _, line := range lines {
 		def, ok := parseLink(line)
@@ -667,7 +667,7 @@ NoDefs:
 //
 //	[text]: url
 //
-// It returns the link definition and whether the line was well formed.
+// It 返回the link definition and whether the line was well formed.
 func parseLink(line string) (*LinkDef, bool) {
 	if line == "" || line[0] != '[' {
 		return nil, false
@@ -691,7 +691,7 @@ func parseLink(line string) (*LinkDef, bool) {
 	return &LinkDef{Text: text, URL: url}, true
 }
 
-// list returns a list built from the indented lines,
+// list 返回a list built from the indented lines,
 // using forceBlankBefore as the value of the List's ForceBlankBefore field.
 func (d *parseDoc) list(lines []string, forceBlankBefore bool) *List {
 	num, _, _ := listMarker(lines[0])
@@ -731,7 +731,7 @@ func (d *parseDoc) list(lines []string, forceBlankBefore bool) *List {
 }
 
 // listMarker parses the line as beginning with a list marker.
-// If it can do that, it returns the numeric marker ("" for a bullet list),
+// If it can do that, it 返回 numeric marker ("" for a bullet list),
 // the rest of the line, and ok == true.
 // Otherwise, it returns "", "", false.
 func listMarker(line string) (num, rest string, ok bool) {
@@ -763,7 +763,7 @@ func listMarker(line string) (num, rest string, ok bool) {
 	return num, rest, true
 }
 
-// isList reports whether the line is the first line of a list,
+// isList 报告whether the line 是 first line of a list,
 // meaning starts with a list marker after any indentation.
 // (The caller is responsible for checking the line is indented, as appropriate.)
 func isList(line string) bool {
@@ -771,14 +771,14 @@ func isList(line string) bool {
 	return ok
 }
 
-// parseLinkedText parses text that is allowed to contain explicit links,
+// parseLinkedText parses text that 是一个llowed to contain explicit links,
 // such as [math.Sin] or [Go home page], into a slice of Text items.
 //
-// A “pkg” is only assumed to be a full import path if it starts with
+// 一个“pkg” is only assumed to be a full import path if it starts with
 // a domain name (a path element with a dot) or is one of the packages
 // from the standard library (“[os]”, “[encoding/json]”, and so on).
-// To avoid problems with maps, generics, and array types, doc links
-// must be both preceded and followed by punctuation, spaces, tabs,
+// To avoid problems with 映射, generics, and array types, doc links
+// 必须是 both preceded and followed by punctuation, spaces, tabs,
 // or the start or end of a line. An example problem would be treating
 // map[ast.Expr]TypeAndValue as containing a link.
 func (d *parseDoc) parseLinkedText(text string) []Text {
@@ -834,7 +834,7 @@ func (d *parseDoc) parseLinkedText(text string) []Text {
 // as a doc link if possible, returning the DocLink and ok == true
 // or else nil, false.
 // The before and after strings are the text before the [ and after the ]
-// on the same line. Doc links must be preceded and followed by
+// on the same line. Doc links 必须是 preceded and followed by
 // punctuation, spaces, tabs, or the start or end of a line.
 func (d *parseDoc) docLink(text, before, after string) (link *DocLink, ok bool) {
 	if before != "" {
@@ -872,7 +872,7 @@ func (d *parseDoc) docLink(text, before, after string) (link *DocLink, ok bool) 
 	return link, true
 }
 
-// If text is of the form before.Name, where Name is a capitalized Go identifier,
+// If text is of the form before.Name, where Name 是一个 capitalized Go identifier,
 // then splitDocName returns before, name, true.
 // Otherwise it returns text, "", false.
 func splitDocName(text string) (before, name string, foundDot bool) {
@@ -887,11 +887,11 @@ func splitDocName(text string) (before, name string, foundDot bool) {
 	return before, name, true
 }
 
-// parseText parses s as text and returns the result of appending
+// parseText parses s as text and 返回 result of appending
 // those parsed Text elements to out.
-// parseText does not handle explicit links like [math.Sin] or [Go home page]:
+// parseText 执行not handle explicit links like [math.Sin] or [Go home page]:
 // those are handled by parseLinkedText.
-// If autoLink is true, then parseText recognizes URLs and words from d.Words
+// If autoLink 为真, then parseText recognizes URLs and words from d.Words
 // and converts those to links as appropriate.
 func (d *parseDoc) parseText(out []Text, s string, autoLink bool) []Text {
 	var w strings.Builder
@@ -966,14 +966,14 @@ func (d *parseDoc) parseText(out []Text, s string, autoLink bool) []Text {
 	return out
 }
 
-// autoURL checks whether s begins with a URL that should be hyperlinked.
-// If so, it returns the URL, which is a prefix of s, and ok == true.
+// autoURL 检查是否 s begins with a URL that 应该是 hyperlinked.
+// If so, it 返回 URL, which 是一个 prefix of s, and ok == true.
 // Otherwise it returns "", false.
 // The caller should skip over the first len(url) bytes of s
 // before further processing.
 func autoURL(s string) (url string, ok bool) {
 	// Find the ://. Fast path to pick off non-URL,
-	// since we call this at every position in the string.
+	// since we call th是一个t every position in the string.
 	// The shortest possible URL is ftp://x, 7 bytes.
 	var i int
 	switch {
@@ -1053,7 +1053,7 @@ Path:
 	return s[:end], true
 }
 
-// isScheme reports whether s is a recognized URL scheme.
+// isScheme 报告whether s 是一个 recognized URL scheme.
 // Note that if strings of new length (beyond 3-7)
 // are added here, the fast path at the top of autoURL will need updating.
 func isScheme(s string) bool {
@@ -1070,13 +1070,13 @@ func isScheme(s string) bool {
 	return false
 }
 
-// isHost reports whether c is a byte that can appear in a URL host,
+// isHost 报告whether c 是一个 byte that can appear in a URL host,
 // like www.example.com or user@[::1]:8080
 func isHost(c byte) bool {
-	// mask is a 128-bit bitmap with 1s for allowed bytes,
+	// mask 是一个 128-bit bitmap with 1s for allowed bytes,
 	// so that the byte c can be tested with a shift and an and.
 	// If c > 128, then 1<<c and 1<<(c-64) will both be zero,
-	// and this function will return false.
+	// and this function 将返回 false.
 	const mask = 0 |
 		(1<<26-1)<<'A' |
 		(1<<26-1)<<'a' |
@@ -1093,13 +1093,13 @@ func isHost(c byte) bool {
 		(uint64(1)<<(c-64))&(mask>>64)) != 0
 }
 
-// isPunct reports whether c is a punctuation byte that can appear
+// isPunct 报告whether c 是一个 punctuation byte that can appear
 // inside a path but not at the end.
 func isPunct(c byte) bool {
-	// mask is a 128-bit bitmap with 1s for allowed bytes,
+	// mask 是一个 128-bit bitmap with 1s for allowed bytes,
 	// so that the byte c can be tested with a shift and an and.
 	// If c > 128, then 1<<c and 1<<(c-64) will both be zero,
-	// and this function will return false.
+	// and this function 将返回 false.
 	const mask = 0 |
 		1<<'.' |
 		1<<',' |
@@ -1112,12 +1112,12 @@ func isPunct(c byte) bool {
 		(uint64(1)<<(c-64))&(mask>>64)) != 0
 }
 
-// isPath reports whether c is a (non-punctuation) path byte.
+// isPath 报告whether c 是一个 (non-punctuation) path byte.
 func isPath(c byte) bool {
-	// mask is a 128-bit bitmap with 1s for allowed bytes,
+	// mask 是一个 128-bit bitmap with 1s for allowed bytes,
 	// so that the byte c can be tested with a shift and an and.
 	// If c > 128, then 1<<c and 1<<(c-64) will both be zero,
-	// and this function will return false.
+	// and this function 将返回 false.
 	const mask = 0 |
 		(1<<26-1)<<'A' |
 		(1<<26-1)<<'a' |
@@ -1146,7 +1146,7 @@ func isPath(c byte) bool {
 		(uint64(1)<<(c-64))&(mask>>64)) != 0
 }
 
-// isName reports whether s is a capitalized Go identifier (like Name).
+// isName 报告whether s 是一个 capitalized Go identifier (like Name).
 func isName(s string) bool {
 	t, ok := ident(s)
 	if !ok || t != s {
@@ -1156,8 +1156,8 @@ func isName(s string) bool {
 	return unicode.IsUpper(r)
 }
 
-// ident checks whether s begins with a Go identifier.
-// If so, it returns the identifier, which is a prefix of s, and ok == true.
+// ident 检查是否 s begins with a Go identifier.
+// If so, it 返回 identifier, which 是一个 prefix of s, and ok == true.
 // Otherwise it returns "", false.
 // The caller should skip over the first len(id) bytes of s
 // before further processing.
@@ -1182,12 +1182,12 @@ func ident(s string) (id string, ok bool) {
 	return s[:n], n > 0
 }
 
-// isIdentASCII reports whether c is an ASCII identifier byte.
+// isIdentASCII 报告whether c 是一个n ASCII identifier byte.
 func isIdentASCII(c byte) bool {
-	// mask is a 128-bit bitmap with 1s for allowed bytes,
+	// mask 是一个 128-bit bitmap with 1s for allowed bytes,
 	// so that the byte c can be tested with a shift and an and.
 	// If c > 128, then 1<<c and 1<<(c-64) will both be zero,
-	// and this function will return false.
+	// and this function 将返回 false.
 	const mask = 0 |
 		(1<<26-1)<<'A' |
 		(1<<26-1)<<'a' |
@@ -1198,8 +1198,8 @@ func isIdentASCII(c byte) bool {
 		(uint64(1)<<(c-64))&(mask>>64)) != 0
 }
 
-// validImportPath reports whether path is a valid import path.
-// It is a lightly edited copy of golang.org/x/mod/module.CheckImportPath.
+// validImportPath 报告whether path 是一个 valid import path.
+// It 是一个 lightly edited copy of golang.org/x/mod/module.CheckImportPath.
 func validImportPath(path string) bool {
 	if !utf8.ValidString(path) {
 		return false
@@ -1210,7 +1210,7 @@ func validImportPath(path string) bool {
 	if path[0] == '-' {
 		return false
 	}
-	if strings.Contains(path, "//") {
+	if strings.包含(path, "//") {
 		return false
 	}
 	if path[len(path)-1] == '/' {
@@ -1241,10 +1241,10 @@ func validImportPathElem(elem string) bool {
 }
 
 func importPathOK(c byte) bool {
-	// mask is a 128-bit bitmap with 1s for allowed bytes,
+	// mask 是一个 128-bit bitmap with 1s for allowed bytes,
 	// so that the byte c can be tested with a shift and an and.
 	// If c > 128, then 1<<c and 1<<(c-64) will both be zero,
-	// and this function will return false.
+	// and this function 将返回 false.
 	const mask = 0 |
 		(1<<26-1)<<'A' |
 		(1<<26-1)<<'a' |

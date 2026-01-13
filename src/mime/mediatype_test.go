@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package mime
 
@@ -99,7 +99,7 @@ type mediaTypeTest struct {
 var parseMediaTypeTests []mediaTypeTest
 
 func init() {
-	// Convenience map initializer
+	// 便捷的 map 初始化器
 	m := func(s ...string) map[string]string {
 		sm := make(map[string]string)
 		for i := 0; i < len(s); i += 2 {
@@ -123,7 +123,7 @@ func init() {
 		{`foo; key=val1; key=the-key-appears-again-which-is-bogus`,
 			"", m()},
 
-		// From RFC 2231:
+		// 来自 RFC 2231：
 		{`application/x-stuff; title*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A`,
 			"application/x-stuff",
 			m("title", "This is ***fun***")},
@@ -142,8 +142,8 @@ func init() {
 			"application/x-stuff",
 			m("title", "This is even more ***fun*** isn't it!")},
 
-		// Tests from http://greenbytes.de/tech/tc2231/
-		// Note: Backslash escape handling is a bit loose, like MSIE.
+		// 来自 http://greenbytes.de/tech/tc2231/ 的测试
+		// 注意：反斜杠转义处理比较宽松，类似于 MSIE。
 
 		// #attonly
 		{`attachment`,
@@ -387,34 +387,34 @@ func init() {
 			"attachment",
 			m("foobar", "x", "filename", "foo.html")},
 
-		// Browsers also just send UTF-8 directly without RFC 2231,
-		// at least when the source page is served with UTF-8.
+		// 浏览器也会直接发送 UTF-8 而不使用 RFC 2231，
+		// 至少在源页面以 UTF-8 编码提供时是这样。
 		{`form-data; firstname="Брэд"; lastname="Фицпатрик"`,
 			"form-data",
 			m("firstname", "Брэд", "lastname", "Фицпатрик")},
 
-		// Empty string used to be mishandled.
+		// 空字符串曾经被错误处理。
 		{`foo; bar=""`, "foo", m("bar", "")},
 
-		// Microsoft browsers in intranet mode do not think they need to escape \ in file name.
+		// 内网模式下的 Microsoft 浏览器认为不需要转义文件名中的 \。
 		{`form-data; name="file"; filename="C:\dev\go\robots.txt"`, "form-data", m("name", "file", "filename", `C:\dev\go\robots.txt`)},
 		{`form-data; name="file"; filename="C:\新建文件夹\中文第二次测试.mp4"`, "form-data", m("name", "file", "filename", `C:\新建文件夹\中文第二次测试.mp4`)},
 
 		// issue #46323 (https://github.com/golang/go/issues/46323)
 		{
-			// example from rfc2231-p.3 (https://datatracker.ietf.org/doc/html/rfc2231)
+			// 来自 rfc2231 第 3 页的示例 (https://datatracker.ietf.org/doc/html/rfc2231)
 			`message/external-body; access-type=URL;
 		URL*0="ftp://";
-		URL*1="cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar";`, // <-- trailing semicolon
+		URL*1="cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar";`, // <-- 尾随分号
 			`message/external-body`,
 			m("access-type", "URL", "url", "ftp://cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar"),
 		},
 
-		// Issue #48866: duplicate parameters containing equal values should be allowed
+		// Issue #48866: 应该允许包含相等值的重复参数
 		{`text; charset=utf-8; charset=utf-8; format=fixed`, "text", m("charset", "utf-8", "format", "fixed")},
 		{`text; charset=utf-8; format=flowed; charset=utf-8`, "text", m("charset", "utf-8", "format", "flowed")},
 
-		// Issue #76236: '{' and '}' are token chars.
+		// Issue #76236: '{' 和 '}' 是 token 字符。
 		{"attachment; filename={file}.png", "attachment", m("filename", "{file}.png")},
 	}
 }
@@ -462,13 +462,13 @@ type badMediaTypeTest struct {
 
 var badMediaTypeTests = []badMediaTypeTest{
 	{"bogus ;=========", "bogus", "mime: invalid media parameter"},
-	// The following example is from real email delivered by gmail (error: missing semicolon)
-	// and it is there to check behavior described in #19498
+	// 以下示例来自 gmail 投递的真实邮件（错误：缺少分号）
+	// 用于检查 #19498 中描述的行为
 	{"application/pdf; x-mac-type=\"3F3F3F3F\"; x-mac-creator=\"3F3F3F3F\" name=\"a.pdf\";",
 		"application/pdf", "mime: invalid media parameter"},
 	{"bogus/<script>alert</script>", "", "mime: expected token after slash"},
 	{"bogus/bogus<script>alert</script>", "", "mime: unexpected content after media subtype"},
-	// Tests from http://greenbytes.de/tech/tc2231/
+	// 来自 http://greenbytes.de/tech/tc2231/ 的测试
 	{`"attachment"`, "attachment", "mime: no media type"},
 	{"attachment; filename=foo,bar.html", "attachment", "mime: invalid media parameter"},
 	{"attachment; ;filename=foo", "attachment", "mime: invalid media parameter"},

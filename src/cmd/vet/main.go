@@ -48,17 +48,17 @@ import (
 )
 
 func main() {
-	// Keep consistent with cmd/fix/main.go!
+	// 与 cmd/fix/main.go 保持一致!
 	counter.Open()
 	objabi.AddVersionFlag()
 	counter.Inc("vet/invocations")
 
-	unitchecker.Main(suite...) // (never returns)
+	unitchecker.Main(suite...) // (永不返回)
 }
 
-// The vet suite analyzers report diagnostics.
-// (Diagnostics must describe real problems, but need not
-// suggest fixes, and fixes are not necessarily safe to apply.)
+// vet 套件分析器报告诊断信息。
+// (诊断必须描述真实问题，但不一定需要
+// 建议修复，且修复不一定安全。)
 var suite = []*analysis.Analyzer{
 	appends.Analyzer,
 	asmdecl.Analyzer,
@@ -72,7 +72,7 @@ var suite = []*analysis.Analyzer{
 	defers.Analyzer,
 	directive.Analyzer,
 	errorsas.Analyzer,
-	// fieldalignment.Analyzer omitted: too noisy
+	// fieldalignment.Analyzer 忽略：噪声太多
 	framepointer.Analyzer,
 	httpresponse.Analyzer,
 	hostport.Analyzer,
@@ -81,7 +81,7 @@ var suite = []*analysis.Analyzer{
 	lostcancel.Analyzer,
 	nilfunc.Analyzer,
 	printf.Analyzer,
-	// shadow.Analyzer omitted: too noisy
+	// shadow.Analyzer 忽略：噪声太多
 	shift.Analyzer,
 	sigchanyzer.Analyzer,
 	slog.Analyzer,

@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -11,13 +11,13 @@ import (
 	"encoding/json/internal/jsonflags"
 )
 
-// Options is the common options type shared across json packages.
+// Options 是 common options type shared across json packages.
 type Options interface {
 	// JSONOptions is exported so related json packages can implement Options.
 	JSONOptions(internal.NotForPublicUse)
 }
 
-// Struct is the combination of all options in struct form.
+// Struct 是 combination of all options in struct form.
 // This is efficient to pass down the call stack and to query.
 type Struct struct {
 	Flags jsonflags.Flags
@@ -45,7 +45,7 @@ type ArshalValues struct {
 	FormatDepth int
 }
 
-// DefaultOptionsV2 is the set of all options that define default v2 behavior.
+// DefaultOptionsV2 是 set of all options that define default v2 behavior.
 var DefaultOptionsV2 = Struct{
 	Flags: jsonflags.Flags{
 		Presence: uint64(jsonflags.DefaultV1Flags),
@@ -53,7 +53,7 @@ var DefaultOptionsV2 = Struct{
 	},
 }
 
-// DefaultOptionsV1 is the set of all options that define default v1 behavior.
+// DefaultOptionsV1 是 set of all options that define default v1 behavior.
 var DefaultOptionsV1 = Struct{
 	Flags: jsonflags.Flags{
 		Presence: uint64(jsonflags.DefaultV1Flags),

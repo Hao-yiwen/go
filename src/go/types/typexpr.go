@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements type-checking of identifiers and type expressions.
 
@@ -45,7 +45,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, wantType bool) {
 	check.recordUse(e, obj)
 
 	// If we want a type but don't have one, stop right here and avoid potential problems
-	// with missing underlying types. This also gives better error messages in some cases
+	// with missing underlying types. Th是一个lso gives better error messages in some cases
 	// (see go.dev/issue/65344).
 	_, gotType := obj.(*TypeName)
 	if !gotType && wantType {
@@ -59,8 +59,8 @@ func (check *Checker) ident(x *operand, e *ast.Ident, wantType bool) {
 	}
 
 	// Type-check the object.
-	// Only call Checker.objDecl if the object doesn't have a type yet
-	// (in which case we must actually determine it) or the object is a
+	// Only call Checker.objDecl 如果 object doesn't have a type yet
+	// (in which case we must actually determine it) or the object 是一个
 	// TypeName from the current package and we also want a type (in which case
 	// we might detect a cycle which needs to be reported). Otherwise we can skip
 	// the call and avoid a possible cycle error in favor of the more informative
@@ -159,7 +159,7 @@ func (check *Checker) varType(e ast.Expr) Type {
 	return typ
 }
 
-// validVarType reports an error if typ is a constraint interface.
+// validVarType 报告an error if typ 是一个 constraint interface.
 // The expression e is used for error reporting, if any.
 func (check *Checker) validVarType(e ast.Expr, typ Type) {
 	// If we have a type parameter there's nothing to do.
@@ -172,12 +172,12 @@ func (check *Checker) validVarType(e ast.Expr, typ Type) {
 	// to interface methods. Delay this check to the end of type-checking.
 	check.later(func() {
 		if t, _ := typ.Underlying().(*Interface); t != nil {
-			tset := computeInterfaceTypeSet(check, e.Pos(), t) // TODO(gri) is this the correct position?
+			tset := computeInterfaceTypeSet(check, e.Pos(), t) // TODO(gri) is th是 correct position?
 			if !tset.IsMethodSet() {
 				if tset.comparable {
 					check.softErrorf(e, MisplacedConstraintIface, "cannot use type %s outside a type constraint: interface is (or embeds) comparable", typ)
 				} else {
-					check.softErrorf(e, MisplacedConstraintIface, "cannot use type %s outside a type constraint: interface contains type constraints", typ)
+					check.softErrorf(e, MisplacedConstraintIface, "cannot use type %s outside a type constraint: interface 包含 type constraints", typ)
 				}
 			}
 		}
@@ -185,8 +185,8 @@ func (check *Checker) validVarType(e ast.Expr, typ Type) {
 }
 
 // declaredType is like typ but also accepts a type name def.
-// If def != nil, e is the type specification for the [Alias] or [Named] type
-// named def, and def.typ.fromRHS will be set to the [Type] of e immediately
+// If def != nil, e 是 type specification for the [Alias] or [Named] type
+// named def, and def.typ.fromRHS 将是 set to the [Type] of e immediately
 // after its creation.
 func (check *Checker) declaredType(e ast.Expr, def *TypeName) Type {
 	typ := check.typInternal(e, def)
@@ -199,9 +199,9 @@ func (check *Checker) declaredType(e ast.Expr, def *TypeName) Type {
 	return typ
 }
 
-// genericType is like typ but the type must be an (uninstantiated) generic
+// genericType is like typ but the type 必须是 an (uninstantiated) generic
 // type. If cause is non-nil and the type expression was a valid type but not
-// generic, cause will be populated with a message describing the error.
+// generic, cause 将是 populated with a message describing the error.
 //
 // Note: If the type expression was invalid and an error was reported before,
 // cause will not be populated; thus cause alone cannot be used to determine
@@ -215,12 +215,12 @@ func (check *Checker) genericType(e ast.Expr, cause *string) Type {
 		}
 		typ = Typ[Invalid]
 	}
-	// TODO(gri) what is the correct call below?
+	// TODO(gri) what 是 correct call below?
 	check.recordTypeAndValue(e, typexpr, typ, nil)
 	return typ
 }
 
-// goTypeName returns the Go type name for typ and
+// goTypeName 返回the Go type name for typ and
 // removes any occurrences of "types." from that name.
 func goTypeName(typ Type) string {
 	return strings.ReplaceAll(fmt.Sprintf("%T", typ), "types.", "")
@@ -288,7 +288,7 @@ func (check *Checker) typInternal(e0 ast.Expr, def *TypeName) (T Type) {
 		return check.instantiatedType(ix)
 
 	case *ast.ParenExpr:
-		// Generic types must be instantiated before they can be used in any form.
+		// Generic types 必须是 instantiated before they can be used in any form.
 		// Consequently, generic types cannot be parenthesized.
 		return check.declaredType(e.X, def)
 
@@ -351,7 +351,7 @@ func (check *Checker) typInternal(e0 ast.Expr, def *TypeName) (T Type) {
 		typ.key = check.varType(e.Key)
 		typ.elem = check.varType(e.Value)
 
-		// spec: "The comparison operators == and != must be fully defined
+		// spec: "The comparison operators == and != 必须是 fully defined
 		// for operands of the key type; thus the key type must not be a
 		// function, map, or slice."
 		//
@@ -417,7 +417,7 @@ func (check *Checker) instantiatedType(ix *indexedExpr) (res Type) {
 	if !isValid(typ) {
 		return typ // error already reported
 	}
-	// typ must be a generic Alias or Named type (but not a *Signature)
+	// typ 必须是 a generic Alias or Named type (but not a *Signature)
 	if _, ok := typ.(*Signature); ok {
 		panic("unexpected generic signature")
 	}
@@ -441,8 +441,8 @@ func (check *Checker) instantiatedType(ix *indexedExpr) (res Type) {
 
 	// For Named types, orig.tparams may not be set up, so we need to do expansion later.
 	check.later(func() {
-		// This is an instance from the source, not from recursive substitution,
-		// and so it must be resolved during type-checking so that we can report
+		// This 是一个n instance from the source, not from recursive substitution,
+		// and so it 必须是 resolved during type-checking so that we can report
 		// errors.
 		check.recordInstance(ix.orig, targs, inst)
 
@@ -467,10 +467,10 @@ func (check *Checker) instantiatedType(ix *indexedExpr) (res Type) {
 }
 
 // arrayLength type-checks the array length expression e
-// and returns the constant length >= 0, or a value < 0
+// and 返回the constant length >= 0, or a value < 0
 // to indicate an error (and thus an unknown length).
 func (check *Checker) arrayLength(e ast.Expr) int64 {
-	// If e is an identifier, the array declaration might be an
+	// If e 是一个n identifier, the array declaration might be an
 	// attempt at a parameterized type declaration with missing
 	// constraint. Provide an error message that mentions array
 	// length.
@@ -515,7 +515,7 @@ func (check *Checker) arrayLength(e ast.Expr) int64 {
 	return -1
 }
 
-// typeList provides the list of types corresponding to the incoming expression list.
+// typeList 提供the list of types corresponding to the incoming expression list.
 // If an error occurred, the result is nil, but all list elements were type-checked.
 func (check *Checker) typeList(list []ast.Expr) []Type {
 	res := make([]Type, len(list)) // res != nil even if len(list) == 0

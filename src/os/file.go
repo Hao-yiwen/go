@@ -1,31 +1,31 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package os provides a platform-independent interface to operating system
-// functionality. The design is Unix-like, although the error handling is
-// Go-like; failing calls return values of type error rather than error numbers.
-// Often, more information is available within the error. For example,
-// if a call that takes a file name fails, such as [Open] or [Stat], the error
-// will include the failing file name when printed and will be of type
-// [*PathError], which may be unpacked for more information.
+// os 包提供了一个与平台无关的操作系统功能接口。
+// 设计风格类似 Unix，但错误处理采用 Go 风格；
+// 失败的调用返回 error 类型的值，而不是错误码。
+// 通常，错误中包含更多信息。例如，
+// 如果接受文件名的调用失败（如 [Open] 或 [Stat]），
+// 打印时错误信息会包含失败的文件名，并且类型为
+// [*PathError]，可以解包以获取更多信息。
 //
-// The os interface is intended to be uniform across all operating systems.
-// Features not generally available appear in the system-specific package syscall.
+// os 接口旨在在所有操作系统上保持一致。
+// 不通用的功能出现在特定系统的 syscall 包中。
 //
-// Here is a simple example, opening a file and reading some of it.
+// 这是一个简单的例子，打开一个文件并读取其中一部分。
 //
-//	file, err := os.Open("file.go") // For read access.
+//	file, err := os.Open("file.go") // 用于读取访问。
 //	if err != nil {
 //		log.Fatal(err)
 //	}
 //
-// If the open fails, the error string will be self-explanatory, like
+// 如果打开失败，错误字符串会是不言自明的，例如
 //
 //	open file.go: no such file or directory
 //
-// The file's data can then be read into a slice of bytes. Read and
-// Write take their byte counts from the length of the argument slice.
+// 然后可以将文件数据读入字节切片。Read 和
+// Write 从参数切片的长度获取字节数。
 //
 //	data := make([]byte, 100)
 //	count, err := file.Read(data)
@@ -34,13 +34,13 @@
 //	}
 //	fmt.Printf("read %d bytes: %q\n", count, data[:count])
 //
-// # Concurrency
+// # 并发性
 //
-// The methods of [File] correspond to file system operations. All are
-// safe for concurrent use. The maximum number of concurrent
-// operations on a File may be limited by the OS or the system. The
-// number should be high, but exceeding it may degrade performance or
-// cause other issues.
+// [File] 的方法对应文件系统操作。所有方法
+// 都可以安全地并发使用。对单个 File 的最大并发
+// 操作数可能受操作系统或系统限制。
+// 这个数字应该很高，但超过它可能会降低性能或
+// 导致其他问题。
 package os
 
 import (
@@ -57,49 +57,49 @@ import (
 	"unsafe"
 )
 
-// Name returns the name of the file as presented to Open.
+// Name 返回传递给 Open 的文件名。
 //
-// It is safe to call Name after [Close].
+// 在 [Close] 之后调用 Name 是安全的。
 func (f *File) Name() string { return f.name }
 
-// Stdin, Stdout, and Stderr are open Files pointing to the standard input,
-// standard output, and standard error file descriptors.
+// Stdin、Stdout 和 Stderr 是指向标准输入、
+// 标准输出和标准错误文件描述符的打开文件。
 //
-// Note that the Go runtime writes to standard error for panics and crashes;
-// closing Stderr may cause those messages to go elsewhere, perhaps
-// to a file opened later.
+// 注意 Go 运行时会将 panic 和崩溃信息写入标准错误；
+// 关闭 Stderr 可能会导致这些消息被发送到其他地方，
+// 也许是稍后打开的文件。
 var (
 	Stdin  = NewFile(uintptr(syscall.Stdin), "/dev/stdin")
 	Stdout = NewFile(uintptr(syscall.Stdout), "/dev/stdout")
 	Stderr = NewFile(uintptr(syscall.Stderr), "/dev/stderr")
 )
 
-// Flags to OpenFile wrapping those of the underlying system. Not all
-// flags may be implemented on a given system.
+// OpenFile 的标志，包装了底层系统的标志。并非所有
+// 标志都在给定系统上实现。
 const (
-	// Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.
-	O_RDONLY int = syscall.O_RDONLY // open the file read-only.
-	O_WRONLY int = syscall.O_WRONLY // open the file write-only.
-	O_RDWR   int = syscall.O_RDWR   // open the file read-write.
-	// The remaining values may be or'ed in to control behavior.
-	O_APPEND int = syscall.O_APPEND // append data to the file when writing.
-	O_CREATE int = syscall.O_CREAT  // create a new file if none exists.
-	O_EXCL   int = syscall.O_EXCL   // used with O_CREATE, file must not exist.
-	O_SYNC   int = syscall.O_SYNC   // open for synchronous I/O.
-	O_TRUNC  int = syscall.O_TRUNC  // truncate regular writable file when opened.
+	// 必须指定 O_RDONLY、O_WRONLY 或 O_RDWR 中的一个。
+	O_RDONLY int = syscall.O_RDONLY // 以只读方式打开文件。
+	O_WRONLY int = syscall.O_WRONLY // 以只写方式打开文件。
+	O_RDWR   int = syscall.O_RDWR   // 以读写方式打开文件。
+	// 其余值可以通过按位或来控制行为。
+	O_APPEND int = syscall.O_APPEND // 写入时将数据追加到文件末尾。
+	O_CREATE int = syscall.O_CREAT  // 如果文件不存在则创建新文件。
+	O_EXCL   int = syscall.O_EXCL   // 与 O_CREATE 一起使用，文件必须不存在。
+	O_SYNC   int = syscall.O_SYNC   // 以同步 I/O 方式打开。
+	O_TRUNC  int = syscall.O_TRUNC  // 打开时截断常规可写文件。
 )
 
-// Seek whence values.
+// Seek 的 whence 值。
 //
-// Deprecated: Use io.SeekStart, io.SeekCurrent, and io.SeekEnd.
+// 已弃用：请使用 io.SeekStart、io.SeekCurrent 和 io.SeekEnd。
 const (
-	SEEK_SET int = 0 // seek relative to the origin of the file
-	SEEK_CUR int = 1 // seek relative to the current offset
-	SEEK_END int = 2 // seek relative to the end
+	SEEK_SET int = 0 // 相对于文件起始位置进行定位
+	SEEK_CUR int = 1 // 相对于当前偏移量进行定位
+	SEEK_END int = 2 // 相对于文件末尾进行定位
 )
 
-// LinkError records an error during a link or symlink or rename
-// system call and the paths that caused it.
+// LinkError 记录在 link、symlink 或 rename
+// 系统调用期间发生的错误以及导致错误的路径。
 type LinkError struct {
 	Op  string
 	Old string
@@ -115,28 +115,28 @@ func (e *LinkError) Unwrap() error {
 	return e.Err
 }
 
-// NewFile returns a new [File] with the given file descriptor and name.
-// The returned value will be nil if fd is not a valid file descriptor.
+// NewFile 使用给定的文件描述符和名称返回一个新的 [File]。
+// 如果 fd 不是有效的文件描述符，返回值将为 nil。
 //
-// NewFile's behavior differs on some platforms:
+// NewFile 的行为在某些平台上有所不同：
 //
-//   - On Unix, if fd is in non-blocking mode, NewFile will attempt to return a pollable file.
-//   - On Windows, if fd is opened for asynchronous I/O (that is, [syscall.FILE_FLAG_OVERLAPPED]
-//     has been specified in the [syscall.CreateFile] call), NewFile will attempt to return a pollable
-//     file by associating fd with the Go runtime I/O completion port.
-//     The I/O operations will be performed synchronously if the association fails.
+//   - 在 Unix 上，如果 fd 处于非阻塞模式，NewFile 将尝试返回一个可轮询的文件。
+//   - 在 Windows 上，如果 fd 以异步 I/O 方式打开（即在 [syscall.CreateFile] 调用中
+//     指定了 [syscall.FILE_FLAG_OVERLAPPED]），NewFile 将尝试通过将 fd 与
+//     Go 运行时 I/O 完成端口关联来返回一个可轮询的文件。
+//     如果关联失败，I/O 操作将以同步方式执行。
 //
-// Only pollable files support [File.SetDeadline], [File.SetReadDeadline], and [File.SetWriteDeadline].
+// 只有可轮询的文件支持 [File.SetDeadline]、[File.SetReadDeadline] 和 [File.SetWriteDeadline]。
 //
-// After passing it to NewFile, fd may become invalid under the same conditions described
-// in the comments of [File.Fd], and the same constraints apply.
+// 将 fd 传递给 NewFile 后，fd 可能在 [File.Fd] 注释中描述的相同条件下变为无效，
+// 并且适用相同的约束。
 func NewFile(fd uintptr, name string) *File {
 	return newFileFromNewFile(fd, name)
 }
 
-// Read reads up to len(b) bytes from the File and stores them in b.
-// It returns the number of bytes read and any error encountered.
-// At end of file, Read returns 0, io.EOF.
+// Read 从 File 读取最多 len(b) 个字节并存储到 b 中。
+// 它返回读取的字节数和遇到的任何错误。
+// 在文件末尾，Read 返回 0, io.EOF。
 func (f *File) Read(b []byte) (n int, err error) {
 	if err := f.checkValid("read"); err != nil {
 		return 0, err
@@ -145,10 +145,10 @@ func (f *File) Read(b []byte) (n int, err error) {
 	return n, f.wrapErr("read", e)
 }
 
-// ReadAt reads len(b) bytes from the File starting at byte offset off.
-// It returns the number of bytes read and the error, if any.
-// ReadAt always returns a non-nil error when n < len(b).
-// At end of file, that error is io.EOF.
+// ReadAt 从 File 的字节偏移 off 处开始读取 len(b) 个字节。
+// 它返回读取的字节数和错误（如果有）。
+// 当 n < len(b) 时，ReadAt 总是返回非 nil 错误。
+// 在文件末尾，该错误是 io.EOF。
 func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
 	if err := f.checkValid("read"); err != nil {
 		return 0, err
@@ -171,31 +171,31 @@ func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
 	return
 }
 
-// ReadFrom implements io.ReaderFrom.
+// ReadFrom 实现 io.ReaderFrom 接口。
 func (f *File) ReadFrom(r io.Reader) (n int64, err error) {
 	if err := f.checkValid("write"); err != nil {
 		return 0, err
 	}
 	n, handled, e := f.readFrom(r)
 	if !handled {
-		return genericReadFrom(f, r) // without wrapping
+		return genericReadFrom(f, r) // 不进行包装
 	}
 	return n, f.wrapErr("write", e)
 }
 
-// noReadFrom can be embedded alongside another type to
-// hide the ReadFrom method of that other type.
+// noReadFrom 可以与另一个类型一起嵌入，
+// 以隐藏该类型的 ReadFrom 方法。
 type noReadFrom struct{}
 
-// ReadFrom hides another ReadFrom method.
-// It should never be called.
+// ReadFrom 隐藏另一个 ReadFrom 方法。
+// 它永远不应该被调用。
 func (noReadFrom) ReadFrom(io.Reader) (int64, error) {
 	panic("can't happen")
 }
 
-// fileWithoutReadFrom implements all the methods of *File other
-// than ReadFrom. This is used to permit ReadFrom to call io.Copy
-// without leading to a recursive call to ReadFrom.
+// fileWithoutReadFrom 实现了 *File 的所有方法，
+// 除了 ReadFrom。这用于允许 ReadFrom 调用 io.Copy
+// 而不会导致递归调用 ReadFrom。
 type fileWithoutReadFrom struct {
 	noReadFrom
 	*File
@@ -205,9 +205,9 @@ func genericReadFrom(f *File, r io.Reader) (int64, error) {
 	return io.Copy(fileWithoutReadFrom{File: f}, r)
 }
 
-// Write writes len(b) bytes from b to the File.
-// It returns the number of bytes written and an error, if any.
-// Write returns a non-nil error when n != len(b).
+// Write 将 b 中的 len(b) 个字节写入 File。
+// 它返回写入的字节数和错误（如果有）。
+// 当 n != len(b) 时，Write 返回非 nil 错误。
 func (f *File) Write(b []byte) (n int, err error) {
 	if err := f.checkValid("write"); err != nil {
 		return 0, err
@@ -231,11 +231,11 @@ func (f *File) Write(b []byte) (n int, err error) {
 
 var errWriteAtInAppendMode = errors.New("os: invalid use of WriteAt on file opened with O_APPEND")
 
-// WriteAt writes len(b) bytes to the File starting at byte offset off.
-// It returns the number of bytes written and an error, if any.
-// WriteAt returns a non-nil error when n != len(b).
+// WriteAt 从字节偏移 off 处开始向 File 写入 len(b) 个字节。
+// 它返回写入的字节数和错误（如果有）。
+// 当 n != len(b) 时，WriteAt 返回非 nil 错误。
 //
-// If file was opened with the [O_APPEND] flag, WriteAt returns an error.
+// 如果文件是使用 [O_APPEND] 标志打开的，WriteAt 返回错误。
 func (f *File) WriteAt(b []byte, off int64) (n int, err error) {
 	if err := f.checkValid("write"); err != nil {
 		return 0, err
@@ -261,7 +261,7 @@ func (f *File) WriteAt(b []byte, off int64) (n int, err error) {
 	return
 }
 
-// WriteTo implements io.WriterTo.
+// WriteTo 实现 io.WriterTo 接口。
 func (f *File) WriteTo(w io.Writer) (n int64, err error) {
 	if err := f.checkValid("read"); err != nil {
 		return 0, err
@@ -270,22 +270,22 @@ func (f *File) WriteTo(w io.Writer) (n int64, err error) {
 	if handled {
 		return n, f.wrapErr("read", e)
 	}
-	return genericWriteTo(f, w) // without wrapping
+	return genericWriteTo(f, w) // 不进行包装
 }
 
-// noWriteTo can be embedded alongside another type to
-// hide the WriteTo method of that other type.
+// noWriteTo 可以与另一个类型一起嵌入，
+// 以隐藏该类型的 WriteTo 方法。
 type noWriteTo struct{}
 
-// WriteTo hides another WriteTo method.
-// It should never be called.
+// WriteTo 隐藏另一个 WriteTo 方法。
+// 它永远不应该被调用。
 func (noWriteTo) WriteTo(io.Writer) (int64, error) {
 	panic("can't happen")
 }
 
-// fileWithoutWriteTo implements all the methods of *File other
-// than WriteTo. This is used to permit WriteTo to call io.Copy
-// without leading to a recursive call to WriteTo.
+// fileWithoutWriteTo 实现了 *File 的所有方法，
+// 除了 WriteTo。这用于允许 WriteTo 调用 io.Copy
+// 而不会导致递归调用 WriteTo。
 type fileWithoutWriteTo struct {
 	noWriteTo
 	*File
@@ -295,11 +295,11 @@ func genericWriteTo(f *File, w io.Writer) (int64, error) {
 	return io.Copy(w, fileWithoutWriteTo{File: f})
 }
 
-// Seek sets the offset for the next Read or Write on file to offset, interpreted
-// according to whence: 0 means relative to the origin of the file, 1 means
-// relative to the current offset, and 2 means relative to the end.
-// It returns the new offset and an error, if any.
-// The behavior of Seek on a file opened with [O_APPEND] is not specified.
+// Seek 为文件的下一次 Read 或 Write 设置偏移量，
+// 根据 whence 解释：0 表示相对于文件起始位置，1 表示
+// 相对于当前偏移量，2 表示相对于文件末尾。
+// 它返回新的偏移量和错误（如果有）。
+// 在使用 [O_APPEND] 打开的文件上调用 Seek 的行为未指定。
 func (f *File) Seek(offset int64, whence int) (ret int64, err error) {
 	if err := f.checkValid("seek"); err != nil {
 		return 0, err
@@ -314,16 +314,15 @@ func (f *File) Seek(offset int64, whence int) (ret int64, err error) {
 	return r, nil
 }
 
-// WriteString is like Write, but writes the contents of string s rather than
-// a slice of bytes.
+// WriteString 类似于 Write，但写入的是字符串 s 的内容，
+// 而不是字节切片。
 func (f *File) WriteString(s string) (n int, err error) {
 	b := unsafe.Slice(unsafe.StringData(s), len(s))
 	return f.Write(b)
 }
 
-// Mkdir creates a new directory with the specified name and permission
-// bits (before umask).
-// If there is an error, it will be of type [*PathError].
+// Mkdir 使用指定的名称和权限位（应用 umask 之前）创建新目录。
+// 如果发生错误，它的类型将是 [*PathError]。
 func Mkdir(name string, perm FileMode) error {
 	longName := fixLongPath(name)
 	e := ignoringEINTR(func() error {
@@ -334,7 +333,7 @@ func Mkdir(name string, perm FileMode) error {
 		return &PathError{Op: "mkdir", Path: name, Err: e}
 	}
 
-	// mkdir(2) itself won't handle the sticky bit on *BSD and Solaris
+	// mkdir(2) 本身不会处理 *BSD 和 Solaris 上的 sticky 位
 	if !supportsCreateWithStickyBit && perm&ModeSticky != 0 {
 		e = setStickyBit(name)
 
@@ -347,7 +346,7 @@ func Mkdir(name string, perm FileMode) error {
 	return nil
 }
 
-// setStickyBit adds ModeSticky to the permission bits of path, non atomic.
+// setStickyBit 将 ModeSticky 添加到 path 的权限位，非原子操作。
 func setStickyBit(name string) error {
 	fi, err := Stat(name)
 	if err != nil {
@@ -356,11 +355,11 @@ func setStickyBit(name string) error {
 	return Chmod(name, fi.Mode()|ModeSticky)
 }
 
-// Chdir changes the current working directory to the named directory.
-// If there is an error, it will be of type [*PathError].
+// Chdir 将当前工作目录更改为指定的目录。
+// 如果发生错误，它的类型将是 [*PathError]。
 func Chdir(dir string) error {
 	if e := syscall.Chdir(dir); e != nil {
-		testlog.Open(dir) // observe likely non-existent directory
+		testlog.Open(dir) // 观察可能不存在的目录
 		return &PathError{Op: "chdir", Path: dir, Err: e}
 	}
 	if runtime.GOOS == "windows" {
@@ -382,31 +381,31 @@ func Chdir(dir string) error {
 	return nil
 }
 
-// Open opens the named file for reading. If successful, methods on
-// the returned file can be used for reading; the associated file
-// descriptor has mode [O_RDONLY].
-// If there is an error, it will be of type [*PathError].
+// Open 打开指定的文件用于读取。如果成功，可以使用
+// 返回文件上的方法进行读取；关联的文件描述符
+// 具有 [O_RDONLY] 模式。
+// 如果发生错误，它的类型将是 [*PathError]。
 func Open(name string) (*File, error) {
 	return OpenFile(name, O_RDONLY, 0)
 }
 
-// Create creates or truncates the named file. If the file already exists,
-// it is truncated. If the file does not exist, it is created with mode 0o666
-// (before umask). If successful, methods on the returned File can
-// be used for I/O; the associated file descriptor has mode [O_RDWR].
-// The directory containing the file must already exist.
-// If there is an error, it will be of type [*PathError].
+// Create 创建或截断指定的文件。如果文件已存在，
+// 它会被截断。如果文件不存在，则以 0o666 模式创建
+// （应用 umask 之前）。如果成功，可以使用返回的 File 上的方法
+// 进行 I/O 操作；关联的文件描述符具有 [O_RDWR] 模式。
+// 包含该文件的目录必须已经存在。
+// 如果发生错误，它的类型将是 [*PathError]。
 func Create(name string) (*File, error) {
 	return OpenFile(name, O_RDWR|O_CREATE|O_TRUNC, 0666)
 }
 
-// OpenFile is the generalized open call; most users will use Open
-// or Create instead. It opens the named file with specified flag
-// ([O_RDONLY] etc.). If the file does not exist, and the [O_CREATE] flag
-// is passed, it is created with mode perm (before umask);
-// the containing directory must exist. If successful,
-// methods on the returned File can be used for I/O.
-// If there is an error, it will be of type [*PathError].
+// OpenFile 是通用的打开调用；大多数用户会使用 Open
+// 或 Create 代替。它使用指定的标志打开命名的文件
+// （[O_RDONLY] 等）。如果文件不存在，且传递了 [O_CREATE] 标志，
+// 则以 perm 模式创建（应用 umask 之前）；
+// 包含目录必须存在。如果成功，
+// 可以使用返回的 File 上的方法进行 I/O 操作。
+// 如果发生错误，它的类型将是 [*PathError]。
 func OpenFile(name string, flag int, perm FileMode) (*File, error) {
 	testlog.Open(name)
 	f, err := openFileNolog(name, flag, perm)
@@ -420,38 +419,38 @@ func OpenFile(name string, flag int, perm FileMode) (*File, error) {
 
 var errPathEscapes = errors.New("path escapes from parent")
 
-// openDir opens a file which is assumed to be a directory. As such, it skips
-// the syscalls that make the file descriptor non-blocking as these take time
-// and will fail on file descriptors for directories.
+// openDir 打开一个假定为目录的文件。因此，它跳过了
+// 使文件描述符变为非阻塞的系统调用，因为这些调用需要时间
+// 并且会在目录的文件描述符上失败。
 func openDir(name string) (*File, error) {
 	testlog.Open(name)
 	return openDirNolog(name)
 }
 
-// lstat is overridden in tests.
+// lstat 在测试中被覆盖。
 var lstat = Lstat
 
-// Rename renames (moves) oldpath to newpath.
-// If newpath already exists and is not a directory, Rename replaces it.
-// If newpath already exists and is a directory, Rename returns an error.
-// OS-specific restrictions may apply when oldpath and newpath are in different directories.
-// Even within the same directory, on non-Unix platforms Rename is not an atomic operation.
-// If there is an error, it will be of type *LinkError.
+// Rename 将 oldpath 重命名（移动）为 newpath。
+// 如果 newpath 已存在且不是目录，Rename 会替换它。
+// 如果 newpath 已存在且是目录，Rename 返回错误。
+// 当 oldpath 和 newpath 在不同目录中时，可能适用特定于操作系统的限制。
+// 即使在同一目录中，在非 Unix 平台上 Rename 也不是原子操作。
+// 如果发生错误，它的类型将是 *LinkError。
 func Rename(oldpath, newpath string) error {
 	return rename(oldpath, newpath)
 }
 
-// Readlink returns the destination of the named symbolic link.
-// If there is an error, it will be of type [*PathError].
+// Readlink 返回指定符号链接的目标。
+// 如果发生错误，它的类型将是 [*PathError]。
 //
-// If the link destination is relative, Readlink returns the relative path
-// without resolving it to an absolute one.
+// 如果链接目标是相对路径，Readlink 返回相对路径，
+// 不会将其解析为绝对路径。
 func Readlink(name string) (string, error) {
 	return readlink(name)
 }
 
-// Many functions in package syscall return a count of -1 instead of 0.
-// Using fixCount(call()) instead of call() corrects the count.
+// syscall 包中的许多函数返回 -1 而不是 0。
+// 使用 fixCount(call()) 而不是 call() 可以修正计数。
 func fixCount(n int, err error) (int, error) {
 	if n < 0 {
 		n = 0
@@ -459,13 +458,13 @@ func fixCount(n int, err error) (int, error) {
 	return n, err
 }
 
-// checkWrapErr is the test hook to enable checking unexpected wrapped errors of poll.ErrFileClosing.
-// It is set to true in the export_test.go for tests (including fuzz tests).
+// checkWrapErr 是测试钩子，用于启用检查 poll.ErrFileClosing 的意外包装错误。
+// 它在 export_test.go 中为测试（包括模糊测试）设置为 true。
 var checkWrapErr = false
 
-// wrapErr wraps an error that occurred during an operation on an open file.
-// It passes io.EOF through unchanged, otherwise converts
-// poll.ErrFileClosing to ErrClosed and wraps the error in a PathError.
+// wrapErr 包装在打开文件的操作期间发生的错误。
+// 它直接传递 io.EOF，否则将
+// poll.ErrFileClosing 转换为 ErrClosed 并将错误包装在 PathError 中。
 func (f *File) wrapErr(op string, err error) error {
 	if err == nil || err == io.EOF {
 		return err
@@ -478,32 +477,30 @@ func (f *File) wrapErr(op string, err error) error {
 	return &PathError{Op: op, Path: f.name, Err: err}
 }
 
-// TempDir returns the default directory to use for temporary files.
+// TempDir 返回用于临时文件的默认目录。
 //
-// On Unix systems, it returns $TMPDIR if non-empty, else /tmp.
-// On Windows, it uses GetTempPath, returning the first non-empty
-// value from %TMP%, %TEMP%, %USERPROFILE%, or the Windows directory.
-// On Plan 9, it returns /tmp.
+// 在 Unix 系统上，如果 $TMPDIR 非空则返回它，否则返回 /tmp。
+// 在 Windows 上，它使用 GetTempPath，返回 %TMP%、%TEMP%、
+// %USERPROFILE% 或 Windows 目录中第一个非空的值。
+// 在 Plan 9 上，它返回 /tmp。
 //
-// The directory is neither guaranteed to exist nor have accessible
-// permissions.
+// 不保证该目录存在或具有可访问的权限。
 func TempDir() string {
 	return tempDir()
 }
 
-// UserCacheDir returns the default root directory to use for user-specific
-// cached data. Users should create their own application-specific subdirectory
-// within this one and use that.
+// UserCacheDir 返回用于用户特定缓存数据的默认根目录。
+// 用户应在此目录中创建自己的应用程序特定子目录并使用它。
 //
-// On Unix systems, it returns $XDG_CACHE_HOME as specified by
-// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html if
-// non-empty, else $HOME/.cache.
-// On Darwin, it returns $HOME/Library/Caches.
-// On Windows, it returns %LocalAppData%.
-// On Plan 9, it returns $home/lib/cache.
+// 在 Unix 系统上，如果非空则返回
+// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+// 指定的 $XDG_CACHE_HOME，否则返回 $HOME/.cache。
+// 在 Darwin 上，它返回 $HOME/Library/Caches。
+// 在 Windows 上，它返回 %LocalAppData%。
+// 在 Plan 9 上，它返回 $home/lib/cache。
 //
-// If the location cannot be determined (for example, $HOME is not defined) or
-// the path in $XDG_CACHE_HOME is relative, then it will return an error.
+// 如果无法确定位置（例如，$HOME 未定义）或
+// $XDG_CACHE_HOME 中的路径是相对的，则会返回错误。
 func UserCacheDir() (string, error) {
 	var dir string
 
@@ -528,7 +525,7 @@ func UserCacheDir() (string, error) {
 		}
 		dir += "/lib/cache"
 
-	default: // Unix
+	default: // Unix 系统
 		dir = Getenv("XDG_CACHE_HOME")
 		if dir == "" {
 			dir = Getenv("HOME")
@@ -544,19 +541,18 @@ func UserCacheDir() (string, error) {
 	return dir, nil
 }
 
-// UserConfigDir returns the default root directory to use for user-specific
-// configuration data. Users should create their own application-specific
-// subdirectory within this one and use that.
+// UserConfigDir 返回用于用户特定配置数据的默认根目录。
+// 用户应在此目录中创建自己的应用程序特定子目录并使用它。
 //
-// On Unix systems, it returns $XDG_CONFIG_HOME as specified by
-// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html if
-// non-empty, else $HOME/.config.
-// On Darwin, it returns $HOME/Library/Application Support.
-// On Windows, it returns %AppData%.
-// On Plan 9, it returns $home/lib.
+// 在 Unix 系统上，如果非空则返回
+// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+// 指定的 $XDG_CONFIG_HOME，否则返回 $HOME/.config。
+// 在 Darwin 上，它返回 $HOME/Library/Application Support。
+// 在 Windows 上，它返回 %AppData%。
+// 在 Plan 9 上，它返回 $home/lib。
 //
-// If the location cannot be determined (for example, $HOME is not defined) or
-// the path in $XDG_CONFIG_HOME is relative, then it will return an error.
+// 如果无法确定位置（例如，$HOME 未定义）或
+// $XDG_CONFIG_HOME 中的路径是相对的，则会返回错误。
 func UserConfigDir() (string, error) {
 	var dir string
 
@@ -581,7 +577,7 @@ func UserConfigDir() (string, error) {
 		}
 		dir += "/lib"
 
-	default: // Unix
+	default: // Unix 系统
 		dir = Getenv("XDG_CONFIG_HOME")
 		if dir == "" {
 			dir = Getenv("HOME")
@@ -597,14 +593,14 @@ func UserConfigDir() (string, error) {
 	return dir, nil
 }
 
-// UserHomeDir returns the current user's home directory.
+// UserHomeDir 返回当前用户的主目录。
 //
-// On Unix, including macOS, it returns the $HOME environment variable.
-// On Windows, it returns %USERPROFILE%.
-// On Plan 9, it returns the $home environment variable.
+// 在 Unix 上（包括 macOS），它返回 $HOME 环境变量。
+// 在 Windows 上，它返回 %USERPROFILE%。
+// 在 Plan 9 上，它返回 $home 环境变量。
 //
-// If the expected variable is not set in the environment, UserHomeDir
-// returns either a platform-specific default value or a non-nil error.
+// 如果预期的变量未在环境中设置，UserHomeDir
+// 返回特定于平台的默认值或非 nil 错误。
 func UserHomeDir() (string, error) {
 	env, enverr := "HOME", "$HOME"
 	switch runtime.GOOS {
@@ -616,7 +612,7 @@ func UserHomeDir() (string, error) {
 	if v := Getenv(env); v != "" {
 		return v, nil
 	}
-	// On some operating systems the home directory is not always defined.
+	// 在某些操作系统上，主目录并不总是被定义。
 	switch runtime.GOOS {
 	case "android":
 		return "/sdcard", nil
@@ -626,78 +622,76 @@ func UserHomeDir() (string, error) {
 	return "", errors.New(enverr + " is not defined")
 }
 
-// Chmod changes the mode of the named file to mode.
-// If the file is a symbolic link, it changes the mode of the link's target.
-// If there is an error, it will be of type [*PathError].
+// Chmod 将指定文件的模式更改为 mode。
+// 如果文件是符号链接，它会更改链接目标的模式。
+// 如果发生错误，它的类型将是 [*PathError]。
 //
-// A different subset of the mode bits are used, depending on the
-// operating system.
+// 根据操作系统的不同，使用不同的模式位子集。
 //
-// On Unix, the mode's permission bits, [ModeSetuid], [ModeSetgid], and
-// [ModeSticky] are used.
+// 在 Unix 上，使用模式的权限位、[ModeSetuid]、[ModeSetgid] 和
+// [ModeSticky]。
 //
-// On Windows, only the 0o200 bit (owner writable) of mode is used; it
-// controls whether the file's read-only attribute is set or cleared.
-// The other bits are currently unused. For compatibility with Go 1.12
-// and earlier, use a non-zero mode. Use mode 0o400 for a read-only
-// file and 0o600 for a readable+writable file.
+// 在 Windows 上，只使用 mode 的 0o200 位（所有者可写）；
+// 它控制文件的只读属性是设置还是清除。
+// 其他位目前未使用。为了与 Go 1.12 及更早版本兼容，
+// 请使用非零模式。对于只读文件使用 0o400 模式，
+// 对于可读写文件使用 0o600 模式。
 //
-// On Plan 9, the mode's permission bits, [ModeAppend], [ModeExclusive],
-// and [ModeTemporary] are used.
+// 在 Plan 9 上，使用模式的权限位、[ModeAppend]、[ModeExclusive]
+// 和 [ModeTemporary]。
 func Chmod(name string, mode FileMode) error { return chmod(name, mode) }
 
-// Chmod changes the mode of the file to mode.
-// If there is an error, it will be of type [*PathError].
+// Chmod 将文件的模式更改为 mode。
+// 如果发生错误，它的类型将是 [*PathError]。
 func (f *File) Chmod(mode FileMode) error { return f.chmod(mode) }
 
-// SetDeadline sets the read and write deadlines for a File.
-// It is equivalent to calling both SetReadDeadline and SetWriteDeadline.
+// SetDeadline 为 File 设置读取和写入截止时间。
+// 它等同于同时调用 SetReadDeadline 和 SetWriteDeadline。
 //
-// Only some kinds of files support setting a deadline. Calls to SetDeadline
-// for files that do not support deadlines will return ErrNoDeadline.
-// On most systems ordinary files do not support deadlines, but pipes do.
+// 只有某些类型的文件支持设置截止时间。对于不支持截止时间的文件，
+// 调用 SetDeadline 将返回 ErrNoDeadline。
+// 在大多数系统上，普通文件不支持截止时间，但管道支持。
 //
-// A deadline is an absolute time after which I/O operations fail with an
-// error instead of blocking. The deadline applies to all future and pending
-// I/O, not just the immediately following call to Read or Write.
-// After a deadline has been exceeded, the connection can be refreshed
-// by setting a deadline in the future.
+// 截止时间是一个绝对时间，超过该时间后，I/O 操作将失败并返回
+// 错误而不是阻塞。截止时间适用于所有未来和待处理的
+// I/O，而不仅仅是紧随其后的 Read 或 Write 调用。
+// 超过截止时间后，可以通过设置一个未来的截止时间来刷新连接。
 //
-// If the deadline is exceeded a call to Read or Write or to other I/O
-// methods will return an error that wraps ErrDeadlineExceeded.
-// This can be tested using errors.Is(err, os.ErrDeadlineExceeded).
-// That error implements the Timeout method, and calling the Timeout
-// method will return true, but there are other possible errors for which
-// the Timeout will return true even if the deadline has not been exceeded.
+// 如果超过截止时间，对 Read 或 Write 或其他 I/O
+// 方法的调用将返回包装了 ErrDeadlineExceeded 的错误。
+// 可以使用 errors.Is(err, os.ErrDeadlineExceeded) 进行测试。
+// 该错误实现了 Timeout 方法，调用 Timeout 方法将返回 true，
+// 但还有其他可能的错误，即使截止时间未超过，
+// Timeout 也会返回 true。
 //
-// An idle timeout can be implemented by repeatedly extending
-// the deadline after successful Read or Write calls.
+// 可以通过在成功的 Read 或 Write 调用后反复延长
+// 截止时间来实现空闲超时。
 //
-// A zero value for t means I/O operations will not time out.
+// t 的零值意味着 I/O 操作不会超时。
 func (f *File) SetDeadline(t time.Time) error {
 	return f.setDeadline(t)
 }
 
-// SetReadDeadline sets the deadline for future Read calls and any
-// currently-blocked Read call.
-// A zero value for t means Read will not time out.
-// Not all files support setting deadlines; see SetDeadline.
+// SetReadDeadline 为未来的 Read 调用和任何
+// 当前阻塞的 Read 调用设置截止时间。
+// t 的零值意味着 Read 不会超时。
+// 并非所有文件都支持设置截止时间；请参阅 SetDeadline。
 func (f *File) SetReadDeadline(t time.Time) error {
 	return f.setReadDeadline(t)
 }
 
-// SetWriteDeadline sets the deadline for any future Write calls and any
-// currently-blocked Write call.
-// Even if Write times out, it may return n > 0, indicating that
-// some of the data was successfully written.
-// A zero value for t means Write will not time out.
-// Not all files support setting deadlines; see SetDeadline.
+// SetWriteDeadline 为任何未来的 Write 调用和任何
+// 当前阻塞的 Write 调用设置截止时间。
+// 即使 Write 超时，它也可能返回 n > 0，表示
+// 部分数据已成功写入。
+// t 的零值意味着 Write 不会超时。
+// 并非所有文件都支持设置截止时间；请参阅 SetDeadline。
 func (f *File) SetWriteDeadline(t time.Time) error {
 	return f.setWriteDeadline(t)
 }
 
-// SyscallConn returns a raw file.
-// This implements the syscall.Conn interface.
+// SyscallConn 返回原始文件。
+// 这实现了 syscall.Conn 接口。
 func (f *File) SyscallConn() (syscall.RawConn, error) {
 	if err := f.checkValid("SyscallConn"); err != nil {
 		return nil, err
@@ -705,44 +699,42 @@ func (f *File) SyscallConn() (syscall.RawConn, error) {
 	return newRawConn(f)
 }
 
-// Fd returns the system file descriptor or handle referencing the open file.
-// If f is closed, the descriptor becomes invalid.
-// If f is garbage collected, a finalizer may close the descriptor,
-// making it invalid; see [runtime.SetFinalizer] for more information on when
-// a finalizer might be run.
+// Fd 返回引用打开文件的系统文件描述符或句柄。
+// 如果 f 已关闭，描述符将变为无效。
+// 如果 f 被垃圾回收，终结器可能会关闭描述符，
+// 使其无效；有关终结器何时可能运行的更多信息，
+// 请参阅 [runtime.SetFinalizer]。
 //
-// Do not close the returned descriptor; that could cause a later
-// close of f to close an unrelated descriptor.
+// 不要关闭返回的描述符；这可能导致稍后
+// 关闭 f 时关闭一个不相关的描述符。
 //
-// Fd's behavior differs on some platforms:
+// Fd 的行为在某些平台上有所不同：
 //
-//   - On Unix and Windows, [File.SetDeadline] methods will stop working.
-//   - On Windows, the file descriptor will be disassociated from the
-//     Go runtime I/O completion port if there are no concurrent I/O
-//     operations on the file.
+//   - 在 Unix 和 Windows 上，[File.SetDeadline] 方法将停止工作。
+//   - 在 Windows 上，如果文件上没有并发的 I/O 操作，
+//     文件描述符将与 Go 运行时 I/O 完成端口解除关联。
 //
-// For most uses prefer the f.SyscallConn method.
+// 对于大多数用途，建议使用 f.SyscallConn 方法。
 func (f *File) Fd() uintptr {
 	return f.fd()
 }
 
-// DirFS returns a file system (an fs.FS) for the tree of files rooted at the directory dir.
+// DirFS 返回一个以目录 dir 为根的文件树的文件系统（一个 fs.FS）。
 //
-// Note that DirFS("/prefix") only guarantees that the Open calls it makes to the
-// operating system will begin with "/prefix": DirFS("/prefix").Open("file") is the
-// same as os.Open("/prefix/file"). So if /prefix/file is a symbolic link pointing outside
-// the /prefix tree, then using DirFS does not stop the access any more than using
-// os.Open does. Additionally, the root of the fs.FS returned for a relative path,
-// DirFS("prefix"), will be affected by later calls to Chdir. DirFS is therefore not
-// a general substitute for a chroot-style security mechanism when the directory tree
-// contains arbitrary content.
+// 注意 DirFS("/prefix") 只保证它向操作系统发出的 Open 调用
+// 将以 "/prefix" 开头：DirFS("/prefix").Open("file") 与
+// os.Open("/prefix/file") 相同。因此，如果 /prefix/file 是指向
+// /prefix 树外部的符号链接，那么使用 DirFS 不会比使用
+// os.Open 更能阻止访问。此外，对于相对路径返回的 fs.FS 的根，
+// DirFS("prefix") 将受到后续 Chdir 调用的影响。因此，当目录树
+// 包含任意内容时，DirFS 不能作为 chroot 风格安全机制的通用替代品。
 //
-// Use [Root.FS] to obtain a fs.FS that prevents escapes from the tree via symbolic links.
+// 使用 [Root.FS] 获取一个通过符号链接防止逃逸的 fs.FS。
 //
-// The directory dir must not be "".
+// 目录 dir 不能为 ""。
 //
-// The result implements [io/fs.StatFS], [io/fs.ReadFileFS], [io/fs.ReadDirFS], and
-// [io/fs.ReadLinkFS].
+// 结果实现了 [io/fs.StatFS]、[io/fs.ReadFileFS]、[io/fs.ReadDirFS] 和
+// [io/fs.ReadLinkFS]。
 func DirFS(dir string) fs.FS {
 	return dirFS(dir)
 }
@@ -761,20 +753,18 @@ func (dir dirFS) Open(name string) (fs.File, error) {
 	}
 	f, err := Open(fullname)
 	if err != nil {
-		// DirFS takes a string appropriate for GOOS,
-		// while the name argument here is always slash separated.
-		// dir.join will have mixed the two; undo that for
-		// error reporting.
+		// DirFS 接受适合 GOOS 的字符串，
+		// 而这里的 name 参数始终是斜杠分隔的。
+		// dir.join 将混合这两者；为了错误报告撤销这一点。
 		err.(*PathError).Path = name
 		return nil, err
 	}
 	return f, nil
 }
 
-// The ReadFile method calls the [ReadFile] function for the file
-// with the given name in the directory. The function provides
-// robust handling for small files and special file systems.
-// Through this method, dirFS implements [io/fs.ReadFileFS].
+// ReadFile 方法为目录中具有给定名称的文件调用 [ReadFile] 函数。
+// 该函数为小文件和特殊文件系统提供了健壮的处理。
+// 通过此方法，dirFS 实现了 [io/fs.ReadFileFS]。
 func (dir dirFS) ReadFile(name string) ([]byte, error) {
 	fullname, err := dir.join(name)
 	if err != nil {
@@ -783,7 +773,7 @@ func (dir dirFS) ReadFile(name string) ([]byte, error) {
 	b, err := ReadFile(fullname)
 	if err != nil {
 		if e, ok := err.(*PathError); ok {
-			// See comment in dirFS.Open.
+			// 参见 dirFS.Open 中的注释。
 			e.Path = name
 		}
 		return nil, err
@@ -791,8 +781,8 @@ func (dir dirFS) ReadFile(name string) ([]byte, error) {
 	return b, nil
 }
 
-// ReadDir reads the named directory, returning all its directory entries sorted
-// by filename. Through this method, dirFS implements [io/fs.ReadDirFS].
+// ReadDir 读取指定目录，返回按文件名排序的所有目录条目。
+// 通过此方法，dirFS 实现了 [io/fs.ReadDirFS]。
 func (dir dirFS) ReadDir(name string) ([]DirEntry, error) {
 	fullname, err := dir.join(name)
 	if err != nil {
@@ -801,7 +791,7 @@ func (dir dirFS) ReadDir(name string) ([]DirEntry, error) {
 	entries, err := ReadDir(fullname)
 	if err != nil {
 		if e, ok := err.(*PathError); ok {
-			// See comment in dirFS.Open.
+			// 参见 dirFS.Open 中的注释。
 			e.Path = name
 		}
 		return nil, err
@@ -816,7 +806,7 @@ func (dir dirFS) Stat(name string) (fs.FileInfo, error) {
 	}
 	f, err := Stat(fullname)
 	if err != nil {
-		// See comment in dirFS.Open.
+		// 参见 dirFS.Open 中的注释。
 		err.(*PathError).Path = name
 		return nil, err
 	}
@@ -830,7 +820,7 @@ func (dir dirFS) Lstat(name string) (fs.FileInfo, error) {
 	}
 	f, err := Lstat(fullname)
 	if err != nil {
-		// See comment in dirFS.Open.
+		// 参见 dirFS.Open 中的注释。
 		err.(*PathError).Path = name
 		return nil, err
 	}
@@ -845,7 +835,7 @@ func (dir dirFS) ReadLink(name string) (string, error) {
 	return Readlink(fullname)
 }
 
-// join returns the path for name in dir.
+// join 返回 dir 中 name 的路径。
 func (dir dirFS) join(name string) (string, error) {
 	if dir == "" {
 		return "", errors.New("os: DirFS with empty root")
@@ -860,10 +850,10 @@ func (dir dirFS) join(name string) (string, error) {
 	return string(dir) + string(PathSeparator) + name, nil
 }
 
-// ReadFile reads the named file and returns the contents.
-// A successful call returns err == nil, not err == EOF.
-// Because ReadFile reads the whole file, it does not treat an EOF from Read
-// as an error to be reported.
+// ReadFile 读取指定的文件并返回内容。
+// 成功的调用返回 err == nil，而不是 err == EOF。
+// 因为 ReadFile 读取整个文件，所以它不会将 Read 返回的 EOF
+// 视为需要报告的错误。
 func ReadFile(name string) ([]byte, error) {
 	f, err := Open(name)
 	if err != nil {
@@ -881,27 +871,26 @@ func statOrZero(f *File) int64 {
 	return 0
 }
 
-// readFileContents reads the contents of a file using the provided read function
-// (*os.File.Read, except in tests) one or more times, until an error is seen.
+// readFileContents 使用提供的读取函数（*os.File.Read，测试中除外）
+// 一次或多次读取文件内容，直到遇到错误。
 //
-// The provided size is the stat size of the file, which might be 0 for a
-// /proc-like file that doesn't report a size.
+// 提供的 size 是文件的 stat 大小，对于不报告大小的
+// 类 /proc 文件可能为 0。
 func readFileContents(statSize int64, read func([]byte) (int, error)) ([]byte, error) {
 	zeroSize := statSize == 0
 
-	// Figure out how big to make the initial slice. For files with known size
-	// that fit in memory, use that size + 1. Otherwise, use a small buffer and
-	// we'll grow.
+	// 确定初始切片的大小。对于已知大小且能放入内存的文件，
+	// 使用该大小 + 1。否则，使用小缓冲区，我们会扩展它。
 	var size int
 	if int64(int(statSize)) == statSize {
 		size = int(statSize)
 	}
-	size++ // one byte for final read at EOF
+	size++ // 为 EOF 时的最后一次读取预留一个字节
 
 	const minBuf = 512
-	// If a file claims a small size, read at least 512 bytes. In particular,
-	// files in Linux's /proc claim size 0 but then do not work right if read in
-	// small pieces, so an initial read of 1 byte would not work correctly.
+	// 如果文件声称大小很小，至少读取 512 字节。特别是，
+	// Linux 的 /proc 中的文件声称大小为 0，但如果以小块读取
+	// 则无法正常工作，因此 1 字节的初始读取将无法正确工作。
 	if size < minBuf {
 		size = minBuf
 	}
@@ -917,9 +906,9 @@ func readFileContents(statSize int64, read func([]byte) (int, error)) ([]byte, e
 			return data, err
 		}
 
-		// If we're either out of capacity or if the file was a /proc-like zero
-		// sized file, grow the buffer. Per Issue 72080, we always want to issue
-		// Read calls on zero-length files with a non-tiny buffer size.
+		// 如果容量用尽或文件是类 /proc 的零大小文件，则扩展缓冲区。
+		// 根据 Issue 72080，我们总是希望对零长度文件
+		// 使用非微小的缓冲区大小发出 Read 调用。
 		capRemain := cap(data) - len(data)
 		if capRemain == 0 || (zeroSize && capRemain < minBuf) {
 			data = slices.Grow(data, minBuf)
@@ -927,11 +916,11 @@ func readFileContents(statSize int64, read func([]byte) (int, error)) ([]byte, e
 	}
 }
 
-// WriteFile writes data to the named file, creating it if necessary.
-// If the file does not exist, WriteFile creates it with permissions perm (before umask);
-// otherwise WriteFile truncates it before writing, without changing permissions.
-// Since WriteFile requires multiple system calls to complete, a failure mid-operation
-// can leave the file in a partially written state.
+// WriteFile 将数据写入指定的文件，如有必要会创建该文件。
+// 如果文件不存在，WriteFile 以 perm 权限创建它（应用 umask 之前）；
+// 否则 WriteFile 在写入之前截断它，而不更改权限。
+// 由于 WriteFile 需要多个系统调用才能完成，操作中途的失败
+// 可能会使文件处于部分写入状态。
 func WriteFile(name string, data []byte, perm FileMode) error {
 	f, err := OpenFile(name, O_WRONLY|O_CREATE|O_TRUNC, perm)
 	if err != nil {

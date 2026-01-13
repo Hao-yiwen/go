@@ -4,11 +4,11 @@
 
 package runtime
 
-import _ "unsafe" // for go:linkname
+import _ "unsafe" // 用于 go:linkname
 
 //go:linkname boring_runtime_arg0 crypto/internal/boring.runtime_arg0
 func boring_runtime_arg0() string {
-	// On Windows, argslice is not set, and it's too much work to find argv0.
+	// 在 Windows 上，argslice 未设置，找到 argv0 会很麻烦。
 	if len(argslice) == 0 {
 		return ""
 	}

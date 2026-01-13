@@ -1,90 +1,87 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
-// The original C code and the long comment below are
-// from FreeBSD's /usr/src/lib/msun/src/e_sqrt.c and
-// came with this notice. The go code is a simplified
-// version of the original C.
+// 原始 C 代码和下面的长注释来自
+// FreeBSD 的 /usr/src/lib/msun/src/e_sqrt.c，
+// 并附带以下声明。Go 代码是原始 C 代码的简化版本。
 //
 // ====================================================
-// Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+// 版权所有 (C) 1993 Sun Microsystems, Inc. 保留所有权利。
 //
-// Developed at SunPro, a Sun Microsystems, Inc. business.
-// Permission to use, copy, modify, and distribute this
-// software is freely granted, provided that this notice
-// is preserved.
+// 由 SunPro（Sun Microsystems, Inc. 的一个业务部门）开发。
+// 允许自由使用、复制、修改和分发本软件，
+// 前提是保留此声明。
 // ====================================================
 //
 // __ieee754_sqrt(x)
-// Return correctly rounded sqrt.
+// 返回正确舍入的 sqrt。
 //           -----------------------------------------
-//           | Use the hardware sqrt if you have one |
+//           | 如果有硬件 sqrt，请使用硬件 sqrt       |
 //           -----------------------------------------
-// Method:
-//   Bit by bit method using integer arithmetic. (Slow, but portable)
-//   1. Normalization
-//      Scale x to y in [1,4) with even powers of 2:
-//      find an integer k such that  1 <= (y=x*2**(2k)) < 4, then
+// 方法：
+//   使用整数运算的逐位方法。（慢，但可移植）
+//   1. 规范化
+//      将 x 缩放到 [1,4) 区间的 y，使用 2 的偶次幂：
+//      找到一个整数 k 使得 1 <= (y=x*2**(2k)) < 4，则
 //              sqrt(x) = 2**k * sqrt(y)
-//   2. Bit by bit computation
-//      Let q  = sqrt(y) truncated to i bit after binary point (q = 1),
-//           i                                                   0
+//   2. 逐位计算
+//      令 q  = sqrt(y) 截断到二进制小数点后 i 位 (q = 1)，
+//           i                                        0
 //                                     i+1         2
-//          s  = 2*q , and      y  =  2   * ( y - q  ).          (1)
+//          s  = 2*q , 且        y  =  2   * ( y - q  )。         (1)
 //           i      i            i                 i
 //
-//      To compute q    from q , one checks whether
-//                  i+1       i
+//      要从 q  计算 q   ，需检查是否
+//            i       i+1
 //
 //                            -(i+1) 2
-//                      (q + 2      )  <= y.                     (2)
+//                      (q + 2      )  <= y。                    (2)
 //                        i
 //                                                            -(i+1)
-//      If (2) is false, then q   = q ; otherwise q   = q  + 2      .
-//                             i+1   i             i+1   i
+//      如果 (2) 为假，则 q   = q ；否则 q   = q  + 2      。
+//                         i+1   i         i+1   i
 //
-//      With some algebraic manipulation, it is not difficult to see
-//      that (2) is equivalent to
+//      通过一些代数运算，不难看出
+//      (2) 等价于
 //                             -(i+1)
 //                      s  +  2       <= y                       (3)
 //                       i                i
 //
-//      The advantage of (3) is that s  and y  can be computed by
-//                                    i      i
-//      the following recurrence formula:
-//          if (3) is false
+//      (3) 的优点是 s  和 y  可以通过
+//                    i      i
+//      以下递推公式计算：
+//          如果 (3) 为假
 //
 //          s     =  s  ,       y    = y   ;                     (4)
 //           i+1      i          i+1    i
 //
-//      otherwise,
+//      否则，
 //                         -i                      -(i+1)
 //          s     =  s  + 2  ,  y    = y  -  s  - 2              (5)
 //           i+1      i          i+1    i     i
 //
-//      One may easily use induction to prove (4) and (5).
-//      Note. Since the left hand side of (3) contain only i+2 bits,
-//            it is not necessary to do a full (53-bit) comparison
-//            in (3).
-//   3. Final rounding
-//      After generating the 53 bits result, we compute one more bit.
-//      Together with the remainder, we can decide whether the
-//      result is exact, bigger than 1/2ulp, or less than 1/2ulp
-//      (it will never equal to 1/2ulp).
-//      The rounding mode can be detected by checking whether
-//      huge + tiny is equal to huge, and whether huge - tiny is
-//      equal to huge for some floating point number "huge" and "tiny".
+//      可以很容易地用归纳法证明 (4) 和 (5)。
+//      注意：由于 (3) 的左侧只包含 i+2 位，
+//            因此在 (3) 中不需要进行完整的（53 位）比较。
+//   3. 最终舍入
+//      生成 53 位结果后，我们再计算一位。
+//      结合余数，我们可以确定结果是精确的、
+//      大于 1/2ulp 还是小于 1/2ulp
+//      （它永远不会等于 1/2ulp）。
+//      可以通过检查对于某些浮点数 "huge" 和 "tiny"，
+//      huge + tiny 是否等于 huge，以及 huge - tiny 是否
+//      等于 huge 来检测舍入模式。
 //
 //
-// Notes:  Rounding mode detection omitted. The constants "mask", "shift",
-// and "bias" are found in src/math/bits.go
+// 注意：舍入模式检测已省略。常量 "mask"、"shift"
+// 和 "bias" 在 src/math/bits.go 中定义。
 
-// Sqrt returns the square root of x.
+// Sqrt 返回 x 的平方根。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Sqrt(+Inf) = +Inf
 //	Sqrt(±0) = ±0
@@ -94,11 +91,11 @@ func Sqrt(x float64) float64 {
 	return sqrt(x)
 }
 
-// Note: On systems where Sqrt is a single instruction, the compiler
-// may turn a direct call into a direct use of that instruction instead.
+// 注意：在 Sqrt 是单条指令的系统上，编译器可能会
+// 将直接调用转换为直接使用该指令。
 
 func sqrt(x float64) float64 {
-	// special cases
+	// 特殊情况
 	switch {
 	case x == 0 || IsNaN(x) || IsInf(x, 1):
 		return x
@@ -106,26 +103,26 @@ func sqrt(x float64) float64 {
 		return NaN()
 	}
 	ix := Float64bits(x)
-	// normalize x
+	// 规范化 x
 	exp := int((ix >> shift) & mask)
-	if exp == 0 { // subnormal x
+	if exp == 0 { // 次正规数 x
 		for ix&(1<<shift) == 0 {
 			ix <<= 1
 			exp--
 		}
 		exp++
 	}
-	exp -= bias // unbias exponent
+	exp -= bias // 去除指数偏置
 	ix &^= mask << shift
 	ix |= 1 << shift
-	if exp&1 == 1 { // odd exp, double x to make it even
+	if exp&1 == 1 { // 奇数指数，将 x 加倍使其变为偶数
 		ix <<= 1
 	}
-	exp >>= 1 // exp = exp/2, exponent of square root
-	// generate sqrt(x) bit by bit
+	exp >>= 1 // exp = exp/2，平方根的指数
+	// 逐位生成 sqrt(x)
 	ix <<= 1
 	var q, s uint64               // q = sqrt(x)
-	r := uint64(1 << (shift + 1)) // r = moving bit from MSB to LSB
+	r := uint64(1 << (shift + 1)) // r = 从 MSB 到 LSB 移动的位
 	for r != 0 {
 		t := s + r
 		if t <= ix {
@@ -136,10 +133,10 @@ func sqrt(x float64) float64 {
 		ix <<= 1
 		r >>= 1
 	}
-	// final rounding
-	if ix != 0 { // remainder, result not exact
-		q += q & 1 // round according to extra bit
+	// 最终舍入
+	if ix != 0 { // 有余数，结果不精确
+		q += q & 1 // 根据额外位进行舍入
 	}
-	ix = q>>1 + uint64(exp-1+bias)<<shift // significand + biased exponent
+	ix = q>>1 + uint64(exp-1+bias)<<shift // 有效数字 + 带偏置的指数
 	return Float64frombits(ix)
 }

@@ -1,10 +1,10 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build unix
 
-// Fork, exec, wait, etc.
+// Fork、exec、wait 等。
 
 package syscall
 
@@ -16,59 +16,46 @@ import (
 	"unsafe"
 )
 
-// ForkLock is used to synchronize creation of new file descriptors
-// with fork.
+// ForkLock 用于同步新文件描述符的创建与 fork 操作。
 //
-// We want the child in a fork/exec sequence to inherit only the
-// file descriptors we intend. To do that, we mark all file
-// descriptors close-on-exec and then, in the child, explicitly
-// unmark the ones we want the exec'ed program to keep.
-// Unix doesn't make this easy: there is, in general, no way to
-// allocate a new file descriptor close-on-exec. Instead you
-// have to allocate the descriptor and then mark it close-on-exec.
-// If a fork happens between those two events, the child's exec
-// will inherit an unwanted file descriptor.
+// 我们希望 fork/exec 序列中的子进程只继承我们预期的文件描述符。
+// 为此，我们将所有文件描述符标记为 close-on-exec，
+// 然后在子进程中显式取消标记我们希望 exec 的程序保留的那些。
+// Unix 不容易做到这一点：通常没有办法分配一个 close-on-exec 的新文件描述符。
+// 相反，你必须先分配描述符，然后将其标记为 close-on-exec。
+// 如果在这两个事件之间发生 fork，子进程的 exec 将继承一个不需要的文件描述符。
 //
-// This lock solves that race: the create new fd/mark close-on-exec
-// operation is done holding ForkLock for reading, and the fork itself
-// is done holding ForkLock for writing. At least, that's the idea.
-// There are some complications.
+// 这个锁解决了这个竞态：创建新 fd/标记 close-on-exec 的操作
+// 在持有 ForkLock 读锁的情况下完成，而 fork 本身
+// 在持有 ForkLock 写锁的情况下完成。至少，这是我们的想法。
+// 但有一些复杂情况。
 //
-// Some system calls that create new file descriptors can block
-// for arbitrarily long times: open on a hung NFS server or named
-// pipe, accept on a socket, and so on. We can't reasonably grab
-// the lock across those operations.
+// 一些创建新文件描述符的系统调用可能会阻塞任意长的时间：
+// 在挂起的 NFS 服务器或命名管道上 open，在套接字上 accept，等等。
+// 我们不能合理地在这些操作期间持有锁。
 //
-// It is worse to inherit some file descriptors than others.
-// If a non-malicious child accidentally inherits an open ordinary file,
-// that's not a big deal. On the other hand, if a long-lived child
-// accidentally inherits the write end of a pipe, then the reader
-// of that pipe will not see EOF until that child exits, potentially
-// causing the parent program to hang. This is a common problem
-// in threaded C programs that use popen.
+// 继承某些文件描述符比其他的更糟糕。
+// 如果一个非恶意的子进程意外继承了一个打开的普通文件，那不是什么大问题。
+// 另一方面，如果一个长寿命的子进程意外继承了管道的写端，
+// 那么该管道的读者直到该子进程退出才会看到 EOF，
+// 这可能导致父程序挂起。这在使用 popen 的多线程 C 程序中是一个常见问题。
 //
-// Luckily, the file descriptors that are most important not to
-// inherit are not the ones that can take an arbitrarily long time
-// to create: pipe returns instantly, and the net package uses
-// non-blocking I/O to accept on a listening socket.
-// The rules for which file descriptor-creating operations use the
-// ForkLock are as follows:
+// 幸运的是，最重要的不应该被继承的文件描述符并不是那些
+// 创建需要任意长时间的：pipe 立即返回，net 包使用
+// 非阻塞 I/O 在监听套接字上 accept。
+// 哪些创建文件描述符的操作使用 ForkLock 的规则如下：
 //
-//   - [Pipe]. Use pipe2 if available. Otherwise, does not block,
-//     so use ForkLock.
-//   - [Socket]. Use SOCK_CLOEXEC if available. Otherwise, does not
-//     block, so use ForkLock.
-//   - [Open]. Use [O_CLOEXEC] if available. Otherwise, may block,
-//     so live with the race.
-//   - [Dup]. Use [F_DUPFD_CLOEXEC] or dup3 if available. Otherwise,
-//     does not block, so use ForkLock.
+//   - [Pipe]。如果可用则使用 pipe2。否则，不会阻塞，所以使用 ForkLock。
+//   - [Socket]。如果可用则使用 SOCK_CLOEXEC。否则，不会阻塞，所以使用 ForkLock。
+//   - [Open]。如果可用则使用 [O_CLOEXEC]。否则，可能阻塞，所以接受竞态。
+//   - [Dup]。如果可用则使用 [F_DUPFD_CLOEXEC] 或 dup3。否则，
+//     不会阻塞，所以使用 ForkLock。
 var ForkLock sync.RWMutex
 
-// StringSlicePtr converts a slice of strings to a slice of pointers
-// to NUL-terminated byte arrays. If any string contains a NUL byte
-// this function panics instead of returning an error.
+// StringSlicePtr 将字符串切片转换为指向以 NUL 结尾的字节数组的指针切片。
+// 如果任何字符串包含 NUL 字节，此函数会 panic 而不是返回错误。
 //
-// Deprecated: Use [SlicePtrFromStrings] instead.
+// 已弃用：请使用 [SlicePtrFromStrings] 代替。
 func StringSlicePtr(ss []string) []*byte {
 	bb := make([]*byte, len(ss)+1)
 	for i := 0; i < len(ss); i++ {
@@ -78,16 +65,15 @@ func StringSlicePtr(ss []string) []*byte {
 	return bb
 }
 
-// SlicePtrFromStrings converts a slice of strings to a slice of
-// pointers to NUL-terminated byte arrays. If any string contains
-// a NUL byte, it returns (nil, [EINVAL]).
+// SlicePtrFromStrings 将字符串切片转换为指向以 NUL 结尾的字节数组的指针切片。
+// 如果任何字符串包含 NUL 字节，它返回 (nil, [EINVAL])。
 func SlicePtrFromStrings(ss []string) ([]*byte, error) {
 	n := 0
 	for _, s := range ss {
 		if bytealg.IndexByteString(s, 0) != -1 {
 			return nil, EINVAL
 		}
-		n += len(s) + 1 // +1 for NUL
+		n += len(s) + 1 // +1 用于 NUL
 	}
 	bb := make([]*byte, len(ss)+1)
 	b := make([]byte, n)
@@ -119,21 +105,19 @@ func SetNonblock(fd int, nonblocking bool) (err error) {
 	return err
 }
 
-// Credential holds user and group identities to be assumed
-// by a child process started by [StartProcess].
+// Credential 保存由 [StartProcess] 启动的子进程将要使用的用户和组身份。
 type Credential struct {
-	Uid         uint32   // User ID.
-	Gid         uint32   // Group ID.
-	Groups      []uint32 // Supplementary group IDs.
-	NoSetGroups bool     // If true, don't set supplementary groups
+	Uid         uint32   // 用户 ID。
+	Gid         uint32   // 组 ID。
+	Groups      []uint32 // 附加组 ID。
+	NoSetGroups bool     // 如果为 true，则不设置附加组
 }
 
-// ProcAttr holds attributes that will be applied to a new process started
-// by [StartProcess].
+// ProcAttr 保存将应用于由 [StartProcess] 启动的新进程的属性。
 type ProcAttr struct {
-	Dir   string    // Current working directory.
-	Env   []string  // Environment.
-	Files []uintptr // File descriptors.
+	Dir   string    // 当前工作目录。
+	Env   []string  // 环境变量。
+	Files []uintptr // 文件描述符。
 	Sys   *SysProcAttr
 }
 
@@ -154,7 +138,7 @@ func forkExec(argv0 string, argv []string, attr *ProcAttr) (pid int, err error) 
 		sys = &zeroSysProcAttr
 	}
 
-	// Convert args to C form.
+	// 将参数转换为 C 形式。
 	argv0p, err := BytePtrFromString(argv0)
 	if err != nil {
 		return 0, err
@@ -187,8 +171,8 @@ func forkExec(argv0 string, argv []string, attr *ProcAttr) (pid int, err error) 
 		}
 	}
 
-	// Both Setctty and Foreground use the Ctty field,
-	// but they give it slightly different meanings.
+	// Setctty 和 Foreground 都使用 Ctty 字段，
+	// 但它们赋予它略有不同的含义。
 	if sys.Setctty && sys.Foreground {
 		return 0, errorspkg.New("both Setctty and Foreground set in SysProcAttr")
 	}
@@ -198,13 +182,13 @@ func forkExec(argv0 string, argv []string, attr *ProcAttr) (pid int, err error) 
 
 	acquireForkLock()
 
-	// Allocate child status pipe close on exec.
+	// 分配子进程状态管道，在 exec 时关闭。
 	if err = forkExecPipe(p[:]); err != nil {
 		releaseForkLock()
 		return 0, err
 	}
 
-	// Kick off child.
+	// 启动子进程。
 	pid, err1 = forkAndExecInChild(argv0p, argvp, envvp, chroot, dir, attr, sys, p[1])
 	if err1 != 0 {
 		Close(p[0])
@@ -214,7 +198,7 @@ func forkExec(argv0 string, argv []string, attr *ProcAttr) (pid int, err error) 
 	}
 	releaseForkLock()
 
-	// Read child error status from pipe.
+	// 从管道读取子进程错误状态。
 	Close(p[1])
 	for {
 		n, err = readlen(p[0], (*byte)(unsafe.Pointer(&err1)), int(unsafe.Sizeof(err1)))
@@ -231,43 +215,42 @@ func forkExec(argv0 string, argv []string, attr *ProcAttr) (pid int, err error) 
 			err = EPIPE
 		}
 
-		// Child failed; wait for it to exit, to make sure
-		// the zombies don't accumulate.
+		// 子进程失败；等待它退出，确保不会积累僵尸进程。
 		_, err1 := Wait4(pid, &wstatus, 0, nil)
 		for err1 == EINTR {
 			_, err1 = Wait4(pid, &wstatus, 0, nil)
 		}
 
-		// OS-specific cleanup on failure.
+		// 失败时的操作系统特定清理。
 		forkAndExecFailureCleanup(attr, sys)
 
 		return 0, err
 	}
 
-	// Read got EOF, so pipe closed on exec, so exec succeeded.
+	// 读取到 EOF，说明管道在 exec 时关闭，即 exec 成功。
 	return pid, nil
 }
 
-// Combination of fork and exec, careful to be thread safe.
+// fork 和 exec 的组合，注意线程安全。
 func ForkExec(argv0 string, argv []string, attr *ProcAttr) (pid int, err error) {
 	return forkExec(argv0, argv, attr)
 }
 
-// StartProcess wraps [ForkExec] for package os.
+// StartProcess 为 os 包封装了 [ForkExec]。
 func StartProcess(argv0 string, argv []string, attr *ProcAttr) (pid int, handle uintptr, err error) {
 	pid, err = forkExec(argv0, argv, attr)
 	return pid, 0, err
 }
 
-// Implemented in runtime package.
+// 在 runtime 包中实现。
 func runtime_BeforeExec()
 func runtime_AfterExec()
 
-// execveLibc is non-nil on OS using libc syscall, set to execve in exec_libc.go; this
-// avoids a build dependency for other platforms.
+// execveLibc 在使用 libc 系统调用的操作系统上非空，在 exec_libc.go 中设置为 execve；
+// 这避免了其他平台的构建依赖。
 var execveLibc func(path *byte, argv **byte, envp **byte) error
 
-// Exec invokes the execve(2) system call.
+// Exec 调用 execve(2) 系统调用。
 func Exec(argv0 string, argv []string, envv []string) (err error) {
 	argv0p, err := BytePtrFromString(argv0)
 	if err != nil {
@@ -291,7 +274,7 @@ func Exec(argv0 string, argv []string, envv []string) (err error) {
 	var err1 error
 	switch runtime.GOOS {
 	case "aix", "darwin", "illumos", "ios", "openbsd", "solaris":
-		// RawSyscall should never be used on these platforms.
+		// 在这些平台上不应该使用 RawSyscall。
 		err1 = execveLibc(argv0p, &argvp[0], &envvp[0])
 
 	default:

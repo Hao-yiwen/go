@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package image
 
@@ -12,28 +12,28 @@ import (
 	"sync/atomic"
 )
 
-// ErrFormat indicates that decoding encountered an unknown format.
+// ErrFormat 表示解码时遇到了未知格式。
 var ErrFormat = errors.New("image: unknown format")
 
-// A format holds an image format's name, magic header and how to decode it.
+// format 保存图像格式的名称、魔数头和解码方法。
 type format struct {
 	name, magic  string
 	decode       func(io.Reader) (Image, error)
 	decodeConfig func(io.Reader) (Config, error)
 }
 
-// Formats is the list of registered formats.
+// formats 是已注册格式的列表。
 var (
 	formatsMu     sync.Mutex
 	atomicFormats atomic.Value
 )
 
-// RegisterFormat registers an image format for use by [Decode].
-// Name is the name of the format, like "jpeg" or "png".
-// Magic is the magic prefix that identifies the format's encoding. The magic
-// string can contain "?" wildcards that each match any one byte.
-// [Decode] is the function that decodes the encoded image.
-// [DecodeConfig] is the function that decodes just its configuration.
+// RegisterFormat 注册一个图像格式供 [Decode] 使用。
+// name 是格式的名称，如 "jpeg" 或 "png"。
+// magic 是标识格式编码的魔数前缀。魔数字符串可以包含 "?" 通配符，
+// 每个通配符匹配任意一个字节。
+// [Decode] 是解码已编码图像的函数。
+// [DecodeConfig] 是仅解码其配置的函数。
 func RegisterFormat(name, magic string, decode func(io.Reader) (Image, error), decodeConfig func(io.Reader) (Config, error)) {
 	formatsMu.Lock()
 	formats, _ := atomicFormats.Load().([]format)
@@ -41,13 +41,13 @@ func RegisterFormat(name, magic string, decode func(io.Reader) (Image, error), d
 	formatsMu.Unlock()
 }
 
-// A reader is an io.Reader that can also peek ahead.
+// reader 是一个可以预览数据的 io.Reader。
 type reader interface {
 	io.Reader
 	Peek(int) ([]byte, error)
 }
 
-// asReader converts an io.Reader to a reader.
+// asReader 将 io.Reader 转换为 reader。
 func asReader(r io.Reader) reader {
 	if rr, ok := r.(reader); ok {
 		return rr
@@ -55,7 +55,7 @@ func asReader(r io.Reader) reader {
 	return bufio.NewReader(r)
 }
 
-// match reports whether magic matches b. Magic may contain "?" wildcards.
+// match 报告 magic 是否匹配 b。magic 可以包含 "?" 通配符。
 func match(magic string, b []byte) bool {
 	if len(magic) != len(b) {
 		return false
@@ -68,7 +68,7 @@ func match(magic string, b []byte) bool {
 	return true
 }
 
-// sniff determines the format of r's data.
+// sniff 确定 r 数据的格式。
 func sniff(r reader) format {
 	formats, _ := atomicFormats.Load().([]format)
 	for _, f := range formats {
@@ -80,10 +80,9 @@ func sniff(r reader) format {
 	return format{}
 }
 
-// Decode decodes an image that has been encoded in a registered format.
-// The string returned is the format name used during format registration.
-// Format registration is typically done by an init function in the codec-
-// specific package.
+// Decode 解码以已注册格式编码的图像。
+// 返回的字符串是格式注册时使用的格式名称。
+// 格式注册通常由编解码器特定包中的 init 函数完成。
 func Decode(r io.Reader) (Image, string, error) {
 	rr := asReader(r)
 	f := sniff(rr)
@@ -94,10 +93,9 @@ func Decode(r io.Reader) (Image, string, error) {
 	return m, f.name, err
 }
 
-// DecodeConfig decodes the color model and dimensions of an image that has
-// been encoded in a registered format. The string returned is the format name
-// used during format registration. Format registration is typically done by
-// an init function in the codec-specific package.
+// DecodeConfig 解码以已注册格式编码的图像的颜色模型和尺寸。
+// 返回的字符串是格式注册时使用的格式名称。
+// 格式注册通常由编解码器特定包中的 init 函数完成。
 func DecodeConfig(r io.Reader) (Config, string, error) {
 	rr := asReader(r)
 	f := sniff(rr)

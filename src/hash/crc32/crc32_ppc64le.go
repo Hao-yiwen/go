@@ -1,6 +1,6 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package crc32
 
@@ -10,7 +10,7 @@ import (
 
 const (
 	vecMinLen    = 16
-	vecAlignMask = 15 // align to 16 bytes
+	vecAlignMask = 15 // 对齐到 16 字节
 	crcIEEE      = 1
 	crcCast      = 2
 )
@@ -18,7 +18,7 @@ const (
 //go:noescape
 func ppc64SlicingUpdateBy8(crc uint32, table8 *slicing8Table, p []byte) uint32
 
-// this function requires the buffer to be 16 byte aligned and > 16 bytes long.
+// 此函数要求缓冲区 16 字节对齐且长度 > 16 字节。
 //
 //go:noescape
 func vectorCrc32(crc uint32, poly uint32, p []byte) uint32
@@ -31,7 +31,7 @@ func archInitCastagnoli() {
 
 func archUpdateCastagnoli(crc uint32, p []byte) uint32 {
 	if len(p) >= 4*vecMinLen {
-		// If not aligned then process the initial unaligned bytes
+		// 如果未对齐，则先处理初始的未对齐字节
 
 		if uint64(uintptr(unsafe.Pointer(&p[0])))&uint64(vecAlignMask) != 0 {
 			align := uint64(uintptr(unsafe.Pointer(&p[0]))) & uint64(vecAlignMask)
@@ -39,7 +39,7 @@ func archUpdateCastagnoli(crc uint32, p []byte) uint32 {
 			crc = ppc64SlicingUpdateBy8(crc, archCastagnoliTable8, p[:newlen])
 			p = p[newlen:]
 		}
-		// p should be aligned now
+		// 现在 p 应该已经对齐了
 		aligned := len(p) & ^vecAlignMask
 		crc = vectorCrc32(crc, crcCast, p[:aligned])
 		p = p[aligned:]
@@ -60,15 +60,15 @@ func archAvailableCastagnoli() bool {
 var archIeeeTable8 *slicing8Table
 
 func archInitIEEE() {
-	// We still use slicing-by-8 for small buffers.
+	// 对于小缓冲区，我们仍然使用 slicing-by-8。
 	archIeeeTable8 = slicingMakeTable(IEEE)
 }
 
-// archUpdateIEEE calculates the checksum of p using vectorizedIEEE.
+// archUpdateIEEE 使用 vectorizedIEEE 计算 p 的校验和。
 func archUpdateIEEE(crc uint32, p []byte) uint32 {
 
-	// Check if vector code should be used.  If not aligned, then handle those
-	// first up to the aligned bytes.
+	// 检查是否应使用向量代码。如果未对齐，则先处理
+	// 到对齐字节为止的那些字节。
 
 	if len(p) >= 4*vecMinLen {
 		if uint64(uintptr(unsafe.Pointer(&p[0])))&uint64(vecAlignMask) != 0 {

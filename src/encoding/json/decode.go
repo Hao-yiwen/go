@@ -1,9 +1,9 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // Represents JSON data structure using native Go types: booleans, floats,
-// strings, arrays, and maps.
+// strings, arrays, and 映射.
 
 //go:build !goexperiment.jsonv2
 
@@ -22,12 +22,12 @@ import (
 	_ "unsafe" // for linkname
 )
 
-// Unmarshal parses the JSON-encoded data and stores the result
-// in the value pointed to by v. If v is nil or not a pointer,
-// Unmarshal returns an [InvalidUnmarshalError].
+// Unmarshal 解析 JSON 编码的数据并将结果
+// 存储在 v 指向的值中。 If v is nil or not a pointer,
+// Unmarshal 返回an [InvalidUnmarshalError].
 //
-// Unmarshal uses the inverse of the encodings that
-// [Marshal] uses, allocating maps, slices, and pointers as necessary,
+// Unmarshal 使用与
+// [Marshal] uses, allocating 映射, slices, and pointers as necessary,
 // with the following additional rules:
 //
 // To unmarshal JSON into a pointer, Unmarshal first handles the case of
@@ -38,9 +38,9 @@ import (
 //
 // To unmarshal JSON into a value implementing [Unmarshaler],
 // Unmarshal calls that value's [Unmarshaler.UnmarshalJSON] method, including
-// when the input is a JSON null.
-// Otherwise, if the value implements [encoding.TextUnmarshaler]
-// and the input is a JSON quoted string, Unmarshal calls
+// when the input 是一个 JSON null.
+// Otherwise, 如果 value implements [encoding.TextUnmarshaler]
+// and the input 是一个 JSON quoted string, Unmarshal calls
 // [encoding.TextUnmarshaler.UnmarshalText] with the unquoted form of the string.
 //
 // To unmarshal JSON into a struct, Unmarshal matches incoming object keys to
@@ -62,7 +62,7 @@ import (
 //   - map[string]any, for JSON objects
 //   - nil for JSON null
 //
-// To unmarshal a JSON array into a slice, Unmarshal resets the slice length
+// To unmarshal a JSON array into a slice, Unmarshal re设置 slice length
 // to zero and then appends each element to the slice.
 // As a special case, to unmarshal an empty JSON array into a slice,
 // Unmarshal replaces the slice with a new empty slice.
@@ -80,7 +80,7 @@ import (
 // key-value pairs from the JSON object into the map. The map's key type must
 // either be any string type, an integer, or implement [encoding.TextUnmarshaler].
 //
-// If the JSON-encoded data contain a syntax error, Unmarshal returns a [SyntaxError].
+// If the JSON-encoded data contain a syntax error, Unmarshal 返回一个[SyntaxError].
 //
 // If a JSON value is not appropriate for a given target type,
 // or if a JSON number overflows the target type, Unmarshal
@@ -88,7 +88,7 @@ import (
 // If no more serious errors are encountered, Unmarshal returns
 // an [UnmarshalTypeError] describing the earliest such error. In any
 // case, it's not guaranteed that all the remaining fields following
-// the problematic one will be unmarshaled into the target object.
+// the problematic one 将是 unmarshaled into the target object.
 //
 // The JSON null value unmarshals into an interface, map, pointer, or slice
 // by setting that Go value to nil. Because null is often used in JSON to mean
@@ -113,7 +113,7 @@ func Unmarshal(data []byte, v any) error {
 	return d.unmarshal(v)
 }
 
-// Unmarshaler is the interface implemented by types
+// Unmarshaler 是 interface implemented by types
 // that can unmarshal a JSON description of themselves.
 // The input can be assumed to be a valid encoding of
 // a JSON value. UnmarshalJSON must copy the JSON data
@@ -122,7 +122,7 @@ type Unmarshaler interface {
 	UnmarshalJSON([]byte) error
 }
 
-// An UnmarshalTypeError describes a JSON value that was
+// 一个UnmarshalTypeError 描述 a JSON value that was
 // not appropriate for a value of a specific Go type.
 type UnmarshalTypeError struct {
 	Value  string       // description of JSON value - "bool", "array", "number -5"
@@ -139,7 +139,7 @@ func (e *UnmarshalTypeError) Error() string {
 	return "json: cannot unmarshal " + e.Value + " into Go value of type " + e.Type.String()
 }
 
-// An UnmarshalFieldError describes a JSON object key that
+// 一个UnmarshalFieldError 描述 a JSON object key that
 // led to an unexported (and therefore unwritable) struct field.
 //
 // Deprecated: No longer used; kept for compatibility.
@@ -153,8 +153,8 @@ func (e *UnmarshalFieldError) Error() string {
 	return "json: cannot unmarshal object key " + strconv.Quote(e.Key) + " into unexported field " + e.Field.Name + " of type " + e.Type.String()
 }
 
-// An InvalidUnmarshalError describes an invalid argument passed to [Unmarshal].
-// (The argument to [Unmarshal] must be a non-nil pointer.)
+// 一个InvalidUnmarshalError 描述 an invalid argument passed to [Unmarshal].
+// (The argument to [Unmarshal] 必须是 a non-nil pointer.)
 type InvalidUnmarshalError struct {
 	Type reflect.Type
 }
@@ -179,7 +179,7 @@ func (d *decodeState) unmarshal(v any) error {
 	d.scan.reset()
 	d.scanWhile(scanSkipSpace)
 	// We decode rv not rv.Elem because the Unmarshaler interface
-	// test must be applied at the top level of the value.
+	// test 必须是 applied at the top level of the value.
 	err := d.value(rv)
 	if err != nil {
 		return d.addErrorContext(err)
@@ -187,29 +187,29 @@ func (d *decodeState) unmarshal(v any) error {
 	return d.savedError
 }
 
-// A Number represents a JSON number literal.
+// 一个Number represents a JSON number literal.
 type Number string
 
-// String returns the literal text of the number.
+// String 返回the literal text of the number.
 func (n Number) String() string { return string(n) }
 
-// Float64 returns the number as a float64.
+// Float64 返回the number as a float64.
 func (n Number) Float64() (float64, error) {
 	return strconv.ParseFloat(string(n), 64)
 }
 
-// Int64 returns the number as an int64.
+// Int64 返回the number as an int64.
 func (n Number) Int64() (int64, error) {
 	return strconv.ParseInt(string(n), 10, 64)
 }
 
-// An errorContext provides context for type errors during decoding.
+// 一个errorContext provides context for type errors during decoding.
 type errorContext struct {
 	Struct     reflect.Type
 	FieldStack []string
 }
 
-// decodeState represents the state while decoding a JSON value.
+// decodeState 表示the state while decoding a JSON value.
 type decodeState struct {
 	data                  []byte
 	off                   int // next read offset in data
@@ -221,7 +221,7 @@ type decodeState struct {
 	disallowUnknownFields bool
 }
 
-// readIndex returns the position of the last byte read.
+// readIndex 返回the position of the last byte read.
 func (d *decodeState) readIndex() int {
 	return d.off - 1
 }
@@ -251,7 +251,7 @@ func (d *decodeState) saveError(err error) {
 	}
 }
 
-// addErrorContext returns a new error enhanced with information from d.errorContext
+// addErrorContext 返回a new error enhanced with information from d.errorContext
 func (d *decodeState) addErrorContext(err error) error {
 	if d.errorContext != nil && (d.errorContext.Struct != nil || len(d.errorContext.FieldStack) > 0) {
 		switch err := err.(type) {
@@ -404,7 +404,7 @@ type unquotedValue struct{}
 // valueQuoted is like value but decodes a
 // quoted string literal or literal null into an interface value.
 // If it finds anything other than a quoted string literal or null,
-// valueQuoted returns unquotedValue{}.
+// valueQuoted 返回unquotedValue{}.
 func (d *decodeState) valueQuoted() any {
 	switch d.opcode {
 	default:
@@ -427,10 +427,10 @@ func (d *decodeState) valueQuoted() any {
 // indirect walks down v allocating pointers as needed,
 // until it gets to a non-pointer.
 // If it encounters an Unmarshaler, indirect stops and returns that.
-// If decodingNull is true, indirect stops at the first settable pointer so it
+// If decodingNull 为真, indirect stops at the first settable pointer so it
 // can be set to nil.
 func indirect(v reflect.Value, decodingNull bool) (Unmarshaler, encoding.TextUnmarshaler, reflect.Value) {
-	// Issue #24153 indicates that it is generally not a guaranteed property
+	// Issue #24153 指示 it is generally not a guaranteed property
 	// that you may round-trip a reflect.Value by calling Value.Addr().Elem()
 	// and expect the value to still be settable for values derived from
 	// unexported embedded struct fields.
@@ -444,15 +444,15 @@ func indirect(v reflect.Value, decodingNull bool) (Unmarshaler, encoding.TextUnm
 	v0 := v
 	haveAddr := false
 
-	// If v is a named type and is addressable,
-	// start with its address, so that if the type has pointer methods,
+	// If v 是一个 named type and 是一个ddressable,
+	// start with its address, so that 如果 type has pointer methods,
 	// we find them.
 	if v.Kind() != reflect.Pointer && v.Type().Name() != "" && v.CanAddr() {
 		haveAddr = true
 		v = v.Addr()
 	}
 	for {
-		// Load value from interface, but only if the result will be
+		// Load value from interface, but only 如果 result 将是
 		// usefully addressable.
 		if v.Kind() == reflect.Interface && !v.IsNil() {
 			e := v.Elem()
@@ -471,7 +471,7 @@ func indirect(v reflect.Value, decodingNull bool) (Unmarshaler, encoding.TextUnm
 			break
 		}
 
-		// Prevent infinite loop if v is an interface pointing to its own address:
+		// Prevent infinite loop if v 是一个n interface pointing to its own address:
 		//     var v any
 		//     v = &v
 		if v.Elem().Kind() == reflect.Interface && v.Elem().Elem().Equal(v) {
@@ -569,7 +569,7 @@ func (d *decodeState) array(v reflect.Value) error {
 		}
 		i++
 
-		// Next token must be , or ].
+		// Next token 必须是 , or ].
 		if d.opcode == scanSkipSpace {
 			d.scanWhile(scanSkipSpace)
 		}
@@ -812,7 +812,7 @@ func (d *decodeState) object(v reflect.Value) error {
 			}
 		}
 
-		// Next token must be , or }.
+		// Next token 必须是 , or }.
 		if d.opcode == scanSkipSpace {
 			d.scanWhile(scanSkipSpace)
 		}
@@ -850,7 +850,7 @@ var numberType = reflect.TypeFor[Number]()
 
 // literalStore decodes a literal stored in item into v.
 //
-// fromQuoted indicates whether this literal came from unwrapping a
+// fromQuoted 指示whether this literal came from unwrapping a
 // string from the ",string" struct tag option. this is used only to
 // produce more helpful error messages.
 func (d *decodeState) literalStore(item []byte, v reflect.Value, fromQuoted bool) error {
@@ -978,7 +978,7 @@ func (d *decodeState) literalStore(item []byte, v reflect.Value, fromQuoted bool
 		switch v.Kind() {
 		default:
 			if v.Kind() == reflect.String && v.Type() == numberType {
-				// s must be a valid number, because it's
+				// s 必须是 a valid number, because it's
 				// already been tokenized.
 				v.SetString(string(item))
 				break
@@ -1031,7 +1031,7 @@ func (d *decodeState) literalStore(item []byte, v reflect.Value, fromQuoted bool
 // in an empty interface. They are not strictly necessary,
 // but they avoid the weight of reflection in this common case.
 
-// valueInterface is like value but returns any.
+// valueInterface is like value but 返回一个y.
 func (d *decodeState) valueInterface() (val any) {
 	switch d.opcode {
 	default:
@@ -1060,7 +1060,7 @@ func (d *decodeState) arrayInterface() []any {
 
 		v = append(v, d.valueInterface())
 
-		// Next token must be , or ].
+		// Next token 必须是 , or ].
 		if d.opcode == scanSkipSpace {
 			d.scanWhile(scanSkipSpace)
 		}
@@ -1109,7 +1109,7 @@ func (d *decodeState) objectInterface() map[string]any {
 		// Read value.
 		m[key] = d.valueInterface()
 
-		// Next token must be , or }.
+		// Next token 必须是 , or }.
 		if d.opcode == scanSkipSpace {
 			d.scanWhile(scanSkipSpace)
 		}
@@ -1123,7 +1123,7 @@ func (d *decodeState) objectInterface() map[string]any {
 	return m
 }
 
-// literalInterface consumes and returns a literal from d.data[d.off-1:] and
+// literalInterface consumes and 返回一个literal from d.data[d.off-1:] and
 // it reads the following byte ahead. The first byte of the literal has been
 // read already (that's how the caller knows it's a literal).
 func (d *decodeState) literalInterface() any {
@@ -1269,7 +1269,7 @@ func unquoteBytes(s []byte) (t []byte, ok bool) {
 				if utf16.IsSurrogate(rr) {
 					rr1 := getu4(s[r:])
 					if dec := utf16.DecodeRune(rr, rr1); dec != unicode.ReplacementChar {
-						// A valid pair; consume.
+						// 一个valid pair; consume.
 						r += 6
 						w += utf8.EncodeRune(b[w:], dec)
 						break

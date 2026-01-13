@@ -1,15 +1,14 @@
-// Copyright 2019 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2019 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package maphash provides hash functions on byte sequences and comparable values.
-// These hash functions are intended to be used to implement hash tables or
-// other data structures that need to map arbitrary strings or byte
-// sequences to a uniform distribution on unsigned 64-bit integers.
-// Each different instance of a hash table or data structure should use its own [Seed].
+// maphash 包提供字节序列和可比较值的哈希函数。
+// 这些哈希函数旨在用于实现哈希表或其他需要将任意字符串
+// 或字节序列映射到无符号 64 位整数均匀分布的数据结构。
+// 每个不同的哈希表或数据结构实例应使用自己的 [Seed]。
 //
-// The hash functions are not cryptographically secure.
-// (See crypto/sha256 and crypto/sha512 for cryptographic use.)
+// 这些哈希函数不是加密安全的。
+//（加密用途请参阅 crypto/sha256 和 crypto/sha512。）
 package maphash
 
 import (
@@ -17,24 +16,21 @@ import (
 	"internal/abi"
 )
 
-// A Seed is a random value that selects the specific hash function
-// computed by a [Hash]. If two Hashes use the same Seeds, they
-// will compute the same hash values for any given input.
-// If two Hashes use different Seeds, they are very likely to compute
-// distinct hash values for any given input.
+// Seed 是一个随机值，用于选择 [Hash] 计算的特定哈希函数。
+// 如果两个 Hash 使用相同的 Seed，它们将为任何给定输入计算相同的哈希值。
+// 如果两个 Hash 使用不同的 Seed，它们很可能为任何给定输入计算不同的哈希值。
 //
-// A Seed must be initialized by calling [MakeSeed].
-// The zero seed is uninitialized and not valid for use with [Hash]'s SetSeed method.
+// Seed 必须通过调用 [MakeSeed] 初始化。
+// 零值 seed 是未初始化的，不能用于 [Hash] 的 SetSeed 方法。
 //
-// Each Seed value is local to a single process and cannot be serialized
-// or otherwise recreated in a different process.
+// 每个 Seed 值是单个进程本地的，不能被序列化或在不同进程中重新创建。
 type Seed struct {
 	s uint64
 }
 
-// Bytes returns the hash of b with the given seed.
+// Bytes 返回使用给定 seed 的 b 的哈希值。
 //
-// Bytes is equivalent to, but more convenient and efficient than:
+// Bytes 等效于以下代码，但更方便和高效：
 //
 //	var h Hash
 //	h.SetSeed(seed)
@@ -56,9 +52,9 @@ func Bytes(seed Seed, b []byte) uint64 {
 	return rthash(b, state)
 }
 
-// String returns the hash of s with the given seed.
+// String 返回使用给定 seed 的 s 的哈希值。
 //
-// String is equivalent to, but more convenient and efficient than:
+// String 等效于以下代码，但更方便和高效：
 //
 //	var h Hash
 //	h.SetSeed(seed)
@@ -76,48 +72,44 @@ func String(seed Seed, s string) uint64 {
 	return rthashString(s, state)
 }
 
-// A Hash computes a seeded hash of a byte sequence.
+// Hash 计算字节序列的种子哈希。
 //
-// The zero Hash is a valid Hash ready to use.
-// A zero Hash chooses a random seed for itself during
-// the first call to a Reset, Write, Seed, Clone, or Sum64 method.
-// For control over the seed, use SetSeed.
+// 零值 Hash 是一个可以立即使用的有效 Hash。
+// 零值 Hash 在第一次调用 Reset、Write、Seed、Clone 或 Sum64 方法时
+// 会为自己选择一个随机种子。
+// 要控制种子，请使用 SetSeed。
 //
-// The computed hash values depend only on the initial seed and
-// the sequence of bytes provided to the Hash object, not on the way
-// in which the bytes are provided. For example, the three sequences
+// 计算的哈希值仅取决于初始种子和提供给 Hash 对象的字节序列，
+// 而不取决于字节的提供方式。例如，以下三个序列
 //
 //	h.Write([]byte{'f','o','o'})
 //	h.WriteByte('f'); h.WriteByte('o'); h.WriteByte('o')
 //	h.WriteString("foo")
 //
-// all have the same effect.
+// 都具有相同的效果。
 //
-// Hashes are intended to be collision-resistant, even for situations
-// where an adversary controls the byte sequences being hashed.
+// Hash 旨在抗碰撞，即使在对手控制被哈希的字节序列的情况下也是如此。
 //
-// A Hash is not safe for concurrent use by multiple goroutines, but a Seed is.
-// If multiple goroutines must compute the same seeded hash,
-// each can declare its own Hash and call SetSeed with a common Seed.
+// Hash 不能被多个 goroutine 安全地并发使用，但 Seed 可以。
+// 如果多个 goroutine 必须计算相同的种子哈希，
+// 每个都可以声明自己的 Hash 并使用共同的 Seed 调用 SetSeed。
 type Hash struct {
-	_     [0]func()     // not comparable
-	seed  Seed          // initial seed used for this hash
-	state Seed          // current hash of all flushed bytes
-	buf   [bufSize]byte // unflushed byte buffer
-	n     int           // number of unflushed bytes
+	_     [0]func()     // 不可比较
+	seed  Seed          // 用于此哈希的初始种子
+	state Seed          // 所有已刷新字节的当前哈希
+	buf   [bufSize]byte // 未刷新的字节缓冲区
+	n     int           // 未刷新字节的数量
 }
 
-// bufSize is the size of the Hash write buffer.
-// The buffer ensures that writes depend only on the sequence of bytes,
-// not the sequence of WriteByte/Write/WriteString calls,
-// by always calling rthash with a full buffer (except for the tail).
+// bufSize 是 Hash 写入缓冲区的大小。
+// 缓冲区通过始终使用完整缓冲区调用 rthash（尾部除外），
+// 确保写入仅取决于字节序列，而不取决于 WriteByte/Write/WriteString 调用的序列。
 const bufSize = 128
 
-// initSeed seeds the hash if necessary.
-// initSeed is called lazily before any operation that actually uses h.seed/h.state.
-// Note that this does not include Write/WriteByte/WriteString in the case
-// where they only add to h.buf. (If they write too much, they call h.flush,
-// which does call h.initSeed.)
+// initSeed 在必要时为哈希设置种子。
+// initSeed 在任何实际使用 h.seed/h.state 的操作之前延迟调用。
+// 请注意，在仅添加到 h.buf 的情况下，这不包括 Write/WriteByte/WriteString。
+//（如果它们写入太多，它们会调用 h.flush，h.flush 会调用 h.initSeed。）
 func (h *Hash) initSeed() {
 	if h.seed.s == 0 {
 		seed := MakeSeed()
@@ -126,8 +118,8 @@ func (h *Hash) initSeed() {
 	}
 }
 
-// WriteByte adds b to the sequence of bytes hashed by h.
-// It never fails; the error result is for implementing [io.ByteWriter].
+// WriteByte 将 b 添加到 h 正在哈希的字节序列中。
+// 它永远不会失败；error 返回值是为了实现 [io.ByteWriter]。
 func (h *Hash) WriteByte(b byte) error {
 	if h.n == len(h.buf) {
 		h.flush()
@@ -137,25 +129,25 @@ func (h *Hash) WriteByte(b byte) error {
 	return nil
 }
 
-// Write adds b to the sequence of bytes hashed by h.
-// It always writes all of b and never fails; the count and error result are for implementing [io.Writer].
+// Write 将 b 添加到 h 正在哈希的字节序列中。
+// 它总是写入所有的 b 且永远不会失败；count 和 error 返回值是为了实现 [io.Writer]。
 func (h *Hash) Write(b []byte) (int, error) {
 	size := len(b)
-	// Deal with bytes left over in h.buf.
-	// h.n <= bufSize is always true.
-	// Checking it is ~free and it lets the compiler eliminate a bounds check.
+	// 处理 h.buf 中剩余的字节。
+	// h.n <= bufSize 始终为真。
+	// 检查它几乎是免费的，并且可以让编译器消除边界检查。
 	if h.n > 0 && h.n <= bufSize {
 		k := copy(h.buf[h.n:], b)
 		h.n += k
 		if h.n < bufSize {
-			// Copied the entirety of b to h.buf.
+			// 将 b 的全部内容复制到 h.buf。
 			return size, nil
 		}
 		b = b[k:]
 		h.flush()
-		// No need to set h.n = 0 here; it happens just before exit.
+		// 这里不需要设置 h.n = 0；它在退出前就会发生。
 	}
-	// Process as many full buffers as possible, without copying, and calling initSeed only once.
+	// 尽可能多地处理完整缓冲区，无需复制，且只调用一次 initSeed。
 	if len(b) > bufSize {
 		h.initSeed()
 		for len(b) > bufSize {
@@ -163,16 +155,16 @@ func (h *Hash) Write(b []byte) (int, error) {
 			b = b[bufSize:]
 		}
 	}
-	// Copy the tail.
+	// 复制尾部。
 	copy(h.buf[:], b)
 	h.n = len(b)
 	return size, nil
 }
 
-// WriteString adds the bytes of s to the sequence of bytes hashed by h.
-// It always writes all of s and never fails; the count and error result are for implementing [io.StringWriter].
+// WriteString 将 s 的字节添加到 h 正在哈希的字节序列中。
+// 它总是写入所有的 s 且永远不会失败；count 和 error 返回值是为了实现 [io.StringWriter]。
 func (h *Hash) WriteString(s string) (int, error) {
-	// WriteString mirrors Write. See Write for comments.
+	// WriteString 镜像 Write。有关注释，请参阅 Write。
 	size := len(s)
 	if h.n > 0 && h.n <= bufSize {
 		k := copy(h.buf[h.n:], s)
@@ -195,17 +187,17 @@ func (h *Hash) WriteString(s string) (int, error) {
 	return size, nil
 }
 
-// Seed returns h's seed value.
+// Seed 返回 h 的种子值。
 func (h *Hash) Seed() Seed {
 	h.initSeed()
 	return h.seed
 }
 
-// SetSeed sets h to use seed, which must have been returned by [MakeSeed]
-// or by another [Hash.Seed] method.
-// Two [Hash] objects with the same seed behave identically.
-// Two [Hash] objects with different seeds will very likely behave differently.
-// Any bytes added to h before this call will be discarded.
+// SetSeed 将 h 设置为使用 seed，该 seed 必须由 [MakeSeed] 或
+// 另一个 [Hash.Seed] 方法返回。
+// 具有相同 seed 的两个 [Hash] 对象行为相同。
+// 具有不同 seed 的两个 [Hash] 对象很可能行为不同。
+// 在此调用之前添加到 h 的任何字节都将被丢弃。
 func (h *Hash) SetSeed(seed Seed) {
 	if seed.s == 0 {
 		panic("maphash: use of uninitialized Seed")
@@ -215,15 +207,15 @@ func (h *Hash) SetSeed(seed Seed) {
 	h.n = 0
 }
 
-// Reset discards all bytes added to h.
-// (The seed remains the same.)
+// Reset 丢弃添加到 h 的所有字节。
+//（种子保持不变。）
 func (h *Hash) Reset() {
 	h.initSeed()
 	h.state = h.seed
 	h.n = 0
 }
 
-// precondition: buffer is full.
+// 前置条件：缓冲区已满。
 func (h *Hash) flush() {
 	if h.n != len(h.buf) {
 		panic("maphash: flush of partially full buffer")
@@ -233,25 +225,24 @@ func (h *Hash) flush() {
 	h.n = 0
 }
 
-// Sum64 returns h's current 64-bit value, which depends on
-// h's seed and the sequence of bytes added to h since the
-// last call to [Hash.Reset] or [Hash.SetSeed].
+// Sum64 返回 h 的当前 64 位值，该值取决于
+// h 的种子和自上次调用 [Hash.Reset] 或 [Hash.SetSeed] 以来
+// 添加到 h 的字节序列。
 //
-// All bits of the Sum64 result are close to uniformly and
-// independently distributed, so it can be safely reduced
-// by using bit masking, shifting, or modular arithmetic.
+// Sum64 结果的所有位都接近均匀且独立分布，
+// 因此可以通过使用位掩码、移位或模运算安全地减少。
 func (h *Hash) Sum64() uint64 {
 	h.initSeed()
 	return rthash(h.buf[:h.n], h.state.s)
 }
 
-// MakeSeed returns a new random seed.
+// MakeSeed 返回一个新的随机种子。
 func MakeSeed() Seed {
 	var s uint64
 	for {
 		s = randUint64()
-		// We use seed 0 to indicate an uninitialized seed/hash,
-		// so keep trying until we get a non-zero seed.
+		// 我们使用种子 0 表示未初始化的 seed/hash，
+		// 所以继续尝试直到获得非零种子。
 		if s != 0 {
 			break
 		}
@@ -259,9 +250,9 @@ func MakeSeed() Seed {
 	return Seed{s: s}
 }
 
-// Sum appends the hash's current 64-bit value to b.
-// It exists for implementing [hash.Hash].
-// For direct calls, it is more efficient to use [Hash.Sum64].
+// Sum 将哈希的当前 64 位值追加到 b。
+// 它存在是为了实现 [hash.Hash]。
+// 对于直接调用，使用 [Hash.Sum64] 更高效。
 func (h *Hash) Sum(b []byte) []byte {
 	x := h.Sum64()
 	return append(b,
@@ -275,34 +266,33 @@ func (h *Hash) Sum(b []byte) []byte {
 		byte(x>>56))
 }
 
-// Size returns h's hash value size, 8 bytes.
+// Size 返回 h 的哈希值大小，8 字节。
 func (h *Hash) Size() int { return 8 }
 
-// BlockSize returns h's block size.
+// BlockSize 返回 h 的块大小。
 func (h *Hash) BlockSize() int { return len(h.buf) }
 
-// Clone implements [hash.Cloner].
+// Clone 实现 [hash.Cloner]。
 func (h *Hash) Clone() (hash.Cloner, error) {
 	h.initSeed()
 	r := *h
 	return &r, nil
 }
 
-// Comparable returns the hash of comparable value v with the given seed
-// such that Comparable(s, v1) == Comparable(s, v2) if v1 == v2.
-// If v != v, then the resulting hash is randomly distributed.
+// Comparable 返回使用给定 seed 的可比较值 v 的哈希，
+// 使得如果 v1 == v2，则 Comparable(s, v1) == Comparable(s, v2)。
+// 如果 v != v，则结果哈希是随机分布的。
 func Comparable[T comparable](seed Seed, v T) uint64 {
 	abi.EscapeNonString(v)
 	return comparableHash(v, seed)
 }
 
-// WriteComparable adds x to the data hashed by h.
+// WriteComparable 将 x 添加到 h 正在哈希的数据中。
 func WriteComparable[T comparable](h *Hash, x T) {
 	abi.EscapeNonString(x)
-	// writeComparable (not in purego mode) directly operates on h.state
-	// without using h.buf. Mix in the buffer length so it won't
-	// commute with a buffered write, which either changes h.n or changes
-	// h.state.
+	// writeComparable（非 purego 模式）直接操作 h.state
+	// 而不使用 h.buf。混入缓冲区长度，使其不会与
+	// 缓冲写入交换，后者会改变 h.n 或改变 h.state。
 	if h.n != 0 {
 		writeComparable(h, h.n)
 	}

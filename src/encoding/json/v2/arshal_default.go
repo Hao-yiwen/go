@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -29,9 +29,9 @@ import (
 	"encoding/json/jsontext"
 )
 
-// optimizeCommon specifies whether to use optimizations targeted for certain
+// optimizeCommon 指定whether to use optimizations targeted for certain
 // common patterns, rather than using the slower, but more general logic.
-// All tests should pass regardless of whether this is true or not.
+// All tests should pass regardless of whether this 为真 or not.
 const optimizeCommon = true
 
 var (
@@ -57,7 +57,7 @@ type typedPointer struct {
 	len int // remember slice length to avoid false positives
 }
 
-// visitPointer visits pointer p of type t, reporting an error if seen before.
+// visitPointer visits pointer p 类型为 t, reporting an error if seen before.
 // If successfully visited, then the caller must eventually call leave.
 func visitPointer(m *seenPointers, v reflect.Value) error {
 	p := typedPointer{v.Type(), v.UnsafePointer(), sliceLen(v)}
@@ -217,7 +217,7 @@ func makeStringArshaler(t reflect.Type) *arshaler {
 				}
 				return nil
 			}
-			// Otherwise, the string contains invalid UTF-8,
+			// Otherwise, the string 包含 invalid UTF-8,
 			// so let the logic below construct the proper error.
 		}
 
@@ -386,11 +386,11 @@ func makeBytesArshaler(t reflect.Type, fncs *arshaler) *arshaler {
 			return nil
 		case '"':
 			// NOTE: The v2 default is to strictly comply with RFC 4648.
-			// Section 3.2 specifies that padding is required.
-			// Section 3.3 specifies that non-alphabet characters
-			// (e.g., '\r' or '\n') must be rejected.
-			// Section 3.5 specifies that unnecessary non-zero bits in
-			// the last quantum may be rejected. Since this is optional,
+			// Section 3.2 指定 padding is required.
+			// Section 3.3 指定 non-alphabet characters
+			// (e.g., '\r' or '\n') 必须是 rejected.
+			// Section 3.5 指定 unnecessary non-zero bits in
+			// the last quantum 可能是 rejected. Since this is optional,
 			// we do not reject such inputs.
 			val = jsonwire.UnquoteMayCopy(val, flags.IsVerbatim())
 			b, err := appendDecode(va.Bytes()[:0], val)
@@ -399,7 +399,7 @@ func makeBytesArshaler(t reflect.Type, fncs *arshaler) *arshaler {
 			}
 			if len(val) != encodedLen(len(b)) && !uo.Flags.Get(jsonflags.ParseBytesWithLooseRFC4648) {
 				// TODO(https://go.dev/issue/53845): RFC 4648, section 3.3,
-				// specifies that non-alphabet characters must be rejected.
+				// 指定 non-alphabet characters 必须是 rejected.
 				// Unfortunately, the "base32" and "base64" packages allow
 				// '\r' and '\n' characters by default.
 				i := bytes.IndexAny(val, "\r\n")
@@ -731,7 +731,7 @@ func makeFloatArshaler(t reflect.Type) *arshaler {
 }
 
 func makeMapArshaler(t reflect.Type) *arshaler {
-	// NOTE: The logic below disables namespaces for tracking duplicate names
+	// NOTE: The logic below 禁用 namespaces for tracking duplicate names
 	// when handling map keys with a unique representation.
 
 	// NOTE: Values retrieved from a map are not addressable,
@@ -774,7 +774,7 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 			}
 		}
 
-		// Handle empty maps.
+		// Handle empty 映射.
 		n := va.Len()
 		if n == 0 {
 			if emitNull && va.IsNil() {
@@ -808,7 +808,7 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 			k := newAddressableValue(t.Key())
 			v := newAddressableValue(t.Elem())
 
-			// A Go map guarantees that each entry has a unique key.
+			// 一个Go map guarantees that each entry has a unique key.
 			// As such, disable the expensive duplicate name check if we know
 			// that every Go key will serialize as a unique JSON string.
 			if !nonDefaultKey && mapKeyWithUniqueRepresentation(k.Kind(), mo.Flags.Get(jsonflags.AllowInvalidUTF8)) {
@@ -867,9 +867,9 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 				vals := reflect.MakeSlice(reflect.SliceOf(t.Elem()), n, n)
 				for i, iter := 0, va.Value.MapRange(); i < n && iter.Next(); i++ {
 					// Marshal the member name.
-					k := addressableValue{keys.Index(i), true} // indexed slice element is always addressable
+					k := addressableValue{keys.Index(i), true} // indexed slice element 是一个lways addressable
 					k.SetIterKey(iter)
-					v := addressableValue{vals.Index(i), true} // indexed slice element is always addressable
+					v := addressableValue{vals.Index(i), true} // indexed slice element 是一个lways addressable
 					v.SetIterValue(iter)
 					err := marshalKey(enc, k, mo)
 					if err != nil {
@@ -888,7 +888,7 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 					members[i] = member{name, k, v}
 				}
 				// TODO: If AllowDuplicateNames is enabled, then sort according
-				// to reflect.Value as well if the names are equal.
+				// to reflect.Value as well 如果 names are equal.
 				// See internal/fmtsort.
 				slices.SortFunc(members, func(x, y member) int {
 					return strings.Compare(x.name, y.name)
@@ -948,8 +948,8 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 			// Manually check for duplicate entries by virtue of whether the
 			// unmarshaled key already exists in the destination Go map.
 			// Consequently, syntactically different names (e.g., "0" and "-0")
-			// will be rejected as duplicates since they semantically refer
-			// to the same Go value. This is an unusual interaction
+			// 将是 rejected as duplicates since they semantically refer
+			// to the same Go value. This 是一个n unusual interaction
 			// between syntax and semantics, but is more correct.
 			if !nonDefaultKey && mapKeyWithUniqueRepresentation(k.Kind(), uo.Flags.Get(jsonflags.AllowInvalidUTF8)) {
 				xd.Tokens.Last.DisableNamespace()
@@ -1030,10 +1030,10 @@ func makeMapArshaler(t reflect.Type) *arshaler {
 	return &fncs
 }
 
-// mapKeyWithUniqueRepresentation reports whether all possible values of k
+// mapKeyWithUniqueRepresentation 报告whether all possible values of k
 // marshal to a different JSON value, and whether all possible JSON values
 // that can unmarshal into k unmarshal to different Go values.
-// In other words, the representation must be a bijective.
+// In other words, the representation 必须是 a bijective.
 func mapKeyWithUniqueRepresentation(k reflect.Kind, allowInvalidUTF8 bool) bool {
 	switch k {
 	case reflect.Bool,
@@ -1054,7 +1054,7 @@ func mapKeyWithUniqueRepresentation(k reflect.Kind, allowInvalidUTF8 bool) bool 
 var errNilField = errors.New("cannot set embedded pointer to unexported struct type")
 
 func makeStructArshaler(t reflect.Type) *arshaler {
-	// NOTE: The logic below disables namespaces for tracking duplicate names
+	// NOTE: The logic below 禁用 namespaces for tracking duplicate names
 	// and does the tracking locally with an efficient bit-set based on which
 	// Go struct fields were seen.
 
@@ -1084,7 +1084,7 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 		xe.Tokens.Last.DisableNamespace() // we manually ensure unique names below
 		for i := range fields.flattened {
 			f := &fields.flattened[i]
-			v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value is addressable
+			v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value 是一个ddressable
 			if len(f.index) > 0 {
 				v = v.fieldByIndex(f.index, false)
 				if !v.IsValid() {
@@ -1092,7 +1092,7 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 				}
 			}
 
-			// OmitZero skips the field if the Go value is zero,
+			// OmitZero skips the field 如果 Go value is zero,
 			// which we can determine up front without calling the marshaler.
 			if (f.omitzero || mo.Flags.Get(jsonflags.OmitZeroStructFields)) &&
 				((f.isZero == nil && v.IsZero()) || (f.isZero != nil && f.isZero(v))) {
@@ -1112,9 +1112,9 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 				nonDefault = nonDefault || ok
 			}
 
-			// OmitEmpty skips the field if the marshaled JSON value is empty,
+			// OmitEmpty skips the field 如果 marshaled JSON value is empty,
 			// which we can know up front if there are no custom marshalers,
-			// otherwise we must marshal the value and unwrite it if empty.
+			// 否则 we must marshal the value and unwrite it if empty.
 			if f.omitempty && !mo.Flags.Get(jsonflags.OmitEmptyWithLegacySemantics) &&
 				!nonDefault && f.isEmpty != nil && f.isEmpty(v) {
 				continue // fast path for omitempty
@@ -1125,7 +1125,7 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 			// The logic below is semantically equivalent to:
 			//	enc.WriteToken(String(f.name))
 			// but specialized and simplified because:
-			//	1. The Encoder must be expecting an object name.
+			//	1. The Encoder 必须是 expecting an object name.
 			//	2. The object namespace is guaranteed to be disabled.
 			//	3. The object name is guaranteed to be valid and pre-escaped.
 			//	4. There is no need to flush the buffer (for unwrite purposes).
@@ -1321,7 +1321,7 @@ func makeStructArshaler(t reflect.Type) *arshaler {
 					uo.FormatDepth = xd.Tokens.Depth()
 					uo.Format = f.format
 				}
-				v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value is addressable
+				v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value 是一个ddressable
 				if len(f.index) > 0 {
 					v = v.fieldByIndex(f.index, true)
 					if !v.IsValid() {
@@ -1361,7 +1361,7 @@ func (va addressableValue) fieldByIndex(index []int, mayAlloc bool) addressableV
 		if !va.IsValid() {
 			return va
 		}
-		va = addressableValue{va.Field(i), va.forcedAddr} // addressable if struct value is addressable
+		va = addressableValue{va.Field(i), va.forcedAddr} // addressable if struct value 是一个ddressable
 	}
 	return va
 }
@@ -1374,12 +1374,12 @@ func (va addressableValue) indirect(mayAlloc bool) addressableValue {
 			}
 			va.Set(reflect.New(va.Type().Elem()))
 		}
-		va = addressableValue{va.Elem(), false} // dereferenced pointer is always addressable
+		va = addressableValue{va.Elem(), false} // dereferenced pointer 是一个lways addressable
 	}
 	return va
 }
 
-// isLegacyEmpty reports whether a value is empty according to the v1 definition.
+// isLegacyEmpty 报告whether a value is empty according to the v1 definition.
 func isLegacyEmpty(v addressableValue) bool {
 	// Equivalent to encoding/json.isEmptyValue@v1.21.0.
 	switch v.Kind() {
@@ -1399,8 +1399,8 @@ func isLegacyEmpty(v addressableValue) bool {
 	return false
 }
 
-// canLegacyStringify reports whether t can be stringified according to v1,
-// where t is a bool, string, or number (or unnamed pointer to such).
+// canLegacyStringify 报告whether t can be stringified according to v1,
+// where t 是一个 bool, string, or number (or unnamed pointer to such).
 // In v1, the `string` option does not apply recursively to nested types within
 // a composite Go type (e.g., an array, slice, struct, map, or interface).
 func canLegacyStringify(t reflect.Type) bool {
@@ -1477,7 +1477,7 @@ func makeSliceArshaler(t reflect.Type) *arshaler {
 			marshal, _ = mo.Marshalers.(*Marshalers).lookup(marshal, t.Elem())
 		}
 		for i := range n {
-			v := addressableValue{va.Index(i), false} // indexed slice element is always addressable
+			v := addressableValue{va.Index(i), false} // indexed slice element 是一个lways addressable
 			if err := marshal(enc, v, mo); err != nil {
 				return err
 			}
@@ -1528,7 +1528,7 @@ func makeSliceArshaler(t reflect.Type) *arshaler {
 					va.SetLen(cap)
 					mustZero = false // reflect.Value.Grow ensures new capacity is zero-initialized
 				}
-				v := addressableValue{va.Index(i), false} // indexed slice element is always addressable
+				v := addressableValue{va.Index(i), false} // indexed slice element 是一个lways addressable
 				i++
 				if mustZero && !uo.Flags.Get(jsonflags.MergeWithLegacySemantics) {
 					v.SetZero()
@@ -1583,7 +1583,7 @@ func makeArrayArshaler(t reflect.Type) *arshaler {
 			marshal, _ = mo.Marshalers.(*Marshalers).lookup(marshal, t.Elem())
 		}
 		for i := range n {
-			v := addressableValue{va.Index(i), va.forcedAddr} // indexed array element is addressable if array is addressable
+			v := addressableValue{va.Index(i), va.forcedAddr} // indexed array element 是一个ddressable if array 是一个ddressable
 			if err := marshal(enc, v, mo); err != nil {
 				return err
 			}
@@ -1625,7 +1625,7 @@ func makeArrayArshaler(t reflect.Type) *arshaler {
 					err = errArrayOverflow
 					continue
 				}
-				v := addressableValue{va.Index(i), va.forcedAddr} // indexed array element is addressable if array is addressable
+				v := addressableValue{va.Index(i), va.forcedAddr} // indexed array element 是一个ddressable if array 是一个ddressable
 				if !uo.Flags.Get(jsonflags.MergeWithLegacySemantics) {
 					v.SetZero()
 				}
@@ -1682,7 +1682,7 @@ func makePointerArshaler(t reflect.Type) *arshaler {
 		if mo.Marshalers != nil {
 			marshal, _ = mo.Marshalers.(*Marshalers).lookup(marshal, t.Elem())
 		}
-		v := addressableValue{va.Elem(), false} // dereferenced pointer is always addressable
+		v := addressableValue{va.Elem(), false} // dereferenced pointer 是一个lways addressable
 		return marshal(enc, v, mo)
 	}
 	fncs.unmarshal = func(dec *jsontext.Decoder, va addressableValue, uo *jsonopts.Struct) error {
@@ -1702,13 +1702,13 @@ func makePointerArshaler(t reflect.Type) *arshaler {
 		if va.IsNil() {
 			va.Set(reflect.New(t.Elem()))
 		}
-		v := addressableValue{va.Elem(), false} // dereferenced pointer is always addressable
+		v := addressableValue{va.Elem(), false} // dereferenced pointer 是一个lways addressable
 		if err := unmarshal(dec, v, uo); err != nil {
 			return err
 		}
 		if uo.Flags.Get(jsonflags.StringifyWithLegacySemantics) &&
 			uo.Flags.Get(jsonflags.StringifyNumbers|jsonflags.StringifyBoolsAndStrings) {
-			// A JSON null quoted within a JSON string should take effect
+			// 一个JSON null quoted within a JSON string should take effect
 			// within the pointer value, rather than the indirect value.
 			//
 			// TODO: This does not correctly handle escaped nulls
@@ -1746,7 +1746,7 @@ func makeInterfaceArshaler(t reflect.Type) *arshaler {
 		} else if mo.Flags.Get(jsonflags.CallMethodsWithLegacySemantics) && whichMarshaler != nil {
 			// The marshaler for a pointer never calls the method on a nil receiver.
 			// Wrap the nil pointer within a struct type so that marshal
-			// instead appears on a value receiver and may be called.
+			// instead appears on a value receiver and 可能是 called.
 			if va.Elem().Kind() == reflect.Pointer && va.Elem().IsNil() {
 				v2 := newAddressableValue(whichMarshaler)
 				switch whichMarshaler {
@@ -1812,7 +1812,7 @@ func makeInterfaceArshaler(t reflect.Type) *arshaler {
 			// Optimize for the any type if there are no special options.
 			// We do not care about stringified numbers since JSON strings
 			// are always unmarshaled into an any value as Go strings.
-			// Duplicate name check must be enforced since unmarshalValueAny
+			// Duplicate name check 必须是 enforced since unmarshalValueAny
 			// does not implement merge semantics.
 			if optimizeCommon &&
 				t == anyType && !uo.Flags.Get(jsonflags.AllowDuplicateNames) && uo.Format == "" &&
@@ -1847,7 +1847,7 @@ func makeInterfaceArshaler(t reflect.Type) *arshaler {
 				v = newAddressableValue(sliceAnyType)
 			default:
 				// If k is invalid (e.g., due to an I/O or syntax error), then
-				// that will be cached by PeekKind and returned by ReadValue.
+				// that 将是 cached by PeekKind and returned by ReadValue.
 				// If k is '}' or ']', then ReadValue must error since
 				// those are invalid kinds at the start of a JSON value.
 				_, err := dec.ReadValue()
@@ -1855,7 +1855,7 @@ func makeInterfaceArshaler(t reflect.Type) *arshaler {
 			}
 		} else {
 			// Shallow copy the existing value to keep it addressable.
-			// Any mutations at the top-level of the value will be observable
+			// Any mutations at the top-level of the value 将是 observable
 			// since we always store this value back into the interface value.
 			v = newAddressableValue(va.Elem().Type())
 			v.Set(va.Elem())
@@ -1871,9 +1871,9 @@ func makeInterfaceArshaler(t reflect.Type) *arshaler {
 	return &fncs
 }
 
-// isAnyType reports wether t is equivalent to the any interface type.
+// isAnyType 报告wether t is equivalent to the any interface type.
 func isAnyType(t reflect.Type) bool {
-	// This is forward compatible if the Go language permits type sets within
+	// This is forward compatible 如果 Go language permits type sets within
 	// ordinary interfaces where an interface with zero methods does not
 	// necessarily mean it can hold every possible Go type.
 	// See https://go.dev/issue/45346.
@@ -1904,14 +1904,14 @@ type uintSet64 uint64
 func (s uintSet64) has(i uint) bool { return s&(1<<i) > 0 }
 func (s *uintSet64) set(i uint)     { *s |= 1 << i }
 
-// uintSet is a set of unsigned integers.
+// uintSet 是一个 set of unsigned integers.
 // It is optimized for most integers being close to zero.
 type uintSet struct {
 	lo uintSet64
 	hi []uintSet64
 }
 
-// has reports whether i is in the set.
+// has 报告whether i is in the set.
 func (s *uintSet) has(i uint) bool {
 	if i < 64 {
 		return s.lo.has(i)
@@ -1922,7 +1922,7 @@ func (s *uintSet) has(i uint) bool {
 	}
 }
 
-// insert inserts i into the set and reports whether it was the first insertion.
+// insert inserts i into the set and 报告是否 it was the first insertion.
 func (s *uintSet) insert(i uint) bool {
 	// TODO: Make this inlinable at least for the lower 64-bit case.
 	if i < 64 {

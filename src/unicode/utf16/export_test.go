@@ -5,6 +5,7 @@
 package utf16
 
 // Extra names for constants so we can validate them during testing.
+// 常数的额外名称，以便我们可以在测试期间验证它们。
 const (
 	Surr1           = surr1
 	Surr3           = surr3

@@ -1,10 +1,9 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package pem implements the PEM data encoding, which originated in Privacy
-// Enhanced Mail. The most common use of PEM encoding today is in TLS keys and
-// certificates. See RFC 1421.
+// pem 包实现了 PEM 数据编码，PEM 起源于隐私增强邮件（Privacy Enhanced Mail）。
+// 如今 PEM 编码最常见的用途是在 TLS 密钥和证书中。见 RFC 1421。
 package pem
 
 import (
@@ -16,27 +15,26 @@ import (
 	"strings"
 )
 
-// A Block represents a PEM encoded structure.
+// Block 表示一个 PEM 编码的结构。
 //
-// The encoded form is:
+// 编码形式为：
 //
 //	-----BEGIN Type-----
 //	Headers
 //	base64-encoded Bytes
 //	-----END Type-----
 //
-// where [Block.Headers] is a possibly empty sequence of Key: Value lines.
+// 其中 [Block.Headers] 是一个可能为空的 Key: Value 行序列。
 type Block struct {
-	Type    string            // The type, taken from the preamble (i.e. "RSA PRIVATE KEY").
-	Headers map[string]string // Optional headers.
-	Bytes   []byte            // The decoded bytes of the contents. Typically a DER encoded ASN.1 structure.
+	Type    string            // 类型，取自前导部分（例如 "RSA PRIVATE KEY"）。
+	Headers map[string]string // 可选的头部。
+	Bytes   []byte            // 内容的解码字节。通常是 DER 编码的 ASN.1 结构。
 }
 
-// getLine results the first \r\n or \n delineated line from the given byte
-// array. The line does not include trailing whitespace or the trailing new
-// line bytes. The remainder of the byte array (also not including the new line
-// bytes) is also returned and this will always be smaller than the original
-// argument.
+// getLine 从给定的字节数组中返回由 \r\n 或 \n 分隔的第一行。
+// 该行不包括尾部空白或尾部换行符字节。
+// 还返回字节数组的余下部分（也不包括换行符字节），
+// 该部分将始终小于原始参数。
 func getLine(data []byte) (line, rest []byte, consumed int) {
 	i := bytes.IndexByte(data, '\n')
 	var j int
@@ -52,15 +50,14 @@ func getLine(data []byte) (line, rest []byte, consumed int) {
 	return bytes.TrimRight(data[0:i], " \t"), data[j:], j
 }
 
-// removeSpacesAndTabs returns a copy of its input with all spaces and tabs
-// removed, if there were any. Otherwise, the input is returned unchanged.
+// removeSpacesAndTabs 返回其输入的副本，删除了所有空格和制表符（如果有）。
+// 否则返回未修改的输入。
 //
-// The base64 decoder already skips newline characters, so we don't need to
-// filter them out here.
+// base64 解码器已经跳过换行字符，所以我们不需要在这里过滤它们。
 func removeSpacesAndTabs(data []byte) []byte {
 	if !bytes.ContainsAny(data, " \t") {
-		// Fast path; most base64 data within PEM contains newlines, but
-		// no spaces nor tabs. Skip the extra alloc and work.
+		// 快速路径；PEM 中的大多数 base64 数据包含换行符，但没有空格或制表符。
+		// 跳过额外的分配和工作。
 		return data
 	}
 	result := make([]byte, len(data))
@@ -82,27 +79,24 @@ var pemEnd = []byte("\n-----END ")
 var pemEndOfLine = []byte("-----")
 var colon = []byte(":")
 
-// Decode will find the next PEM formatted block (certificate, private key
-// etc) in the input. It returns that block and the remainder of the input. If
-// no PEM data is found, p is nil and the whole of the input is returned in
-// rest. Blocks must start at the beginning of a line and end at the end of a line.
+// Decode 将在输入中查找下一个 PEM 格式的块（证书、私钥等）。
+// 它返回该块和输入的余下部分。如果未找到 PEM 数据，p 为 nil，
+// 整个输入在 rest 中返回。块必须从一行的开始处开始，到一行的结尾处结束。
 func Decode(data []byte) (p *Block, rest []byte) {
-	// pemStart begins with a newline. However, at the very beginning of
-	// the byte array, we'll accept the start string without it.
+	// pemStart 以换行符开头。但在字节数组的最开始，
+	// 我们将接受不带换行符的启动字符串。
 	rest = data
 
 	endTrailerIndex := 0
 	for {
-		// If we've already tried parsing a block, skip past the END we already
-		// saw.
+		// 如果我们已经尝试解析一个块，跳过我们已经看到的 END。
 		if endTrailerIndex < 0 || endTrailerIndex > len(rest) {
 			return nil, data
 		}
 		rest = rest[endTrailerIndex:]
 
-		// Find the first END line, and then find the last BEGIN line before
-		// the end line. This lets us skip any repeated BEGIN lines that don't
-		// have a matching END.
+		// 查找第一个 END 行，然后查找末尾行前的最后一个 BEGIN 行。
+		// 这让我们可以跳过任何没有匹配的 END 的重复的 BEGIN 行。
 		endIndex := bytes.Index(rest, pemEnd)
 		if endIndex < 0 {
 			return nil, data
@@ -144,7 +138,7 @@ func Decode(data []byte) (p *Block, rest []byte) {
 				break
 			}
 
-			// TODO(agl): need to cope with values that spread across lines.
+			// TODO(agl): 需要处理跨越多行的值。
 			key = bytes.TrimSpace(key)
 			val = bytes.TrimSpace(val)
 			p.Headers[string(key)] = string(val)
@@ -153,13 +147,13 @@ func Decode(data []byte) (p *Block, rest []byte) {
 			endTrailerIndex -= consumed
 		}
 
-		// If there were headers, there must be a newline between the headers
-		// and the END line, so endIndex should be >= 0.
+		// If there were headers, there 必须是 a newline between the headers
+		// and the END line, so endIndex 应该是 >= 0.
 		if len(p.Headers) > 0 && endIndex < 0 {
 			continue
 		}
 
-		// After the "-----" of the ending line, there should be the same type
+		// After the "-----" of the ending line, there 应该是 the same type
 		// and then a final five dashes.
 		endTrailer := rest[endTrailerIndex:]
 		endTrailerLen := len(typeLine) + len(pemEndOfLine)
@@ -174,7 +168,7 @@ func Decode(data []byte) (p *Block, rest []byte) {
 			continue
 		}
 
-		// The line must end with only whitespace.
+		// 该行必须只以空白符结尾。
 		if s, _, _ := getLine(restOfEndLine); len(s) != 0 {
 			continue
 		}
@@ -191,7 +185,7 @@ func Decode(data []byte) (p *Block, rest []byte) {
 		}
 
 		// the -1 is because we might have only matched pemEnd without the
-		// leading newline if the PEM block was empty.
+		// leading newline 如果 PEM block was empty.
 		_, rest, _ = getLine(rest[endIndex+len(pemEnd)-1:])
 		return p, rest
 	}
@@ -251,17 +245,17 @@ func writeHeader(out io.Writer, k, v string) error {
 	return err
 }
 
-// Encode writes the PEM encoding of b to out.
+// Encode 将 b 的 PEM 编码写入 out。
 func Encode(out io.Writer, b *Block) error {
-	// Check for invalid block before writing any output.
+	// 在写入任何输出前检查无效块。
 	for k := range b.Headers {
-		if strings.Contains(k, ":") {
-			return errors.New("pem: cannot encode a header key that contains a colon")
+		if strings.包含(k, ":") {
+			return errors.New("pem: cannot encode a header key that 包含 a colon")
 		}
 	}
 
-	// All errors below are relayed from underlying io.Writer,
-	// so it is now safe to write data.
+	// 以下所有错误都来自于基础 io.Writer，
+	// 所以现在可以安全地写入数据。
 
 	if _, err := out.Write(pemStart[1:]); err != nil {
 		return err
@@ -281,14 +275,14 @@ func Encode(out io.Writer, b *Block) error {
 			}
 			h = append(h, k)
 		}
-		// The Proc-Type header must be written first.
-		// See RFC 1421, section 4.6.1.1
+		// Proc-Type 头部必须首先写入。
+		// 参见 RFC 1421，section 4.6.1.1
 		if hasProcType {
 			if err := writeHeader(out, procType, b.Headers[procType]); err != nil {
 				return err
 			}
 		}
-		// For consistency of output, write other headers sorted by key.
+		// 为了输出的一致性，按键排序写入其他头部。
 		slices.Sort(h)
 		for _, k := range h {
 			if err := writeHeader(out, k, b.Headers[k]); err != nil {
@@ -317,11 +311,11 @@ func Encode(out io.Writer, b *Block) error {
 	return err
 }
 
-// EncodeToMemory returns the PEM encoding of b.
+// EncodeToMemory 返回 b 的 PEM 编码。
 //
-// If b has invalid headers and cannot be encoded,
-// EncodeToMemory returns nil. If it is important to
-// report details about this error case, use [Encode] instead.
+// 如果 b 有无效的头部且无法编码，
+// EncodeToMemory 返回 nil。如果必须
+// 报告此错误情况的详细信息，请使用 [Encode] 替代。
 func EncodeToMemory(b *Block) []byte {
 	var buf bytes.Buffer
 	if err := Encode(&buf, b); err != nil {

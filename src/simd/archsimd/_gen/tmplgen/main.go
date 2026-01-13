@@ -1,11 +1,10 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
-// this generates type-instantiated boilerplate code for
-// slice operations and tests
+// 此程序为切片操作和测试生成类型实例化的样板代码
 
 import (
 	"bufio"
@@ -21,16 +20,16 @@ import (
 
 type resultTypeFunc func(t string, w, c int) (ot string, ow int, oc int)
 
-// shapes describes a combination of vector widths and various element types
+// shapes 描述向量宽度和各种元素类型的组合
 type shapes struct {
-	vecs   []int // Vector bit width for this shape.
-	ints   []int // Int element bit width(s) for this shape
-	uints  []int // Unsigned int element bit width(s) for this shape
-	floats []int // Float element bit width(s) for this shape
+	vecs   []int // 此形状的向量位宽。
+	ints   []int // 此形状的 int 元素位宽
+	uints  []int // 此形状的无符号 int 元素位宽
+	floats []int // 此形状的 float 元素位宽
 	output resultTypeFunc
 }
 
-// shapeAndTemplate is a template and the set of shapes on which it will be expanded
+// shapeAndTemplate 是模板和将在其上展开的形状集合
 type shapeAndTemplate struct {
 	s *shapes
 	t *template.Template
@@ -137,17 +136,17 @@ var avx2MaskedLoadShapes = &shapes{
 }
 
 var avx2SmallLoadPunShapes = &shapes{
-	// ints are done by hand, these are type-punned to int.
+	// ints 是手动完成的，这些被类型双关为 int。
 	vecs:  []int{128, 256},
 	uints: []int{8, 16},
 }
 
-var unaryFlaky = &shapes{ // for tests that support flaky equality
+var unaryFlaky = &shapes{ // 用于支持模糊相等的测试
 	vecs:   []int{128, 256, 512},
 	floats: []int{32, 64},
 }
 
-var ternaryFlaky = &shapes{ // for tests that support flaky equality
+var ternaryFlaky = &shapes{ // 用于支持模糊相等的测试
 	vecs:   []int{128, 256, 512},
 	floats: []int{32},
 }
@@ -163,21 +162,21 @@ var avx2UnsignedComparisons = &shapes{
 }
 
 type templateData struct {
-	VType  string // the type of the vector, e.g. Float32x4
-	AOrAn  string // for documentation, the article "a" or "an"
-	EWidth int    // the bit width of the element type, e.g. 32
-	Vwidth int    // the width of the vector type, e.g. 128
-	Count  int    // the number of elements, e.g. 4
-	WxC    string // the width-by-type string, e.g., "32x4"
-	BxC    string // as if bytes, in the proper count, e.g., "8x16" (W==8)
-	Base   string // the title-case Base Type of the vector, e.g., "Float"
-	Etype  string // the element type, e.g. "float32"
-	OxFF   string // a mask for the lowest 'count' bits
+	VType  string // 向量的类型，例如 Float32x4
+	AOrAn  string // 用于文档，冠词 "a" 或 "an"
+	EWidth int    // 元素类型的位宽，例如 32
+	Vwidth int    // 向量类型的宽度，例如 128
+	Count  int    // 元素的数量，例如 4
+	WxC    string // 宽度乘类型字符串，例如 "32x4"
+	BxC    string // 好像是字节，以适当的数量，例如 "8x16"（W==8）
+	Base   string // 向量的首字母大写基本类型，例如 "Float"
+	Etype  string // 元素类型，例如 "float32"
+	OxFF   string // 最低 'count' 位的掩码
 
-	OVType string // type of output vector
-	OEtype string // output element type
-	OEType string // output element type, title-case
-	OCount int    // output element count
+	OVType string // 输出向量的类型
+	OEtype string // 输出元素类型
+	OEType string // 输出元素类型，首字母大写
+	OCount int    // 输出元素数量
 }
 
 func (t templateData) As128BitVec() string {
@@ -196,7 +195,7 @@ func oneTemplate(t *template.Template, baseType string, width, count int, out io
 		if ow*oc > 512 || ow*oc < 128 || ow < 8 || ow > 64 {
 			return
 		}
-		// TODO someday we will support conversions to 16-bit floats
+		// TODO 将来我们会支持转换到 16 位浮点数
 		if ot == "float" && ow < 32 {
 			return
 		}
@@ -234,8 +233,7 @@ func oneTemplate(t *template.Template, baseType string, width, count int, out io
 	})
 }
 
-// forTemplates expands the template sat.t for each shape
-// in sat.s, writing to out.
+// forTemplates 为 sat.s 中的每个形状展开模板 sat.t，写入 out。
 func (sat shapeAndTemplate) forTemplates(out io.Writer) {
 	t, s := sat.t, sat.s
 	vecs := s.vecs

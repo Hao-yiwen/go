@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package abi
 
@@ -9,38 +9,34 @@ import (
 	"unsafe"
 )
 
-// RegArgs is a struct that has space for each argument
-// and return value register on the current architecture.
+// RegArgs 是一个结构体，为当前架构上的每个参数
+// 和返回值寄存器提供空间。
 //
-// Assembly code knows the layout of the first two fields
-// of RegArgs.
+// 汇编代码知道 RegArgs 前两个字段的布局。
 //
-// RegArgs also contains additional space to hold pointers
-// when it may not be safe to keep them only in the integer
-// register space otherwise.
+// RegArgs 还包含额外的空间用于保存指针，
+// 因为在某些情况下仅将指针保存在整数寄存器空间中
+// 可能不安全。
 type RegArgs struct {
-	// Values in these slots should be precisely the bit-by-bit
-	// representation of how they would appear in a register.
+	// 这些槽位中的值应该精确地表示它们在寄存器中的
+	// 逐位表示形式。
 	//
-	// This means that on big endian arches, integer values should
-	// be in the top bits of the slot. Floats are usually just
-	// directly represented, but some architectures treat narrow
-	// width floating point values specially (e.g. they're promoted
-	// first, or they need to be NaN-boxed).
-	Ints   [IntArgRegs]uintptr  // untyped integer registers
-	Floats [FloatArgRegs]uint64 // untyped float registers
+	// 这意味着在大端架构上，整数值应该在槽位的高位。
+	// 浮点数通常直接表示，但某些架构对窄宽度浮点值
+	// 有特殊处理（例如，它们首先被提升，或者需要进行 NaN 装箱）。
+	Ints   [IntArgRegs]uintptr  // 无类型整数寄存器
+	Floats [FloatArgRegs]uint64 // 无类型浮点寄存器
 
-	// Fields above this point are known to assembly.
+	// 此点以上的字段对汇编代码是已知的。
 
-	// Ptrs is a space that duplicates Ints but with pointer type,
-	// used to make pointers passed or returned  in registers
-	// visible to the GC by making the type unsafe.Pointer.
+	// Ptrs 是一个与 Ints 重复但具有指针类型的空间，
+	// 用于通过将类型设为 unsafe.Pointer 使在寄存器中
+	// 传递或返回的指针对 GC 可见。
 	Ptrs [IntArgRegs]unsafe.Pointer
 
-	// ReturnIsPtr is a bitmap that indicates which registers
-	// contain or will contain pointers on the return path from
-	// a reflectcall. The i'th bit indicates whether the i'th
-	// register contains or will contain a valid Go pointer.
+	// ReturnIsPtr 是一个位图，指示哪些寄存器在 reflectcall
+	// 的返回路径上包含或将包含指针。第 i 位指示第 i 个
+	// 寄存器是否包含或将包含有效的 Go 指针。
 	ReturnIsPtr IntArgRegBitmap
 }
 
@@ -62,15 +58,14 @@ func (r *RegArgs) Dump() {
 	println()
 }
 
-// IntRegArgAddr returns a pointer inside of r.Ints[reg] that is appropriately
-// offset for an argument of size argSize.
+// IntRegArgAddr 返回 r.Ints[reg] 内部的一个指针，该指针针对
+// 大小为 argSize 的参数进行了适当的偏移。
 //
-// argSize must be non-zero, fit in a register, and a power-of-two.
+// argSize 必须非零、能够放入寄存器中，且为 2 的幂次方。
 //
-// This method is a helper for dealing with the endianness of different CPU
-// architectures, since sub-word-sized arguments in big endian architectures
-// need to be "aligned" to the upper edge of the register to be interpreted
-// by the CPU correctly.
+// 此方法是用于处理不同 CPU 架构字节序的辅助函数，
+// 因为在大端架构中，小于字长的参数需要"对齐"到寄存器的
+// 高位边缘才能被 CPU 正确解释。
 func (r *RegArgs) IntRegArgAddr(reg int, argSize uintptr) unsafe.Pointer {
 	if argSize > goarch.PtrSize || argSize == 0 || argSize&(argSize-1) != 0 {
 		panic("invalid argSize")
@@ -82,23 +77,23 @@ func (r *RegArgs) IntRegArgAddr(reg int, argSize uintptr) unsafe.Pointer {
 	return unsafe.Pointer(uintptr(unsafe.Pointer(&r.Ints[reg])) + offset)
 }
 
-// IntArgRegBitmap is a bitmap large enough to hold one bit per
-// integer argument/return register.
+// IntArgRegBitmap 是一个足够大的位图，可以为每个
+// 整数参数/返回值寄存器保存一位。
 type IntArgRegBitmap [(IntArgRegs + 7) / 8]uint8
 
-// Set sets the i'th bit of the bitmap to 1.
+// Set 将位图的第 i 位设置为 1。
 func (b *IntArgRegBitmap) Set(i int) {
 	b[i/8] |= uint8(1) << (i % 8)
 }
 
-// Get returns whether the i'th bit of the bitmap is set.
+// Get 返回位图的第 i 位是否被设置。
 //
-// nosplit because it's called in extremely sensitive contexts, like
-// on the reflectcall return path.
+// nosplit 是因为它在极其敏感的上下文中被调用，
+// 例如在 reflectcall 的返回路径上。
 //
 //go:nosplit
 func (b *IntArgRegBitmap) Get(i int) bool {
-	// Compute p=&b[i/8], but without a bounds check. We don't have the stack for it.
+	// 计算 p=&b[i/8]，但不进行边界检查。我们没有足够的栈空间来做这个。
 	p := (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(b)) + uintptr(i/8)))
 	return *p&(uint8(1)<<(i%8)) != 0
 }

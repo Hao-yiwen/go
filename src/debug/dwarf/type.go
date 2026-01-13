@@ -1,41 +1,38 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// DWARF type information structures.
-// The format is heavily biased toward C, but for simplicity
-// the String methods use a pseudo-Go syntax.
+// DWARF 类型信息结构。
+// 格式严重偏向 C，但为简单起见，String 方法使用伪 Go 语法。
 
 package dwarf
 
 import "strconv"
 
-// A Type conventionally represents a pointer to any of the
-// specific Type structures ([CharType], [StructType], etc.).
+// Type 按惯例表示指向任何特定 Type 结构（[CharType]、[StructType] 等）的指针。
 type Type interface {
 	Common() *CommonType
 	String() string
 	Size() int64
 }
 
-// A CommonType holds fields common to multiple types.
-// If a field is not known or not applicable for a given type,
-// the zero value is used.
+// CommonType 保存多种类型共有的字段。
+// 如果某个字段未知或不适用于给定类型，则使用零值。
 type CommonType struct {
-	ByteSize int64  // size of value of this type, in bytes
-	Name     string // name that can be used to refer to type
+	ByteSize int64  // 此类型值的大小，以字节为单位
+	Name     string // 可用于引用类型的名称
 }
 
 func (c *CommonType) Common() *CommonType { return c }
 
 func (c *CommonType) Size() int64 { return c.ByteSize }
 
-// Basic types
+// 基本类型
 
-// A BasicType holds fields common to all basic types.
+// BasicType 保存所有基本类型共有的字段。
 //
-// See the documentation for [StructField] for more info on the interpretation of
-// the BitSize/BitOffset/DataBitOffset fields.
+// 有关 BitSize/BitOffset/DataBitOffset 字段解释的更多信息，
+// 请参阅 [StructField] 的文档。
 type BasicType struct {
 	CommonType
 	BitSize       int64
@@ -52,54 +49,54 @@ func (t *BasicType) String() string {
 	return "?"
 }
 
-// A CharType represents a signed character type.
+// CharType 表示有符号字符类型。
 type CharType struct {
 	BasicType
 }
 
-// A UcharType represents an unsigned character type.
+// UcharType 表示无符号字符类型。
 type UcharType struct {
 	BasicType
 }
 
-// An IntType represents a signed integer type.
+// IntType 表示有符号整数类型。
 type IntType struct {
 	BasicType
 }
 
-// A UintType represents an unsigned integer type.
+// UintType 表示无符号整数类型。
 type UintType struct {
 	BasicType
 }
 
-// A FloatType represents a floating point type.
+// FloatType 表示浮点类型。
 type FloatType struct {
 	BasicType
 }
 
-// A ComplexType represents a complex floating point type.
+// ComplexType 表示复数浮点类型。
 type ComplexType struct {
 	BasicType
 }
 
-// A BoolType represents a boolean type.
+// BoolType 表示布尔类型。
 type BoolType struct {
 	BasicType
 }
 
-// An AddrType represents a machine address type.
+// AddrType 表示机器地址类型。
 type AddrType struct {
 	BasicType
 }
 
-// An UnspecifiedType represents an implicit, unknown, ambiguous or nonexistent type.
+// UnspecifiedType 表示隐式、未知、模糊或不存在的类型。
 type UnspecifiedType struct {
 	BasicType
 }
 
-// qualifiers
+// 类型限定符
 
-// A QualType represents a type that has the C/C++ "const", "restrict", or "volatile" qualifier.
+// QualType 表示具有 C/C++ "const"、"restrict" 或 "volatile" 限定符的类型。
 type QualType struct {
 	CommonType
 	Qual string
@@ -110,12 +107,12 @@ func (t *QualType) String() string { return t.Qual + " " + t.Type.String() }
 
 func (t *QualType) Size() int64 { return t.Type.Size() }
 
-// An ArrayType represents a fixed size array type.
+// ArrayType 表示固定大小的数组类型。
 type ArrayType struct {
 	CommonType
 	Type          Type
-	StrideBitSize int64 // if > 0, number of bits to hold each element
-	Count         int64 // if == -1, an incomplete array, like char x[].
+	StrideBitSize int64 // 如果 > 0，表示容纳每个元素所需的位数
+	Count         int64 // 如果 == -1，表示不完整数组，如 char x[]。
 }
 
 func (t *ArrayType) String() string {
@@ -129,14 +126,14 @@ func (t *ArrayType) Size() int64 {
 	return t.Count * t.Type.Size()
 }
 
-// A VoidType represents the C void type.
+// VoidType 表示 C 语言的 void 类型。
 type VoidType struct {
 	CommonType
 }
 
 func (t *VoidType) String() string { return "void" }
 
-// A PtrType represents a pointer type.
+// PtrType 表示指针类型。
 type PtrType struct {
 	CommonType
 	Type Type
@@ -144,46 +141,38 @@ type PtrType struct {
 
 func (t *PtrType) String() string { return "*" + t.Type.String() }
 
-// A StructType represents a struct, union, or C++ class type.
+// StructType 表示结构体、联合体或 C++ 类类型。
 type StructType struct {
 	CommonType
 	StructName string
-	Kind       string // "struct", "union", or "class".
+	Kind       string // "struct"、"union" 或 "class"。
 	Field      []*StructField
-	Incomplete bool // if true, struct, union, class is declared but not defined
+	Incomplete bool // 如果为 true，表示结构体、联合体或类已声明但未定义
 }
 
-// A StructField represents a field in a struct, union, or C++ class type.
+// StructField 表示结构体、联合体或 C++ 类类型中的字段。
 //
-// # Bit Fields
+// # 位字段
 //
-// The BitSize, BitOffset, and DataBitOffset fields describe the bit
-// size and offset of data members declared as bit fields in C/C++
-// struct/union/class types.
+// BitSize、BitOffset 和 DataBitOffset 字段描述了在 C/C++ 结构体/联合体/类类型中
+// 声明为位字段的数据成员的位大小和偏移量。
 //
-// BitSize is the number of bits in the bit field.
+// BitSize 是位字段中的位数。
 //
-// DataBitOffset, if non-zero, is the number of bits from the start of
-// the enclosing entity (e.g. containing struct/class/union) to the
-// start of the bit field. This corresponds to the DW_AT_data_bit_offset
-// DWARF attribute that was introduced in DWARF 4.
+// DataBitOffset（如果非零）是从包含实体（例如包含的结构体/类/联合体）的起始位置
+// 到位字段起始位置的位数。这对应于 DWARF 4 中引入的 DW_AT_data_bit_offset DWARF 属性。
 //
-// BitOffset, if non-zero, is the number of bits between the most
-// significant bit of the storage unit holding the bit field to the
-// most significant bit of the bit field. Here "storage unit" is the
-// type name before the bit field (for a field "unsigned x:17", the
-// storage unit is "unsigned"). BitOffset values can vary depending on
-// the endianness of the system. BitOffset corresponds to the
-// DW_AT_bit_offset DWARF attribute that was deprecated in DWARF 4 and
-// removed in DWARF 5.
+// BitOffset（如果非零）是从存储位字段的存储单元的最高有效位到位字段的最高有效位之间的位数。
+// 这里的"存储单元"是位字段之前的类型名称（对于字段 "unsigned x:17"，
+// 存储单元是 "unsigned"）。BitOffset 值可能因系统的字节序而异。
+// BitOffset 对应于 DW_AT_bit_offset DWARF 属性，该属性在 DWARF 4 中已被弃用，
+// 并在 DWARF 5 中被移除。
 //
-// At most one of DataBitOffset and BitOffset will be non-zero;
-// DataBitOffset/BitOffset will only be non-zero if BitSize is
-// non-zero. Whether a C compiler uses one or the other
-// will depend on compiler vintage and command line options.
+// DataBitOffset 和 BitOffset 中最多有一个非零；
+// 只有当 BitSize 非零时，DataBitOffset/BitOffset 才会非零。
+// C 编译器使用哪一个取决于编译器版本和命令行选项。
 //
-// Here is an example of C/C++ bit field use, along with what to
-// expect in terms of DWARF bit offset info. Consider this code:
+// 以下是 C/C++ 位字段使用的示例，以及预期的 DWARF 位偏移信息。考虑这段代码：
 //
 //	struct S {
 //		int q;
@@ -193,47 +182,40 @@ type StructType struct {
 //		int n:8;
 //	} s;
 //
-// For the code above, one would expect to see the following for
-// DW_AT_bit_offset values (using GCC 8):
+// 对于上述代码，使用 GCC 8 时，DW_AT_bit_offset 值预期如下：
 //
-//	       Little   |     Big
-//	       Endian   |    Endian
+//	       小端     |     大端
+//	       模式     |     模式
 //	                |
 //	"j":     27     |     0
 //	"k":     21     |     5
 //	"m":     16     |     11
 //	"n":     8      |     16
 //
-// Note that in the above the offsets are purely with respect to the
-// containing storage unit for j/k/m/n -- these values won't vary based
-// on the size of prior data members in the containing struct.
+// 请注意，上述偏移量纯粹是相对于 j/k/m/n 的包含存储单元——
+// 这些值不会因包含结构体中先前数据成员的大小而变化。
 //
-// If the compiler emits DW_AT_data_bit_offset, the expected values
-// would be:
+// 如果编译器输出 DW_AT_data_bit_offset，预期值将是：
 //
 //	"j":     32
 //	"k":     37
 //	"m":     43
 //	"n":     48
 //
-// Here the value 32 for "j" reflects the fact that the bit field is
-// preceded by other data members (recall that DW_AT_data_bit_offset
-// values are relative to the start of the containing struct). Hence
-// DW_AT_data_bit_offset values can be quite large for structs with
-// many fields.
+// 这里 "j" 的值 32 反映了位字段之前有其他数据成员的事实
+// （请记住 DW_AT_data_bit_offset 值是相对于包含结构体的起始位置的）。
+// 因此，对于有很多字段的结构体，DW_AT_data_bit_offset 值可能会很大。
 //
-// DWARF also allow for the possibility of base types that have
-// non-zero bit size and bit offset, so this information is also
-// captured for base types, but it is worth noting that it is not
-// possible to trigger this behavior using mainstream languages.
+// DWARF 还允许基本类型具有非零的位大小和位偏移，因此这些信息也会为基本类型捕获，
+// 但值得注意的是，使用主流语言无法触发此行为。
 type StructField struct {
 	Name          string
 	Type          Type
 	ByteOffset    int64
-	ByteSize      int64 // usually zero; use Type.Size() for normal fields
+	ByteSize      int64 // 通常为零；对于普通字段使用 Type.Size()
 	BitOffset     int64
 	DataBitOffset int64
-	BitSize       int64 // zero if not a bit field
+	BitSize       int64 // 如果不是位字段则为零
 }
 
 func (t *StructType) String() string {
@@ -275,16 +257,15 @@ func (t *StructType) Defn() string {
 	return s
 }
 
-// An EnumType represents an enumerated type.
-// The only indication of its native integer type is its ByteSize
-// (inside [CommonType]).
+// EnumType 表示枚举类型。
+// 其原生整数类型的唯一指示是其 ByteSize（在 [CommonType] 内）。
 type EnumType struct {
 	CommonType
 	EnumName string
 	Val      []*EnumValue
 }
 
-// An EnumValue represents a single enumeration value.
+// EnumValue 表示单个枚举值。
 type EnumValue struct {
 	Name string
 	Val  int64
@@ -306,7 +287,7 @@ func (t *EnumType) String() string {
 	return s
 }
 
-// A FuncType represents a function type.
+// FuncType 表示函数类型。
 type FuncType struct {
 	CommonType
 	ReturnType Type
@@ -328,14 +309,14 @@ func (t *FuncType) String() string {
 	return s
 }
 
-// A DotDotDotType represents the variadic ... function parameter.
+// DotDotDotType 表示可变参数 ... 函数参数。
 type DotDotDotType struct {
 	CommonType
 }
 
 func (t *DotDotDotType) String() string { return "..." }
 
-// A TypedefType represents a named type.
+// TypedefType 表示命名类型。
 type TypedefType struct {
 	CommonType
 	Type Type
@@ -345,8 +326,7 @@ func (t *TypedefType) String() string { return t.Name }
 
 func (t *TypedefType) Size() int64 { return t.Type.Size() }
 
-// An UnsupportedType is a placeholder returned in situations where we
-// encounter a type that isn't supported.
+// UnsupportedType 是在遇到不支持的类型时返回的占位符。
 type UnsupportedType struct {
 	CommonType
 	Tag Tag
@@ -359,19 +339,17 @@ func (t *UnsupportedType) String() string {
 	return t.Name + "(unsupported type " + t.Tag.String() + ")"
 }
 
-// typeReader is used to read from either the info section or the
-// types section.
+// typeReader 用于从 info 节或 types 节读取。
 type typeReader interface {
 	Seek(Offset)
 	Next() (*Entry, error)
 	clone() typeReader
 	offset() Offset
-	// AddressSize returns the size in bytes of addresses in the current
-	// compilation unit.
+	// AddressSize 返回当前编译单元中地址的字节大小。
 	AddressSize() int
 }
 
-// Type reads the type at off in the DWARF “info” section.
+// Type 读取 DWARF "info" 节中偏移量 off 处的类型。
 func (d *Data) Type(off Offset) (Type, error) {
 	return d.readType("info", d.Reader(), off, d.typeCache, nil)
 }
@@ -400,10 +378,9 @@ func (tf *typeFixer) apply() {
 	}
 }
 
-// readType reads a type from r at off of name. It adds types to the
-// type cache, appends new typedef types to typedefs, and computes the
-// sizes of types. Callers should pass nil for typedefs; this is used
-// for internal recursion.
+// readType 从 r 的 off 位置读取名为 name 的类型。它将类型添加到类型缓存中，
+// 将新的 typedef 类型追加到 typedefs，并计算类型的大小。
+// 调用者应该为 typedefs 传递 nil；这用于内部递归。
 func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Offset]Type, fixups *typeFixer) (Type, error) {
 	if t, ok := typeCache[off]; ok {
 		return t, nil
@@ -418,11 +395,9 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		return nil, DecodeError{name, off, "no type at offset"}
 	}
 
-	// If this is the root of the recursion, prepare to resolve
-	// typedef sizes and perform other fixups once the recursion is
-	// done. This must be done after the type graph is constructed
-	// because it may need to resolve cycles in a different order than
-	// readType encounters them.
+	// 如果这是递归的根，准备在递归完成后解析 typedef 大小并执行其他修复。
+	// 这必须在类型图构建完成后进行，因为它可能需要以与 readType 遇到循环时
+	// 不同的顺序来解析循环。
 	if fixups == nil {
 		var fixer typeFixer
 		defer func() {
@@ -431,23 +406,22 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		fixups = &fixer
 	}
 
-	// Parse type from Entry.
-	// Must always set typeCache[off] before calling
-	// d.readType recursively, to handle circular types correctly.
+	// 从 Entry 解析类型。
+	// 必须在递归调用 d.readType 之前设置 typeCache[off]，
+	// 以正确处理循环类型。
 	var typ Type
 
 	nextDepth := 0
 
-	// Get next child; set err if error happens.
+	// 获取下一个子条目；如果发生错误则设置 err。
 	next := func() *Entry {
 		if !e.Children {
 			return nil
 		}
-		// Only return direct children.
-		// Skip over composite entries that happen to be nested
-		// inside this one. Most DWARF generators wouldn't generate
-		// such a thing, but clang does.
-		// See golang.org/issue/6472.
+		// 只返回直接子条目。
+		// 跳过恰好嵌套在此条目内的复合条目。
+		// 大多数 DWARF 生成器不会生成这样的东西，但 clang 会。
+		// 参见 golang.org/issue/6472。
 		for {
 			kid, err1 := r.Next()
 			if err1 != nil {
@@ -475,8 +449,8 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		}
 	}
 
-	// Get Type referred to by Entry's AttrType field.
-	// Set err if error happens. Not having a type is an error.
+	// 获取 Entry 的 AttrType 字段引用的类型。
+	// 如果发生错误则设置 err。没有类型是一个错误。
 	typeOf := func(e *Entry) Type {
 		tval := e.Val(AttrType)
 		var t Type
@@ -490,7 +464,7 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 				return nil
 			}
 		default:
-			// It appears that no Type means "void".
+			// 看起来没有 Type 意味着 "void"。
 			return new(VoidType)
 		}
 		return t
@@ -498,14 +472,14 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 
 	switch e.Tag {
 	case TagArrayType:
-		// Multi-dimensional array.  (DWARF v2 §5.4)
-		// Attributes:
-		//	AttrType:subtype [required]
-		//	AttrStrideSize: size in bits of each element of the array
-		//	AttrByteSize: size of entire array
-		// Children:
-		//	TagSubrangeType or TagEnumerationType giving one dimension.
-		//	dimensions are in left to right order.
+		// 多维数组。（DWARF v2 §5.4）
+		// 属性：
+		//	AttrType: 子类型 [必需]
+		//	AttrStrideSize: 数组每个元素的位大小
+		//	AttrByteSize: 整个数组的大小
+		// 子条目：
+		//	TagSubrangeType 或 TagEnumerationType 给出一个维度。
+		//	维度按从左到右的顺序排列。
 		t := new(ArrayType)
 		typ = t
 		typeCache[off] = t
@@ -514,21 +488,21 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		}
 		t.StrideBitSize, _ = e.Val(AttrStrideSize).(int64)
 
-		// Accumulate dimensions,
+		// 累积维度，
 		var dims []int64
 		for kid := next(); kid != nil; kid = next() {
-			// TODO(rsc): Can also be TagEnumerationType
-			// but haven't seen that in the wild yet.
+			// TODO(rsc): 也可以是 TagEnumerationType
+			// 但在实际中还没见过。
 			switch kid.Tag {
 			case TagSubrangeType:
 				count, ok := kid.Val(AttrCount).(int64)
 				if !ok {
-					// Old binaries may have an upper bound instead.
+					// 旧的二进制文件可能有上界代替。
 					count, ok = kid.Val(AttrUpperBound).(int64)
 					if ok {
-						count++ // Length is one more than upper bound.
+						count++ // 长度比上界多一。
 					} else if len(dims) == 0 {
-						count = -1 // As in x[].
+						count = -1 // 如 x[]。
 					}
 				}
 				dims = append(dims, count)
@@ -538,7 +512,7 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 			}
 		}
 		if len(dims) == 0 {
-			// LLVM generates this for x[].
+			// LLVM 为 x[] 生成这样的代码。
 			dims = []int64{-1}
 		}
 
@@ -548,17 +522,16 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		}
 
 	case TagBaseType:
-		// Basic type.  (DWARF v2 §5.1)
-		// Attributes:
-		//	AttrName: name of base type in programming language of the compilation unit [required]
-		//	AttrEncoding: encoding value for type (encFloat etc) [required]
-		//	AttrByteSize: size of type in bytes [required]
-		//	AttrBitOffset: bit offset of value within containing storage unit
-		//	AttrDataBitOffset: bit offset of value within containing storage unit
-		//	AttrBitSize: size in bits
+		// 基本类型。（DWARF v2 §5.1）
+		// 属性：
+		//	AttrName: 编译单元编程语言中基本类型的名称 [必需]
+		//	AttrEncoding: 类型的编码值（encFloat 等）[必需]
+		//	AttrByteSize: 类型的字节大小 [必需]
+		//	AttrBitOffset: 值在包含存储单元内的位偏移
+		//	AttrDataBitOffset: 值在包含存储单元内的位偏移
+		//	AttrBitSize: 位大小
 		//
-		// For most languages BitOffset/DataBitOffset/BitSize will not be present
-		// for base types.
+		// 对于大多数语言，基本类型不会有 BitOffset/DataBitOffset/BitSize。
 		name, _ := e.Val(AttrName).(string)
 		enc, ok := e.Val(AttrEncoding).(int64)
 		if !ok {
@@ -577,9 +550,9 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		case encComplexFloat:
 			typ = new(ComplexType)
 			if name == "complex" {
-				// clang writes out 'complex' instead of 'complex float' or 'complex double'.
-				// clang also writes out a byte size that we can use to distinguish.
-				// See issue 8694.
+				// clang 输出 'complex' 而不是 'complex float' 或 'complex double'。
+				// clang 还输出一个字节大小，我们可以用来区分。
+				// 参见 issue 8694。
 				switch byteSize, _ := e.Val(AttrByteSize).(int64); byteSize {
 				case 8:
 					name = "complex float"
@@ -614,21 +587,21 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		}
 
 	case TagClassType, TagStructType, TagUnionType:
-		// Structure, union, or class type.  (DWARF v2 §5.5)
-		// Attributes:
-		//	AttrName: name of struct, union, or class
-		//	AttrByteSize: byte size [required]
-		//	AttrDeclaration: if true, struct/union/class is incomplete
-		// Children:
-		//	TagMember to describe one member.
-		//		AttrName: name of member [required]
-		//		AttrType: type of member [required]
-		//		AttrByteSize: size in bytes
-		//		AttrBitOffset: bit offset within bytes for bit fields
-		//		AttrDataBitOffset: field bit offset relative to struct start
-		//		AttrBitSize: bit size for bit fields
-		//		AttrDataMemberLoc: location within struct [required for struct, class]
-		// There is much more to handle C++, all ignored for now.
+		// 结构体、联合体或类类型。（DWARF v2 §5.5）
+		// 属性：
+		//	AttrName: 结构体、联合体或类的名称
+		//	AttrByteSize: 字节大小 [必需]
+		//	AttrDeclaration: 如果为 true，则结构体/联合体/类不完整
+		// 子条目：
+		//	TagMember 描述一个成员。
+		//		AttrName: 成员名称 [必需]
+		//		AttrType: 成员类型 [必需]
+		//		AttrByteSize: 字节大小
+		//		AttrBitOffset: 位字段在字节内的位偏移
+		//		AttrDataBitOffset: 字段相对于结构体起始的位偏移
+		//		AttrBitSize: 位字段的位大小
+		//		AttrDataMemberLoc: 在结构体内的位置 [结构体、类必需]
+		// 处理 C++ 还有很多内容，目前全部忽略。
 		t := new(StructType)
 		typ = t
 		typeCache[off] = t
@@ -656,8 +629,8 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 			}
 			switch loc := kid.Val(AttrDataMemberLoc).(type) {
 			case []byte:
-				// TODO: Should have original compilation
-				// unit here, not unknownFormat.
+				// TODO: 这里应该有原始编译单元，
+				// 而不是 unknownFormat。
 				b := makeBuf(d, unknownFormat{}, "location", 0, loc)
 				if b.uint8() != opPlusUconst {
 					err = DecodeError{name, kid.Offset, "unexpected opcode"}
@@ -686,8 +659,8 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 			t.Field = append(t.Field, f)
 
 			if lastFieldBitSize == 0 && lastFieldByteOffset == f.ByteOffset && t.Kind != "union" {
-				// Last field was zero width. Fix array length.
-				// (DWARF writes out 0-length arrays as if they were 1-length arrays.)
+				// 上一个字段宽度为零。修复数组长度。
+				// （DWARF 将 0 长度数组写成好像是 1 长度数组。）
 				fixups.recordArrayType(lastFieldType)
 			}
 			lastFieldType = &f.Type
@@ -697,15 +670,15 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		if t.Kind != "union" {
 			b, ok := e.Val(AttrByteSize).(int64)
 			if ok && b == lastFieldByteOffset {
-				// Final field must be zero width. Fix array length.
+				// 最后一个字段必须是零宽度。修复数组长度。
 				fixups.recordArrayType(lastFieldType)
 			}
 		}
 
 	case TagConstType, TagVolatileType, TagRestrictType:
-		// Type modifier (DWARF v2 §5.2)
-		// Attributes:
-		//	AttrType: subtype
+		// 类型修饰符（DWARF v2 §5.2）
+		// 属性：
+		//	AttrType: 子类型
 		t := new(QualType)
 		typ = t
 		typeCache[off] = t
@@ -722,14 +695,14 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		}
 
 	case TagEnumerationType:
-		// Enumeration type (DWARF v2 §5.6)
-		// Attributes:
-		//	AttrName: enum name if any
-		//	AttrByteSize: bytes required to represent largest value
-		// Children:
+		// 枚举类型（DWARF v2 §5.6）
+		// 属性：
+		//	AttrName: 枚举名称（如果有）
+		//	AttrByteSize: 表示最大值所需的字节数
+		// 子条目：
 		//	TagEnumerator:
-		//		AttrName: name of constant
-		//		AttrConstValue: value of constant
+		//		AttrName: 常量名称
+		//		AttrConstValue: 常量值
 		t := new(EnumType)
 		typ = t
 		typeCache[off] = t
@@ -752,10 +725,10 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		}
 
 	case TagPointerType:
-		// Type modifier (DWARF v2 §5.2)
-		// Attributes:
-		//	AttrType: subtype [not required!  void* has no AttrType]
-		//	AttrAddrClass: address class [ignored]
+		// 类型修饰符（DWARF v2 §5.2）
+		// 属性：
+		//	AttrType: 子类型 [非必需！void* 没有 AttrType]
+		//	AttrAddrClass: 地址类 [忽略]
 		t := new(PtrType)
 		typ = t
 		typeCache[off] = t
@@ -766,15 +739,15 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		t.Type = typeOf(e)
 
 	case TagSubroutineType:
-		// Subroutine type.  (DWARF v2 §5.7)
-		// Attributes:
-		//	AttrType: type of return value if any
-		//	AttrName: possible name of type [ignored]
-		//	AttrPrototyped: whether used ANSI C prototype [ignored]
-		// Children:
-		//	TagFormalParameter: typed parameter
-		//		AttrType: type of parameter
-		//	TagUnspecifiedParameter: final ...
+		// 子程序类型。（DWARF v2 §5.7）
+		// 属性：
+		//	AttrType: 返回值的类型（如果有）
+		//	AttrName: 类型的可能名称 [忽略]
+		//	AttrPrototyped: 是否使用 ANSI C 原型 [忽略]
+		// 子条目：
+		//	TagFormalParameter: 带类型的参数
+		//		AttrType: 参数类型
+		//	TagUnspecifiedParameter: 最后的 ...
 		t := new(FuncType)
 		typ = t
 		typeCache[off] = t
@@ -798,10 +771,10 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		}
 
 	case TagTypedef:
-		// Typedef (DWARF v2 §5.3)
-		// Attributes:
-		//	AttrName: name [required]
-		//	AttrType: type definition [required]
+		// 类型定义（DWARF v2 §5.3）
+		// 属性：
+		//	AttrName: 名称 [必需]
+		//	AttrType: 类型定义 [必需]
 		t := new(TypedefType)
 		typ = t
 		typeCache[off] = t
@@ -809,18 +782,17 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 		t.Type = typeOf(e)
 
 	case TagUnspecifiedType:
-		// Unspecified type (DWARF v3 §5.2)
-		// Attributes:
-		//	AttrName: name
+		// 未指定类型（DWARF v3 §5.2）
+		// 属性：
+		//	AttrName: 名称
 		t := new(UnspecifiedType)
 		typ = t
 		typeCache[off] = t
 		t.Name, _ = e.Val(AttrName).(string)
 
 	default:
-		// This is some other type DIE that we're currently not
-		// equipped to handle. Return an abstract "unsupported type"
-		// object in such cases.
+		// 这是我们目前无法处理的其他类型 DIE。
+		// 在这种情况下返回一个抽象的"不支持的类型"对象。
 		t := new(UnsupportedType)
 		typ = t
 		typeCache[off] = t
@@ -838,9 +810,8 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 			b = -1
 			switch t := typ.(type) {
 			case *TypedefType:
-				// Record that we need to resolve this
-				// type's size once the type graph is
-				// constructed.
+				// 记录我们需要在类型图构建完成后
+				// 解析此类型的大小。
 				fixups.typedefs = append(fixups.typedefs, t)
 			case *PtrType:
 				b = int64(addressSize)
@@ -851,9 +822,9 @@ func (d *Data) readType(name string, r typeReader, off Offset, typeCache map[Off
 	return typ, nil
 
 Error:
-	// If the parse fails, take the type out of the cache
-	// so that the next call with this offset doesn't hit
-	// the cache and return success.
+	// 如果解析失败，将类型从缓存中移除，
+	// 这样下次使用此偏移量调用时不会命中
+	// 缓存并返回成功。
 	delete(typeCache, off)
 	return nil, err
 }
@@ -863,7 +834,7 @@ func zeroArray(t *Type) {
 	if at.Type.Size() == 0 {
 		return
 	}
-	// Make a copy to avoid invalidating typeCache.
+	// 创建副本以避免使 typeCache 失效。
 	tt := *at
 	tt.Count = 0
 	*t = &tt

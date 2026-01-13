@@ -1,21 +1,21 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // Test cases for sort order of declarations.
 
 package d
 
-// C1 should be second.
+// C1 应该是 second.
 const C1 = 1
 
-// C0 should be first.
+// C0 应该是 first.
 const C0 = 0
 
-// V1 should be second.
+// V1 应该是 second.
 var V1 uint
 
-// V0 should be first.
+// V0 应该是 first.
 var V0 uintptr
 
 // CAx constants should appear after CBx constants.
@@ -32,14 +32,14 @@ var (
 	VA0 int // at end
 )
 
-// T1 should be second.
+// T1 应该是 second.
 type T1 struct{}
 
-// T0 should be first.
+// T0 应该是 first.
 type T0 struct{}
 
-// F1 should be second.
+// F1 应该是 second.
 func F1() {}
 
-// F0 should be first.
+// F0 应该是 first.
 func F0() {}

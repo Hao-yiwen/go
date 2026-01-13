@@ -4,7 +4,7 @@
 
 //go:build !asan
 
-// Dummy ASan support API, used when not built with -asan.
+// 虚拟的 ASan 支持 API，在未使用 -asan 构建时使用。
 
 package runtime
 
@@ -15,7 +15,7 @@ import (
 const asanenabled = false
 const asanenabledBit = 0
 
-// Because asanenabled is false, none of these functions should be called.
+// 因为 asanenabled 为 false，这些函数都不应该被调用。
 
 func asanread(addr unsafe.Pointer, sz uintptr)            { throw("asan") }
 func asanwrite(addr unsafe.Pointer, sz uintptr)           { throw("asan") }

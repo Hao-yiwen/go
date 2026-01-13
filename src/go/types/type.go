@@ -1,18 +1,18 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
-// A Type represents a type of Go.
+// 一个Type represents a type of Go.
 // All types implement the Type interface.
 type Type interface {
-	// Underlying returns the underlying type of a type.
+	// Underlying 返回 underlying type of a type.
 	// Underlying types are never Named, TypeParam, or Alias types.
 	//
 	// See https://go.dev/ref/spec#Underlying_types.
 	Underlying() Type
 
-	// String returns a string representation of a type.
+	// String 返回一个string representation of a type.
 	String() string
 }

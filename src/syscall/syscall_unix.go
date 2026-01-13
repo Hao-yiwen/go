@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build unix
 
@@ -30,7 +30,7 @@ const (
 	netbsd32Bit = runtime.GOOS == "netbsd" && sizeofPtr == 4
 )
 
-// clen returns the index of the first NULL byte in n or len(n) if n contains no NULL byte.
+// clen 返回 n 中第一个 NULL 字节的索引，如果 n 不包含 NULL 字节则返回 len(n)。
 func clen(n []byte) int {
 	if i := bytealg.IndexByte(n, 0); i != -1 {
 		return i
@@ -38,11 +38,11 @@ func clen(n []byte) int {
 	return len(n)
 }
 
-// Mmap manager, for use by operating system-specific implementations.
+// Mmap 管理器，供操作系统特定实现使用。
 
 type mmapper struct {
 	sync.Mutex
-	active map[*byte][]byte // active mappings; key is last byte in mapping
+	active map[*byte][]byte // 活动映射；键是映射中的最后一个字节
 	mmap   func(addr, length uintptr, prot, flags, fd int, offset int64) (uintptr, error)
 	munmap func(addr uintptr, length uintptr) error
 }
@@ -52,16 +52,16 @@ func (m *mmapper) Mmap(fd int, offset int64, length int, prot int, flags int) (d
 		return nil, EINVAL
 	}
 
-	// Map the requested memory.
+	// 映射请求的内存。
 	addr, errno := m.mmap(0, uintptr(length), prot, flags, fd, offset)
 	if errno != nil {
 		return nil, errno
 	}
 
-	// Use unsafe to turn addr into a []byte.
+	// 使用 unsafe 将 addr 转换为 []byte。
 	b := unsafe.Slice((*byte)(unsafe.Pointer(addr)), length)
 
-	// Register mapping in m and return it.
+	// 在 m 中注册映射并返回。
 	p := &b[cap(b)-1]
 	m.Lock()
 	defer m.Unlock()
@@ -74,7 +74,7 @@ func (m *mmapper) Munmap(data []byte) (err error) {
 		return EINVAL
 	}
 
-	// Find the base of the mapping.
+	// 查找映射的基地址。
 	p := &data[cap(data)-1]
 	m.Lock()
 	defer m.Unlock()
@@ -83,7 +83,7 @@ func (m *mmapper) Munmap(data []byte) (err error) {
 		return EINVAL
 	}
 
-	// Unmap the memory and update m.
+	// 取消内存映射并更新 m。
 	if errno := m.munmap(uintptr(unsafe.Pointer(&b[0])), uintptr(len(b))); errno != nil {
 		return errno
 	}
@@ -91,17 +91,17 @@ func (m *mmapper) Munmap(data []byte) (err error) {
 	return nil
 }
 
-// An Errno is an unsigned number describing an error condition.
-// It implements the error interface. The zero Errno is by convention
-// a non-error, so code to convert from Errno to error should use:
+// Errno 是一个描述错误条件的无符号数。
+// 它实现了 error 接口。按照惯例，零值 Errno 表示非错误，
+// 因此从 Errno 转换为 error 的代码应该使用：
 //
 //	err = nil
 //	if errno != 0 {
 //		err = errno
 //	}
 //
-// Errno values can be tested against error values using [errors.Is].
-// For example:
+// 可以使用 [errors.Is] 将 Errno 值与 error 值进行比较。
+// 例如：
 //
 //	_, _, err := syscall.Syscall(...)
 //	if errors.Is(err, fs.ErrNotExist) ...
@@ -139,16 +139,14 @@ func (e Errno) Timeout() bool {
 	return e == EAGAIN || e == EWOULDBLOCK || e == ETIMEDOUT
 }
 
-// Do the interface allocations only once for common
-// Errno values.
+// 对于常见的 Errno 值，只进行一次接口分配。
 var (
 	errEAGAIN error = EAGAIN
 	errEINVAL error = EINVAL
 	errENOENT error = ENOENT
 )
 
-// errnoErr returns common boxed Errno values, to prevent
-// allocations at runtime.
+// errnoErr 返回常见的装箱 Errno 值，以防止运行时分配。
 func errnoErr(e Errno) error {
 	switch e {
 	case 0:
@@ -163,8 +161,8 @@ func errnoErr(e Errno) error {
 	return e
 }
 
-// A Signal is a number describing a process signal.
-// It implements the [os.Signal] interface.
+// Signal 是一个描述进程信号的数字。
+// 它实现了 [os.Signal] 接口。
 type Signal int
 
 func (s Signal) Signal() {}
@@ -258,12 +256,12 @@ func Pwrite(fd int, p []byte, offset int64) (n int, err error) {
 	return
 }
 
-// For testing: clients can set this flag to force
-// creation of IPv6 sockets to return [EAFNOSUPPORT].
+// 用于测试：客户端可以设置此标志以强制
+// 创建 IPv6 套接字时返回 [EAFNOSUPPORT]。
 var SocketDisableIPv6 bool
 
 type Sockaddr interface {
-	sockaddr() (ptr unsafe.Pointer, len _Socklen, err error) // lowercase; only we can define Sockaddrs
+	sockaddr() (ptr unsafe.Pointer, len _Socklen, err error) // 小写；只有我们可以定义 Sockaddrs
 }
 
 type SockaddrInet4 struct {
@@ -385,7 +383,7 @@ func recvmsgInet6(fd int, p, oob []byte, flags int, from *SockaddrInet6) (n, oob
 func Recvmsg(fd int, p, oob []byte, flags int) (n, oobn int, recvflags int, from Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	n, oobn, recvflags, err = recvmsgRaw(fd, p, oob, flags, &rsa)
-	// source address is only specified if the socket is unconnected
+	// 仅当套接字未连接时才指定源地址
 	if rsa.Addr.Family != AF_UNSPEC {
 		from, err = anyToSockaddr(&rsa)
 	}

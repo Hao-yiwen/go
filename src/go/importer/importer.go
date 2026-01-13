@@ -1,14 +1,14 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2015 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package importer provides access to export data importers.
+// importer 包提供 access to export data importers.
 //
 // These functions, which are mostly deprecated, date from before the
 // introduction of modules in release Go 1.11. They should no longer
 // be relied on except for use in test cases using small programs that
 // depend only on the standard library. For reliable module-aware
-// loading of type information, use the packages.Load function from
+// loading 类型为 information, use the packages.Load function from
 // golang.org/x/tools/go/packages.
 package importer
 
@@ -23,13 +23,13 @@ import (
 	"runtime"
 )
 
-// A Lookup function returns a reader to access package data for
+// 一个Lookup function 返回一个reader to access package data for
 // a given import path, or an error if no matching package is found.
 type Lookup func(path string) (io.ReadCloser, error)
 
-// ForCompiler returns an Importer for importing from installed packages
+// ForCompiler 返回an Importer for importing from installed packages
 // for the compilers "gc" and "gccgo", or for importing directly
-// from the source if the compiler argument is "source". In this
+// from the source 如果 compiler argument is "source". In this
 // latter case, importing may fail under circumstances where the
 // exported API is not entirely defined in pure Go source code
 // (if the package API depends on cgo-defined entities, the type
@@ -38,10 +38,10 @@ type Lookup func(path string) (io.ReadCloser, error)
 // The lookup function is called each time the resulting importer needs
 // to resolve an import path. In this mode the importer can only be
 // invoked with canonical import paths (not relative or absolute ones);
-// it is assumed that the translation to canonical import paths is being
+// it 是一个ssumed that the translation to canonical import paths is being
 // done by the client of the importer.
 //
-// A lookup function must be provided for correct module-aware operation.
+// 一个lookup function 必须是 provided for correct module-aware operation.
 // Deprecated: If lookup is nil, for backwards-compatibility, the importer
 // will attempt to resolve imports in the $GOPATH workspace.
 func ForCompiler(fset *token.FileSet, compiler string, lookup Lookup) types.Importer {
@@ -86,13 +86,13 @@ func For(compiler string, lookup Lookup) types.Importer {
 	return ForCompiler(token.NewFileSet(), compiler, lookup)
 }
 
-// Default returns an Importer for the compiler that built the running binary.
+// Default 返回an Importer for the compiler that built the running binary.
 // If available, the result implements [types.ImporterFrom].
 //
-// Default may be convenient for use in the simplest of cases, but
+// Default 可能是 convenient for use in the simplest of cases, but
 // most clients should instead use [ForCompiler], which accepts a
 // [token.FileSet] from the caller; without it, all position
-// information derived from the Importer will be incorrect and
+// information derived from the Importer 将是 incorrect and
 // misleading. See also the package documentation.
 func Default() types.Importer {
 	return For(runtime.Compiler, nil)

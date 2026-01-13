@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package tar
 
@@ -16,23 +16,22 @@ import (
 	"time"
 )
 
-// Writer provides sequential writing of a tar archive.
-// [Writer.WriteHeader] begins a new file with the provided [Header],
-// and then Writer can be treated as an io.Writer to supply that file's data.
+// Writer 提供对 tar 归档的顺序写入。
+// [Writer.WriteHeader] 使用提供的 [Header] 开始一个新文件，
+// 然后 Writer 可以被当作 io.Writer 来提供该文件的数据。
 type Writer struct {
 	w    io.Writer
-	pad  int64      // Amount of padding to write after current file entry
-	curr fileWriter // Writer for current file entry
-	hdr  Header     // Shallow copy of Header that is safe for mutations
-	blk  block      // Buffer to use as temporary local storage
+	pad  int64      // 当前文件条目之后要写入的填充量
+	curr fileWriter // 当前文件条目的 Writer
+	hdr  Header     // Header 的浅拷贝，可以安全地进行修改
+	blk  block      // 用作临时本地存储的缓冲区
 
-	// err is a persistent error.
-	// It is only the responsibility of every exported method of Writer to
-	// ensure that this error is sticky.
+	// err 是一个持久性错误。
+	// Writer 的每个导出方法都有责任确保这个错误是粘性的。
 	err error
 }
 
-// NewWriter creates a new Writer writing to w.
+// NewWriter 创建一个新的 Writer，向 w 写入。
 func NewWriter(w io.Writer) *Writer {
 	return &Writer{w: w, curr: &regFileWriter{w, 0}}
 }
@@ -44,11 +43,11 @@ type fileWriter interface {
 	ReadFrom(io.Reader) (int64, error)
 }
 
-// Flush finishes writing the current file's block padding.
-// The current file must be fully written before Flush can be called.
+// Flush 完成当前文件的块填充写入。
+// 在调用 Flush 之前，当前文件必须完全写入。
 //
-// This is unnecessary as the next call to [Writer.WriteHeader] or [Writer.Close]
-// will implicitly flush out the file's padding.
+// 这是不必要的，因为下一次调用 [Writer.WriteHeader] 或 [Writer.Close]
+// 将隐式地刷新文件的填充。
 func (tw *Writer) Flush() error {
 	if tw.err != nil {
 		return tw.err
@@ -63,18 +62,18 @@ func (tw *Writer) Flush() error {
 	return nil
 }
 
-// WriteHeader writes hdr and prepares to accept the file's contents.
-// The Header.Size determines how many bytes can be written for the next file.
-// If the current file is not fully written, then this returns an error.
-// This implicitly flushes any padding necessary before writing the header.
+// WriteHeader 写入 hdr 并准备接受文件内容。
+// Header.Size 决定了下一个文件可以写入多少字节。
+// 如果当前文件未完全写入，则返回错误。
+// 这会在写入头部之前隐式刷新所有必要的填充。
 func (tw *Writer) WriteHeader(hdr *Header) error {
 	if err := tw.Flush(); err != nil {
 		return err
 	}
-	tw.hdr = *hdr // Shallow copy of Header
+	tw.hdr = *hdr // Header 的浅拷贝
 
-	// Avoid usage of the legacy TypeRegA flag, and automatically promote
-	// it to use TypeReg or TypeDir.
+	// 避免使用遗留的 TypeRegA 标志，并自动将其
+	// 提升为使用 TypeReg 或 TypeDir。
 	if tw.hdr.Typeflag == TypeRegA {
 		if strings.HasSuffix(tw.hdr.Name, "/") {
 			tw.hdr.Typeflag = TypeDir
@@ -83,11 +82,10 @@ func (tw *Writer) WriteHeader(hdr *Header) error {
 		}
 	}
 
-	// Round ModTime and ignore AccessTime and ChangeTime unless
-	// the format is explicitly chosen.
-	// This ensures nominal usage of WriteHeader (without specifying the format)
-	// does not always result in the PAX format being chosen, which
-	// causes a 1KiB increase to every header.
+	// 除非明确选择格式，否则将 ModTime 四舍五入并忽略 AccessTime 和 ChangeTime。
+	// 这确保了 WriteHeader 的正常使用（不指定格式）
+	// 不会总是导致选择 PAX 格式，
+	// PAX 格式会导致每个头部增加 1KiB。
 	if tw.hdr.Format == FormatUnknown {
 		tw.hdr.ModTime = tw.hdr.ModTime.Round(time.Second)
 		tw.hdr.AccessTime = time.Time{}
@@ -106,24 +104,24 @@ func (tw *Writer) WriteHeader(hdr *Header) error {
 		tw.err = tw.writeGNUHeader(&tw.hdr)
 		return tw.err
 	default:
-		return err // Non-fatal error
+		return err // 非致命错误
 	}
 }
 
 func (tw *Writer) writeUSTARHeader(hdr *Header) error {
-	// Check if we can use USTAR prefix/suffix splitting.
+	// 检查是否可以使用 USTAR 前缀/后缀分割。
 	var namePrefix string
 	if prefix, suffix, ok := splitUSTARPath(hdr.Name); ok {
 		namePrefix, hdr.Name = prefix, suffix
 	}
 
-	// Pack the main header.
+	// 打包主头部。
 	var f formatter
 	blk := tw.templateV7Plus(hdr, f.formatString, f.formatOctal)
 	f.formatString(blk.toUSTAR().prefix(), namePrefix)
 	blk.setFormat(FormatUSTAR)
 	if f.err != nil {
-		return f.err // Should never happen since header is validated
+		return f.err // 不应该发生，因为头部已经验证过了
 	}
 	return tw.writeRawHeader(blk, hdr.Size, hdr.Typeflag)
 }
@@ -131,19 +129,19 @@ func (tw *Writer) writeUSTARHeader(hdr *Header) error {
 func (tw *Writer) writePAXHeader(hdr *Header, paxHdrs map[string]string) error {
 	realName, realSize := hdr.Name, hdr.Size
 
-	// TODO(dsnet): Re-enable this when adding sparse support.
-	// See https://golang.org/issue/22735
+	// TODO(dsnet): 添加稀疏支持时重新启用此功能。
+	// 参见 https://golang.org/issue/22735
 	/*
-		// Handle sparse files.
+		// 处理稀疏文件。
 		var spd sparseDatas
 		var spb []byte
 		if len(hdr.SparseHoles) > 0 {
-			sph := append([]sparseEntry{}, hdr.SparseHoles...) // Copy sparse map
+			sph := append([]sparseEntry{}, hdr.SparseHoles...) // 复制稀疏映射
 			sph = alignSparseEntries(sph, hdr.Size)
 			spd = invertSparseEntries(sph, hdr.Size)
 
-			// Format the sparse map.
-			hdr.Size = 0 // Replace with encoded size
+			// 格式化稀疏映射。
+			hdr.Size = 0 // 替换为编码后的大小
 			spb = append(strconv.AppendInt(spb, int64(len(spd)), 10), '\n')
 			for _, s := range spd {
 				hdr.Size += s.Length
@@ -152,9 +150,9 @@ func (tw *Writer) writePAXHeader(hdr *Header, paxHdrs map[string]string) error {
 			}
 			pad := blockPadding(int64(len(spb)))
 			spb = append(spb, zeroBlock[:pad]...)
-			hdr.Size += int64(len(spb)) // Accounts for encoded sparse map
+			hdr.Size += int64(len(spb)) // 计入编码后的稀疏映射
 
-			// Add and modify appropriate PAX records.
+			// 添加和修改适当的 PAX 记录。
 			dir, file := path.Split(realName)
 			hdr.Name = path.Join(dir, "GNUSparseFile.0", file)
 			paxHdrs[paxGNUSparseMajor] = "1"
@@ -162,17 +160,17 @@ func (tw *Writer) writePAXHeader(hdr *Header, paxHdrs map[string]string) error {
 			paxHdrs[paxGNUSparseName] = realName
 			paxHdrs[paxGNUSparseRealSize] = strconv.FormatInt(realSize, 10)
 			paxHdrs[paxSize] = strconv.FormatInt(hdr.Size, 10)
-			delete(paxHdrs, paxPath) // Recorded by paxGNUSparseName
+			delete(paxHdrs, paxPath) // 由 paxGNUSparseName 记录
 		}
 	*/
 	_ = realSize
 
-	// Write PAX records to the output.
+	// 将 PAX 记录写入输出。
 	isGlobal := hdr.Typeflag == TypeXGlobalHeader
 	if len(paxHdrs) > 0 || isGlobal {
-		// Write each record to a buffer.
+		// 将每条记录写入缓冲区。
 		var buf strings.Builder
-		// Sort keys for deterministic ordering.
+		// 对键排序以获得确定性顺序。
 		for _, k := range slices.Sorted(maps.Keys(paxHdrs)) {
 			rec, err := formatPAXRecord(k, paxHdrs[k])
 			if err != nil {
@@ -181,7 +179,7 @@ func (tw *Writer) writePAXHeader(hdr *Header, paxHdrs map[string]string) error {
 			buf.WriteString(rec)
 		}
 
-		// Write the extended header file.
+		// 写入扩展头部文件。
 		var name string
 		var flag byte
 		if isGlobal {
@@ -200,12 +198,12 @@ func (tw *Writer) writePAXHeader(hdr *Header, paxHdrs map[string]string) error {
 			return ErrFieldTooLong
 		}
 		if err := tw.writeRawFile(name, data, flag, FormatPAX); err != nil || isGlobal {
-			return err // Global headers return here
+			return err // 全局头部在这里返回
 		}
 	}
 
-	// Pack the main header.
-	var f formatter // Ignore errors since they are expected
+	// 打包主头部。
+	var f formatter // 忽略错误，因为它们是预期的
 	fmtStr := func(b []byte, s string) { f.formatString(b, toASCII(s)) }
 	blk := tw.templateV7Plus(hdr, fmtStr, f.formatOctal)
 	blk.setFormat(FormatPAX)
@@ -213,12 +211,12 @@ func (tw *Writer) writePAXHeader(hdr *Header, paxHdrs map[string]string) error {
 		return err
 	}
 
-	// TODO(dsnet): Re-enable this when adding sparse support.
-	// See https://golang.org/issue/22735
+	// TODO(dsnet): 添加稀疏支持时重新启用此功能。
+	// 参见 https://golang.org/issue/22735
 	/*
-		// Write the sparse map and setup the sparse writer if necessary.
+		// 如有必要，写入稀疏映射并设置稀疏写入器。
 		if len(spd) > 0 {
-			// Use tw.curr since the sparse map is accounted for in hdr.Size.
+			// 使用 tw.curr，因为稀疏映射已计入 hdr.Size。
 			if _, err := tw.curr.Write(spb); err != nil {
 				return err
 			}
@@ -229,7 +227,7 @@ func (tw *Writer) writePAXHeader(hdr *Header, paxHdrs map[string]string) error {
 }
 
 func (tw *Writer) writeGNUHeader(hdr *Header) error {
-	// Use long-link files if Name or Linkname exceeds the field size.
+	// 如果 Name 或 Linkname 超过字段大小，则使用长链接文件。
 	const longName = "././@LongLink"
 	if len(hdr.Name) > nameSize {
 		data := hdr.Name + "\x00"
@@ -244,8 +242,8 @@ func (tw *Writer) writeGNUHeader(hdr *Header) error {
 		}
 	}
 
-	// Pack the main header.
-	var f formatter // Ignore errors since they are expected
+	// 打包主头部。
+	var f formatter // 忽略错误，因为它们是预期的
 	var spd sparseDatas
 	var spb []byte
 	blk := tw.templateV7Plus(hdr, f.formatString, f.formatNumeric)
@@ -255,15 +253,15 @@ func (tw *Writer) writeGNUHeader(hdr *Header) error {
 	if !hdr.ChangeTime.IsZero() {
 		f.formatNumeric(blk.toGNU().changeTime(), hdr.ChangeTime.Unix())
 	}
-	// TODO(dsnet): Re-enable this when adding sparse support.
-	// See https://golang.org/issue/22735
+	// TODO(dsnet): 添加稀疏支持时重新启用此功能。
+	// 参见 https://golang.org/issue/22735
 	/*
 		if hdr.Typeflag == TypeGNUSparse {
-			sph := append([]sparseEntry{}, hdr.SparseHoles...) // Copy sparse map
+			sph := append([]sparseEntry{}, hdr.SparseHoles...) // 复制稀疏映射
 			sph = alignSparseEntries(sph, hdr.Size)
 			spd = invertSparseEntries(sph, hdr.Size)
 
-			// Format the sparse map.
+			// 格式化稀疏映射。
 			formatSPD := func(sp sparseDatas, sa sparseArray) sparseDatas {
 				for i := 0; len(sp) > 0 && i < sa.MaxEntries(); i++ {
 					f.formatNumeric(sa.Entry(i).Offset(), sp[0].Offset)
@@ -282,13 +280,13 @@ func (tw *Writer) writeGNUHeader(hdr *Header) error {
 				spb = append(spb, spHdr[:]...)
 			}
 
-			// Update size fields in the header block.
+			// 更新头部块中的大小字段。
 			realSize := hdr.Size
-			hdr.Size = 0 // Encoded size; does not account for encoded sparse map
+			hdr.Size = 0 // 编码大小；不计入编码后的稀疏映射
 			for _, s := range spd {
 				hdr.Size += s.Length
 			}
-			copy(blk.V7().Size(), zeroBlock[:]) // Reset field
+			copy(blk.V7().Size(), zeroBlock[:]) // 重置字段
 			f.formatNumeric(blk.V7().Size(), hdr.Size)
 			f.formatNumeric(blk.GNU().RealSize(), realSize)
 		}
@@ -298,9 +296,9 @@ func (tw *Writer) writeGNUHeader(hdr *Header) error {
 		return err
 	}
 
-	// Write the extended sparse map and setup the sparse writer if necessary.
+	// 如有必要，写入扩展稀疏映射并设置稀疏写入器。
 	if len(spd) > 0 {
-		// Use tw.w since the sparse map is not accounted for in hdr.Size.
+		// 使用 tw.w，因为稀疏映射未计入 hdr.Size。
 		if _, err := tw.w.Write(spb); err != nil {
 			return err
 		}

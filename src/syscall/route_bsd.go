@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build darwin || dragonfly || freebsd || netbsd || openbsd
 
@@ -12,26 +12,23 @@ import (
 )
 
 var (
-	freebsdConfArch       string // "machine $arch" line in kern.conftxt on freebsd
+	freebsdConfArch       string // freebsd 上 kern.conftxt 中的 "machine $arch" 行
 	minRoutingSockaddrLen = rsaAlignOf(0)
 )
 
-// Round the length of a raw sockaddr up to align it properly.
+// 将原始 sockaddr 的长度向上舍入以正确对齐。
 func rsaAlignOf(salen int) int {
 	salign := sizeofPtr
 	if darwin64Bit {
-		// Darwin kernels require 32-bit aligned access to
-		// routing facilities.
+		// Darwin 内核需要 32 位对齐访问路由设施。
 		salign = 4
 	} else if netbsd32Bit {
-		// NetBSD 6 and beyond kernels require 64-bit aligned
-		// access to routing facilities.
+		// NetBSD 6 及更高版本内核需要 64 位对齐访问路由设施。
 		salign = 8
 	} else if runtime.GOOS == "freebsd" {
-		// In the case of kern.supported_archs="amd64 i386",
-		// we need to know the underlying kernel's
-		// architecture because the alignment for routing
-		// facilities are set at the build time of the kernel.
+		// 在 kern.supported_archs="amd64 i386" 的情况下，
+		// 我们需要知道底层内核的架构，因为路由设施的对齐
+		// 是在内核构建时设置的。
 		if freebsdConfArch == "amd64" {
 			salign = 8
 		}
@@ -42,7 +39,7 @@ func rsaAlignOf(salen int) int {
 	return (salen + salign - 1) & ^(salign - 1)
 }
 
-// parseSockaddrLink parses b as a datalink socket address.
+// parseSockaddrLink 将 b 解析为数据链路套接字地址。
 func parseSockaddrLink(b []byte) (*SockaddrDatalink, error) {
 	if len(b) < 8 {
 		return nil, EINVAL
@@ -58,20 +55,19 @@ func parseSockaddrLink(b []byte) (*SockaddrDatalink, error) {
 	return sa, nil
 }
 
-// parseLinkLayerAddr parses b as a datalink socket address in
-// conventional BSD kernel form.
+// parseLinkLayerAddr 将 b 解析为传统 BSD 内核形式的数据链路套接字地址。
 func parseLinkLayerAddr(b []byte) (*SockaddrDatalink, int, error) {
-	// The encoding looks like the following:
+	// 编码格式如下：
 	// +----------------------------+
-	// | Type             (1 octet) |
+	// | 类型             (1 字节)  |
 	// +----------------------------+
-	// | Name length      (1 octet) |
+	// | 名称长度         (1 字节)  |
 	// +----------------------------+
-	// | Address length   (1 octet) |
+	// | 地址长度         (1 字节)  |
 	// +----------------------------+
-	// | Selector length  (1 octet) |
+	// | 选择器长度       (1 字节)  |
 	// +----------------------------+
-	// | Data            (variable) |
+	// | 数据            (可变长度) |
 	// +----------------------------+
 	type linkLayerAddr struct {
 		Type byte
@@ -92,7 +88,7 @@ func parseLinkLayerAddr(b []byte) (*SockaddrDatalink, int, error) {
 	return sa, rsaAlignOf(l), nil
 }
 
-// parseSockaddrInet parses b as an internet socket address.
+// parseSockaddrInet 将 b 解析为互联网套接字地址。
 func parseSockaddrInet(b []byte, family byte) (Sockaddr, error) {
 	switch family {
 	case AF_INET:
@@ -117,34 +113,29 @@ const (
 	offsetofInet6 = int(unsafe.Offsetof(RawSockaddrInet6{}.Addr))
 )
 
-// parseNetworkLayerAddr parses b as an internet socket address in
-// conventional BSD kernel form.
+// parseNetworkLayerAddr 将 b 解析为传统 BSD 内核形式的互联网套接字地址。
 func parseNetworkLayerAddr(b []byte, family byte) (Sockaddr, error) {
-	// The encoding looks similar to the NLRI encoding.
+	// 编码格式类似于 NLRI 编码。
 	// +----------------------------+
-	// | Length           (1 octet) |
+	// | 长度             (1 字节)  |
 	// +----------------------------+
-	// | Address prefix  (variable) |
+	// | 地址前缀        (可变长度) |
 	// +----------------------------+
 	//
-	// The differences between the kernel form and the NLRI
-	// encoding are:
+	// 内核形式与 NLRI 编码之间的区别：
 	//
-	// - The length field of the kernel form indicates the prefix
-	//   length in bytes, not in bits
+	// - 内核形式的长度字段表示前缀长度（以字节为单位），而不是位
 	//
-	// - In the kernel form, zero value of the length field
-	//   doesn't mean 0.0.0.0/0 or ::/0
+	// - 在内核形式中，长度字段的零值不表示 0.0.0.0/0 或 ::/0
 	//
-	// - The kernel form appends leading bytes to the prefix field
-	//   to make the <length, prefix> tuple to be conformed with
-	//   the routing message boundary
+	// - 内核形式在前缀字段前附加前导字节，
+	//   使 <长度, 前缀> 元组符合路由消息边界
 	l := int(rsaAlignOf(int(b[0])))
 	if len(b) < l {
 		return nil, EINVAL
 	}
-	// Don't reorder case expressions.
-	// The case expressions for IPv6 must come first.
+	// 不要重新排序 case 表达式。
+	// IPv6 的 case 表达式必须放在前面。
 	switch {
 	case b[0] == SizeofSockaddrInet6:
 		sa := &SockaddrInet6{}
@@ -162,7 +153,7 @@ func parseNetworkLayerAddr(b []byte, family byte) (Sockaddr, error) {
 		sa := &SockaddrInet4{}
 		copy(sa.Addr[:], b[offsetofInet4:])
 		return sa, nil
-	default: // an old fashion, AF_UNSPEC or unknown means AF_INET
+	default: // 旧方式，AF_UNSPEC 或未知表示 AF_INET
 		sa := &SockaddrInet4{}
 		if l-1 < offsetofInet4 {
 			copy(sa.Addr[:], b[1:l])
@@ -173,14 +164,12 @@ func parseNetworkLayerAddr(b []byte, family byte) (Sockaddr, error) {
 	}
 }
 
-// RouteRIB returns routing information base, as known as RIB,
-// which consists of network facility information, states and
-// parameters.
+// RouteRIB 返回路由信息库（RIB），它包含网络设施信息、状态和参数。
 //
-// Deprecated: Use golang.org/x/net/route instead.
+// 已弃用：请使用 golang.org/x/net/route 代替。
 func RouteRIB(facility, param int) ([]byte, error) {
 	mib := []_C_int{CTL_NET, AF_ROUTE, 0, 0, _C_int(facility), _C_int(param)}
-	// Find size.
+	// 查找大小。
 	n := uintptr(0)
 	if err := sysctl(mib, nil, &n, nil, 0); err != nil {
 		return nil, err
@@ -195,9 +184,9 @@ func RouteRIB(facility, param int) ([]byte, error) {
 	return tab[:n], nil
 }
 
-// RoutingMessage represents a routing message.
+// RoutingMessage 表示一个路由消息。
 //
-// Deprecated: Use golang.org/x/net/route instead.
+// 已弃用：请使用 golang.org/x/net/route 代替。
 type RoutingMessage interface {
 	sockaddr() ([]Sockaddr, error)
 }
@@ -210,10 +199,9 @@ type anyMessage struct {
 	Type    uint8
 }
 
-// RouteMessage represents a routing message containing routing
-// entries.
+// RouteMessage 表示包含路由条目的路由消息。
 //
-// Deprecated: Use golang.org/x/net/route instead.
+// 已弃用：请使用 golang.org/x/net/route 代替。
 type RouteMessage struct {
 	Header RtMsghdr
 	Data   []byte
@@ -256,10 +244,9 @@ func (m *RouteMessage) sockaddr() ([]Sockaddr, error) {
 	return sas[:], nil
 }
 
-// InterfaceMessage represents a routing message containing
-// network interface entries.
+// InterfaceMessage 表示包含网络接口条目的路由消息。
 //
-// Deprecated: Use golang.org/x/net/route instead.
+// 已弃用：请使用 golang.org/x/net/route 代替。
 type InterfaceMessage struct {
 	Header IfMsghdr
 	Data   []byte
@@ -278,10 +265,9 @@ func (m *InterfaceMessage) sockaddr() ([]Sockaddr, error) {
 	return sas[:], nil
 }
 
-// InterfaceAddrMessage represents a routing message containing
-// network interface address entries.
+// InterfaceAddrMessage 表示包含网络接口地址条目的路由消息。
 //
-// Deprecated: Use golang.org/x/net/route instead.
+// 已弃用：请使用 golang.org/x/net/route 代替。
 type InterfaceAddrMessage struct {
 	Header IfaMsghdr
 	Data   []byte
@@ -324,10 +310,9 @@ func (m *InterfaceAddrMessage) sockaddr() ([]Sockaddr, error) {
 	return sas[:], nil
 }
 
-// ParseRoutingMessage parses b as routing messages and returns the
-// slice containing the [RoutingMessage] interfaces.
+// ParseRoutingMessage 将 b 解析为路由消息，并返回包含 [RoutingMessage] 接口的切片。
 //
-// Deprecated: Use golang.org/x/net/route instead.
+// 已弃用：请使用 golang.org/x/net/route 代替。
 func ParseRoutingMessage(b []byte) (msgs []RoutingMessage, err error) {
 	nmsgs, nskips := 0, 0
 	for len(b) >= anyMessageLen {
@@ -344,17 +329,17 @@ func ParseRoutingMessage(b []byte) (msgs []RoutingMessage, err error) {
 		}
 		b = b[any.Msglen:]
 	}
-	// We failed to parse any of the messages - version mismatch?
+	// 我们未能解析任何消息 - 版本不匹配？
 	if nmsgs != len(msgs)+nskips {
 		return nil, EINVAL
 	}
 	return msgs, nil
 }
 
-// ParseRoutingSockaddr parses msg's payload as raw sockaddrs and
-// returns the slice containing the [Sockaddr] interfaces.
+// ParseRoutingSockaddr 将 msg 的载荷解析为原始 sockaddrs，
+// 并返回包含 [Sockaddr] 接口的切片。
 //
-// Deprecated: Use golang.org/x/net/route instead.
+// 已弃用：请使用 golang.org/x/net/route 代替。
 func ParseRoutingSockaddr(msg RoutingMessage) ([]Sockaddr, error) {
 	sas, err := msg.sockaddr()
 	if err != nil {

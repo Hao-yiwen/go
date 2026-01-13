@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package scanner implements a scanner for Go source text.
+// scanner 包实现了 Go 源代码的扫描器。
 // It takes a []byte as source which can then be tokenized
 // through repeated calls to the Scan method.
 package scanner
@@ -18,15 +18,15 @@ import (
 	"unicode/utf8"
 )
 
-// An ErrorHandler may be provided to [Scanner.Init]. If a syntax error is
+// 一个ErrorHandler 可能是 provided to [Scanner.Init]. If a syntax error is
 // encountered and a handler was installed, the handler is called with a
 // position and an error message. The position points to the beginning of
 // the offending token.
 type ErrorHandler func(pos token.Position, msg string)
 
-// A Scanner holds the scanner's internal state while processing
+// 一个Scanner 保存 scanner's internal state while processing
 // a given text. It can be allocated as part of another data
-// structure but must be initialized via [Scanner.Init] before use.
+// structure but 必须是 initialized via [Scanner.Init] before use.
 type Scanner struct {
 	// immutable state
 	file *token.File  // source file handle
@@ -84,7 +84,7 @@ func (s *Scanner) next() {
 				if s.offset == 0 &&
 					len(in) >= 2 &&
 					(in[0] == 0xFF && in[1] == 0xFE || in[0] == 0xFE && in[1] == 0xFF) {
-					// U+FEFF BOM at start of file, encoded as big- or little-endian
+					// U+FEFF BOM at start of file, 编码为 big- or little-endian
 					// UCS-2 (i.e. 2-byte UTF-16). Give specific error (go.dev/issue/71950).
 					s.error(s.offset, "illegal UTF-8 encoding (got UTF-16)")
 					s.rdOffset += len(in) // consume all input to avoid error cascade
@@ -107,8 +107,8 @@ func (s *Scanner) next() {
 	}
 }
 
-// peek returns the byte following the most recently read character without
-// advancing the scanner. If the scanner is at EOF, peek returns 0.
+// peek 返回the byte following the most recently read character without
+// advancing the scanner. If the scanner 是一个t EOF, peek returns 0.
 func (s *Scanner) peek() byte {
 	if s.rdOffset < len(s.src) {
 		return s.src[s.rdOffset]
@@ -116,7 +116,7 @@ func (s *Scanner) peek() byte {
 	return 0
 }
 
-// A Mode value is a set of flags (or 0).
+// 一个Mode value 是一个 set of flags (or 0).
 // They control scanner behavior.
 type Mode uint
 
@@ -129,18 +129,18 @@ const (
 // scanner at the beginning of src. The scanner uses the file set file
 // for position information and it adds line information for each line.
 // It is ok to re-use the same file when re-scanning the same file as
-// line information which is already present is ignored. Init causes a
-// panic if the file size does not match the src size.
+// line information which 是一个lready present is ignored. Init causes a
+// panic 如果 file size does not match the src size.
 //
 // Calls to [Scanner.Scan] will invoke the error handler err if they encounter a
 // syntax error and err is not nil. Also, for each error encountered,
 // the [Scanner] field ErrorCount is incremented by one. The mode parameter
 // determines how comments are handled.
 //
-// Note that Init may call err if there is an error in the first character
+// Note that Init may call err if there 是一个n error in the first character
 // of the file.
 func (s *Scanner) Init(file *token.File, src []byte, err ErrorHandler, mode Mode) {
-	// Explicitly initialize all fields since a scanner may be reused.
+	// Explicitly initialize all fields since a scanner 可能是 reused.
 	if file.Size() != len(src) {
 		panic(fmt.Sprintf("file size (%d) does not match src len (%d)", file.Size(), len(src)))
 	}
@@ -174,7 +174,7 @@ func (s *Scanner) errorf(offs int, format string, args ...any) {
 	s.error(offs, fmt.Sprintf(format, args...))
 }
 
-// scanComment returns the text of the comment and (if nonzero)
+// scanComment 返回the text of the comment and (if nonzero)
 // the offset of the first newline within it, which implies a
 // /*...*/ comment.
 func (s *Scanner) scanComment() (string, int) {
@@ -194,7 +194,7 @@ func (s *Scanner) scanComment() (string, int) {
 			}
 			s.next()
 		}
-		// if we are at '\n', the position following the comment is afterwards
+		// if we are at '\n', the position following the comment 是一个fterwards
 		next = s.offset
 		if s.ch == '\n' {
 			next++
@@ -273,7 +273,7 @@ func (s *Scanner) updateLineInfo(next, offs int, text []byte) {
 	}
 
 	// Put a cap on the maximum size of line and column numbers.
-	// 30 bits allows for some additional space before wrapping an int32.
+	// 30 bits 允许 for some additional space before wrapping an int32.
 	// Keep this consistent with cmd/compile/internal/syntax.PosMax.
 	const maxLineCol = 1 << 30
 	var line, col int
@@ -367,8 +367,8 @@ func (s *Scanner) scanIdentifier() string {
 			goto exit
 		}
 		// We know that the preceding character is valid for an identifier because
-		// scanIdentifier is only called when s.ch is a letter, so calling s.next()
-		// at s.rdOffset resets the scanner state.
+		// scanIdentifier is only called when s.ch 是一个 letter, so calling s.next()
+		// at s.rdOffset re设置 scanner state.
 		s.next()
 		for isLetter(s.ch) || isDigit(s.ch) {
 			s.next()
@@ -401,7 +401,7 @@ func isHex(ch rune) bool     { return '0' <= ch && ch <= '9' || 'a' <= lower(ch)
 // If base <= 10, digits accepts any decimal digit but records
 // the offset (relative to the source start) of a digit >= base
 // in *invalid, if *invalid < 0.
-// digits returns a bitset describing whether the sequence contained
+// digits 返回a bitset describing whether the sequence contained
 // digits (bit 0 is set), or separators '_' (bit 1 is set).
 func (s *Scanner) digits(base int, invalid *int) (digsep int) {
 	if base <= 10 {
@@ -528,7 +528,7 @@ func litname(prefix rune) string {
 	return "decimal literal"
 }
 
-// invalidSep returns the index of the first invalid separator in x, or -1.
+// invalidSep 返回the index of the first invalid separator in x, or -1.
 func invalidSep(x string) int {
 	x1 := ' ' // prefix char, we only care if it's 'x'
 	d := '.'  // digit, one of '_', '0' (a digit), or '.' (anything else)
@@ -568,10 +568,10 @@ func invalidSep(x string) int {
 	return -1
 }
 
-// scanEscape parses an escape sequence where rune is the accepted
+// scanEscape parses an escape sequence where rune 是 accepted
 // escaped quote. In case of a syntax error, it stops at the offending
 // character (without consuming it) and returns false. Otherwise
-// it returns true.
+// it 返回true.
 func (s *Scanner) scanEscape(quote rune) bool {
 	offs := s.offset
 
@@ -689,7 +689,7 @@ func stripCR(b []byte, comment bool) []byte {
 	for j, ch := range b {
 		// In a /*-style comment, don't strip \r from *\r/ (incl.
 		// sequences of \r from *\r\r...\r/) since the resulting
-		// */ would terminate the comment too early unless the \r
+		// */ would terminate the comment too early 除非 the \r
 		// is immediately following the opening /* in which case
 		// it's ok because /*/ is not closed yet (issue #11151).
 		if ch != '\r' || comment && i > len("/*") && c[i-1] == '*' && j+1 < len(b) && b[j+1] == '/' {
@@ -739,7 +739,7 @@ func (s *Scanner) skipWhitespace() {
 // Different routines recognize different length tok_i based on matches
 // of ch_i. If a token ends in '=', the result is tok1 or tok3
 // respectively. Otherwise, the result is tok0 if there was no other
-// matching character, or tok2 if the matching character was ch2.
+// matching character, or tok2 如果 matching character was ch2.
 
 func (s *Scanner) switch2(tok0, tok1 token.Token) token.Token {
 	if s.ch == '=' {
@@ -777,29 +777,29 @@ func (s *Scanner) switch4(tok0, tok1 token.Token, ch2 rune, tok2, tok3 token.Tok
 	return tok0
 }
 
-// Scan scans the next token and returns the token position, the token,
+// Scan scans the next token and 返回 token position, the token,
 // and its literal string if applicable. The source end is indicated by
 // [token.EOF].
 //
-// If the returned token is a literal ([token.IDENT], [token.INT], [token.FLOAT],
+// If the returned token 是一个 literal ([token.IDENT], [token.INT], [token.FLOAT],
 // [token.IMAG], [token.CHAR], [token.STRING]) or [token.COMMENT], the literal string
 // has the corresponding value.
 //
-// If the returned token is a keyword, the literal string is the keyword.
+// If the returned token 是一个 keyword, the literal string 是 keyword.
 //
 // If the returned token is [token.SEMICOLON], the corresponding
-// literal string is ";" if the semicolon was present in the source,
-// and "\n" if the semicolon was inserted because of a newline or
+// literal string is ";" 如果 semicolon was present in the source,
+// and "\n" 如果 semicolon was inserted because of a newline or
 // at EOF.
 //
-// If the returned token is [token.ILLEGAL], the literal string is the
+// If the returned token is [token.ILLEGAL], the literal string 是
 // offending character.
 //
-// In all other cases, Scan returns an empty literal string.
+// In all other cases, Scan 返回一个 empty literal string.
 //
-// For more tolerant parsing, Scan will return a valid token if
+// For more tolerant parsing, Scan 将返回 a valid token if
 // possible even if a syntax error was encountered. Thus, even
-// if the resulting token sequence contains no illegal tokens,
+// 如果 resulting token sequence 包含 no illegal tokens,
 // a client may not assume that no error occurred. Instead it
 // must check the scanner's ErrorCount or the number of calls
 // of the error handler, if there was one installed.

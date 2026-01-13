@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
@@ -11,13 +11,13 @@ import (
 	"go/token"
 )
 
-// Eval returns the type and, if constant, the value for the
+// Eval 返回the type and, if constant, the value for the
 // expression expr, evaluated at position pos of package pkg,
 // which must have been derived from type-checking an AST with
 // complete position information relative to the provided file
 // set.
 //
-// The meaning of the parameters fset, pkg, and pos is the
+// The meaning of the parameters fset, pkg, and pos 是
 // same as in [CheckExpr]. An error is returned if expr cannot
 // be parsed successfully, or the resulting expr AST cannot be
 // type-checked.
@@ -37,7 +37,7 @@ func Eval(fset *token.FileSet, pkg *Package, pos token.Pos, expr string) (_ Type
 
 // CheckExpr type checks the expression expr as if it had appeared at position
 // pos of package pkg. [Type] information about the expression is recorded in
-// info. The expression may be an identifier denoting an uninstantiated generic
+// info. The expression 可能是 an identifier denoting an uninstantiated generic
 // function or type.
 //
 // If pkg == nil, the [Universe] scope is used and the provided
@@ -45,13 +45,13 @@ func Eval(fset *token.FileSet, pkg *Package, pos token.Pos, expr string) (_ Type
 // the package scope is used. Otherwise, pos must belong to the
 // package.
 //
-// An error is returned if pos is not within the package or
-// if the node cannot be type-checked.
+// 一个error is returned if pos is not within the package or
+// 如果 node cannot be type-checked.
 //
 // Note: [Eval] and CheckExpr should not be used instead of running Check
 // to compute types and values, but in addition to Check, as these
 // functions ignore the context in which an expression is used (e.g., an
-// assignment). Thus, top-level untyped constants will return an
+// assignment). Thus, top-level untyped constants 将返回 an
 // untyped type rather than the respective context-specific type.
 func CheckExpr(fset *token.FileSet, pkg *Package, pos token.Pos, expr ast.Expr, info *Info) (err error) {
 	// determine scope

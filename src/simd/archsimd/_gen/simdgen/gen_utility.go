@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -63,8 +63,8 @@ func writeAndClose(b []byte, goroot string, file string) {
 	ofile.Close()
 }
 
-// numberLines takes a slice of bytes, and returns a string where each line
-// is numbered, starting from 1.
+// numberLines 接收一个字节切片，返回一个每行都带有行号的字符串，
+// 行号从 1 开始。
 func numberLines(data []byte) string {
 	var buf bytes.Buffer
 	r := bytes.NewReader(data)
@@ -83,49 +83,48 @@ type memShape uint8
 
 const (
 	InvalidIn     inShape = iota
-	PureVregIn            // vector register input only
-	OneKmaskIn            // vector and kmask input
-	OneImmIn              // vector and immediate input
-	OneKmaskImmIn         // vector, kmask, and immediate inputs
-	PureKmaskIn           // only mask inputs.
+	PureVregIn            // 仅向量寄存器输入
+	OneKmaskIn            // 向量和 kmask 输入
+	OneImmIn              // 向量和立即数输入
+	OneKmaskImmIn         // 向量、kmask 和立即数输入
+	PureKmaskIn           // 仅掩码输入
 )
 
 const (
 	InvalidOut     outShape = iota
-	NoOut                   // no output
-	OneVregOut              // (one) vector register output
-	OneGregOut              // (one) general register output
-	OneKmaskOut             // mask output
-	OneVregOutAtIn          // the first input is also the output
+	NoOut                   // 无输出
+	OneVregOut              // (一个) 向量寄存器输出
+	OneGregOut              // (一个) 通用寄存器输出
+	OneKmaskOut             // 掩码输出
+	OneVregOutAtIn          // 第一个输入也是输出
 )
 
 const (
 	InvalidMask maskShape = iota
-	NoMask                // no mask
-	OneMask               // with mask (K1 to K7)
-	AllMasks              // a K mask instruction (K0-K7)
+	NoMask                // 无掩码
+	OneMask               // 带掩码 (K1 到 K7)
+	AllMasks              // K 掩码指令 (K0-K7)
 )
 
 const (
 	InvalidImm  immShape = iota
-	NoImm                // no immediate
-	ConstImm             // const only immediate
-	VarImm               // pure imm argument provided by the users
-	ConstVarImm          // a combination of user arg and const
+	NoImm                // 无立即数
+	ConstImm             // 仅常量立即数
+	VarImm               // 用户提供的纯立即数参数
+	ConstVarImm          // 用户参数和常量的组合
 )
 
 const (
 	InvalidMem memShape = iota
 	NoMem
-	VregMemIn // The instruction contains a mem input which is loading a vreg.
+	VregMemIn // 该指令包含一个正在加载向量寄存器的内存输入。
 )
 
-// opShape returns the several integers describing the shape of the operation,
-// and modified versions of the op:
+// opShape 返回描述操作形状的几个整数，以及 op 的修改版本：
 //
-// opNoImm is op with its inputs excluding the const imm.
+// opNoImm 是 op，但其输入不包含常量立即数。
 //
-// This function does not modify op.
+// 此函数不修改 op。
 func (op *Operation) shape() (shapeIn inShape, shapeOut outShape, maskType maskShape, immType immShape,
 	opNoImm Operation) {
 	if len(op.Out) > 1 {
@@ -145,8 +144,8 @@ func (op *Operation) shape() (shapeIn inShape, shapeOut outShape, maskType maskS
 		}
 	} else {
 		shapeOut = NoOut
-		// TODO: are these only Load/Stores?
-		// We manually supported two Load and Store, are those enough?
+		// TODO: 这些只是加载/存储吗？
+		// 我们手动支持了两个 Load 和 Store，这些够吗？
 		panic(fmt.Errorf("simdgen only supports 1 output: %s", op))
 	}
 	hasImm := false
@@ -161,8 +160,8 @@ func (op *Operation) shape() (shapeIn inShape, shapeOut outShape, maskType maskS
 			}
 		}
 		if in.Class == "immediate" {
-			// A manual check on XED data found that AMD64 SIMD instructions at most
-			// have 1 immediates. So we don't need to check this here.
+			// 对 XED 数据的手动检查发现 AMD64 SIMD 指令最多
+			// 有 1 个立即数。所以我们不需要在这里检查这个。
 			if *in.Bits != 8 {
 				panic(fmt.Errorf("simdgen only supports immediates of 8 bits: %s", op))
 			}
@@ -233,7 +232,7 @@ func (op *Operation) shape() (shapeIn inShape, shapeOut outShape, maskType maskS
 	return
 }
 
-// regShape returns a string representation of the register shape.
+// regShape 返回寄存器形状的字符串表示。
 func (op *Operation) regShape(mem memShape) (string, error) {
 	_, _, _, _, gOp := op.shape()
 	var regInfo, fixedName string
@@ -258,7 +257,7 @@ func (op *Operation) regShape(mem memShape) (string, error) {
 		}
 	}
 	for i, out := range gOp.Out {
-		// If class overwrite is happening, that's not really a mask but a vreg.
+		// 如果发生类覆盖，那实际上不是掩码而是向量寄存器。
 		if out.Class == "vreg" || out.OverwriteClass != nil {
 			vRegOutCnt++
 		} else if out.Class == "greg" {
@@ -298,7 +297,7 @@ func (op *Operation) regShape(mem memShape) (string, error) {
 	outMasks = rmAbbrev("k", kMaskOutCnt)
 
 	if kMaskInCnt == 0 && kMaskOutCnt == 0 && gRegInCnt == 0 && gRegOutCnt == 0 {
-		// For pure v we can abbreviate it as v%d%d.
+		// 对于纯 v，我们可以将其缩写为 v%d%d。
 		regInfo = fmt.Sprintf("v%d%d", vRegInCnt, vRegOutCnt)
 	} else if kMaskInCnt == 0 && kMaskOutCnt == 0 {
 		regInfo = fmt.Sprintf("%s%s", inRegs, outRegs)
@@ -319,10 +318,10 @@ func (op *Operation) regShape(mem memShape) (string, error) {
 	return regInfo, nil
 }
 
-// sortOperand sorts op.In by putting immediates first, then vreg, and mask the last.
-// TODO: verify that this is a safe assumption of the prog structure.
-// from my observation looks like in asm, imms are always the first,
-// masks are always the last, with vreg in between.
+// sortOperand 对 op.In 排序，将立即数放在最前面，然后是 vreg，掩码放在最后。
+// TODO: 验证这是否是 prog 结构的安全假设。
+// 根据我的观察，在汇编中立即数总是第一个，
+// 掩码总是最后一个，vreg 在中间。
 func (op *Operation) sortOperand() {
 	priority := map[string]int{"immediate": 0, "vreg": 1, "greg": 1, "mask": 2}
 	sort.SliceStable(op.In, func(i, j int) bool {
@@ -335,7 +334,7 @@ func (op *Operation) sortOperand() {
 	})
 }
 
-// adjustAsm adjusts the asm to make it align with Go's assembler.
+// adjustAsm 调整汇编以使其与 Go 的汇编器对齐。
 func (op *Operation) adjustAsm() {
 	if op.Asm == "VCVTTPD2DQ" || op.Asm == "VCVTTPD2UDQ" ||
 		op.Asm == "VCVTQQ2PS" || op.Asm == "VCVTUQQ2PS" ||
@@ -349,22 +348,21 @@ func (op *Operation) adjustAsm() {
 	}
 }
 
-// goNormalType returns the Go type name for the result of an Op that
-// does not return a vector, i.e., that returns a result in a general
-// register.  Currently there's only one family of Ops in Go's simd library
-// that does this (GetElem), and so this is specialized to work for that,
-// but the problem (mismatch betwen hardware register width and Go type
-// width) seems likely to recur if there are any other cases.
+// goNormalType 返回不返回向量的操作结果的 Go 类型名，
+// 即返回通用寄存器中结果的操作。目前 Go 的 simd 库中只有一类操作
+// 这样做 (GetElem)，因此这是专门为此设计的，
+// 但如果有其他情况，这个问题（硬件寄存器宽度与 Go 类型
+// 宽度不匹配）似乎可能会再次出现。
 func (op Operation) goNormalType() string {
 	if op.Go == "GetElem" {
-		// GetElem returns an element of the vector into a general register
-		// but as far as the hardware is concerned, that result is either 32
-		// or 64 bits wide, no matter what the vector element width is.
-		// This is not "wrong" but it is not the right answer for Go source code.
-		// To get the Go type right, combine the base type ("int", "uint", "float"),
-		// with the input vector element width in bits (8,16,32,64).
+		// GetElem 将向量的一个元素返回到通用寄存器中，
+		// 但就硬件而言，该结果要么是 32 位要么是 64 位宽，
+		// 无论向量元素宽度是多少。
+		// 这并非"错误"，但对于 Go 源代码来说不是正确的答案。
+		// 要获得正确的 Go 类型，需要将基本类型（"int"、"uint"、"float"）
+		// 与输入向量元素宽度（8、16、32、64 位）组合。
 
-		at := 0 // proper value of at depends on whether immediate was stripped or not
+		at := 0 // at 的正确值取决于立即数是否被剥离
 		if op.In[at].Class == "immediate" {
 			at++
 		}
@@ -373,8 +371,8 @@ func (op Operation) goNormalType() string {
 	panic(fmt.Errorf("Implement goNormalType for %v", op))
 }
 
-// SSAType returns the string for the type reference in SSA generation,
-// for example in the intrinsics generating template.
+// SSAType 返回 SSA 生成中类型引用的字符串，
+// 例如在内置函数生成模板中。
 func (op Operation) SSAType() string {
 	if op.Out[0].Class == "greg" {
 		return fmt.Sprintf("types.Types[types.T%s]", strings.ToUpper(op.goNormalType()))
@@ -382,8 +380,8 @@ func (op Operation) SSAType() string {
 	return fmt.Sprintf("types.TypeVec%d", *op.Out[0].Bits)
 }
 
-// GoType returns the Go type returned by this operation (relative to the simd package),
-// for example "int32" or "Int8x16".  This is used in a template.
+// GoType 返回此操作返回的 Go 类型（相对于 simd 包），
+// 例如 "int32" 或 "Int8x16"。这用于模板中。
 func (op Operation) GoType() string {
 	if op.Out[0].Class == "greg" {
 		return op.goNormalType()
@@ -391,9 +389,9 @@ func (op Operation) GoType() string {
 	return *op.Out[0].Go
 }
 
-// ImmName returns the name to use for an operation's immediate operand.
-// This can be overriden in the yaml with "name" on an operand,
-// otherwise, for now, "constant"
+// ImmName 返回操作的立即数操作数使用的名称。
+// 这可以在 yaml 中用操作数上的 "name" 覆盖，
+// 否则，目前默认为 "constant"
 func (op Operation) ImmName() string {
 	return op.Op0Name("constant")
 }
@@ -412,71 +410,66 @@ func (o Operand) OpNameAndType(s string) string {
 	return o.OpName(s) + " " + *o.Go
 }
 
-// GoExported returns [Go] with first character capitalized.
+// GoExported 返回首字符大写的 [Go]。
 func (op Operation) GoExported() string {
 	return capitalizeFirst(op.Go)
 }
 
-// DocumentationExported returns [Documentation] with method name capitalized.
+// DocumentationExported 返回方法名大写的 [Documentation]。
 func (op Operation) DocumentationExported() string {
 	return strings.ReplaceAll(op.Documentation, op.Go, op.GoExported())
 }
 
-// Op0Name returns the name to use for the 0 operand,
-// if any is present, otherwise the parameter is used.
+// Op0Name 返回第 0 个操作数使用的名称，
+// 如果存在的话，否则使用参数。
 func (op Operation) Op0Name(s string) string {
 	return op.In[0].OpName(s)
 }
 
-// Op1Name returns the name to use for the 1 operand,
-// if any is present, otherwise the parameter is used.
+// Op1Name 返回第 1 个操作数使用的名称，
+// 如果存在的话，否则使用参数。
 func (op Operation) Op1Name(s string) string {
 	return op.In[1].OpName(s)
 }
 
-// Op2Name returns the name to use for the 2 operand,
-// if any is present, otherwise the parameter is used.
+// Op2Name 返回第 2 个操作数使用的名称，
+// 如果存在的话，否则使用参数。
 func (op Operation) Op2Name(s string) string {
 	return op.In[2].OpName(s)
 }
 
-// Op3Name returns the name to use for the 3 operand,
-// if any is present, otherwise the parameter is used.
+// Op3Name 返回第 3 个操作数使用的名称，
+// 如果存在的话，否则使用参数。
 func (op Operation) Op3Name(s string) string {
 	return op.In[3].OpName(s)
 }
 
-// Op0NameAndType returns the name and type to use for
-// the 0 operand, if a name is provided, otherwise
-// the parameter value is used as the default.
+// Op0NameAndType 返回第 0 个操作数使用的名称和类型，
+// 如果提供了名称，否则使用参数值作为默认值。
 func (op Operation) Op0NameAndType(s string) string {
 	return op.In[0].OpNameAndType(s)
 }
 
-// Op1NameAndType returns the name and type to use for
-// the 1 operand, if a name is provided, otherwise
-// the parameter value is used as the default.
+// Op1NameAndType 返回第 1 个操作数使用的名称和类型，
+// 如果提供了名称，否则使用参数值作为默认值。
 func (op Operation) Op1NameAndType(s string) string {
 	return op.In[1].OpNameAndType(s)
 }
 
-// Op2NameAndType returns the name and type to use for
-// the 2 operand, if a name is provided, otherwise
-// the parameter value is used as the default.
+// Op2NameAndType 返回第 2 个操作数使用的名称和类型，
+// 如果提供了名称，否则使用参数值作为默认值。
 func (op Operation) Op2NameAndType(s string) string {
 	return op.In[2].OpNameAndType(s)
 }
 
-// Op3NameAndType returns the name and type to use for
-// the 3 operand, if a name is provided, otherwise
-// the parameter value is used as the default.
+// Op3NameAndType 返回第 3 个操作数使用的名称和类型，
+// 如果提供了名称，否则使用参数值作为默认值。
 func (op Operation) Op3NameAndType(s string) string {
 	return op.In[3].OpNameAndType(s)
 }
 
-// Op4NameAndType returns the name and type to use for
-// the 4 operand, if a name is provided, otherwise
-// the parameter value is used as the default.
+// Op4NameAndType 返回第 4 个操作数使用的名称和类型，
+// 如果提供了名称，否则使用参数值作为默认值。
 func (op Operation) Op4NameAndType(s string) string {
 	return op.In[4].OpNameAndType(s)
 }
@@ -484,12 +477,12 @@ func (op Operation) Op4NameAndType(s string) string {
 var immClasses []string = []string{"BAD0Imm", "BAD1Imm", "op1Imm8", "op2Imm8", "op3Imm8", "op4Imm8"}
 var classes []string = []string{"BAD0", "op1", "op2", "op3", "op4"}
 
-// classifyOp returns a classification string, modified operation, and perhaps error based
-// on the stub and intrinsic shape for the operation.
-// The classification string is in the regular expression set "op[1234](Imm8)?(_<order>)?"
-// where the "<order>" suffix is optionally attached to the Operation in its input yaml.
-// The classification string is used to select a template or a clause of a template
-// for intrinsics declaration and the ssagen intrinisics glue code in the compiler.
+// classifyOp 根据操作的存根和内置函数形状，返回分类字符串、修改后的操作，
+// 以及可能的错误。
+// 分类字符串在正则表达式集 "op[1234](Imm8)?(_<order>)?" 中，
+// 其中 "<order>" 后缀可选地附加到其输入 yaml 中的 Operation。
+// 分类字符串用于选择模板或模板的子句，
+// 用于内置函数声明和编译器中的 ssagen 内置函数粘合代码。
 func classifyOp(op Operation) (string, Operation, error) {
 	_, _, _, immType, gOp := op.shape()
 
@@ -575,7 +568,7 @@ func rewriteLastVregToMem(op Operation) Operation {
 			lastVregIdx = i
 		}
 	}
-	// vbcst operations put their mem op always as the last vreg.
+	// vbcst 操作总是将其内存操作放在最后一个 vreg。
 	if lastVregIdx == -1 {
 		panic("simdgen cannot find one vreg in the mem op vreg original")
 	}
@@ -585,7 +578,7 @@ func rewriteLastVregToMem(op Operation) Operation {
 	return op
 }
 
-// dedup is deduping operations in the full structure level.
+// dedup 在完整结构级别上去重操作。
 func dedup(ops []Operation) (deduped []Operation) {
 	for _, op := range ops {
 		seen := false
@@ -606,7 +599,7 @@ func (op Operation) GenericName() string {
 	if op.OperandOrder != nil {
 		switch *op.OperandOrder {
 		case "21Type1", "231Type1":
-			// Permute uses operand[1] for method receiver.
+			// Permute 使用 operand[1] 作为方法接收者。
 			return op.Go + *op.In[1].Go
 		}
 	}
@@ -616,10 +609,10 @@ func (op Operation) GenericName() string {
 	return op.Go + *op.In[0].Go
 }
 
-// dedupGodef is deduping operations in [Op.Go]+[*Op.In[0].Go] level.
-// By deduping, it means picking the least advanced architecture that satisfy the requirement:
-// AVX512 will be least preferred.
-// If FlagNoDedup is set, it will report the duplicates to the console.
+// dedupGodef 在 [Op.Go]+[*Op.In[0].Go] 级别上去重操作。
+// 去重意味着选择满足要求的最低高级架构：
+// AVX512 将是最不优先的。
+// 如果设置了 FlagNoDedup，它将向控制台报告重复项。
 func dedupGodef(ops []Operation) ([]Operation, error) {
 	seen := map[string][]Operation{}
 	for _, op := range ops {
@@ -646,7 +639,7 @@ func dedupGodef(ops []Operation) ([]Operation, error) {
 	for _, dup := range seen {
 		if len(dup) > 1 {
 			slices.SortFunc(dup, func(i, j Operation) int {
-				// Put non-AVX512 candidates at the beginning
+				// 将非 AVX512 候选项放在开头
 				if !isAVX512(i) && isAVX512(j) {
 					return -1
 				}
@@ -656,10 +649,10 @@ func dedupGodef(ops []Operation) ([]Operation, error) {
 				if i.CPUFeature != j.CPUFeature {
 					return strings.Compare(i.CPUFeature, j.CPUFeature)
 				}
-				// Weirdly Intel sometimes has duplicated definitions for the same instruction,
-				// this confuses the XED mem-op merge logic: [MemFeature] will only be attached to an instruction
-				// for only once, which means that for essentially duplicated instructions only one will have the
-				// proper [MemFeature] set. We have to make this sort deterministic for [MemFeature].
+				// 奇怪的是，Intel 有时会为同一指令定义重复项，
+				// 这会混淆 XED 内存操作合并逻辑：[MemFeature] 只会附加到一条指令
+				// 一次，这意味着对于本质上重复的指令，只有一个会设置
+				// 正确的 [MemFeature]。我们必须使这个排序对于 [MemFeature] 是确定性的。
 				if i.MemFeatures != nil && j.MemFeatures == nil {
 					return -1
 				}
@@ -672,7 +665,7 @@ func dedupGodef(ops []Operation) ([]Operation, error) {
 					}
 					return 1
 				}
-				// Their order does not matter anymore, at least for now.
+				// 它们的顺序不再重要了，至少目前是这样。
 				return 0
 			})
 		}
@@ -682,8 +675,8 @@ func dedupGodef(ops []Operation) ([]Operation, error) {
 	return deduped, nil
 }
 
-// Copy op.ConstImm to op.In[0].Const
-// This is a hack to reduce the size of defs we need for const imm operations.
+// 将 op.ConstImm 复制到 op.In[0].Const
+// 这是一个技巧，用于减少我们需要的常量立即数操作定义的大小。
 func copyConstImm(ops []Operation) error {
 	for _, op := range ops {
 		if op.ConstImm == nil {
@@ -694,8 +687,8 @@ func copyConstImm(ops []Operation) error {
 		if immType == ConstImm || immType == ConstVarImm {
 			op.In[0].Const = op.ConstImm
 		}
-		// Otherwise, just not port it - e.g. {VPCMP[BWDQ] imm=0} and {VPCMPEQ[BWDQ]} are
-		// the same operations "Equal", [dedupgodef] should be able to distinguish them.
+		// 否则，就不移植它 - 例如 {VPCMP[BWDQ] imm=0} 和 {VPCMPEQ[BWDQ]} 是
+		// 相同的操作 "Equal"，[dedupgodef] 应该能够区分它们。
 	}
 	return nil
 }
@@ -704,18 +697,18 @@ func capitalizeFirst(s string) string {
 	if s == "" {
 		return ""
 	}
-	// Convert the string to a slice of runes to handle multi-byte characters correctly.
+	// 将字符串转换为符文切片以正确处理多字节字符。
 	r := []rune(s)
 	r[0] = unicode.ToUpper(r[0])
 	return string(r)
 }
 
-// overwrite corrects some errors due to:
-//   - The XED data is wrong
-//   - Go's SIMD API requirement, for example AVX2 compares should also produce masks.
-//     This rewrite has strict constraints, please see the error message.
-//     These constraints are also explointed in [writeSIMDRules], [writeSIMDMachineOps]
-//     and [writeSIMDSSA], please be careful when updating these constraints.
+// overwrite 纠正一些由于以下原因导致的错误：
+//   - XED 数据是错误的
+//   - Go 的 SIMD API 要求，例如 AVX2 比较也应该产生掩码。
+//     这个重写有严格的约束，请参阅错误消息。
+//     这些约束也在 [writeSIMDRules]、[writeSIMDMachineOps]
+//     和 [writeSIMDSSA] 中被利用，更新这些约束时请小心。
 func overwrite(ops []Operation) error {
 	hasClassOverwrite := false
 	overwrite := func(op []Operand, idx int, o Operation) error {
@@ -782,12 +775,12 @@ func overwrite(ops []Operation) error {
 	return nil
 }
 
-// reportXEDInconsistency reports potential XED inconsistencies.
-// We can add more fields to [Operation] to enable more checks and implement it here.
-// Supported checks:
-// [NameAndSizeCheck]: NAME[BWDQ] should set the elemBits accordingly.
-// This check is useful to find inconsistencies, then we can add overwrite fields to
-// those defs to correct them manually.
+// reportXEDInconsistency 报告潜在的 XED 不一致性。
+// 我们可以向 [Operation] 添加更多字段以启用更多检查并在此处实现。
+// 支持的检查：
+// [NameAndSizeCheck]：NAME[BWDQ] 应该相应地设置 elemBits。
+// 此检查用于查找不一致性，然后我们可以向这些定义添加覆盖字段
+// 以手动更正它们。
 func reportXEDInconsistency(ops []Operation) error {
 	for _, o := range ops {
 		if o.NameAndSizeCheck != nil {
@@ -810,7 +803,7 @@ func reportXEDInconsistency(ops []Operation) error {
 					continue
 				}
 				if in.TreatLikeAScalarOfSize != nil {
-					// This is an irregular operand, don't check it.
+					// 这是一个不规则的操作数，不检查它。
 					continue
 				}
 				if err := checkOperand(in); err != nil {
@@ -828,7 +821,7 @@ func reportXEDInconsistency(ops []Operation) error {
 }
 
 func (o *Operation) hasMaskedMerging(maskType maskShape, outType outShape) bool {
-	// BLEND and VMOVDQU are not user-facing ops so we should filter them out.
+	// BLEND 和 VMOVDQU 不是面向用户的操作，所以我们应该将它们过滤掉。
 	return o.OperandOrder == nil && o.SpecialLower == nil && maskType == OneMask && outType == OneVregOut &&
 		len(o.InVariant) == 1 && !strings.Contains(o.Asm, "BLEND") && !strings.Contains(o.Asm, "VMOVDQU")
 }

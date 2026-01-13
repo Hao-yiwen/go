@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements (error and trace) message formatting support.
 
@@ -87,7 +87,7 @@ func sprintf(fset *token.FileSet, qf Qualifier, tpSubscripts bool, format string
 	return fmt.Sprintf(format, args...)
 }
 
-// check may be nil.
+// check 可能是 nil.
 func (check *Checker) sprintf(format string, args ...any) string {
 	var fset *token.FileSet
 	var qf Qualifier
@@ -113,9 +113,9 @@ func (check *Checker) trace(pos token.Pos, format string, args ...any) {
 	)
 }
 
-// ndigits returns the number of decimal digits in x.
-// For x < 10, the result is always 1.
-// For x > 100, the result is always 3.
+// ndigits 返回the number of decimal digits in x.
+// For x < 10, the result 是一个lways 1.
+// For x > 100, the result 是一个lways 3.
 func ndigits(x int) int {
 	switch {
 	case x < 10:
@@ -133,7 +133,7 @@ func (check *Checker) dump(format string, args ...any) {
 }
 
 func (check *Checker) qualifier(pkg *Package) string {
-	// Qualify the package unless it's the package being type-checked.
+	// Qualify the package 除非 it's the package being type-checked.
 	if pkg != check.pkg {
 		if check.pkgPathMap == nil {
 			check.pkgPathMap = make(map[string]map[string]bool)

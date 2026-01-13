@@ -1,40 +1,40 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
-// jsonflags implements all the optional boolean flags.
+// jsonflags 实现all the optional boolean flags.
 // These flags are shared across both "json", "jsontext", and "jsonopts".
 package jsonflags
 
 import "encoding/json/internal"
 
-// Bools represents zero or more boolean flags, all set to true or false.
-// The least-significant bit is the boolean value of all flags in the set.
+// Bools 表示zero or more boolean flags, all set to true or false.
+// The least-significant bit 是 boolean value of all flags in the set.
 // The remaining bits identify which particular flags.
 //
 // In common usage, this is OR'd with 0 or 1. For example:
-//   - (AllowInvalidUTF8 | 0) means "AllowInvalidUTF8 is false"
+//   - (AllowInvalidUTF8 | 0) means "AllowInvalidUTF8 为假"
 //   - (Multiline | Indent | 1) means "Multiline and Indent are true"
 type Bools uint64
 
 func (Bools) JSONOptions(internal.NotForPublicUse) {}
 
 const (
-	// AllFlags is the set of all flags.
+	// AllFlags 是 set of all flags.
 	AllFlags = AllCoderFlags | AllArshalV2Flags | AllArshalV1Flags
 
-	// AllCoderFlags is the set of all encoder/decoder flags.
+	// AllCoderFlags 是 set of all encoder/decoder flags.
 	AllCoderFlags = (maxCoderFlag - 1) - initFlag
 
-	// AllArshalV2Flags is the set of all v2 marshal/unmarshal flags.
+	// AllArshalV2Flags 是 set of all v2 marshal/unmarshal flags.
 	AllArshalV2Flags = (maxArshalV2Flag - 1) - (maxCoderFlag - 1)
 
-	// AllArshalV1Flags is the set of all v1 marshal/unmarshal flags.
+	// AllArshalV1Flags 是 set of all v1 marshal/unmarshal flags.
 	AllArshalV1Flags = (maxArshalV1Flag - 1) - (maxArshalV2Flag - 1)
 
-	// NonBooleanFlags is the set of non-boolean flags,
+	// NonBooleanFlags 是 set of non-boolean flags,
 	// where the value is some other concrete Go type.
 	// The value of the flag is stored within jsonopts.Struct.
 	NonBooleanFlags = 0 |
@@ -45,7 +45,7 @@ const (
 		Marshalers |
 		Unmarshalers
 
-	// DefaultV1Flags is the set of booleans flags that default to true under
+	// DefaultV1Flags 是 set of booleans flags that default to true under
 	// v1 semantics. None of the non-boolean flags differ between v1 and v2.
 	DefaultV1Flags = 0 |
 		AllowDuplicateNames |
@@ -70,18 +70,18 @@ const (
 		StringifyWithLegacySemantics |
 		UnmarshalArrayFromAnyLength
 
-	// AnyWhitespace reports whether the encoded output might have any whitespace.
+	// AnyWhitespace 报告是否 the encoded output might have any whitespace.
 	AnyWhitespace = Multiline | SpaceAfterColon | SpaceAfterComma
 
-	// WhitespaceFlags is the set of flags related to whitespace formatting.
+	// WhitespaceFlags 是 set of flags related to whitespace formatting.
 	// In contrast to AnyWhitespace, this includes Indent and IndentPrefix
-	// as those settings take no effect if Multiline is false.
+	// as those settings take no effect if Multiline 为假.
 	WhitespaceFlags = AnyWhitespace | Indent | IndentPrefix
 
-	// AnyEscape is the set of flags related to escaping in a JSON string.
+	// AnyEscape 是 set of flags related to escaping in a JSON string.
 	AnyEscape = EscapeForHTML | EscapeForJS
 
-	// CanonicalizeNumbers is the set of flags related to raw number canonicalization.
+	// CanonicalizeNumbers 是 set of flags related to raw number canonicalization.
 	CanonicalizeNumbers = CanonicalizeRawInts | CanonicalizeRawFloats
 )
 
@@ -150,18 +150,18 @@ const (
 	maxArshalV1Flag
 )
 
-// bitsUsed is the number of bits used in the 64-bit boolean flags
+// bitsUsed 是 number of bits used in the 64-bit boolean flags
 const bitsUsed = 42
 
 // Static compile check that bitsUsed and maxArshalV1Flag are in sync.
 const _ = uint64((1<<bitsUsed)-maxArshalV1Flag) + uint64(maxArshalV1Flag-(1<<bitsUsed))
 
-// Flags is a set of boolean flags.
+// Flags 是一个 set of boolean flags.
 // If the presence bit is zero, then the value bit must also be zero.
-// The least-significant bit of both fields is always zero.
+// The least-significant bit of both fields 是一个lways zero.
 //
 // Unlike Bools, which can represent a set of bools that are all true or false,
-// Flags represents a set of bools, each individually may be true or false.
+// Flags 表示a set of bools, each individually 可能是 true or false.
 type Flags struct{ Presence, Values uint64 }
 
 // Join joins two sets of flags such that the latter takes precedence.
@@ -176,7 +176,7 @@ func (dst *Flags) Join(src Flags) {
 	dst.Values |= src.Values     // e.g., 0b_1000_0001 | 0b_1001_0010 -> 0b_100_10011
 }
 
-// Set sets both the presence and value for the provided bool (or set of bools).
+// Set 设置both the presence and value for the provided bool (or set of bools).
 func (fs *Flags) Set(f Bools) {
 	// Select out the bits for the flag identifiers (everything except LSB),
 	// then set the presence for all the identifier bits (using OR),
@@ -190,14 +190,14 @@ func (fs *Flags) Set(f Bools) {
 	fs.Values |= uint64(f&1) * id // e.g., 0b_0000_0010 | 0b_1001_0000 -> 0b_1001_0010
 }
 
-// Get reports whether the bool (or any of the bools) is true.
+// Get 报告whether the bool (or any of the bools) 为真.
 // This is generally only used with a singular bool.
 // The value bit of f (i.e., the LSB) is ignored.
 func (fs Flags) Get(f Bools) bool {
 	return fs.Values&uint64(f) > 0
 }
 
-// Has reports whether the bool (or any of the bools) is set.
+// Has 报告whether the bool (or any of the bools) is set.
 // The value bit of f (i.e., the LSB) is ignored.
 func (fs Flags) Has(f Bools) bool {
 	return fs.Presence&uint64(f) > 0

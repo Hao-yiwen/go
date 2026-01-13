@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:generate go run decgen.go -output dec_helpers.go
 
@@ -24,18 +24,18 @@ var (
 
 type decHelper func(state *decoderState, v reflect.Value, length int, ovfl error) bool
 
-// decoderState is the execution state of an instance of the decoder. A new state
+// decoderState 是 execution state of an instance of the decoder. A new state
 // is created for nested objects.
 type decoderState struct {
 	dec *Decoder
-	// The buffer is stored with an extra indirection because it may be replaced
+	// The buffer is stored with an extra indirection because it 可能是 replaced
 	// if we load a type during decode (when reading an interface value).
 	b        *decBuffer
 	fieldnum int           // the last field number read.
 	next     *decoderState // for free list
 }
 
-// decBuffer is an extremely simple, fast implementation of a read-only byte buffer.
+// decBuffer 是一个n extremely simple, fast implementation of a read-only byte buffer.
 // It is initialized by calling Size and then copying the data into the slice returned by Bytes().
 type decBuffer struct {
 	data   []byte
@@ -75,7 +75,7 @@ func (d *decBuffer) Bytes() []byte {
 	return d.data[d.offset:]
 }
 
-// SetBytes sets the buffer to the bytes, discarding any existing data.
+// SetBytes 设置the buffer to the bytes, discarding any existing data.
 func (d *decBuffer) SetBytes(data []byte) {
 	d.data = data
 	d.offset = 0
@@ -178,7 +178,7 @@ func (state *decoderState) decodeInt() int64 {
 	return int64(x >> 1)
 }
 
-// getLength decodes the next uint and makes sure it is a possible
+// getLength decodes the next uint and 使 sure it 是一个 possible
 // size for a data item that follows, which means it must fit in a
 // non-negative int and fit in the buffer.
 func (state *decoderState) getLength() (int, bool) {
@@ -189,7 +189,7 @@ func (state *decoderState) getLength() (int, bool) {
 	return n, true
 }
 
-// decOp is the signature of a decoding operator for a given type.
+// decOp 是 signature of a decoding operator for a given type.
 type decOp func(i *decInstr, state *decoderState, v reflect.Value)
 
 // The 'instructions' of the decoding machine
@@ -219,8 +219,8 @@ func ignoreTwoUints(i *decInstr, state *decoderState, v reflect.Value) {
 // with the data structure. If any pointer so reached is nil, allocation must
 // be done.
 
-// decAlloc takes a value and returns a settable value that can
-// be assigned to. If the value is a pointer, decAlloc guarantees it points to storage.
+// decAlloc takes a value and 返回一个settable value that can
+// be assigned to. If the value 是一个 pointer, decAlloc guarantees it points to storage.
 // The callers to the individual decoders are expected to have used decAlloc.
 // The individual decoders don't need it.
 func decAlloc(v reflect.Value) reflect.Value {
@@ -316,7 +316,7 @@ func float64FromBits(u uint64) float64 {
 
 // float32FromBits decodes an unsigned integer, treats it as a 32-bit floating-point
 // number, and returns it. It's a helper function for float32 and complex64.
-// It returns a float64 because that's what reflection needs, but its return
+// It 返回a float64 because that's what reflection needs, but its return
 // value is known to be accurately representable in a float32.
 func float32FromBits(u uint64, ovfl error) float64 {
 	v := float64FromBits(u)
@@ -324,7 +324,7 @@ func float32FromBits(u uint64, ovfl error) float64 {
 	if av < 0 {
 		av = -av
 	}
-	// +Inf is OK in both 32- and 64-bit floats. Underflow is always OK.
+	// +Inf is OK in both 32- and 64-bit floats. Underflow 是一个lways OK.
 	if math.MaxFloat32 < av && av <= math.MaxFloat64 {
 		error_(ovfl)
 	}
@@ -363,7 +363,7 @@ func decComplex128(i *decInstr, state *decoderState, value reflect.Value) {
 
 // decUint8Slice decodes a byte slice and stores in value a slice header
 // describing the data.
-// uint8 slices are encoded as an unsigned count followed by the raw bytes.
+// uint8 slices are 编码为 an unsigned count followed by the raw bytes.
 func decUint8Slice(i *decInstr, state *decoderState, value reflect.Value) {
 	n, ok := state.getLength()
 	if !ok {
@@ -409,7 +409,7 @@ func decUint8Slice(i *decInstr, state *decoderState, value reflect.Value) {
 
 // decString decodes byte array and stores in value a string header
 // describing the data.
-// Strings are encoded as an unsigned count followed by the raw bytes.
+// Strings are 编码为 an unsigned count followed by the raw bytes.
 func decString(i *decInstr, state *decoderState, value reflect.Value) {
 	n, ok := state.getLength()
 	if !ok {
@@ -440,7 +440,7 @@ func ignoreUint8Array(i *decInstr, state *decoderState, value reflect.Value) {
 
 // Execution engine
 
-// The encoder engine is an array of instructions indexed by field number of the incoming
+// The encoder engine 是一个n array of instructions indexed by field number of the incoming
 // decoder. It is executed with random access according to field number.
 type decEngine struct {
 	instr    []decInstr
@@ -485,7 +485,7 @@ func (dec *Decoder) decodeStruct(engine *decEngine, value reflect.Value) {
 		instr := &engine.instr[fieldnum]
 		var field reflect.Value
 		if instr.index != nil {
-			// Otherwise the field is unknown to us and instr.op is an ignore op.
+			// Otherwise the field is unknown to us and instr.op 是一个n ignore op.
 			field = value.FieldByIndex(instr.index)
 			if field.Kind() == reflect.Pointer {
 				field = decAlloc(field)
@@ -535,7 +535,7 @@ func (dec *Decoder) ignoreSingle(engine *decEngine) {
 	instr.op(instr, state, noValue)
 }
 
-// decodeArrayHelper does the work for decoding arrays and slices.
+// decodeArrayHelper 执行the work for decoding arrays and slices.
 func (dec *Decoder) decodeArrayHelper(state *decoderState, value reflect.Value, elemOp decOp, length int, ovfl error, helper decHelper) {
 	if helper != nil && helper(state, value, length, ovfl) {
 		return
@@ -548,7 +548,7 @@ func (dec *Decoder) decodeArrayHelper(state *decoderState, value reflect.Value, 
 			errorf("decoding array or slice: length exceeds input size (%d elements)", length)
 		}
 		if i >= ln {
-			// This is a slice that we only partially allocated.
+			// This 是一个 slice that we only partially allocated.
 			// Grow it up to length.
 			value.Grow(1)
 			cp := value.Cap()
@@ -567,7 +567,7 @@ func (dec *Decoder) decodeArrayHelper(state *decoderState, value reflect.Value, 
 }
 
 // decodeArray decodes an array and stores it in value.
-// The length is an unsigned integer preceding the elements. Even though the length is redundant
+// The length 是一个n unsigned integer preceding the elements. Even though the length is redundant
 // (it's part of the type), it's a useful check and is included in the encoding.
 func (dec *Decoder) decodeArray(state *decoderState, value reflect.Value, elemOp decOp, length int, ovfl error, helper decHelper) {
 	if n := state.decodeUint(); n != uint64(length) {
@@ -576,7 +576,7 @@ func (dec *Decoder) decodeArray(state *decoderState, value reflect.Value, elemOp
 	dec.decodeArrayHelper(state, value, elemOp, length, ovfl, helper)
 }
 
-// decodeIntoValue is a helper for map decoding.
+// decodeIntoValue 是一个 helper for map decoding.
 func decodeIntoValue(state *decoderState, op decOp, isPtr bool, value reflect.Value, instr *decInstr) reflect.Value {
 	v := value
 	if isPtr {
@@ -588,8 +588,8 @@ func decodeIntoValue(state *decoderState, op decOp, isPtr bool, value reflect.Va
 }
 
 // decodeMap decodes a map and stores it in value.
-// Maps are encoded as a length followed by key:value pairs.
-// Because the internals of maps are not visible to us, we must
+// 映射 are 编码为 a length followed by key:value pairs.
+// Because the internals of 映射 are not visible to us, we must
 // use reflection rather than pointer magic.
 func (dec *Decoder) decodeMap(mtyp reflect.Type, state *decoderState, value reflect.Value, keyOp, elemOp decOp, ovfl error) {
 	n := int(state.decodeUint())
@@ -611,7 +611,7 @@ func (dec *Decoder) decodeMap(mtyp reflect.Type, state *decoderState, value refl
 	}
 }
 
-// ignoreArrayHelper does the work for discarding arrays and slices.
+// ignoreArrayHelper 执行the work for discarding arrays and slices.
 func (dec *Decoder) ignoreArrayHelper(state *decoderState, elemOp decOp, length int) {
 	instr := &decInstr{elemOp, 0, nil, errors.New("no error")}
 	for i := 0; i < length; i++ {
@@ -642,7 +642,7 @@ func (dec *Decoder) ignoreMap(state *decoderState, keyOp, elemOp decOp) {
 }
 
 // decodeSlice decodes a slice and stores it in value.
-// Slices are encoded as an unsigned length followed by the elements.
+// Slices are 编码为 an unsigned length followed by the elements.
 func (dec *Decoder) decodeSlice(state *decoderState, value reflect.Value, elemOp decOp, ovfl error, helper decHelper) {
 	u := state.decodeUint()
 	typ := value.Type()
@@ -652,7 +652,7 @@ func (dec *Decoder) decodeSlice(state *decoderState, value reflect.Value, elemOp
 	// Take care with overflow in this calculation.
 	if n < 0 || uint64(n) != u || nBytes > tooBig || (size > 0 && nBytes/size != u) {
 		// We don't check n against buffer length here because if it's a slice
-		// of interfaces, there will be buffer reloads.
+		// of interfaces, there 将是 buffer reloads.
 		errorf("%s slice too big: %d elements of %d bytes", typ.Elem(), u, size)
 	}
 	if value.Cap() < n {
@@ -673,7 +673,7 @@ func (dec *Decoder) ignoreSlice(state *decoderState, elemOp decOp) {
 }
 
 // decodeInterface decodes an interface value and stores it in value.
-// Interfaces are encoded as the name of a concrete type followed by a value.
+// Interfaces are 编码为 the name of a concrete type followed by a value.
 // If the name is empty, the value is nil and no value is sent.
 func (dec *Decoder) decodeInterface(ityp reflect.Type, state *decoderState, value reflect.Value) {
 	// Read the name of the concrete type.
@@ -696,7 +696,7 @@ func (dec *Decoder) decodeInterface(ityp reflect.Type, state *decoderState, valu
 	if len(name) > 1024 {
 		errorf("name too long (%d bytes): %.20q...", len(name), name)
 	}
-	// The concrete type must be registered.
+	// The concrete type 必须是 registered.
 	typi, ok := nameToConcreteType.Load(string(name))
 	if !ok {
 		errorf("name not registered for interface: %q", name)
@@ -742,7 +742,7 @@ func (dec *Decoder) ignoreInterface(state *decoderState) {
 	if id < 0 {
 		error_(dec.err)
 	}
-	// At this point, the decoder buffer contains a delimited value. Just toss it.
+	// At this point, the decoder buffer 包含 a delimited value. Just toss it.
 	n, ok = state.getLength()
 	if !ok {
 		errorf("bad interface encoding: data length too large for buffer")
@@ -751,7 +751,7 @@ func (dec *Decoder) ignoreInterface(state *decoderState) {
 }
 
 // decodeGobDecoder decodes something implementing the GobDecoder interface.
-// The data is encoded as a byte slice.
+// The data is 编码为 a byte slice.
 func (dec *Decoder) decodeGobDecoder(ut *userTypeInfo, state *decoderState, value reflect.Value) {
 	// Read the bytes for the value.
 	n, ok := state.getLength()
@@ -814,7 +814,7 @@ var decOpTable = [...]decOp{
 	reflect.String:     decString,
 }
 
-// Indexed by gob types.  tComplex will be added during type.init().
+// Indexed by gob types.  tComplex 将是 added during type.init().
 var decIgnoreOpMap = map[typeId]decOp{
 	tBool:    ignoreUint,
 	tInt:     ignoreUint,
@@ -825,7 +825,7 @@ var decIgnoreOpMap = map[typeId]decOp{
 	tComplex: ignoreTwoUints,
 }
 
-// decOpFor returns the decoding op for the base type under rt and
+// decOpFor 返回the decoding op for the base type under rt and
 // the indirection count to reach it.
 func (dec *Decoder) decOpFor(wireId typeId, rt reflect.Type, name string, inProgress map[reflect.Type]*decOp) *decOp {
 	ut := userType(rt)
@@ -834,7 +834,7 @@ func (dec *Decoder) decOpFor(wireId typeId, rt reflect.Type, name string, inProg
 		return dec.gobDecodeOpFor(ut)
 	}
 
-	// If this type is already in progress, it's a recursive type (e.g. map[string]*T).
+	// If this type 是一个lready in progress, it's a recursive type (e.g. map[string]*T).
 	// Return the pointer to the op we're already building.
 	if opPtr := inProgress[rt]; opPtr != nil {
 		return opPtr
@@ -913,7 +913,7 @@ func (dec *Decoder) decOpFor(wireId typeId, rt reflect.Type, name string, inProg
 
 var maxIgnoreNestingDepth = 10000
 
-// decIgnoreOpFor returns the decoding op for a field that has no destination.
+// decIgnoreOpFor 返回the decoding op for a field that has no destination.
 func (dec *Decoder) decIgnoreOpFor(wireId typeId, inProgress map[typeId]*decOp) *decOp {
 	// Track how deep we've recursed trying to skip nested ignored fields.
 	dec.ignoreDepth++
@@ -921,7 +921,7 @@ func (dec *Decoder) decIgnoreOpFor(wireId typeId, inProgress map[typeId]*decOp) 
 	if dec.ignoreDepth > maxIgnoreNestingDepth {
 		error_(errors.New("invalid nesting depth"))
 	}
-	// If this type is already in progress, it's a recursive type (e.g. map[string]*T).
+	// If this type 是一个lready in progress, it's a recursive type (e.g. map[string]*T).
 	// Return the pointer to the op we're already building.
 	if opPtr := inProgress[wireId]; opPtr != nil {
 		return opPtr
@@ -988,7 +988,7 @@ func (dec *Decoder) decIgnoreOpFor(wireId typeId, inProgress map[typeId]*decOp) 
 	return &op
 }
 
-// gobDecodeOpFor returns the op for a type that is known to implement
+// gobDecodeOpFor 返回the op for a type that is known to implement
 // GobDecoder.
 func (dec *Decoder) gobDecodeOpFor(ut *userTypeInfo) *decOp {
 	rcvrType := ut.user
@@ -1001,7 +1001,7 @@ func (dec *Decoder) gobDecodeOpFor(ut *userTypeInfo) *decOp {
 	}
 	var op decOp
 	op = func(i *decInstr, state *decoderState, value reflect.Value) {
-		// We now have the base type. We need its address if the receiver is a pointer.
+		// We now have the base type. We need its address 如果 receiver 是一个 pointer.
 		if value.Kind() != reflect.Pointer && rcvrType.Kind() == reflect.Pointer {
 			value = value.Addr()
 		}
@@ -1011,9 +1011,9 @@ func (dec *Decoder) gobDecodeOpFor(ut *userTypeInfo) *decOp {
 }
 
 // compatibleType asks: Are these two gob Types compatible?
-// Answers the question for basic types, arrays, maps and slices, plus
+// Answers the question for basic types, arrays, 映射 and slices, plus
 // GobEncoder/Decoder pairs.
-// Structs are considered ok; fields will be checked later.
+// Structs are considered ok; fields 将是 checked later.
 func (dec *Decoder) compatibleType(fr reflect.Type, fw typeId, inProgress map[reflect.Type]typeId) bool {
 	if rhs, ok := inProgress[fr]; ok {
 		return rhs == fw
@@ -1084,7 +1084,7 @@ func (dec *Decoder) compatibleType(fr reflect.Type, fw typeId, inProgress map[re
 	}
 }
 
-// typeString returns a human-readable description of the type identified by remoteId.
+// typeString 返回a human-readable description 的类型 identified by remoteId.
 func (dec *Decoder) typeString(remoteId typeId) string {
 	typeLock.Lock()
 	defer typeLock.Unlock()
@@ -1117,7 +1117,7 @@ func (dec *Decoder) compileSingle(remoteId typeId, ut *userTypeInfo) (engine *de
 	return
 }
 
-// compileIgnoreSingle compiles the decoder engine for a non-struct top-level value that will be discarded.
+// compileIgnoreSingle compiles the decoder engine for a non-struct top-level value that 将是 discarded.
 func (dec *Decoder) compileIgnoreSingle(remoteId typeId) *decEngine {
 	engine := new(decEngine)
 	engine.instr = make([]decInstr, 1) // one item
@@ -1138,7 +1138,7 @@ func (dec *Decoder) compileDec(remoteId typeId, ut *userTypeInfo) (engine *decEn
 		return dec.compileSingle(remoteId, ut)
 	}
 	var wireStruct *structType
-	// Builtin types can come from global pool; the rest must be defined by the decoder.
+	// Builtin types can come from global pool; the rest 必须是 defined by the decoder.
 	// Also we know we're decoding a struct now, so the client must have sent one.
 	if t := builtinIdToType(remoteId); t != nil {
 		wireStruct, _ = t.(*structType)
@@ -1180,7 +1180,7 @@ func (dec *Decoder) compileDec(remoteId typeId, ut *userTypeInfo) (engine *decEn
 	return
 }
 
-// getDecEnginePtr returns the engine for the specified type.
+// getDecEnginePtr 返回the engine for the specified type.
 func (dec *Decoder) getDecEnginePtr(remoteId typeId, ut *userTypeInfo) (enginePtr **decEngine, err error) {
 	rt := ut.user
 	decoderMap, ok := dec.decoderCache[rt]
@@ -1200,12 +1200,12 @@ func (dec *Decoder) getDecEnginePtr(remoteId typeId, ut *userTypeInfo) (enginePt
 	return
 }
 
-// emptyStruct is the type we compile into when ignoring a struct value.
+// emptyStruct 是 type we compile into when ignoring a struct value.
 type emptyStruct struct{}
 
 var emptyStructType = reflect.TypeFor[emptyStruct]()
 
-// getIgnoreEnginePtr returns the engine for the specified type when the value is to be discarded.
+// getIgnoreEnginePtr 返回the engine for the specified type when the value is to be discarded.
 func (dec *Decoder) getIgnoreEnginePtr(wireId typeId) (enginePtr **decEngine, err error) {
 	var ok bool
 	if enginePtr, ok = dec.ignorerCache[wireId]; !ok {
@@ -1304,7 +1304,7 @@ func init() {
 }
 
 // Gob depends on being able to take the address
-// of zeroed Values it creates, so use this wrapper instead
+// of zeroed Values it 创建, so use this wrapper instead
 // of the standard reflect.Zero.
 // Each call allocates once.
 func allocValue(t reflect.Type) reflect.Value {

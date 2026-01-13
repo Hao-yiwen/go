@@ -1,6 +1,6 @@
-// Copyright 2014 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2014 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -56,10 +56,10 @@ func main() {
 		log.Printf("unknown setting -spectre=%s", *flags.Spectre)
 		os.Exit(2)
 	case "":
-		// nothing
+		// 无操作
 	case "index":
-		// known to compiler; ignore here so people can use
-		// the same list with -gcflags=-spectre=LIST and -asmflags=-spectre=LIST
+		// 编译器已知；在此忽略，以便人们可以使用
+		// 相同的列表配合 -gcflags=-spectre=LIST 和 -asmflags=-spectre=LIST
 	case "all", "ret":
 		ctxt.Retpoline = true
 	}
@@ -69,7 +69,7 @@ func main() {
 
 	architecture.Init(ctxt)
 
-	// Create object file, write header.
+	// 创建目标文件，写入头部。
 	buf, err := bio.Create(*flags.OutputFile)
 	if err != nil {
 		log.Fatal(err)
@@ -81,8 +81,8 @@ func main() {
 		fmt.Fprintf(buf, "!\n")
 	}
 
-	// Set macros for GOEXPERIMENTs so we can easily switch
-	// runtime assembly code based on them.
+	// 为 GOEXPERIMENTs 设置宏，以便我们可以轻松地
+	// 根据它们切换运行时汇编代码。
 	if objabi.LookupPkgSpecial(ctxt.Pkgpath).AllowAsmABI {
 		for _, exp := range buildcfg.Experiment.Enabled() {
 			flags.D = append(flags.D, "GOEXPERIMENT_"+exp)
@@ -103,7 +103,7 @@ func main() {
 		} else {
 			pList := new(obj.Plist)
 			pList.Firstpc, ok = parser.Parse()
-			// reports errors to parser.Errorf
+			// 向 parser.Errorf 报告错误
 			if ok {
 				obj.Flushplist(ctxt, pList, nil)
 			}

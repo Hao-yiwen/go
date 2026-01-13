@@ -1,6 +1,6 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2015 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package mime_test
 
@@ -34,9 +34,8 @@ func ExampleWordDecoder_Decode() {
 	dec.CharsetReader = func(charset string, input io.Reader) (io.Reader, error) {
 		switch charset {
 		case "x-case":
-			// Fake character set for example.
-			// Real use would integrate with packages such
-			// as code.google.com/p/go-charset
+			// 示例用的虚假字符集。
+			// 实际使用时应集成如 code.google.com/p/go-charset 这样的包
 			content, err := io.ReadAll(input)
 			if err != nil {
 				return nil, err
@@ -73,9 +72,8 @@ func ExampleWordDecoder_DecodeHeader() {
 	dec.CharsetReader = func(charset string, input io.Reader) (io.Reader, error) {
 		switch charset {
 		case "x-case":
-			// Fake character set for example.
-			// Real use would integrate with packages such
-			// as code.google.com/p/go-charset
+			// 示例用的虚假字符集。
+			// 实际使用时应集成如 code.google.com/p/go-charset 这样的包
 			content, err := io.ReadAll(input)
 			if err != nil {
 				return nil, err

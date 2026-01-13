@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build purego
 
@@ -42,8 +42,8 @@ func randUint64() uint64 {
 	return byteorder.LEUint64(buf)
 }
 
-// This is a port of wyhash implementation in runtime/hash64.go,
-// without using unsafe for purego.
+// 这是 runtime/hash64.go 中 wyhash 实现的移植版本，
+// 为了 purego 不使用 unsafe。
 
 const m5 = 0x1d8e4e27c47d124f
 
@@ -112,7 +112,7 @@ func writeComparable[T comparable](h *Hash, v T) {
 	appendT(h, vv)
 }
 
-// appendT hash a value.
+// appendT 对一个值进行哈希。
 func appendT(h *Hash, v reflect.Value) {
 	h.WriteString(v.Type().String())
 	switch v.Kind() {
@@ -130,8 +130,8 @@ func appendT(h *Hash, v reflect.Value) {
 		var buf [8]byte
 		for i := range uint64(v.Len()) {
 			byteorder.LEPutUint64(buf[:], i)
-			// do not want to hash to the same value,
-			// [2]string{"foo", ""} and [2]string{"", "foo"}.
+			// 不希望哈希到相同的值，
+			// [2]string{"foo", ""} 和 [2]string{"", "foo"} 应该不同。
 			h.Write(buf[:])
 			appendT(h, v.Index(int(i)))
 		}
@@ -144,9 +144,9 @@ func appendT(h *Hash, v reflect.Value) {
 		for i := range v.NumField() {
 			f := v.Field(i)
 			byteorder.LEPutUint64(buf[:], uint64(i))
-			// do not want to hash to the same value,
-			// struct{a,b string}{"foo",""} and
-			// struct{a,b string}{"","foo"}.
+			// 不希望哈希到相同的值，
+			// struct{a,b string}{"foo",""} 和
+			// struct{a,b string}{"","foo"} 应该不同。
 			h.Write(buf[:])
 			appendT(h, f)
 		}
@@ -164,9 +164,9 @@ func appendT(h *Hash, v reflect.Value) {
 		return
 	case reflect.UnsafePointer, reflect.Pointer, reflect.Chan:
 		var buf [8]byte
-		// because pointing to the abi.Escape call in comparableReady,
-		// So this is ok to hash pointer,
-		// this way because we know their target won't be moved.
+		// 因为指向 comparableReady 中的 abi.Escape 调用，
+		// 所以可以对指针进行哈希，
+		// 这样做是因为我们知道它们的目标不会被移动。
 		byteorder.LEPutUint64(buf[:], uint64(v.Pointer()))
 		h.Write(buf[:])
 		return

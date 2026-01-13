@@ -1,30 +1,27 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// This file contains CRC32 algorithms that are not specific to any architecture
-// and don't use hardware acceleration.
+// 本文件包含不特定于任何架构且不使用硬件加速的 CRC32 算法。
 //
-// The simple (and slow) CRC32 implementation only uses a 256*4 bytes table.
+// 简单（且慢速）的 CRC32 实现仅使用 256*4 字节的表。
 //
-// The slicing-by-8 algorithm is a faster implementation that uses a bigger
-// table (8*256*4 bytes).
+// slicing-by-8 算法是一个更快的实现，使用更大的表（8*256*4 字节）。
 
 package crc32
 
 import "internal/byteorder"
 
-// simpleMakeTable allocates and constructs a Table for the specified
-// polynomial. The table is suitable for use with the simple algorithm
-// (simpleUpdate).
+// simpleMakeTable 为指定的多项式分配并构造一个 Table。
+// 该表适用于简单算法（simpleUpdate）。
 func simpleMakeTable(poly uint32) *Table {
 	t := new(Table)
 	simplePopulateTable(poly, t)
 	return t
 }
 
-// simplePopulateTable constructs a Table for the specified polynomial, suitable
-// for use with simpleUpdate.
+// simplePopulateTable 为指定的多项式构造一个 Table，
+// 适用于 simpleUpdate。
 func simplePopulateTable(poly uint32, t *Table) {
 	for i := 0; i < 256; i++ {
 		crc := uint32(i)
@@ -39,8 +36,8 @@ func simplePopulateTable(poly uint32, t *Table) {
 	}
 }
 
-// simpleUpdate uses the simple algorithm to update the CRC, given a table that
-// was previously computed using simpleMakeTable.
+// simpleUpdate 使用简单算法更新 CRC，
+// 给定一个之前使用 simpleMakeTable 计算的表。
 func simpleUpdate(crc uint32, tab *Table, p []byte) uint32 {
 	crc = ^crc
 	for _, v := range p {
@@ -49,14 +46,14 @@ func simpleUpdate(crc uint32, tab *Table, p []byte) uint32 {
 	return ^crc
 }
 
-// Use slicing-by-8 when payload >= this value.
+// 当负载 >= 此值时使用 slicing-by-8。
 const slicing8Cutoff = 16
 
-// slicing8Table is array of 8 Tables, used by the slicing-by-8 algorithm.
+// slicing8Table 是 8 个 Table 的数组，由 slicing-by-8 算法使用。
 type slicing8Table [8]Table
 
-// slicingMakeTable constructs a slicing8Table for the specified polynomial. The
-// table is suitable for use with the slicing-by-8 algorithm (slicingUpdate).
+// slicingMakeTable 为指定的多项式构造一个 slicing8Table。
+// 该表适用于 slicing-by-8 算法（slicingUpdate）。
 func slicingMakeTable(poly uint32) *slicing8Table {
 	t := new(slicing8Table)
 	simplePopulateTable(poly, &t[0])
@@ -70,8 +67,8 @@ func slicingMakeTable(poly uint32) *slicing8Table {
 	return t
 }
 
-// slicingUpdate uses the slicing-by-8 algorithm to update the CRC, given a
-// table that was previously computed using slicingMakeTable.
+// slicingUpdate 使用 slicing-by-8 算法更新 CRC，
+// 给定一个之前使用 slicingMakeTable 计算的表。
 func slicingUpdate(crc uint32, tab *slicing8Table, p []byte) uint32 {
 	if len(p) >= slicing8Cutoff {
 		crc = ^crc

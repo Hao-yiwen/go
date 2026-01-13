@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package tar_test
 
@@ -14,7 +14,7 @@ import (
 )
 
 func Example_minimal() {
-	// Create and add some files to the archive.
+	// 创建并向归档中添加一些文件。
 	var buf bytes.Buffer
 	tw := tar.NewWriter(&buf)
 	var files = []struct {
@@ -41,12 +41,12 @@ func Example_minimal() {
 		log.Fatal(err)
 	}
 
-	// Open and iterate through the files in the archive.
+	// 打开并遍历归档中的文件。
 	tr := tar.NewReader(&buf)
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
-			break // End of archive
+			break // 归档结束
 		}
 		if err != nil {
 			log.Fatal(err)

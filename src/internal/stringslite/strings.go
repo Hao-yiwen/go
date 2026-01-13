@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package stringslite implements a subset of strings,
-// only using packages that may be imported by "os".
+// Package stringslite 实现了字符串的一个子集，
+// 仅使用可由"os"导入的包。
 //
-// Tests for these functions are in the strings package.
+// 这些函数的测试在 strings 包中。
 package stringslite
 
 import (
@@ -40,7 +40,7 @@ func Index(s, substr string) int {
 	case n > len(s):
 		return -1
 	case n <= bytealg.MaxLen:
-		// Use brute force when s and substr both are small
+		// 当 s 和 substr 都很小时使用暴力
 		if len(s) <= bytealg.MaxBruteForce {
 			return bytealg.IndexString(s, substr)
 		}
@@ -51,8 +51,8 @@ func Index(s, substr string) int {
 		fails := 0
 		for i < t {
 			if s[i] != c0 {
-				// IndexByte is faster than bytealg.IndexString, so use it as long as
-				// we're not getting lots of false positives.
+				// IndexByte 比 bytealg.IndexString 快，所以只要
+				// 我们没有得到很多误报，就使用它。
 				o := IndexByte(s[i+1:t], c0)
 				if o < 0 {
 					return -1
@@ -64,7 +64,7 @@ func Index(s, substr string) int {
 			}
 			fails++
 			i++
-			// Switch to bytealg.IndexString when IndexByte produces too many false positives.
+			// 当 IndexByte 产生太多误报时切换到 bytealg.IndexString。
 			if fails > bytealg.Cutover(i) {
 				r := bytealg.IndexString(s[i:], substr)
 				if r >= 0 {
@@ -94,7 +94,7 @@ func Index(s, substr string) int {
 		i++
 		fails++
 		if fails >= 4+i>>4 && i < t {
-			// See comment in ../bytes/bytes.go.
+			// 请参阅 ../bytes/bytes.go 中的注释。
 			j := bytealg.IndexRabinKarp(s[i:], substr)
 			if j < 0 {
 				return -1

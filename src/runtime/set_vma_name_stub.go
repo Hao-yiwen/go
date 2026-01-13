@@ -8,7 +8,7 @@ package runtime
 
 import "unsafe"
 
-// setVMAName isn’t implemented
+// setVMAName 未实现
 func setVMAName(start unsafe.Pointer, len uintptr, name string) {}
 
 func setVMANameSupported() bool { return false }

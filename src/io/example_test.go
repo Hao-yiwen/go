@@ -1,6 +1,6 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2015 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package io_test
 
@@ -28,12 +28,12 @@ func ExampleCopyBuffer() {
 	r2 := strings.NewReader("second reader\n")
 	buf := make([]byte, 8)
 
-	// buf is used here...
+	// buf 在这里使用...
 	if _, err := io.CopyBuffer(os.Stdout, r1, buf); err != nil {
 		log.Fatal(err)
 	}
 
-	// ... reused here also. No need to allocate an extra buffer.
+	// ... 在这里也被复用。不需要分配额外的缓冲区。
 	if _, err := io.CopyBuffer(os.Stdout, r2, buf); err != nil {
 		log.Fatal(err)
 	}
@@ -63,13 +63,13 @@ func ExampleReadAtLeast() {
 	}
 	fmt.Printf("%s\n", buf)
 
-	// buffer smaller than minimal read size.
+	// 缓冲区小于最小读取大小。
 	shortBuf := make([]byte, 3)
 	if _, err := io.ReadAtLeast(r, shortBuf, 4); err != nil {
 		fmt.Println("error:", err)
 	}
 
-	// minimal read size bigger than io.Reader stream
+	// 最小读取大小大于 io.Reader 流
 	longBuf := make([]byte, 64)
 	if _, err := io.ReadAtLeast(r, longBuf, 64); err != nil {
 		fmt.Println("error:", err)
@@ -90,7 +90,7 @@ func ExampleReadFull() {
 	}
 	fmt.Printf("%s\n", buf)
 
-	// minimal read size bigger than io.Reader stream
+	// 最小读取大小大于 io.Reader 流
 	longBuf := make([]byte, 64)
 	if _, err := io.ReadFull(r, longBuf); err != nil {
 		fmt.Println("error:", err)
@@ -140,7 +140,7 @@ func ExampleTeeReader() {
 
 	r = io.TeeReader(r, os.Stdout)
 
-	// Everything read from r will be copied to stdout.
+	// 从 r 读取的所有内容都将被复制到 stdout。
 	if _, err := io.ReadAll(r); err != nil {
 		log.Fatal(err)
 	}
@@ -220,7 +220,7 @@ func ExampleSectionReader_Size() {
 func ExampleSeeker_Seek() {
 	r := strings.NewReader("some io.Reader stream to be read\n")
 
-	r.Seek(5, io.SeekStart) // move to the 5th char from the start
+	r.Seek(5, io.SeekStart) // 从开始位置移动到第5个字符
 	if _, err := io.Copy(os.Stdout, r); err != nil {
 		log.Fatal(err)
 	}

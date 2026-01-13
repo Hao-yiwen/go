@@ -2,40 +2,40 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Nm lists the symbols defined or used by an object file, archive, or executable.
+// Nm 列出对象文件、存档或可执行文件定义或使用的符号。
 //
-// Usage:
+// 用法：
 //
 //	go tool nm [options] file...
 //
-// The default output prints one line per symbol, with three space-separated
-// fields giving the address (in hexadecimal), type (a character), and name of
-// the symbol. The types are:
+// 默认输出每行打印一个符号，有三个空格分隔的
+// 字段，给出地址（十六进制）、类型（一个字符）和
+// 符号的名称。类型如下：
 //
-//	T	text (code) segment symbol
-//	t	static text segment symbol
-//	R	read-only data segment symbol
-//	r	static read-only data segment symbol
-//	D	data segment symbol
-//	d	static data segment symbol
-//	B	bss segment symbol
-//	b	static bss segment symbol
-//	C	constant address
-//	U	referenced but undefined symbol
+//	T	文本（代码）段符号
+//	t	静态文本段符号
+//	R	只读数据段符号
+//	r	静态只读数据段符号
+//	D	数据段符号
+//	d	静态数据段符号
+//	B	bss 段符号
+//	b	静态 bss 段符号
+//	C	常数地址
+//	U	引用但未定义的符号
 //
-// Following established convention, the address is omitted for undefined
-// symbols (type U).
+// 按照既定惯例，对于未定义的
+// 符号（类型 U），地址被省略。
 //
-// The options control the printed output:
+// 选项控制打印输出：
 //
 //	-n
-//		an alias for -sort address (numeric),
-//		for compatibility with other nm commands
+//		-sort address (numeric) 的别名，
+//		与其他 nm 命令兼容
 //	-size
-//		print symbol size in decimal between address and type
+//		在地址和类型之间以十进制打印符号大小
 //	-sort {address,name,none,size}
-//		sort output in the given order (default name)
-//		size orders from largest to smallest
+//		按给定顺序排序输出（默认 name）
+//		size 从最大到最小排序
 //	-type
-//		print symbol type after name
+//		在名称后打印符号类型
 package main

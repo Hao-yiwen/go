@@ -1,6 +1,6 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2015 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package mime
 
@@ -15,13 +15,13 @@ import (
 	"unicode/utf8"
 )
 
-// A WordEncoder is an RFC 2047 encoded-word encoder.
+// WordEncoder 是一个 RFC 2047 编码字编码器。
 type WordEncoder byte
 
 const (
-	// BEncoding represents Base64 encoding scheme as defined by RFC 2045.
+	// BEncoding 表示 RFC 2045 定义的 Base64 编码方案。
 	BEncoding = WordEncoder('b')
-	// QEncoding represents the Q-encoding scheme as defined by RFC 2047.
+	// QEncoding 表示 RFC 2047 定义的 Q 编码方案。
 	QEncoding = WordEncoder('q')
 )
 
@@ -29,9 +29,8 @@ var (
 	errInvalidWord = errors.New("mime: invalid RFC 2047 encoded-word")
 )
 
-// Encode returns the encoded-word form of s. If s is ASCII without special
-// characters, it is returned unchanged. The provided charset is the IANA
-// charset name of s. It is case insensitive.
+// Encode 返回 s 的编码字形式。如果 s 是不含特殊字符的 ASCII 字符串，
+// 则原样返回。charset 参数是 s 的 IANA 字符集名称，不区分大小写。
 func (e WordEncoder) Encode(charset, s string) string {
 	if !needsEncoding(s) {
 		return s
@@ -48,12 +47,12 @@ func needsEncoding(s string) bool {
 	return false
 }
 
-// encodeWord encodes a string into an encoded-word.
+// encodeWord 将字符串编码为编码字。
 func (e WordEncoder) encodeWord(charset, s string) string {
 	var buf strings.Builder
-	// Could use a hint like len(s)*3, but that's not enough for cases
-	// with word splits and too much for simpler inputs.
-	// 48 is close to maxEncodedWordLen/2, but adjusted to allocator size class.
+	// 可以使用 len(s)*3 这样的提示，但对于需要分词的情况来说不够，
+	// 而对于简单输入来说又太多了。
+	// 48 接近 maxEncodedWordLen/2，但已针对分配器大小类进行了调整。
 	buf.Grow(48)
 
 	e.openWord(&buf, charset)
@@ -68,21 +67,19 @@ func (e WordEncoder) encodeWord(charset, s string) string {
 }
 
 const (
-	// The maximum length of an encoded-word is 75 characters.
-	// See RFC 2047, section 2.
+	// 编码字的最大长度为 75 个字符。
+	// 参见 RFC 2047 第 2 节。
 	maxEncodedWordLen = 75
-	// maxContentLen is how much content can be encoded, ignoring the header and
-	// 2-byte footer.
+	// maxContentLen 是可以编码的内容长度，不包括头部和 2 字节的尾部。
 	maxContentLen = maxEncodedWordLen - len("=?UTF-8?q?") - len("?=")
 )
 
 var maxBase64Len = base64.StdEncoding.DecodedLen(maxContentLen)
 
-// bEncode encodes s using base64 encoding and writes it to buf.
+// bEncode 使用 base64 编码对 s 进行编码并写入 buf。
 func (e WordEncoder) bEncode(buf *strings.Builder, charset, s string) {
 	w := base64.NewEncoder(base64.StdEncoding, buf)
-	// If the charset is not UTF-8 or if the content is short, do not bother
-	// splitting the encoded-word.
+	// 如果字符集不是 UTF-8 或者内容较短，则无需拆分编码字。
 	if !isUTF8(charset) || base64.StdEncoding.EncodedLen(len(s)) <= maxContentLen {
 		io.WriteString(w, s)
 		w.Close()
@@ -91,8 +88,8 @@ func (e WordEncoder) bEncode(buf *strings.Builder, charset, s string) {
 
 	var currentLen, last, runeLen int
 	for i := 0; i < len(s); i += runeLen {
-		// Multi-byte characters must not be split across encoded-words.
-		// See RFC 2047, section 5.3.
+		// 多字节字符不能跨编码字拆分。
+		// 参见 RFC 2047 第 5.3 节。
 		_, runeLen = utf8.DecodeRuneInString(s[i:])
 
 		if currentLen+runeLen <= maxBase64Len {
@@ -109,10 +106,9 @@ func (e WordEncoder) bEncode(buf *strings.Builder, charset, s string) {
 	w.Close()
 }
 
-// qEncode encodes s using Q encoding and writes it to buf. It splits the
-// encoded-words when necessary.
+// qEncode 使用 Q 编码对 s 进行编码并写入 buf。必要时会拆分编码字。
 func (e WordEncoder) qEncode(buf *strings.Builder, charset, s string) {
-	// We only split encoded-words when the charset is UTF-8.
+	// 我们只在字符集为 UTF-8 时拆分编码字。
 	if !isUTF8(charset) {
 		writeQString(buf, s)
 		return
@@ -121,8 +117,8 @@ func (e WordEncoder) qEncode(buf *strings.Builder, charset, s string) {
 	var currentLen, runeLen int
 	for i := 0; i < len(s); i += runeLen {
 		b := s[i]
-		// Multi-byte characters must not be split across encoded-words.
-		// See RFC 2047, section 5.3.
+		// 多字节字符不能跨编码字拆分。
+		// 参见 RFC 2047 第 5.3 节。
 		var encLen int
 		if b >= ' ' && b <= '~' && b != '=' && b != '?' && b != '_' {
 			runeLen, encLen = 1, 1
@@ -140,7 +136,7 @@ func (e WordEncoder) qEncode(buf *strings.Builder, charset, s string) {
 	}
 }
 
-// writeQString encodes s using Q encoding and writes it to buf.
+// writeQString 使用 Q 编码对 s 进行编码并写入 buf。
 func writeQString(buf *strings.Builder, s string) {
 	for i := 0; i < len(s); i++ {
 		switch b := s[i]; {
@@ -156,7 +152,7 @@ func writeQString(buf *strings.Builder, s string) {
 	}
 }
 
-// openWord writes the beginning of an encoded-word into buf.
+// openWord 将编码字的开头写入 buf。
 func (e WordEncoder) openWord(buf *strings.Builder, charset string) {
 	buf.WriteString("=?")
 	buf.WriteString(charset)
@@ -165,12 +161,12 @@ func (e WordEncoder) openWord(buf *strings.Builder, charset string) {
 	buf.WriteByte('?')
 }
 
-// closeWord writes the end of an encoded-word into buf.
+// closeWord 将编码字的结尾写入 buf。
 func closeWord(buf *strings.Builder) {
 	buf.WriteString("?=")
 }
 
-// splitWord closes the current encoded-word and opens a new one.
+// splitWord 关闭当前编码字并打开一个新的编码字。
 func (e WordEncoder) splitWord(buf *strings.Builder, charset string) {
 	closeWord(buf)
 	buf.WriteByte(' ')
@@ -183,27 +179,25 @@ func isUTF8(charset string) bool {
 
 const upperhex = "0123456789ABCDEF"
 
-// A WordDecoder decodes MIME headers containing RFC 2047 encoded-words.
+// WordDecoder 解码包含 RFC 2047 编码字的 MIME 头。
 type WordDecoder struct {
-	// CharsetReader, if non-nil, defines a function to generate
-	// charset-conversion readers, converting from the provided
-	// charset into UTF-8.
-	// Charsets are always lower-case. utf-8, iso-8859-1 and us-ascii charsets
-	// are handled by default.
-	// One of the CharsetReader's result values must be non-nil.
+	// CharsetReader 如果非 nil，定义一个生成字符集转换读取器的函数，
+	// 用于将提供的字符集转换为 UTF-8。
+	// 字符集始终为小写。utf-8、iso-8859-1 和 us-ascii 字符集默认支持。
+	// CharsetReader 的返回值之一必须为非 nil。
 	CharsetReader func(charset string, input io.Reader) (io.Reader, error)
 }
 
-// Decode decodes an RFC 2047 encoded-word.
+// Decode 解码一个 RFC 2047 编码字。
 func (d *WordDecoder) Decode(word string) (string, error) {
-	// See https://tools.ietf.org/html/rfc2047#section-2 for details.
-	// Our decoder is permissive, we accept empty encoded-text.
+	// 详情参见 https://tools.ietf.org/html/rfc2047#section-2。
+	// 我们的解码器是宽容的，接受空的编码文本。
 	if len(word) < 8 || !strings.HasPrefix(word, "=?") || !strings.HasSuffix(word, "?=") || strings.Count(word, "?") != 4 {
 		return "", errInvalidWord
 	}
 	word = word[2 : len(word)-2]
 
-	// split word "UTF-8?q?text" into "UTF-8", 'q', and "text"
+	// 将 "UTF-8?q?text" 拆分为 "UTF-8"、'q' 和 "text"
 	charset, text, _ := strings.Cut(word, "?")
 	if charset == "" {
 		return "", errInvalidWord
@@ -225,10 +219,10 @@ func (d *WordDecoder) Decode(word string) (string, error) {
 	return buf.String(), nil
 }
 
-// DecodeHeader decodes all encoded-words of the given string. It returns an
-// error if and only if [WordDecoder.CharsetReader] of d returns an error.
+// DecodeHeader 解码给定字符串中的所有编码字。当且仅当 d 的 [WordDecoder.CharsetReader]
+// 返回错误时，该方法才返回错误。
 func (d *WordDecoder) DecodeHeader(header string) (string, error) {
-	// If there is no encoded-word, returns before creating a buffer.
+	// 如果没有编码字，在创建缓冲区之前就返回。
 	i := strings.Index(header, "=?")
 	if i == -1 {
 		return header, nil
@@ -280,8 +274,7 @@ func (d *WordDecoder) DecodeHeader(header string) (string, error) {
 			continue
 		}
 
-		// Write characters before the encoded-word. White-space and newline
-		// characters separating two encoded-words must be deleted.
+		// 写入编码字之前的字符。分隔两个编码字的空白和换行字符必须删除。
 		if start > 0 && (!betweenWords || hasNonWhitespace(header[:start])) {
 			buf.WriteString(header[:start])
 		}
@@ -343,13 +336,11 @@ func (d *WordDecoder) convert(buf *strings.Builder, charset string, content []by
 	return nil
 }
 
-// hasNonWhitespace reports whether s (assumed to be ASCII) contains at least
-// one byte of non-whitespace.
+// hasNonWhitespace 报告 s（假定为 ASCII）是否包含至少一个非空白字节。
 func hasNonWhitespace(s string) bool {
 	for _, b := range s {
 		switch b {
-		// Encoded-words can only be separated by linear white spaces which does
-		// not include vertical tabs (\v).
+		// 编码字只能由线性空白分隔，不包括垂直制表符（\v）。
 		case ' ', '\t', '\n', '\r':
 		default:
 			return true
@@ -358,7 +349,7 @@ func hasNonWhitespace(s string) bool {
 	return false
 }
 
-// qDecode decodes a Q encoded string.
+// qDecode 解码一个 Q 编码的字符串。
 func qDecode(s string) ([]byte, error) {
 	dec := make([]byte, len(s))
 	n := 0
@@ -387,7 +378,7 @@ func qDecode(s string) ([]byte, error) {
 	return dec[:n], nil
 }
 
-// readHexByte returns the byte from its quoted-printable representation.
+// readHexByte 从 quoted-printable 表示形式返回字节。
 func readHexByte(a, b byte) (byte, error) {
 	var hb, lb byte
 	var err error
@@ -406,7 +397,7 @@ func fromHex(b byte) (byte, error) {
 		return b - '0', nil
 	case b >= 'A' && b <= 'F':
 		return b - 'A' + 10, nil
-	// Accept badly encoded bytes.
+	// 接受编码不规范的字节。
 	case b >= 'a' && b <= 'f':
 		return b - 'a' + 10, nil
 	}

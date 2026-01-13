@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package syntax
 
@@ -11,14 +11,14 @@ import (
 	"unicode/utf8"
 )
 
-// Compiled program.
-// May not belong in this package, but convenient for now.
+// 已编译的程序。
+// 可能不属于这个包，但目前很方便。
 
-// A Prog is a compiled regular expression program.
+// Prog 是已编译的正则表达式程序。
 type Prog struct {
 	Inst   []Inst
-	Start  int // index of start instruction
-	NumCap int // number of InstCapture insts in re
+	Start  int // 起始指令的索引
+	NumCap int // 正则表达式中 InstCapture 指令的数量
 }
 
 // An InstOp is an instruction opcode.

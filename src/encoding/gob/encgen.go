@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build ignore
 
@@ -184,9 +184,9 @@ func printMaps(b *bytes.Buffer, upperClass string) {
 }
 
 const header = `
-// Copyright 2014 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2014 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package gob
 
@@ -198,7 +198,7 @@ import (
 
 const arrayHelper = `
 func enc%[2]sArray(state *encoderState, v reflect.Value) bool {
-	// Can only slice if it is addressable.
+	// Can only slice if it 是一个ddressable.
 	if !v.CanAddr() {
 		return false
 	}

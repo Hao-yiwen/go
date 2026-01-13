@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -12,7 +12,7 @@ import (
 )
 
 // AppendQuote appends a double-quoted JSON string literal representing src
-// to dst and returns the extended buffer.
+// to dst and 返回 extended buffer.
 // It uses the minimal string representation per RFC 8785, section 3.2.2.2.
 // Invalid UTF-8 bytes are replaced with the Unicode replacement character
 // and an error is returned at the end indicating the presence of invalid UTF-8.
@@ -26,8 +26,8 @@ func AppendQuote[Bytes ~[]byte | ~string](dst []byte, src Bytes) ([]byte, error)
 }
 
 // AppendUnquote appends the decoded interpretation of src as a
-// double-quoted JSON string literal to dst and returns the extended buffer.
-// The input src must be a JSON string without any surrounding whitespace.
+// double-quoted JSON string literal to dst and 返回 extended buffer.
+// The input src 必须是 a JSON string without any surrounding whitespace.
 // Invalid UTF-8 bytes are replaced with the Unicode replacement character
 // and an error is returned at the end indicating the presence of invalid UTF-8.
 // Any trailing bytes after the JSON string literal results in an error.

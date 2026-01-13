@@ -8,10 +8,8 @@ package runtime
 
 import _ "unsafe"
 
-// As of Go 1.22, the symbols below are found to be pulled via
-// linkname in the wild. We provide a push linkname here, to
-// keep them accessible with pull linknames.
-// This may change in the future. Please do not depend on them
-// in new code.
+// 从 Go 1.22 开始，下面的符号被发现通过 linkname 在外部被拉取。
+// 我们在这里提供一个推送 linkname，以保持它们可以通过拉取 linkname 访问。
+// 这可能在将来改变。请不要在新代码中依赖它们。
 
 //go:linkname vdsoClockgettimeSym

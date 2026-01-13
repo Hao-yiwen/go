@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // Delete the next line to include in the gob package.
 //
@@ -9,7 +9,7 @@
 package gob
 
 // This file is not normally included in the gob package. Used only for debugging the package itself.
-// Except for reading uints, it is an implementation of a reader that is independent of
+// Except for reading uints, it 是一个n implementation of a reader that is independent of
 // the one implemented by Decoder.
 // To enable the Debug function, delete the +build ignore line above and do
 //	go install
@@ -52,19 +52,19 @@ func (t tab) print() {
 	fmt.Fprint(os.Stderr, t)
 }
 
-// A peekReader wraps an io.Reader, allowing one to peek ahead to see
+// 一个peekReader wraps an io.Reader, allowing one to peek ahead to see
 // what's coming without stealing the data from the client of the Reader.
 type peekReader struct {
 	r    io.Reader
 	data []byte // read-ahead data
 }
 
-// newPeekReader returns a peekReader that wraps r.
+// newPeekReader 返回a peekReader that wraps r.
 func newPeekReader(r io.Reader) *peekReader {
 	return &peekReader{r: r}
 }
 
-// Read is the usual method. It will first take data that has been read ahead.
+// Read 是 usual method. It will first take data that has been read ahead.
 func (p *peekReader) Read(b []byte) (n int, err error) {
 	if len(p.data) == 0 {
 		return p.r.Read(b)
@@ -77,7 +77,7 @@ func (p *peekReader) Read(b []byte) (n int, err error) {
 	return
 }
 
-// peek returns as many bytes as possible from the unread
+// peek 返回as many bytes as possible from the unread
 // portion of the stream, up to the length of b.
 func (p *peekReader) peek(b []byte) (n int, err error) {
 	if len(p.data) > 0 {
@@ -163,7 +163,7 @@ func (deb *debugger) dump(format string, args ...any) {
 }
 
 // Debug prints a human-readable representation of the gob data read from r.
-// It is a no-op unless debugging was enabled when the package was built.
+// It 是一个 no-op 除非 debugging was enabled when the package was built.
 func Debug(r io.Reader) {
 	err := debug(r)
 	if err != nil {
@@ -171,7 +171,7 @@ func Debug(r io.Reader) {
 	}
 }
 
-// debug implements Debug, but catches panics and returns
+// debug 实现Debug, but catches panics and returns
 // them as errors to be printed by Debug.
 func debug(r io.Reader) (err error) {
 	defer catchError(&err)
@@ -196,13 +196,13 @@ func (deb *debugger) consumed(n int) {
 	}
 }
 
-// int64 decodes and returns the next integer, which must be present.
+// int64 decodes and 返回 next integer, which 必须是 present.
 // Don't call this if you could be at EOF.
 func (deb *debugger) int64() int64 {
 	return toInt(deb.uint64())
 }
 
-// uint64 returns and decodes the next unsigned integer, which must be present.
+// uint64 返回and decodes the next unsigned integer, which 必须是 present.
 // Don't call this if you could be at EOF.
 // TODO: handle errors better.
 func (deb *debugger) uint64() uint64 {
@@ -244,7 +244,7 @@ func (deb *debugger) delimitedMessage(indent tab) bool {
 // loadBlock preps us to read a message
 // of the length specified next in the input. It returns
 // the length of the block. The argument tells whether
-// an EOF is acceptable now. If it is and one is found,
+// an EOF 是一个cceptable now. If it 是一个nd one is found,
 // the return value is negative.
 func (deb *debugger) loadBlock(eofOK bool) int {
 	n64, w, err := decodeUintReader(deb.r, deb.tmp) // deb.uint64 will error at EOF
@@ -298,7 +298,7 @@ func (deb *debugger) message(indent tab) bool {
 
 // Helper methods to make it easy to scan a type descriptor.
 
-// common returns the CommonType at the input point.
+// common 返回the CommonType at the input point.
 func (deb *debugger) common() CommonType {
 	fieldNum := -1
 	name := ""
@@ -322,22 +322,22 @@ func (deb *debugger) common() CommonType {
 	return CommonType{name, id}
 }
 
-// uint returns the unsigned int at the input point, as a uint (not uint64).
+// uint 返回the unsigned int at the input point, as a uint (not uint64).
 func (deb *debugger) uint() uint {
 	return uint(deb.uint64())
 }
 
-// int returns the signed int at the input point, as an int (not int64).
+// int 返回the signed int at the input point, as an int (not int64).
 func (deb *debugger) int() int {
 	return int(deb.int64())
 }
 
-// typeId returns the type id at the input point.
+// typeId 返回the type id at the input point.
 func (deb *debugger) typeId() typeId {
 	return typeId(deb.int64())
 }
 
-// string returns the string at the input point.
+// string 返回the string at the input point.
 func (deb *debugger) string() string {
 	x := int(deb.uint64())
 	b := make([]byte, x)
@@ -349,8 +349,8 @@ func (deb *debugger) string() string {
 	return string(b)
 }
 
-// delta returns the field delta at the input point. The expect argument,
-// if non-negative, identifies what the value should be.
+// delta 返回the field delta at the input point. The expect argument,
+// if non-negative, identifies what the value 应该是.
 func (deb *debugger) delta(expect int) int {
 	delta := int(deb.uint64())
 	if delta < 0 || (expect >= 0 && delta != expect) {
@@ -367,7 +367,7 @@ func (deb *debugger) typeDefinition(indent tab, id typeId) {
 	// Encoding is of a wireType. Decode the structure as usual
 	fieldNum := -1
 	wire := new(wireType)
-	// A wireType defines a single field.
+	// 一个wireType 定义 a single field.
 	delta := deb.delta(-1)
 	fieldNum += delta
 	switch fieldNum {
@@ -652,7 +652,7 @@ func (deb *debugger) arrayValue(indent tab, wire *wireType) {
 		deb.fieldValue(indent, elemId)
 	}
 	if length != wire.ArrayT.Len {
-		fmt.Fprintf(os.Stderr, "%s(wrong length for array: %d should be %d)\n", indent, length, wire.ArrayT.Len)
+		fmt.Fprintf(os.Stderr, "%s(wrong length for array: %d 应该是 %d)\n", indent, length, wire.ArrayT.Len)
 	}
 }
 

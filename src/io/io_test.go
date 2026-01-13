@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package io_test
 
@@ -16,14 +16,14 @@ import (
 	"testing"
 )
 
-// A version of bytes.Buffer without ReadFrom and WriteTo
+// 不带 ReadFrom 和 WriteTo 的 bytes.Buffer 版本
 type Buffer struct {
 	bytes.Buffer
-	ReaderFrom // conflicts with and hides bytes.Buffer's ReaderFrom.
-	WriterTo   // conflicts with and hides bytes.Buffer's WriterTo.
+	ReaderFrom // 与 bytes.Buffer 的 ReaderFrom 冲突并隐藏它。
+	WriterTo   // 与 bytes.Buffer 的 WriterTo 冲突并隐藏它。
 }
 
-// Simple tests, primarily to verify the ReadFrom and WriteTo callouts inside Copy, CopyBuffer and CopyN.
+// 简单测试，主要用于验证 Copy、CopyBuffer 和 CopyN 内部的 ReadFrom 和 WriteTo 调用。
 
 func TestCopy(t *testing.T) {
 	rb := new(Buffer)
@@ -54,7 +54,7 @@ func TestCopyBuffer(t *testing.T) {
 	rb := new(Buffer)
 	wb := new(Buffer)
 	rb.WriteString("hello, world.")
-	CopyBuffer(wb, rb, make([]byte, 1)) // Tiny buffer to keep it honest.
+	CopyBuffer(wb, rb, make([]byte, 1)) // 使用微小缓冲区以保持诚实。
 	if wb.String() != "hello, world." {
 		t.Errorf("CopyBuffer did not work properly")
 	}
@@ -64,7 +64,7 @@ func TestCopyBufferNil(t *testing.T) {
 	rb := new(Buffer)
 	wb := new(Buffer)
 	rb.WriteString("hello, world.")
-	CopyBuffer(wb, rb, nil) // Should allocate a buffer.
+	CopyBuffer(wb, rb, nil) // 应该分配一个缓冲区。
 	if wb.String() != "hello, world." {
 		t.Errorf("CopyBuffer did not work properly")
 	}
@@ -72,7 +72,7 @@ func TestCopyBufferNil(t *testing.T) {
 
 func TestCopyReadFrom(t *testing.T) {
 	rb := new(Buffer)
-	wb := new(bytes.Buffer) // implements ReadFrom.
+	wb := new(bytes.Buffer) // 实现了 ReadFrom。
 	rb.WriteString("hello, world.")
 	Copy(wb, rb)
 	if wb.String() != "hello, world." {
@@ -81,7 +81,7 @@ func TestCopyReadFrom(t *testing.T) {
 }
 
 func TestCopyWriteTo(t *testing.T) {
-	rb := new(bytes.Buffer) // implements WriteTo.
+	rb := new(bytes.Buffer) // 实现了 WriteTo。
 	wb := new(Buffer)
 	rb.WriteString("hello, world.")
 	Copy(wb, rb)
@@ -90,7 +90,7 @@ func TestCopyWriteTo(t *testing.T) {
 	}
 }
 
-// Version of bytes.Buffer that checks whether WriteTo was called or not
+// 检查 WriteTo 是否被调用的 bytes.Buffer 版本
 type writeToChecker struct {
 	bytes.Buffer
 	writeToCalled bool
@@ -101,9 +101,9 @@ func (wt *writeToChecker) WriteTo(w Writer) (int64, error) {
 	return wt.Buffer.WriteTo(w)
 }
 
-// It's preferable to choose WriterTo over ReaderFrom, since a WriterTo can issue one large write,
-// while the ReaderFrom must read until EOF, potentially allocating when running out of buffer.
-// Make sure that we choose WriterTo when both are implemented.
+// 优先选择 WriterTo 而非 ReaderFrom，因为 WriterTo 可以发出一次大的写入，
+// 而 ReaderFrom 必须读取到 EOF，可能在缓冲区用完时需要分配内存。
+// 确保当两者都实现时我们选择 WriterTo。
 func TestCopyPriority(t *testing.T) {
 	rb := new(writeToChecker)
 	wb := new(bytes.Buffer)
@@ -132,9 +132,9 @@ func (w errWriter) Write([]byte) (int, error) {
 	return 0, w.err
 }
 
-// In case a Read results in an error with non-zero bytes read, and
-// the subsequent Write also results in an error, the error from Write
-// is returned, as it is the one that prevented progressing further.
+// 如果 Read 导致错误并读取了非零字节，且
+// 后续的 Write 也导致错误，则返回 Write 的错误，
+// 因为它是阻止进一步进展的那个。
 func TestCopyReadErrWriteErr(t *testing.T) {
 	er, ew := errors.New("readError"), errors.New("writeError")
 	r, w := zeroErrReader{err: er}, errWriter{err: ew}
@@ -156,7 +156,7 @@ func TestCopyN(t *testing.T) {
 
 func TestCopyNReadFrom(t *testing.T) {
 	rb := new(Buffer)
-	wb := new(bytes.Buffer) // implements ReadFrom.
+	wb := new(bytes.Buffer) // 实现了 ReadFrom。
 	rb.WriteString("hello")
 	CopyN(wb, rb, 5)
 	if wb.String() != "hello" {
@@ -165,7 +165,7 @@ func TestCopyNReadFrom(t *testing.T) {
 }
 
 func TestCopyNWriteTo(t *testing.T) {
-	rb := new(bytes.Buffer) // implements WriteTo.
+	rb := new(bytes.Buffer) // 实现了 WriteTo。
 	wb := new(Buffer)
 	rb.WriteString("hello, world.")
 	CopyN(wb, rb, 5)
@@ -213,8 +213,8 @@ func (wantedAndErrReader) Read(p []byte) (int, error) {
 }
 
 func TestCopyNEOF(t *testing.T) {
-	// Test that EOF behavior is the same regardless of whether
-	// argument to CopyN has ReadFrom.
+	// 测试无论 CopyN 的参数是否有 ReadFrom，
+	// EOF 行为都是相同的。
 
 	b := new(bytes.Buffer)
 
@@ -228,12 +228,12 @@ func TestCopyNEOF(t *testing.T) {
 		t.Errorf("CopyN(noReadFrom, foo, 4) = %d, %v; want 3, EOF", n, err)
 	}
 
-	n, err = CopyN(b, strings.NewReader("foo"), 3) // b has read from
+	n, err = CopyN(b, strings.NewReader("foo"), 3) // b 有 read from
 	if n != 3 || err != nil {
 		t.Errorf("CopyN(bytes.Buffer, foo, 3) = %d, %v; want 3, nil", n, err)
 	}
 
-	n, err = CopyN(b, strings.NewReader("foo"), 4) // b has read from
+	n, err = CopyN(b, strings.NewReader("foo"), 4) // b 有 read from
 	if n != 3 || err != EOF {
 		t.Errorf("CopyN(bytes.Buffer, foo, 4) = %d, %v; want 3, EOF", n, err)
 	}
@@ -254,8 +254,8 @@ func TestReadAtLeast(t *testing.T) {
 	testReadAtLeast(t, &rb)
 }
 
-// A version of bytes.Buffer that returns n > 0, err on Read
-// when the input is exhausted.
+// 当输入耗尽时，在 Read 上返回 n > 0, err 的
+// bytes.Buffer 版本。
 type dataAndErrorBuffer struct {
 	err error
 	bytes.Buffer
@@ -391,7 +391,7 @@ func TestSectionReader_ReadAt(t *testing.T) {
 }
 
 func TestSectionReader_Seek(t *testing.T) {
-	// Verifies that NewSectionReader's Seeker behaves like bytes.NewReader (which is like strings.NewReader)
+	// 验证 NewSectionReader 的 Seeker 行为与 bytes.NewReader 相同（类似于 strings.NewReader）
 	br := bytes.NewReader([]byte("foo"))
 	sr := NewSectionReader(br, 0, int64(len("foo")))
 
@@ -406,7 +406,7 @@ func TestSectionReader_Seek(t *testing.T) {
 		}
 	}
 
-	// And verify we can just seek past the end and get an EOF
+	// 并验证我们可以定位到末尾之后并获得 EOF
 	got, err := sr.Seek(100, SeekStart)
 	if err != nil || got != 100 {
 		t.Errorf("Seek = %v, %v; want 100, nil", got, err)
@@ -453,8 +453,7 @@ func TestSectionReader_Max(t *testing.T) {
 	}
 }
 
-// largeWriter returns an invalid count that is larger than the number
-// of bytes provided (issue 39978).
+// largeWriter 返回一个大于提供字节数的无效计数（issue 39978）。
 type largeWriter struct {
 	err error
 }
@@ -511,7 +510,7 @@ func TestOffsetWriter_Seek(t *testing.T) {
 	defer tmpfile.Close()
 	w := NewOffsetWriter(tmpfile, 0)
 
-	// Should throw error errWhence if whence is not valid
+	// 如果 whence 无效应该抛出错误 errWhence
 	t.Run("errWhence", func(t *testing.T) {
 		for _, whence := range []int{-3, -2, -1, 3, 4, 5} {
 			var offset int64 = 0
@@ -523,7 +522,7 @@ func TestOffsetWriter_Seek(t *testing.T) {
 		}
 	})
 
-	// Should throw error errOffset if offset is negative
+	// 如果 offset 为负应该抛出错误 errOffset
 	t.Run("errOffset", func(t *testing.T) {
 		for _, whence := range []int{SeekStart, SeekCurrent} {
 			for offset := int64(-3); offset < 0; offset++ {
@@ -536,14 +535,14 @@ func TestOffsetWriter_Seek(t *testing.T) {
 		}
 	})
 
-	// Normal tests
+	// 正常测试
 	t.Run("normal", func(t *testing.T) {
 		tests := []struct {
 			offset    int64
 			whence    int
 			returnOff int64
 		}{
-			// keep in order
+			// 保持顺序
 			{whence: SeekStart, offset: 1, returnOff: 1},
 			{whence: SeekStart, offset: 2, returnOff: 2},
 			{whence: SeekStart, offset: 3, returnOff: 3},
@@ -576,7 +575,7 @@ func TestOffsetWriter_WriteAt(t *testing.T) {
 
 		var writeN int64
 		var wg sync.WaitGroup
-		// Concurrent writes, one byte at a time
+		// 并发写入，每次一个字节
 		for step, value := range []byte(content) {
 			wg.Add(1)
 			go func(wg *sync.WaitGroup, tmpfile *os.File, value byte, off, at int64, step int) {
@@ -592,7 +591,7 @@ func TestOffsetWriter_WriteAt(t *testing.T) {
 		}
 		wg.Wait()
 
-		// Read one more byte to reach EOF
+		// 多读一个字节以达到 EOF
 		buf := make([]byte, contentSize+1)
 		readN, err := tmpfile.ReadAt(buf, off+at)
 		if err != EOF {
@@ -620,9 +619,9 @@ func TestWriteAt_PositionPriorToBase(t *testing.T) {
 	}
 	defer tmpfile.Close()
 
-	// start writing position in OffsetWriter
+	// OffsetWriter 中的起始写入位置
 	offset := int64(10)
-	// position we want to write to the tmpfile
+	// 我们想要写入 tmpfile 的位置
 	at := int64(-1)
 	w := NewOffsetWriter(tmpfile, offset)
 	_, e := w.WriteAt([]byte("hello"), at)
@@ -645,7 +644,7 @@ func TestOffsetWriter_Write(t *testing.T) {
 		return NewOffsetWriter(tmpfile, 0), tmpfile
 	}
 	checkContent := func(name string, f *os.File) {
-		// Read one more byte to reach EOF
+		// 多读一个字节以达到 EOF
 		buf := make([]byte, contentSize+1)
 		readN, err := f.ReadAt(buf, 0)
 		if err != EOF {
@@ -661,8 +660,8 @@ func TestOffsetWriter_Write(t *testing.T) {
 	var name string
 	name = "Write"
 	t.Run(name, func(t *testing.T) {
-		// Write directly (off: 0, at: 0)
-		// Write content to file
+		// 直接写入（off: 0, at: 0）
+		// 将内容写入文件
 		w, f := makeOffsetWriter(name)
 		defer f.Close()
 		for _, value := range []byte(content) {
@@ -674,7 +673,7 @@ func TestOffsetWriter_Write(t *testing.T) {
 		checkContent(name, f)
 
 		// Copy -> Write
-		// Copy file f to file f2
+		// 将文件 f 复制到文件 f2
 		name = "Copy"
 		w2, f2 := makeOffsetWriter(name)
 		defer f2.Close()
@@ -683,7 +682,7 @@ func TestOffsetWriter_Write(t *testing.T) {
 	})
 
 	// Copy -> WriteTo -> Write
-	// Note: strings.Reader implements the io.WriterTo interface.
+	// 注意：strings.Reader 实现了 io.WriterTo 接口。
 	name = "Write_Of_Copy_WriteTo"
 	t.Run(name, func(t *testing.T) {
 		w, f := makeOffsetWriter(name)

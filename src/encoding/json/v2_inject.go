@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -87,14 +87,14 @@ func transformUnmarshalError(root any, err error) error {
 		//
 		// For a representation closer to the historical representation,
 		// we switch the '/'-delimited representation of a JSON pointer
-		// to use a '.'-delimited representation. This may be ambiguous,
+		// to use a '.'-delimited representation. This 可能是 ambiguous,
 		// but the prior representation was always ambiguous as well.
 		// Users that care about precise positions should use v2 errors
 		// by disabling [ReportErrorsWithLegacySemantics].
 		//
 		// The introduction of a Err field is new to the v1-to-v2 migration
-		// and allows us to preserve stronger error information
-		// that may be surfaced by the v2 package.
+		// and 允许 us to preserve stronger error information
+		// that 可能是 surfaced by the v2 package.
 		//
 		// See https://go.dev/issue/43126
 		var value string

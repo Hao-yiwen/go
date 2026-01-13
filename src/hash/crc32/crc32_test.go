@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package crc32
 
@@ -15,11 +15,11 @@ import (
 	"testing"
 )
 
-// First test, so that it can be the one to initialize castagnoliTable.
+// 第一个测试，以便它可以是初始化 castagnoliTable 的测试。
 func TestCastagnoliRace(t *testing.T) {
-	// The MakeTable(Castagnoli) lazily initializes castagnoliTable,
-	// which races with the switch on tab during Write to check
-	// whether tab == castagnoliTable.
+	// MakeTable(Castagnoli) 延迟初始化 castagnoliTable，
+	// 这与 Write 期间在 tab 上的 switch 竞争，
+	// 以检查 tab == castagnoliTable。
 	ieee := NewIEEE()
 	go MakeTable(Castagnoli)
 	ieee.Write([]byte("hello"))
@@ -32,8 +32,8 @@ func TestHashInterface(t *testing.T) {
 type test struct {
 	ieee, castagnoli    uint32
 	in                  string
-	halfStateIEEE       string // IEEE marshaled hash state after first half of in written, used by TestGoldenMarshal
-	halfStateCastagnoli string // Castagnoli marshaled hash state after first half of in written, used by TestGoldenMarshal
+	halfStateIEEE       string // 写入 in 的前半部分后序列化的 IEEE 哈希状态，用于 TestGoldenMarshal
+	halfStateCastagnoli string // 写入 in 的前半部分后序列化的 Castagnoli 哈希状态，用于 TestGoldenMarshal
 }
 
 var golden = []test{
@@ -72,8 +72,7 @@ var golden = []test{
 	{0x772d04d7, 0x5a6f5c45, strings.Repeat("a", 1024+65), "crc\x01ʇ\x91M\xe7Љ\xd1", "crc\x01wB\x84\x81\x95B\xa9("},
 }
 
-// testGoldenIEEE verifies that the given function returns
-// correct IEEE checksums.
+// testGoldenIEEE 验证给定函数返回正确的 IEEE 校验和。
 func testGoldenIEEE(t *testing.T, crcFunc func(b []byte) uint32) {
 	for _, g := range golden {
 		if crc := crcFunc([]byte(g.in)); crc != g.ieee {
@@ -82,8 +81,7 @@ func testGoldenIEEE(t *testing.T, crcFunc func(b []byte) uint32) {
 	}
 }
 
-// testGoldenCastagnoli verifies that the given function returns
-// correct IEEE checksums.
+// testGoldenCastagnoli 验证给定函数返回正确的 Castagnoli 校验和。
 func testGoldenCastagnoli(t *testing.T, crcFunc func(b []byte) uint32) {
 	for _, g := range golden {
 		if crc := crcFunc([]byte(g.in)); crc != g.castagnoli {
@@ -92,12 +90,11 @@ func testGoldenCastagnoli(t *testing.T, crcFunc func(b []byte) uint32) {
 	}
 }
 
-// testCrossCheck generates random buffers of various lengths and verifies that
-// the two "update" functions return the same result.
+// testCrossCheck 生成各种长度的随机缓冲区，并验证
+// 两个 "update" 函数返回相同的结果。
 func testCrossCheck(t *testing.T, crcFunc1, crcFunc2 func(crc uint32, b []byte) uint32) {
-	// The AMD64 implementation has some cutoffs at lengths 168*3=504 and
-	// 1344*3=4032. We should make sure lengths around these values are in the
-	// list.
+	// AMD64 实现在长度 168*3=504 和 1344*3=4032 处有一些阈值。
+	// 我们应该确保这些值附近的长度在列表中。
 	lengths := []int{0, 1, 2, 3, 4, 5, 10, 16, 50, 63, 64, 65, 100,
 		127, 128, 129, 255, 256, 257, 300, 312, 384, 416, 448, 480,
 		500, 501, 502, 503, 504, 505, 512, 513, 1000, 1024, 2000,
@@ -114,7 +111,7 @@ func testCrossCheck(t *testing.T, crcFunc1, crcFunc2 func(crc uint32, b []byte) 
 	}
 }
 
-// TestSimple tests the simple generic algorithm.
+// TestSimple 测试简单的通用算法。
 func TestSimple(t *testing.T) {
 	tab := simpleMakeTable(IEEE)
 	testGoldenIEEE(t, func(b []byte) uint32 {
@@ -231,7 +228,7 @@ func TestMarshalTableMismatch(t *testing.T) {
 	}
 }
 
-// TestSlicing tests the slicing-by-8 algorithm.
+// TestSlicing 测试 slicing-by-8 算法。
 func TestSlicing(t *testing.T) {
 	tab := slicingMakeTable(IEEE)
 	testGoldenIEEE(t, func(b []byte) uint32 {
@@ -243,7 +240,7 @@ func TestSlicing(t *testing.T) {
 		return slicingUpdate(0, tab, b)
 	})
 
-	// Cross-check various polys against the simple algorithm.
+	// 对各种多项式与简单算法进行交叉检查。
 	for _, poly := range []uint32{IEEE, Castagnoli, Koopman, 0xD5828281} {
 		t1 := simpleMakeTable(poly)
 		f1 := func(crc uint32, b []byte) uint32 {
@@ -282,8 +279,8 @@ func TestArchCastagnoli(t *testing.T) {
 func TestGolden(t *testing.T) {
 	testGoldenIEEE(t, ChecksumIEEE)
 
-	// Some implementations have special code to deal with misaligned
-	// data; test that as well.
+	// 一些实现有特殊代码来处理未对齐的数据；
+	// 也要测试这种情况。
 	for delta := 1; delta <= 7; delta++ {
 		testGoldenIEEE(t, func(b []byte) uint32 {
 			ieee := NewIEEE()
@@ -308,8 +305,8 @@ func TestGolden(t *testing.T) {
 		return castagnoli.Sum32()
 	})
 
-	// Some implementations have special code to deal with misaligned
-	// data; test that as well.
+	// 一些实现有特殊代码来处理未对齐的数据；
+	// 也要测试这种情况。
 	for delta := 1; delta <= 7; delta++ {
 		testGoldenCastagnoli(t, func(b []byte) uint32 {
 			castagnoli := New(castagnoliTab)
@@ -357,11 +354,11 @@ func benchmark(b *testing.B, h hash.Hash32, n, alignment int64) {
 	}
 	in := make([]byte, 0, h.Size())
 
-	// Warm up
+	// 预热
 	h.Reset()
 	h.Write(data)
 	h.Sum(in)
-	// Avoid further allocations
+	// 避免进一步的分配
 	in = in[:0]
 
 	b.ResetTimer()

@@ -8,7 +8,7 @@ package runtime
 
 const canCreateFile = true
 
-// create returns an fd to a write-only file.
+// create 返回一个只写文件的文件描述符。
 func create(name *byte, perm int32) int32 {
 	return open(name, _O_CREAT|_O_WRONLY|_O_TRUNC, perm)
 }

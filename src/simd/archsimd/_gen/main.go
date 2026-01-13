@@ -1,8 +1,8 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Run all SIMD-related code generators.
+// 运行所有 SIMD 相关的代码生成器。
 package main
 
 import (
@@ -34,8 +34,8 @@ func main() {
 	}
 
 	if *flagXedPath == defaultXedPath {
-		// In general we want the shell to do variable expansion, but for the
-		// default value we don't get that, so do it ourselves.
+		// 通常我们希望 shell 来进行变量展开，但对于
+		// 默认值我们无法获得这个功能，所以自己来处理。
 		*flagXedPath = os.ExpandEnv(defaultXedPath)
 	}
 
@@ -65,17 +65,17 @@ func doSimdgen() {
 		os.Exit(1)
 	}
 
-	// Regenerate the XED-derived SIMD files
+	// 重新生成基于 XED 的 SIMD 文件
 	goRun("-C", "simdgen", ".", "-o", "godefs", "-goroot", goRoot, "-xedPath", prettyPath("./simdgen", xedPath), "go.yaml", "types.yaml", "categories.yaml")
 
-	// simdgen produces SSA rule files, so update the SSA files
+	// simdgen 会生成 SSA 规则文件，所以需要更新 SSA 文件
 	goRun("-C", prettyPath(".", filepath.Join(goRoot, "src", "cmd", "compile", "internal", "ssa", "_gen")), ".")
 }
 
 func resolveXEDPath(pathList string) (xedPath string, err error) {
 	for _, path := range filepath.SplitList(pathList) {
 		if path == "" {
-			// Probably an unknown shell variable. Ignore.
+			// 可能是未知的 shell 变量。忽略。
 			continue
 		}
 		if _, err := os.Stat(filepath.Join(path, "all-dec-instructions.txt")); err == nil {
@@ -127,8 +127,8 @@ func prettyPath(base, path string) string {
 }
 
 func cmdString(cmd *exec.Cmd) string {
-	// TODO: Shell quoting?
-	// TODO: Environment.
+	// TODO: Shell 引号处理？
+	// TODO: 环境变量。
 
 	var buf strings.Builder
 

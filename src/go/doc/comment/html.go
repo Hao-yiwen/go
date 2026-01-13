@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package comment
 
@@ -10,13 +10,13 @@ import (
 	"strconv"
 )
 
-// An htmlPrinter holds the state needed for printing a [Doc] as HTML.
+// 一个htmlPrinter 保存 state needed for printing a [Doc] as HTML.
 type htmlPrinter struct {
 	*Printer
 	tight bool
 }
 
-// HTML returns an HTML formatting of the [Doc].
+// HTML 返回an HTML formatting of the [Doc].
 // See the [Printer] documentation for ways to customize the HTML output.
 func (p *Printer) HTML(d *Doc) []byte {
 	hp := &htmlPrinter{Printer: p}

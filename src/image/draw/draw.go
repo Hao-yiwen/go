@@ -1,10 +1,10 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package draw provides image composition functions.
+// draw 包提供图像合成函数。
 //
-// See "The Go image/draw package" for an introduction to this package:
+// 有关此包的介绍，请参阅 "The Go image/draw package"：
 // https://golang.org/doc/articles/image_draw.html
 package draw
 
@@ -14,57 +14,54 @@ import (
 	"image/internal/imageutil"
 )
 
-// m is the maximum color value returned by image.Color.RGBA.
+// m 是 image.Color.RGBA 返回的最大颜色值。
 const m = 1<<16 - 1
 
-// Image is an image.Image with a Set method to change a single pixel.
+// Image 是带有 Set 方法来更改单个像素的 image.Image。
 type Image interface {
 	image.Image
 	Set(x, y int, c color.Color)
 }
 
-// RGBA64Image extends both the [Image] and [image.RGBA64Image] interfaces with a
-// SetRGBA64 method to change a single pixel. SetRGBA64 is equivalent to
-// calling Set, but it can avoid allocations from converting concrete color
-// types to the [color.Color] interface type.
+// RGBA64Image 通过 SetRGBA64 方法扩展了 [Image] 和 [image.RGBA64Image] 接口，
+// 用于更改单个像素。SetRGBA64 等效于调用 Set，但它可以避免
+// 将具体颜色类型转换为 [color.Color] 接口类型时的内存分配。
 type RGBA64Image interface {
 	image.RGBA64Image
 	Set(x, y int, c color.Color)
 	SetRGBA64(x, y int, c color.RGBA64)
 }
 
-// Quantizer produces a palette for an image.
+// Quantizer 为图像生成调色板。
 type Quantizer interface {
-	// Quantize appends up to cap(p) - len(p) colors to p and returns the
-	// updated palette suitable for converting m to a paletted image.
+	// Quantize 向 p 追加最多 cap(p) - len(p) 个颜色，并返回
+	// 适合将 m 转换为调色板图像的更新后的调色板。
 	Quantize(p color.Palette, m image.Image) color.Palette
 }
 
-// Op is a Porter-Duff compositing operator.
+// Op 是 Porter-Duff 合成运算符。
 type Op int
 
 const (
-	// Over specifies ``(src in mask) over dst''.
+	// Over 指定 ``(src in mask) over dst''。
 	Over Op = iota
-	// Src specifies ``src in mask''.
+	// Src 指定 ``src in mask''。
 	Src
 )
 
-// Draw implements the [Drawer] interface by calling the Draw function with this
-// [Op].
+// Draw 通过使用此 [Op] 调用 Draw 函数来实现 [Drawer] 接口。
 func (op Op) Draw(dst Image, r image.Rectangle, src image.Image, sp image.Point) {
 	DrawMask(dst, r, src, sp, nil, image.Point{}, op)
 }
 
-// Drawer contains the [Draw] method.
+// Drawer 包含 [Draw] 方法。
 type Drawer interface {
-	// Draw aligns r.Min in dst with sp in src and then replaces the
-	// rectangle r in dst with the result of drawing src on dst.
+	// Draw 将 dst 中的 r.Min 与 src 中的 sp 对齐，然后用在 dst 上绘制 src 的
+	// 结果替换 dst 中的矩形 r。
 	Draw(dst Image, r image.Rectangle, src image.Image, sp image.Point)
 }
 
-// FloydSteinberg is a [Drawer] that is the [Src] [Op] with Floyd-Steinberg error
-// diffusion.
+// FloydSteinberg 是一个使用 Floyd-Steinberg 误差扩散的 [Src] [Op] [Drawer]。
 var FloydSteinberg Drawer = floydSteinberg{}
 
 type floydSteinberg struct{}
@@ -77,9 +74,8 @@ func (floydSteinberg) Draw(dst Image, r image.Rectangle, src image.Image, sp ima
 	drawPaletted(dst, r, src, sp, true)
 }
 
-// clip clips r against each image's bounds (after translating into the
-// destination image's coordinate space) and shifts the points sp and mp by
-// the same amount as the change in r.Min.
+// clip 将 r 裁剪到每个图像的边界（在转换到目标图像的坐标空间之后），
+// 并将点 sp 和 mp 移动与 r.Min 变化相同的量。
 func clip(dst Image, r *image.Rectangle, src image.Image, sp *image.Point, mask image.Image, mp *image.Point) {
 	orig := r.Min
 	*r = r.Intersect(dst.Bounds())
@@ -106,26 +102,25 @@ func processBackward(dst image.Image, r image.Rectangle, src image.Image, sp ima
 		(sp.Y < r.Min.Y || (sp.Y == r.Min.Y && sp.X < r.Min.X))
 }
 
-// Draw calls [DrawMask] with a nil mask.
+// Draw 使用 nil 掩码调用 [DrawMask]。
 func Draw(dst Image, r image.Rectangle, src image.Image, sp image.Point, op Op) {
 	DrawMask(dst, r, src, sp, nil, image.Point{}, op)
 }
 
-// DrawMask aligns r.Min in dst with sp in src and mp in mask and then replaces the rectangle r
-// in dst with the result of a Porter-Duff composition. A nil mask is treated as opaque.
+// DrawMask 将 dst 中的 r.Min 与 src 中的 sp 和 mask 中的 mp 对齐，然后用
+// Porter-Duff 合成的结果替换 dst 中的矩形 r。nil 掩码被视为不透明。
 func DrawMask(dst Image, r image.Rectangle, src image.Image, sp image.Point, mask image.Image, mp image.Point, op Op) {
 	clip(dst, &r, src, &sp, mask, &mp)
 	if r.Empty() {
 		return
 	}
 
-	// Fast paths for special cases. If none of them apply, then we fall back
-	// to general but slower implementations.
+	// 特殊情况的快速路径。如果都不适用，则回退到
+	// 通用但较慢的实现。
 	//
-	// For NRGBA and NRGBA64 image types, the code paths aren't just faster.
-	// They also avoid the information loss that would otherwise occur from
-	// converting non-alpha-premultiplied color to and from alpha-premultiplied
-	// color. See TestDrawSrcNonpremultiplied.
+	// 对于 NRGBA 和 NRGBA64 图像类型，代码路径不仅更快。
+	// 它们还避免了将非预乘 alpha 颜色与预乘 alpha 颜色
+	// 相互转换时会发生的信息丢失。参见 TestDrawSrcNonpremultiplied。
 	switch dst0 := dst.(type) {
 	case *image.RGBA:
 		if op == Over {
@@ -146,10 +141,9 @@ func DrawMask(dst Image, r image.Rectangle, src image.Image, sp image.Point, mas
 					drawNRGBAOver(dst0, r, src0, sp)
 					return
 				case *image.YCbCr:
-					// An image.YCbCr is always fully opaque, and so if the
-					// mask is nil (i.e. fully opaque) then the op is
-					// effectively always Src. Similarly for image.Gray and
-					// image.CMYK.
+					// image.YCbCr 始终是完全不透明的，因此如果
+					// mask 为 nil（即完全不透明），则 op 实际上
+					// 始终是 Src。image.Gray 和 image.CMYK 同理。
 					if imageutil.DrawYCbCr(dst0, r, src0, sp) {
 						return
 					}
@@ -171,8 +165,8 @@ func DrawMask(dst Image, r image.Rectangle, src image.Image, sp image.Point, mas
 				case *image.Gray:
 					drawGrayMaskOver(dst0, r, src0, sp, mask0, mp)
 					return
-				// Case order matters. The next case (image.RGBA64Image) is an
-				// interface type that the concrete types above also implement.
+				// case 顺序很重要。下一个 case（image.RGBA64Image）是
+				// 上述具体类型也实现的接口类型。
 				case image.RGBA64Image:
 					drawRGBA64ImageMaskOver(dst0, r, src0, sp, mask0, mp)
 					return
@@ -261,10 +255,9 @@ func DrawMask(dst Image, r image.Rectangle, src image.Image, sp image.Point, mas
 
 	// FALLBACK1.17
 	//
-	// Try the draw.RGBA64Image and image.RGBA64Image interfaces, part of the
-	// standard library since Go 1.17. These are like the draw.Image and
-	// image.Image interfaces but they can avoid allocations from converting
-	// concrete color types to the color.Color interface type.
+	// 尝试 draw.RGBA64Image 和 image.RGBA64Image 接口，这些接口从 Go 1.17 起
+	// 成为标准库的一部分。它们类似于 draw.Image 和 image.Image 接口，
+	// 但可以避免将具体颜色类型转换为 color.Color 接口类型时的内存分配。
 
 	if dst0, _ := dst.(RGBA64Image); dst0 != nil {
 		if src0, _ := src.(image.RGBA64Image); src0 != nil {
@@ -303,7 +296,7 @@ func DrawMask(dst Image, r image.Rectangle, src image.Image, sp image.Point, mas
 						switch {
 						case ma == 0:
 							if op == Over {
-								// No-op.
+								// 无操作。
 							} else {
 								dst0.SetRGBA64(x, y, color.RGBA64{})
 							}
@@ -338,8 +331,8 @@ func DrawMask(dst Image, r image.Rectangle, src image.Image, sp image.Point, mas
 
 	// FALLBACK1.0
 	//
-	// If none of the faster code paths above apply, use the draw.Image and
-	// image.Image interfaces, part of the standard library since Go 1.0.
+	// 如果上面的快速代码路径都不适用，则使用 draw.Image 和
+	// image.Image 接口，这些接口从 Go 1.0 起成为标准库的一部分。
 
 	var out color.RGBA64
 	sy := sp.Y + y0 - r.Min.Y
@@ -355,7 +348,7 @@ func DrawMask(dst Image, r image.Rectangle, src image.Image, sp image.Point, mas
 			switch {
 			case ma == 0:
 				if op == Over {
-					// No-op.
+					// 无操作。
 				} else {
 					dst.Set(x, y, color.Transparent)
 				}
@@ -376,10 +369,9 @@ func DrawMask(dst Image, r image.Rectangle, src image.Image, sp image.Point, mas
 					out.B = uint16(sb * ma / m)
 					out.A = uint16(sa * ma / m)
 				}
-				// The third argument is &out instead of out (and out is
-				// declared outside of the inner loop) to avoid the implicit
-				// conversion to color.Color here allocating memory in the
-				// inner loop if sizeof(color.RGBA64) > sizeof(uintptr).
+				// 第三个参数是 &out 而不是 out（且 out 在内层循环外声明），
+				// 以避免在 sizeof(color.RGBA64) > sizeof(uintptr) 时，
+				// 此处到 color.Color 的隐式转换在内层循环中分配内存。
 				dst.Set(x, y, &out)
 			}
 		}
@@ -387,7 +379,7 @@ func DrawMask(dst Image, r image.Rectangle, src image.Image, sp image.Point, mas
 }
 
 func drawFillOver(dst *image.RGBA, r image.Rectangle, sr, sg, sb, sa uint32) {
-	// The 0x101 is here for the same reason as in drawRGBA.
+	// 这里的 0x101 与 drawRGBA 中的原因相同。
 	a := (m - sa) * 0x101
 	i0 := dst.PixOffset(r.Min.X, r.Min.Y)
 	i1 := i0 + r.Dx()*4
@@ -413,9 +405,9 @@ func drawFillSrc(dst *image.RGBA, r image.Rectangle, sr, sg, sb, sa uint32) {
 	sg8 := uint8(sg >> 8)
 	sb8 := uint8(sb >> 8)
 	sa8 := uint8(sa >> 8)
-	// The built-in copy function is faster than a straightforward for loop to fill the destination with
-	// the color, but copy requires a slice source. We therefore use a for loop to fill the first row, and
-	// then use the first row as the slice source for the remaining rows.
+	// 内置的 copy 函数比直接使用 for 循环填充颜色更快，
+	// 但 copy 需要一个切片源。因此我们使用 for 循环填充第一行，
+	// 然后将第一行用作剩余行的切片源。
 	i0 := dst.PixOffset(r.Min.X, r.Min.Y)
 	i1 := i0 + r.Dx()*4
 	for i := i0; i < i1; i += 4 {
@@ -445,8 +437,8 @@ func drawCopyOver(dst *image.RGBA, r image.Rectangle, src *image.RGBA, sp image.
 		sdelta = src.Stride
 		i0, i1, idelta = 0, dx*4, +4
 	} else {
-		// If the source start point is higher than the destination start point, or equal height but to the left,
-		// then we compose the rows in right-to-left, bottom-up order instead of left-to-right, top-down.
+		// 如果源起始点高于目标起始点，或高度相同但在左侧，
+		// 则我们按从右到左、从下到上的顺序合成行，而不是从左到右、从上到下。
 		d0 += (dy - 1) * dst.Stride
 		s0 += (dy - 1) * src.Stride
 		ddelta = -dst.Stride
@@ -457,16 +449,16 @@ func drawCopyOver(dst *image.RGBA, r image.Rectangle, src *image.RGBA, sp image.
 		dpix := dst.Pix[d0:]
 		spix := src.Pix[s0:]
 		for i := i0; i != i1; i += idelta {
-			s := spix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			s := spix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			sr := uint32(s[0]) * 0x101
 			sg := uint32(s[1]) * 0x101
 			sb := uint32(s[2]) * 0x101
 			sa := uint32(s[3]) * 0x101
 
-			// The 0x101 is here for the same reason as in drawRGBA.
+			// 这里的 0x101 与 drawRGBA 中的原因相同。
 			a := (m - sa) * 0x101
 
-			d := dpix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			d := dpix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			d[0] = uint8((uint32(d[0])*a/m + sr) >> 8)
 			d[1] = uint8((uint32(d[1])*a/m + sg) >> 8)
 			d[2] = uint8((uint32(d[2])*a/m + sb) >> 8)
@@ -477,9 +469,9 @@ func drawCopyOver(dst *image.RGBA, r image.Rectangle, src *image.RGBA, sp image.
 	}
 }
 
-// drawCopySrc copies bytes to dstPix from srcPix. These arguments roughly
-// correspond to the Pix fields of the image package's concrete image.Image
-// implementations, but are offset (dstPix is dst.Pix[dpOffset:] not dst.Pix).
+// drawCopySrc 从 srcPix 复制字节到 dstPix。这些参数大致对应于
+// image 包的具体 image.Image 实现的 Pix 字段，
+// 但是有偏移（dstPix 是 dst.Pix[dpOffset:] 而不是 dst.Pix）。
 func drawCopySrc(
 	dstPix []byte, dstStride int, r image.Rectangle,
 	srcPix []byte, srcStride int, sp image.Point,
@@ -487,11 +479,10 @@ func drawCopySrc(
 
 	d0, s0, ddelta, sdelta, dy := 0, 0, dstStride, srcStride, r.Dy()
 	if r.Min.Y > sp.Y {
-		// If the source start point is higher than the destination start
-		// point, then we compose the rows in bottom-up order instead of
-		// top-down. Unlike the drawCopyOver function, we don't have to check
-		// the x coordinates because the built-in copy function can handle
-		// overlapping slices.
+		// 如果源起始点高于目标起始点，则我们按从下到上的顺序
+		// 合成行，而不是从上到下。与 drawCopyOver 函数不同，
+		// 我们不必检查 x 坐标，因为内置的 copy 函数可以处理
+		// 重叠的切片。
 		d0 = (dy - 1) * dstStride
 		s0 = (dy - 1) * srcStride
 		ddelta = -dstStride
@@ -517,20 +508,20 @@ func drawNRGBAOver(dst *image.RGBA, r image.Rectangle, src *image.NRGBA, sp imag
 		spix := src.Pix[sy*src.Stride:]
 
 		for i, si := i0, si0; i < i1; i, si = i+4, si+4 {
-			// Convert from non-premultiplied color to pre-multiplied color.
-			s := spix[si : si+4 : si+4] // Small cap improves performance, see https://golang.org/issue/27857
+			// 从非预乘颜色转换为预乘颜色。
+			s := spix[si : si+4 : si+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			sa := uint32(s[3]) * 0x101
 			sr := uint32(s[0]) * sa / 0xff
 			sg := uint32(s[1]) * sa / 0xff
 			sb := uint32(s[2]) * sa / 0xff
 
-			d := dpix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			d := dpix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			dr := uint32(d[0])
 			dg := uint32(d[1])
 			db := uint32(d[2])
 			da := uint32(d[3])
 
-			// The 0x101 is here for the same reason as in drawRGBA.
+			// 这里的 0x101 与 drawRGBA 中的原因相同。
 			a := (m - sa) * 0x101
 
 			d[0] = uint8((dr*a/m + sr) >> 8)
@@ -554,14 +545,14 @@ func drawNRGBASrc(dst *image.RGBA, r image.Rectangle, src *image.NRGBA, sp image
 		spix := src.Pix[sy*src.Stride:]
 
 		for i, si := i0, si0; i < i1; i, si = i+4, si+4 {
-			// Convert from non-premultiplied color to pre-multiplied color.
-			s := spix[si : si+4 : si+4] // Small cap improves performance, see https://golang.org/issue/27857
+			// 从非预乘颜色转换为预乘颜色。
+			s := spix[si : si+4 : si+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			sa := uint32(s[3]) * 0x101
 			sr := uint32(s[0]) * sa / 0xff
 			sg := uint32(s[1]) * sa / 0xff
 			sb := uint32(s[2]) * sa / 0xff
 
-			d := dpix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			d := dpix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			d[0] = uint8(sr >> 8)
 			d[1] = uint8(sg >> 8)
 			d[2] = uint8(sb >> 8)
@@ -584,7 +575,7 @@ func drawGray(dst *image.RGBA, r image.Rectangle, src *image.Gray, sp image.Poin
 
 		for i, si := i0, si0; i < i1; i, si = i+4, si+1 {
 			p := spix[si]
-			d := dpix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			d := dpix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			d[0] = p
 			d[1] = p
 			d[2] = p
@@ -606,7 +597,7 @@ func drawCMYK(dst *image.RGBA, r image.Rectangle, src *image.CMYK, sp image.Poin
 		spix := src.Pix[sy*src.Stride:]
 
 		for i, si := i0, si0; i < i1; i, si = i+4, si+4 {
-			s := spix[si : si+4 : si+4] // Small cap improves performance, see https://golang.org/issue/27857
+			s := spix[si : si+4 : si+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			d := dpix[i : i+4 : i+4]
 			d[0], d[1], d[2] = color.CMYKToRGB(s[0], s[1], s[2], s[3])
 			d[3] = 255
@@ -627,10 +618,10 @@ func drawGlyphOver(dst *image.RGBA, r image.Rectangle, src *image.Uniform, mask 
 			}
 			ma |= ma << 8
 
-			// The 0x101 is here for the same reason as in drawRGBA.
+			// 这里的 0x101 与 drawRGBA 中的原因相同。
 			a := (m - (sa * ma / m)) * 0x101
 
-			d := dst.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			d := dst.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			d[0] = uint8((uint32(d[0])*a + sr*ma) / m >> 8)
 			d[1] = uint8((uint32(d[1])*a + sg*ma) / m >> 8)
 			d[2] = uint8((uint32(d[2])*a + sb*ma) / m >> 8)
@@ -669,18 +660,18 @@ func drawGrayMaskOver(dst *image.RGBA, r image.Rectangle, src *image.Gray, sp im
 			sy |= sy << 8
 			sa := uint32(0xffff)
 
-			d := dst.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			d := dst.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			dr := uint32(d[0])
 			dg := uint32(d[1])
 			db := uint32(d[2])
 			da := uint32(d[3])
 
-			// dr, dg, db and da are all 8-bit color at the moment, ranging in [0,255].
-			// We work in 16-bit color, and so would normally do:
+			// dr、dg、db 和 da 目前都是 8 位颜色，范围在 [0,255]。
+			// 我们使用 16 位颜色，因此通常会这样做：
 			// dr |= dr << 8
-			// and similarly for dg, db and da, but instead we multiply a
-			// (which is a 16-bit color, ranging in [0,65535]) by 0x101.
-			// This yields the same result, but is fewer arithmetic operations.
+			// dg、db 和 da 也类似，但我们改为将 a
+			// （16 位颜色，范围在 [0,65535]）乘以 0x101。
+			// 这会产生相同的结果，但算术运算更少。
 			a := (m - (sa * ma / m)) * 0x101
 
 			d[0] = uint8((dr*a + sy*ma) / m >> 8)
@@ -723,18 +714,18 @@ func drawRGBAMaskOver(dst *image.RGBA, r image.Rectangle, src *image.RGBA, sp im
 			sg |= sg << 8
 			sb |= sb << 8
 			sa |= sa << 8
-			d := dst.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			d := dst.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			dr := uint32(d[0])
 			dg := uint32(d[1])
 			db := uint32(d[2])
 			da := uint32(d[3])
 
-			// dr, dg, db and da are all 8-bit color at the moment, ranging in [0,255].
-			// We work in 16-bit color, and so would normally do:
+			// dr、dg、db 和 da 目前都是 8 位颜色，范围在 [0,255]。
+			// 我们使用 16 位颜色，因此通常会这样做：
 			// dr |= dr << 8
-			// and similarly for dg, db and da, but instead we multiply a
-			// (which is a 16-bit color, ranging in [0,65535]) by 0x101.
-			// This yields the same result, but is fewer arithmetic operations.
+			// dg、db 和 da 也类似，但我们改为将 a
+			// （16 位颜色，范围在 [0,65535]）乘以 0x101。
+			// 这会产生相同的结果，但算术运算更少。
 			a := (m - (sa * ma / m)) * 0x101
 
 			d[0] = uint8((dr*a + sr*ma) / m >> 8)
@@ -769,18 +760,18 @@ func drawRGBA64ImageMaskOver(dst *image.RGBA, r image.Rectangle, src image.RGBA6
 			ma := uint32(mask.Pix[mi])
 			ma |= ma << 8
 			srgba := src.RGBA64At(sx, sy)
-			d := dst.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			d := dst.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			dr := uint32(d[0])
 			dg := uint32(d[1])
 			db := uint32(d[2])
 			da := uint32(d[3])
 
-			// dr, dg, db and da are all 8-bit color at the moment, ranging in [0,255].
-			// We work in 16-bit color, and so would normally do:
+			// dr、dg、db 和 da 目前都是 8 位颜色，范围在 [0,255]。
+			// 我们使用 16 位颜色，因此通常会这样做：
 			// dr |= dr << 8
-			// and similarly for dg, db and da, but instead we multiply a
-			// (which is a 16-bit color, ranging in [0,65535]) by 0x101.
-			// This yields the same result, but is fewer arithmetic operations.
+			// dg、db 和 da 也类似，但我们改为将 a
+			// （16 位颜色，范围在 [0,65535]）乘以 0x101。
+			// 这会产生相同的结果，但算术运算更少。
 			a := (m - (uint32(srgba.A) * ma / m)) * 0x101
 
 			d[0] = uint8((dr*a + uint32(srgba.R)*ma) / m >> 8)
@@ -810,12 +801,10 @@ func drawRGBA(dst *image.RGBA, r image.Rectangle, src image.Image, sp image.Poin
 	i0 := dst.PixOffset(x0, y0)
 	di := dx * 4
 
-	// Try the image.RGBA64Image interface, part of the standard library since
-	// Go 1.17.
+	// 尝试 image.RGBA64Image 接口，该接口从 Go 1.17 起成为标准库的一部分。
 	//
-	// This optimization is similar to how FALLBACK1.17 optimizes FALLBACK1.0
-	// in DrawMask, except here the concrete type of dst is known to be
-	// *image.RGBA.
+	// 此优化类似于 FALLBACK1.17 在 DrawMask 中优化 FALLBACK1.0 的方式，
+	// 只是这里 dst 的具体类型已知为 *image.RGBA。
 	if src0, _ := src.(image.RGBA64Image); src0 != nil {
 		if mask == nil {
 			if op == Over {
@@ -887,11 +876,10 @@ func drawRGBA(dst *image.RGBA, r image.Rectangle, src image.Image, sp image.Poin
 		}
 	}
 
-	// Use the image.Image interface, part of the standard library since Go
-	// 1.0.
+	// 使用 image.Image 接口，该接口从 Go 1.0 起成为标准库的一部分。
 	//
-	// This is similar to FALLBACK1.0 in DrawMask, except here the concrete
-	// type of dst is known to be *image.RGBA.
+	// 这类似于 DrawMask 中的 FALLBACK1.0，
+	// 只是这里 dst 的具体类型已知为 *image.RGBA。
 	for y := y0; y != y1; y, sy, my = y+dy, sy+dy, my+dy {
 		for i, sx, mx := i0, sx0, mx0; sx != sx1; i, sx, mx = i+di, sx+dx, mx+dx {
 			ma := uint32(m)
@@ -899,7 +887,7 @@ func drawRGBA(dst *image.RGBA, r image.Rectangle, src image.Image, sp image.Poin
 				_, _, _, ma = mask.At(mx, my).RGBA()
 			}
 			sr, sg, sb, sa := src.At(sx, sy).RGBA()
-			d := dst.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+			d := dst.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 			if op == Over {
 				dr := uint32(d[0])
 				dg := uint32(d[1])
@@ -930,7 +918,7 @@ func drawRGBA(dst *image.RGBA, r image.Rectangle, src image.Image, sp image.Poin
 	}
 }
 
-// clamp clamps i to the interval [0, 0xffff].
+// clamp 将 i 限制在区间 [0, 0xffff] 内。
 func clamp(i int32) int32 {
 	if i < 0 {
 		return 0
@@ -941,27 +929,25 @@ func clamp(i int32) int32 {
 	return i
 }
 
-// sqDiff returns the squared-difference of x and y, shifted by 2 so that
-// adding four of those won't overflow a uint32.
+// sqDiff 返回 x 和 y 的差的平方，右移 2 位，使得
+// 四个这样的值相加不会溢出 uint32。
 //
-// x and y are both assumed to be in the range [0, 0xffff].
+// x 和 y 都假定在 [0, 0xffff] 范围内。
 func sqDiff(x, y int32) uint32 {
-	// This is an optimized code relying on the overflow/wrap around
-	// properties of unsigned integers operations guaranteed by the language
-	// spec. See sqDiff from the image/color package for more details.
+	// 这是依赖于语言规范保证的无符号整数运算的溢出/回绕属性的
+	// 优化代码。有关更多详细信息，请参阅 image/color 包中的 sqDiff。
 	d := uint32(x - y)
 	return (d * d) >> 2
 }
 
 func drawPaletted(dst Image, r image.Rectangle, src image.Image, sp image.Point, floydSteinberg bool) {
-	// TODO(nigeltao): handle the case where the dst and src overlap.
-	// Does it even make sense to try and do Floyd-Steinberg whilst
-	// walking the image backward (right-to-left bottom-to-top)?
+	// TODO(nigeltao): 处理 dst 和 src 重叠的情况。
+	// 在向后遍历图像（从右到左、从下到上）时尝试 Floyd-Steinberg
+	// 是否有意义？
 
-	// If dst is an *image.Paletted, we have a fast path for dst.Set and
-	// dst.At. The dst.Set equivalent is a batch version of the algorithm
-	// used by color.Palette's Index method in image/color/color.go, plus
-	// optional Floyd-Steinberg error diffusion.
+	// 如果 dst 是 *image.Paletted，我们对 dst.Set 和 dst.At 有快速路径。
+	// dst.Set 的等效版本是 image/color/color.go 中 color.Palette 的 Index
+	// 方法使用的算法的批处理版本，加上可选的 Floyd-Steinberg 误差扩散。
 	palette, pix, stride := [][4]int32(nil), []byte(nil), 0
 	if p, ok := dst.(*image.Paletted); ok {
 		palette = make([][4]int32, len(p.Palette))
@@ -975,18 +961,17 @@ func drawPaletted(dst Image, r image.Rectangle, src image.Image, sp image.Point,
 		pix, stride = p.Pix[p.PixOffset(r.Min.X, r.Min.Y):], p.Stride
 	}
 
-	// quantErrorCurr and quantErrorNext are the Floyd-Steinberg quantization
-	// errors that have been propagated to the pixels in the current and next
-	// rows. The +2 simplifies calculation near the edges.
+	// quantErrorCurr 和 quantErrorNext 是已传播到当前行和下一行像素的
+	// Floyd-Steinberg 量化误差。+2 简化了边缘附近的计算。
 	var quantErrorCurr, quantErrorNext [][4]int32
 	if floydSteinberg {
 		quantErrorCurr = make([][4]int32, r.Dx()+2)
 		quantErrorNext = make([][4]int32, r.Dx()+2)
 	}
 	pxRGBA := func(x, y int) (r, g, b, a uint32) { return src.At(x, y).RGBA() }
-	// Fast paths for special cases to avoid excessive use of the color.Color
-	// interface which escapes to the heap but need to be discovered for
-	// each pixel on r. See also https://golang.org/issues/15759.
+	// 特殊情况的快速路径，以避免过度使用 color.Color 接口，
+	// 该接口会逃逸到堆上，但需要为 r 上的每个像素发现。
+	// 另请参见 https://golang.org/issues/15759。
 	switch src0 := src.(type) {
 	case *image.RGBA:
 		pxRGBA = func(x, y int) (r, g, b, a uint32) { return src0.RGBAAt(x, y).RGBA() }
@@ -996,12 +981,12 @@ func drawPaletted(dst Image, r image.Rectangle, src image.Image, sp image.Point,
 		pxRGBA = func(x, y int) (r, g, b, a uint32) { return src0.YCbCrAt(x, y).RGBA() }
 	}
 
-	// Loop over each source pixel.
+	// 遍历每个源像素。
 	out := color.RGBA64{A: 0xffff}
 	for y := 0; y != r.Dy(); y++ {
 		for x := 0; x != r.Dx(); x++ {
-			// er, eg and eb are the pixel's R,G,B values plus the
-			// optional Floyd-Steinberg error.
+			// er、eg 和 eb 是像素的 R、G、B 值加上
+			// 可选的 Floyd-Steinberg 误差。
 			sr, sg, sb, sa := pxRGBA(sp.X+x, sp.Y+y)
 			er, eg, eb, ea := int32(sr), int32(sg), int32(sb), int32(sa)
 			if floydSteinberg {
@@ -1012,9 +997,9 @@ func drawPaletted(dst Image, r image.Rectangle, src image.Image, sp image.Point,
 			}
 
 			if palette != nil {
-				// Find the closest palette color in Euclidean R,G,B,A space:
-				// the one that minimizes sum-squared-difference.
-				// TODO(nigeltao): consider smarter algorithms.
+				// 在欧几里得 R、G、B、A 空间中找到最接近的调色板颜色：
+				// 使差的平方和最小化的那个。
+				// TODO(nigeltao): 考虑更智能的算法。
 				bestIndex, bestSum := 0, uint32(1<<32-1)
 				for index, p := range palette {
 					sum := sqDiff(er, p[0]) + sqDiff(eg, p[1]) + sqDiff(eb, p[2]) + sqDiff(ea, p[3])
@@ -1040,10 +1025,9 @@ func drawPaletted(dst Image, r image.Rectangle, src image.Image, sp image.Point,
 				out.G = uint16(eg)
 				out.B = uint16(eb)
 				out.A = uint16(ea)
-				// The third argument is &out instead of out (and out is
-				// declared outside of the inner loop) to avoid the implicit
-				// conversion to color.Color here allocating memory in the
-				// inner loop if sizeof(color.RGBA64) > sizeof(uintptr).
+				// 第三个参数是 &out 而不是 out（且 out 在内层循环外声明），
+				// 以避免在 sizeof(color.RGBA64) > sizeof(uintptr) 时，
+				// 此处到 color.Color 的隐式转换在内层循环中分配内存。
 				dst.Set(r.Min.X+x, r.Min.Y+y, &out)
 
 				if !floydSteinberg {
@@ -1056,7 +1040,7 @@ func drawPaletted(dst Image, r image.Rectangle, src image.Image, sp image.Point,
 				ea -= int32(sa)
 			}
 
-			// Propagate the Floyd-Steinberg quantization error.
+			// 传播 Floyd-Steinberg 量化误差。
 			quantErrorNext[x+0][0] += er * 3
 			quantErrorNext[x+0][1] += eg * 3
 			quantErrorNext[x+0][2] += eb * 3
@@ -1075,7 +1059,7 @@ func drawPaletted(dst Image, r image.Rectangle, src image.Image, sp image.Point,
 			quantErrorCurr[x+2][3] += ea * 7
 		}
 
-		// Recycle the quantization error buffers.
+		// 回收量化误差缓冲区。
 		if floydSteinberg {
 			quantErrorCurr, quantErrorNext = quantErrorNext, quantErrorCurr
 			clear(quantErrorNext)

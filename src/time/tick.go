@@ -1,67 +1,64 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package time
 
 import "unsafe"
 
-// Note: The runtime knows the layout of struct Ticker, since newTimer allocates it.
-// Note also that Ticker and Timer have the same layout, so that newTimer can handle both.
-// The initTimer and initTicker fields are named differently so that
-// users cannot convert between the two without unsafe.
+// 注意：运行时知道 struct Ticker 的布局，因为 newTimer 分配它。
+// 另请注意 Ticker 和 Timer 具有相同的布局，因此 newTimer 可以处理两者。
+// initTimer 和 initTicker 字段命名不同，
+// 这样用户就不能在没有 unsafe 的情况下在两者之间转换。
 
-// A Ticker holds a channel that delivers “ticks” of a clock
-// at intervals.
+// Ticker 持有一个通道，该通道按间隔传递时钟的 "tick"。
 type Ticker struct {
-	C          <-chan Time // The channel on which the ticks are delivered.
+	C          <-chan Time // tick 传递的通道。
 	initTicker bool
 }
 
-// NewTicker returns a new [Ticker] containing a channel that will send
-// the current time on the channel after each tick. The period of the
-// ticks is specified by the duration argument. The ticker will adjust
-// the time interval or drop ticks to make up for slow receivers.
-// The duration d must be greater than zero; if not, NewTicker will
-// panic.
+// NewTicker 返回一个新的 [Ticker]，其中包含一个通道，该通道将在每次 tick 后
+// 在通道上发送当前时间。tick 的周期由 duration 参数指定。
+// ticker 将调整时间间隔或丢弃 tick 以弥补慢接收者。
+// duration d 必须大于零；否则 NewTicker 将 panic。
 //
-// Before Go 1.23, the garbage collector did not recover
-// tickers that had not yet expired or been stopped, so code often
-// immediately deferred t.Stop after calling NewTicker, to make
-// the ticker recoverable when it was no longer needed.
-// As of Go 1.23, the garbage collector can recover unreferenced
-// tickers, even if they haven't been stopped.
-// The Stop method is no longer necessary to help the garbage collector.
-// (Code may of course still want to call Stop to stop the ticker for other reasons.)
+// 在 Go 1.23 之前，垃圾收集器不会回收
+// 尚未到期或未被停止的 ticker，因此代码通常
+// 在调用 NewTicker 后立即 defer t.Stop，以便在
+// 不再需要时使 ticker 可回收。
+// 从 Go 1.23 开始，垃圾收集器可以回收未引用的 ticker，
+// 即使它们尚未被停止。
+// Stop 方法不再需要帮助垃圾收集器。
+// （代码当然仍然可以出于其他原因调用 Stop 来停止 ticker。）
 func NewTicker(d Duration) *Ticker {
 	if d <= 0 {
 		panic("non-positive interval for NewTicker")
 	}
-	// Give the channel a 1-element time buffer.
-	// If the client falls behind while reading, we drop ticks
-	// on the floor until the client catches up.
+	// 给通道一个 1 元素的时间缓冲区。
+	// 如果客户端在读取时落后，我们会丢弃 tick，
+	// 直到客户端赶上。
 	c := make(chan Time, 1)
 	t := (*Ticker)(unsafe.Pointer(newTimer(when(d), int64(d), sendTime, c, syncTimer(c))))
 	t.C = c
 	return t
 }
 
-// Stop turns off a ticker. After Stop, no more ticks will be sent.
-// Stop does not close the channel, to prevent a concurrent goroutine
-// reading from the channel from seeing an erroneous "tick".
+// Stop 关闭 ticker。Stop 之后，不会再发送 tick。
+// Stop 不会关闭通道，以防止并发的从通道读取的 goroutine
+// 看到错误的 "tick"。
 func (t *Ticker) Stop() {
 	if !t.initTicker {
-		// This is misuse, and the same for time.Timer would panic,
-		// but this didn't always panic, and we keep it not panicking
-		// to avoid breaking old programs. See issue 21874.
+		// 这是误用，对于 time.Timer 同样会 panic，
+		// 但这并不总是 panic，我们保持它不 panic
+		// 以避免破坏旧程序。参见 issue 21874。
 		return
 	}
 	stopTimer((*Timer)(unsafe.Pointer(t)))
 }
 
-// Reset stops a ticker and resets its period to the specified duration.
-// The next tick will arrive after the new period elapses. The duration d
-// must be greater than zero; if not, Reset will panic.
+// Reset 停止 ticker 并将其周期重置为指定的 duration。
+// 下一个 tick 将在新周期过去后到达。duration d
+// 必须大于零；否则 Reset 将 panic。
 func (t *Ticker) Reset(d Duration) {
 	if d <= 0 {
 		panic("non-positive interval for Ticker.Reset")
@@ -72,17 +69,17 @@ func (t *Ticker) Reset(d Duration) {
 	resetTimer((*Timer)(unsafe.Pointer(t)), when(d), int64(d))
 }
 
-// Tick is a convenience wrapper for [NewTicker] providing access to the ticking
-// channel only. Unlike NewTicker, Tick will return nil if d <= 0.
+// Tick 是 [NewTicker] 的便捷包装器，仅提供对 tick 通道的访问。
+// 与 NewTicker 不同，如果 d <= 0，Tick 将返回 nil。
 //
-// Before Go 1.23, this documentation warned that the underlying
-// [Ticker] would never be recovered by the garbage collector, and that
-// if efficiency was a concern, code should use NewTicker instead and
-// call [Ticker.Stop] when the ticker is no longer needed.
-// As of Go 1.23, the garbage collector can recover unreferenced
-// tickers, even if they haven't been stopped.
-// The Stop method is no longer necessary to help the garbage collector.
-// There is no longer any reason to prefer NewTicker when Tick will do.
+// 在 Go 1.23 之前，此文档警告说底层 [Ticker]
+// 永远不会被垃圾收集器回收，如果效率是一个问题，
+// 代码应该使用 NewTicker 代替，并在不再需要 ticker 时
+// 调用 [Ticker.Stop]。
+// 从 Go 1.23 开始，垃圾收集器可以回收未引用的 ticker，
+// 即使它们尚未被停止。
+// Stop 方法不再需要帮助垃圾收集器。
+// 当 Tick 可以满足需求时，不再有任何理由优先使用 NewTicker。
 func Tick(d Duration) <-chan Time {
 	if d <= 0 {
 		return nil

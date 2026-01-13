@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.staticlockranking
 
@@ -8,14 +8,13 @@ package sync
 
 import "unsafe"
 
-// Approximation of notifyList in runtime/sema.go. Size and alignment must
-// agree.
+// runtime/sema.go 中 notifyList 的近似表示。大小和对齐必须一致。
 type notifyList struct {
 	wait   uint32
 	notify uint32
-	rank   int     // rank field of the mutex
-	pad    int     // pad field of the mutex
-	lock   uintptr // key field of the mutex
+	rank   int     // 互斥锁的 rank 字段
+	pad    int     // 互斥锁的 pad 字段
+	lock   uintptr // 互斥锁的键字段
 
 	head unsafe.Pointer
 	tail unsafe.Pointer

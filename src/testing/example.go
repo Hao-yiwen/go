@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package testing
 
@@ -19,8 +19,8 @@ type InternalExample struct {
 	Unordered bool
 }
 
-// RunExamples is an internal function but exported because it is cross-package;
-// it is part of the implementation of the "go test" command.
+// RunExamples 是一个内部函数，但由于跨包使用而被导出；
+// 它是 "go test" 命令实现的一部分。
 func RunExamples(matchString func(pat, str string) (bool, error), examples []InternalExample) (ok bool) {
 	_, ok = runExamples(matchString, examples)
 	return ok
@@ -46,15 +46,15 @@ func runExamples(matchString func(pat, str string) (bool, error), examples []Int
 	return ran, ok
 }
 
-// processRunResult computes a summary and status of the result of running an example test.
-// stdout is the captured output from stdout of the test.
-// recovered is the result of invoking recover after running the test, in case it panicked.
+// processRunResult 计算运行示例测试结果的摘要和状态。
+// stdout 是从测试的标准输出捕获的输出。
+// recovered 是运行测试后调用 recover 的结果，以防它发生了 panic。
 //
-// If stdout doesn't match the expected output or if recovered is non-nil, it'll print the cause of failure to stdout.
-// If the test is chatty/verbose, it'll print a success message to stdout.
-// If recovered is non-nil, it'll panic with that value.
-// If the test panicked with nil, or invoked runtime.Goexit, it'll be
-// made to fail and panic with errNilPanicOrGoexit
+// 如果 stdout 与预期输出不匹配或 recovered 非空，它将把失败原因打印到标准输出。
+// 如果测试是 chatty/verbose 的，它将把成功消息打印到标准输出。
+// 如果 recovered 非空，它将使用该值 panic。
+// 如果测试使用 nil panic，或调用了 runtime.Goexit，它将被
+// 标记为失败并使用 errNilPanicOrGoexit panic
 func (eg *InternalExample) processRunResult(stdout string, timeSpent time.Duration, finished bool, recovered any) (passed bool) {
 	passed = true
 	dstr := fmtDuration(timeSpent)
@@ -88,7 +88,7 @@ func (eg *InternalExample) processRunResult(stdout string, timeSpent time.Durati
 	}
 
 	if recovered != nil {
-		// Propagate the previously recovered result, by panicking.
+		// 通过 panic 传播之前恢复的结果。
 		panic(recovered)
 	} else if !finished {
 		panic(errNilPanicOrGoexit)

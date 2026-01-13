@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package parser
 
@@ -184,12 +184,12 @@ func (r *resolver) shortVarDecl(decl *ast.AssignStmt) {
 	}
 }
 
-// The unresolved object is a sentinel to mark identifiers that have been added
+// The unresolved object 是一个 sentinel to mark identifiers that have been added
 // to the list of unresolved identifiers. The sentinel is only used for verifying
 // internal consistency.
 var unresolved = new(ast.Object)
 
-// If x is an identifier, resolve attempts to resolve x by looking up
+// If x 是一个n identifier, resolve attempts to resolve x by looking up
 // the object it denotes. If no object is found and collectUnresolved is
 // set, x is marked as unresolved and collected in the list of unresolved
 // identifiers.
@@ -217,7 +217,7 @@ func (r *resolver) resolve(ident *ast.Ident, collectUnresolved bool) {
 		}
 	}
 	// all local scopes are known, so any unresolved identifier
-	// must be found either in the file scope, package scope
+	// 必须是 found either in the file scope, package scope
 	// (perhaps in another file), or universe scope --- collect
 	// them so that they can be resolved later
 	if collectUnresolved {
@@ -355,7 +355,7 @@ func (r *resolver) Visit(node ast.Node) ast.Visitor {
 		}
 		if n.Tag != nil {
 			// The scope below reproduces some unnecessary behavior of the parser,
-			// opening an extra scope in case this is a type switch. It's not needed
+			// opening an extra scope in case this 是一个 type switch. It's not needed
 			// for expression switches.
 			// TODO: remove this once we've matched the parser resolution exactly.
 			if n.Init != nil {
@@ -437,7 +437,7 @@ func (r *resolver) Visit(node ast.Node) ast.Visitor {
 				}
 				// TODO(rFindley): this walkLHS reproduced the parser resolution, but
 				// is it necessary? By comparison, for a normal AssignStmt we don't
-				// walk the LHS in case there is an invalid identifier list.
+				// walk the LHS in case there 是一个n invalid identifier list.
 				r.walkLHS(lhs)
 				r.shortVarDecl(as)
 			} else {
@@ -513,7 +513,7 @@ func (r *resolver) Visit(node ast.Node) ast.Visitor {
 }
 
 func (r *resolver) walkFuncType(typ *ast.FuncType) {
-	// typ.TypeParams must be walked separately for FuncDecls.
+	// typ.TypeParams 必须是 walked separately for FuncDecls.
 	r.resolveList(typ.Params)
 	r.resolveList(typ.Results)
 	r.declareList(typ.Params, ast.Var)
@@ -595,7 +595,7 @@ func (r *resolver) walkFieldList(list *ast.FieldList, kind ast.ObjKind) {
 }
 
 // walkTParams is like walkFieldList, but declares type parameters eagerly so
-// that they may be resolved in the constraint expressions held in the field
+// that they 可能是 resolved in the constraint expressions held in the field
 // Type.
 func (r *resolver) walkTParams(list *ast.FieldList) {
 	r.declareList(list, ast.Typ)

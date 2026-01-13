@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package xml implements a simple XML 1.0 parser that
+// xml 包实现了 a simple XML 1.0 parser that
 // understands XML name spaces.
 package xml
 
@@ -22,7 +22,7 @@ import (
 	"unicode/utf8"
 )
 
-// A SyntaxError represents a syntax error in the XML input stream.
+// 一个SyntaxError represents a syntax error in the XML input stream.
 type SyntaxError struct {
 	Msg  string
 	Line int
@@ -32,7 +32,7 @@ func (e *SyntaxError) Error() string {
 	return "XML syntax error on line " + strconv.Itoa(e.Line) + ": " + e.Msg
 }
 
-// A Name represents an XML name (Local) annotated
+// 一个Name represents an XML name (Local) annotated
 // with a name space identifier (Space).
 // In tokens returned by [Decoder.Token], the Space identifier
 // is given as a canonical URL, not the short prefix used
@@ -41,23 +41,23 @@ type Name struct {
 	Space, Local string
 }
 
-// An Attr represents an attribute in an XML element (Name=Value).
+// 一个Attr represents an attribute in an XML element (Name=Value).
 type Attr struct {
 	Name  Name
 	Value string
 }
 
-// A Token is an interface holding one of the token types:
+// 一个Token 是一个n interface holding one of the token types:
 // [StartElement], [EndElement], [CharData], [Comment], [ProcInst], or [Directive].
 type Token any
 
-// A StartElement represents an XML start element.
+// 一个StartElement represents an XML start element.
 type StartElement struct {
 	Name Name
 	Attr []Attr
 }
 
-// Copy creates a new copy of StartElement.
+// Copy 创建 a new copy of StartElement.
 func (e StartElement) Copy() StartElement {
 	attrs := make([]Attr, len(e.Attr))
 	copy(attrs, e.Attr)
@@ -65,51 +65,51 @@ func (e StartElement) Copy() StartElement {
 	return e
 }
 
-// End returns the corresponding XML end element.
+// End 返回the corresponding XML end element.
 func (e StartElement) End() EndElement {
 	return EndElement{e.Name}
 }
 
-// An EndElement represents an XML end element.
+// 一个EndElement represents an XML end element.
 type EndElement struct {
 	Name Name
 }
 
-// A CharData represents XML character data (raw text),
+// 一个CharData represents XML character data (raw text),
 // in which XML escape sequences have been replaced by
 // the characters they represent.
 type CharData []byte
 
-// Copy creates a new copy of CharData.
+// Copy 创建 a new copy of CharData.
 func (c CharData) Copy() CharData { return CharData(bytes.Clone(c)) }
 
-// A Comment represents an XML comment of the form <!--comment-->.
+// 一个Comment represents an XML comment of the form <!--comment-->.
 // The bytes do not include the <!-- and --> comment markers.
 type Comment []byte
 
-// Copy creates a new copy of Comment.
+// Copy 创建 a new copy of Comment.
 func (c Comment) Copy() Comment { return Comment(bytes.Clone(c)) }
 
-// A ProcInst represents an XML processing instruction of the form <?target inst?>
+// 一个ProcInst represents an XML processing instruction of the form <?target inst?>
 type ProcInst struct {
 	Target string
 	Inst   []byte
 }
 
-// Copy creates a new copy of ProcInst.
+// Copy 创建 a new copy of ProcInst.
 func (p ProcInst) Copy() ProcInst {
 	p.Inst = bytes.Clone(p.Inst)
 	return p
 }
 
-// A Directive represents an XML directive of the form <!text>.
+// 一个Directive represents an XML directive of the form <!text>.
 // The bytes do not include the <! and > markers.
 type Directive []byte
 
-// Copy creates a new copy of Directive.
+// Copy 创建 a new copy of Directive.
 func (d Directive) Copy() Directive { return Directive(bytes.Clone(d)) }
 
-// CopyToken returns a copy of a Token.
+// CopyToken 返回a copy of a Token.
 func CopyToken(t Token) Token {
 	switch v := t.(type) {
 	case CharData:
@@ -126,15 +126,15 @@ func CopyToken(t Token) Token {
 	return t
 }
 
-// A TokenReader is anything that can decode a stream of XML tokens, including a
+// 一个TokenReader 是一个nything that can decode a stream of XML tokens, including a
 // [Decoder].
 //
 // When Token encounters an error or end-of-file condition after successfully
-// reading a token, it returns the token. It may return the (non-nil) error from
+// reading a token, it 返回 token. It 可能返回 the (non-nil) error from
 // the same call or return the error (and a nil token) from a subsequent call.
-// An instance of this general case is that a TokenReader returning a non-nil
-// token at the end of the token stream may return either io.EOF or a nil error.
-// The next Read should return nil, [io.EOF].
+// 一个instance of this general case is that a TokenReader returning a non-nil
+// token at the end of the token stream 可能返回 either io.EOF or a nil error.
+// The next Read 应该返回 nil, [io.EOF].
 //
 // Implementations of Token are discouraged from returning a nil token with a
 // nil error. Callers should treat a return of nil, nil as indicating that
@@ -143,12 +143,12 @@ type TokenReader interface {
 	Token() (Token, error)
 }
 
-// A Decoder represents an XML parser reading a particular input stream.
+// 一个Decoder represents an XML parser reading a particular input stream.
 // The parser assumes that its input is encoded in UTF-8.
 type Decoder struct {
 	// Strict defaults to true, enforcing the requirements
 	// of the XML specification.
-	// If set to false, the parser allows input containing common
+	// If set to false, the parser 允许 input containing common
 	// mistakes:
 	//	* If an element is missing an end tag, the parser invents
 	//	  end tags as necessary to keep the return values from Token
@@ -162,7 +162,7 @@ type Decoder struct {
 	//	d.AutoClose = xml.HTMLAutoClose
 	//	d.Entity = xml.HTMLEntity
 	//
-	// creates a parser that can handle typical HTML.
+	// 创建 a parser that can handle typical HTML.
 	//
 	// Strict mode does not enforce the requirements of the XML name spaces TR.
 	// In particular it does not reject name space tags using undefined prefixes.
@@ -185,15 +185,15 @@ type Decoder struct {
 	//	"quot": `"`,
 	Entity map[string]string
 
-	// CharsetReader, if non-nil, defines a function to generate
+	// CharsetReader, if non-nil, 定义 a function to generate
 	// charset-conversion readers, converting from the provided
 	// non-UTF-8 charset into UTF-8. If CharsetReader is nil or
-	// returns an error, parsing stops with an error. One of the
-	// CharsetReader's result values must be non-nil.
+	// 返回一个 error, parsing stops with an error. One of the
+	// CharsetReader's result values 必须是 non-nil.
 	CharsetReader func(charset string, input io.Reader) (io.Reader, error)
 
-	// DefaultSpace sets the default name space used for unadorned tags,
-	// as if the entire XML stream were wrapped in an element containing
+	// DefaultSpace 设置 default name space used for unadorned tags,
+	// as 如果 entire XML stream were wrapped in an element containing
 	// the attribute xmlns="DefaultSpace".
 	DefaultSpace string
 
@@ -215,7 +215,7 @@ type Decoder struct {
 	unmarshalDepth int
 }
 
-// NewDecoder creates a new XML parser reading from r.
+// NewDecoder 创建 a new XML parser reading from r.
 // If r does not implement [io.ByteReader], NewDecoder will
 // do its own buffering.
 func NewDecoder(r io.Reader) *Decoder {
@@ -229,7 +229,7 @@ func NewDecoder(r io.Reader) *Decoder {
 	return d
 }
 
-// NewTokenDecoder creates a new XML parser using an underlying token stream.
+// NewTokenDecoder 创建 a new XML parser using an underlying token stream.
 func NewTokenDecoder(t TokenReader) *Decoder {
 	// Is it already a Decoder?
 	if d, ok := t.(*Decoder); ok {
@@ -245,7 +245,7 @@ func NewTokenDecoder(t TokenReader) *Decoder {
 	return d
 }
 
-// Token returns the next XML token in the input stream.
+// Token 返回the next XML token in the input stream.
 // At the end of the input stream, Token returns nil, [io.EOF].
 //
 // Slices of bytes in the returned token data refer to the
@@ -260,12 +260,12 @@ func NewTokenDecoder(t TokenReader) *Decoder {
 // tokens it returns are properly nested and matched:
 // if Token encounters an unexpected end element
 // or EOF before all expected end elements,
-// it will return an error.
+// it 将返回 an error.
 //
-// If [Decoder.CharsetReader] is called and returns an error,
+// If [Decoder.CharsetReader] is called and 返回一个 error,
 // the error is wrapped and returned.
 //
-// Token implements XML name spaces as described by
+// Token 实现XML name spaces as described by
 // https://www.w3.org/TR/REC-xml-names/. Each of the
 // [Name] structures contained in the Token has the Space
 // set to the URL identifying its name space when known.
@@ -413,8 +413,8 @@ func (d *Decoder) pop() *stack {
 }
 
 // Record that after the current element is finished
-// (that element is already pushed on the stack)
-// Token should return EOF until popEOF is called.
+// (that element 是一个lready pushed on the stack)
+// Token 应该返回 EOF until popEOF is called.
 func (d *Decoder) pushEOF() {
 	// Walk down stack to find Start.
 	// It might not be the top, because there might be stkNs
@@ -440,7 +440,7 @@ func (d *Decoder) pushEOF() {
 }
 
 // Undo a pushEOF.
-// The element must have been finished, so the EOF should be at the top of the stack.
+// The element must have been finished, so the EOF 应该是 at the top of the stack.
 func (d *Decoder) popEOF() bool {
 	if d.stk == nil || d.stk.kind != stkEOF {
 		return false
@@ -464,14 +464,14 @@ func (d *Decoder) pushNs(local string, url string, ok bool) {
 	s.ok = ok
 }
 
-// Creates a SyntaxError with the current line number.
+// 创建 a SyntaxError with the current line number.
 func (d *Decoder) syntaxError(msg string) error {
 	return &SyntaxError{Msg: msg, Line: d.line}
 }
 
 // Record that we are ending an element with the given name.
 // The name must match the record at the top of the stack,
-// which must be a pushElement record.
+// which 必须是 a pushElement record.
 // After popping the element, apply any undo records from
 // the stack to restore the name translations that existed
 // before we saw this element.
@@ -517,7 +517,7 @@ func (d *Decoder) popElement(t *EndElement) bool {
 	return true
 }
 
-// If the top element on the stack is autoclosing and
+// If the top element on the stack 是一个utoclosing and
 // t is not the end tag, invent the end tag.
 func (d *Decoder) autoClose(t Token) (Token, bool) {
 	if d.stk == nil || d.stk.kind != stkStart {
@@ -525,7 +525,7 @@ func (d *Decoder) autoClose(t Token) (Token, bool) {
 	}
 	for _, s := range d.AutoClose {
 		if strings.EqualFold(s, d.stk.name.Local) {
-			// This one should be auto closed if t doesn't close it.
+			// This one 应该是 auto closed if t doesn't close it.
 			et, ok := t.(EndElement)
 			if !ok || !strings.EqualFold(et.Name.Local, d.stk.name.Local) {
 				return EndElement{d.stk.name}, true
@@ -928,14 +928,14 @@ func (d *Decoder) getc() (b byte, ok bool) {
 	return b, true
 }
 
-// InputOffset returns the input stream byte offset of the current decoder position.
+// InputOffset 返回the input stream byte offset of the current decoder position.
 // The offset gives the location of the end of the most recently returned token
 // and the beginning of the next token.
 func (d *Decoder) InputOffset() int64 {
 	return d.offset
 }
 
-// InputPos returns the line of the current decoder position and the 1 based
+// InputPos 返回the line of the current decoder position and the 1 based
 // input position of the line. The position gives the location of the end of the
 // most recently returned token.
 func (d *Decoder) InputPos() (line, column int) {
@@ -1004,8 +1004,8 @@ Input:
 		}
 
 		// <![CDATA[ section ends with ]]>.
-		// It is an error for ]]> to appear in ordinary text,
-		// but it is allowed in quoted strings.
+		// It 是一个n error for ]]> to appear in ordinary text,
+		// but it 是一个llowed in quoted strings.
 		if quote < 0 && b0 == ']' && b1 == ']' && b == '>' {
 			if cdata {
 				trunc = 2
@@ -1029,7 +1029,7 @@ Input:
 		}
 		if b == '&' && !cdata {
 			// Read escaped character expression up to semicolon.
-			// XML in all its glory allows a document to define and use
+			// XML in all its glory 允许 a document to define and use
 			// its own character names with <!ENTITY ...> directives.
 			// Parsers are required to recognize lt, gt, amp, apos, and quot
 			// even if they have not been declared.
@@ -1164,7 +1164,7 @@ func isInCharacterRange(r rune) (inrange bool) {
 }
 
 // Get name space name: name with a : stuck in the middle.
-// The part before the : is the name space identifier.
+// The part before the : 是 name space identifier.
 func (d *Decoder) nsname() (name Name, ok bool) {
 	s, ok := d.name()
 	if !ok {
@@ -1182,7 +1182,7 @@ func (d *Decoder) nsname() (name Name, ok bool) {
 }
 
 // Get name: /first(first|second)*/
-// Do not set d.err if the name is missing (unless unexpected EOF is received):
+// Do not set d.err 如果 name is missing (unless unexpected EOF is received):
 // let the caller provide better context.
 func (d *Decoder) name() (s string, ok bool) {
 	d.buf.Reset()
@@ -1598,7 +1598,7 @@ var second = &unicode.RangeTable{
 	},
 }
 
-// HTMLEntity is an entity map containing translations for the
+// HTMLEntity 是一个n entity map containing translations for the
 // standard HTML entity characters.
 //
 // See the [Decoder.Strict] and [Decoder.Entity] fields' documentation.
@@ -1867,8 +1867,8 @@ var htmlEntity = map[string]string{
 	"euro":     "\u20AC",
 }
 
-// HTMLAutoClose is the set of HTML elements that
-// should be considered to close automatically.
+// HTMLAutoClose 是 set of HTML elements that
+// 应该是 considered to close automatically.
 //
 // See the [Decoder.Strict] and [Decoder.Entity] fields' documentation.
 var HTMLAutoClose []string = htmlAutoClose
@@ -1912,8 +1912,8 @@ func EscapeText(w io.Writer, s []byte) error {
 }
 
 // escapeText writes to w the properly escaped XML equivalent
-// of the plain text data s. If escapeNewline is true, newline
-// characters will be escaped.
+// of the plain text data s. If escapeNewline 为真, newline
+// characters 将是 escaped.
 func escapeText(w io.Writer, s []byte, escapeNewline bool) error {
 	var esc []byte
 	last := 0

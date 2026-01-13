@@ -1,12 +1,12 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
-// Floor returns the greatest integer value less than or equal to x.
+// Floor 返回小于或等于 x 的最大整数值。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Floor(±0) = ±0
 //	Floor(±Inf) = ±Inf
@@ -33,9 +33,9 @@ func floor(x float64) float64 {
 	return d
 }
 
-// Ceil returns the least integer value greater than or equal to x.
+// Ceil 返回大于或等于 x 的最小整数值。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Ceil(±0) = ±0
 //	Ceil(±Inf) = ±Inf
@@ -51,9 +51,9 @@ func ceil(x float64) float64 {
 	return -Floor(-x)
 }
 
-// Trunc returns the integer value of x.
+// Trunc 返回 x 的整数部分。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Trunc(±0) = ±0
 //	Trunc(±Inf) = ±Inf
@@ -73,22 +73,22 @@ func trunc(x float64) float64 {
 	b := Float64bits(x)
 	e := uint(b>>shift)&mask - bias
 
-	// Keep the top 12+e bits, the integer part; clear the rest.
+	// 保留高 12+e 位（整数部分）；清除其余位。
 	if e < 64-12 {
 		b &^= 1<<(64-12-e) - 1
 	}
 	return Float64frombits(b)
 }
 
-// Round returns the nearest integer, rounding half away from zero.
+// Round 返回最接近的整数，四舍五入时远离零。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Round(±0) = ±0
 //	Round(±Inf) = ±Inf
 //	Round(NaN) = NaN
 func Round(x float64) float64 {
-	// Round is a faster implementation of:
+	// Round 是以下实现的更快版本：
 	//
 	// func Round(x float64) float64 {
 	//   t := Trunc(x)
@@ -100,16 +100,16 @@ func Round(x float64) float64 {
 	bits := Float64bits(x)
 	e := uint(bits>>shift) & mask
 	if e < bias {
-		// Round abs(x) < 1 including denormals.
+		// 舍入 abs(x) < 1，包括次正规数。
 		bits &= signMask // +-0
 		if e == bias-1 {
 			bits |= uvone // +-1
 		}
 	} else if e < bias+shift {
-		// Round any abs(x) >= 1 containing a fractional component [0,1).
+		// 舍入任何包含小数部分 [0,1) 的 abs(x) >= 1。
 		//
-		// Numbers with larger exponents are returned unchanged since they
-		// must be either an integer, infinity, or NaN.
+		// 指数较大的数字保持不变，因为它们
+		// 必须是整数、无穷大或 NaN。
 		const half = 1 << (shift - 1)
 		e -= bias
 		bits += half >> e
@@ -118,15 +118,15 @@ func Round(x float64) float64 {
 	return Float64frombits(bits)
 }
 
-// RoundToEven returns the nearest integer, rounding ties to even.
+// RoundToEven 返回最接近的整数，平局时舍入到偶数。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	RoundToEven(±0) = ±0
 //	RoundToEven(±Inf) = ±Inf
 //	RoundToEven(NaN) = NaN
 func RoundToEven(x float64) float64 {
-	// RoundToEven is a faster implementation of:
+	// RoundToEven 是以下实现的更快版本：
 	//
 	// func RoundToEven(x float64) float64 {
 	//   t := math.Trunc(x)
@@ -139,19 +139,19 @@ func RoundToEven(x float64) float64 {
 	bits := Float64bits(x)
 	e := uint(bits>>shift) & mask
 	if e >= bias {
-		// Round abs(x) >= 1.
-		// - Large numbers without fractional components, infinity, and NaN are unchanged.
-		// - Add 0.499.. or 0.5 before truncating depending on whether the truncated
-		//   number is even or odd (respectively).
+		// 舍入 abs(x) >= 1。
+		// - 没有小数部分的大数、无穷大和 NaN 保持不变。
+		// - 在截断前加上 0.499.. 或 0.5，取决于截断后的
+		//   数字是偶数还是奇数（分别对应）。
 		const halfMinusULP = (1 << (shift - 1)) - 1
 		e -= bias
 		bits += (halfMinusULP + (bits>>(shift-e))&1) >> e
 		bits &^= fracMask >> e
 	} else if e == bias-1 && bits&fracMask != 0 {
-		// Round 0.5 < abs(x) < 1.
+		// 舍入 0.5 < abs(x) < 1。
 		bits = bits&signMask | uvone // +-1
 	} else {
-		// Round abs(x) <= 0.5 including denormals.
+		// 舍入 abs(x) <= 0.5，包括次正规数。
 		bits &= signMask // +-0
 	}
 	return Float64frombits(bits)

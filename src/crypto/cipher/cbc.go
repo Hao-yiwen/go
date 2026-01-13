@@ -1,13 +1,13 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Cipher block chaining (CBC) mode.
+// 密码块链接（CBC）模式。
 
-// CBC provides confidentiality by xoring (chaining) each plaintext block
-// with the previous ciphertext block before applying the block cipher.
+// CBC 通过在应用块密码之前将每个明文块与前一个密文块进行异或（链接）
+// 来提供机密性。
 
-// See NIST SP 800-38A, pp 10-11
+// 参见 NIST SP 800-38A，第 10-11 页
 
 package cipher
 
@@ -37,16 +37,14 @@ func newCBC(b Block, iv []byte) *cbc {
 
 type cbcEncrypter cbc
 
-// cbcEncAble is an interface implemented by ciphers that have a specific
-// optimized implementation of CBC encryption. crypto/aes doesn't use this
-// anymore, and we'd like to eventually remove it.
+// cbcEncAble 是一个由具有 CBC 加密特定优化实现的密码实现的接口。
+// crypto/aes 不再使用它，我们最终希望将其移除。
 type cbcEncAble interface {
 	NewCBCEncrypter(iv []byte) BlockMode
 }
 
-// NewCBCEncrypter returns a BlockMode which encrypts in cipher block chaining
-// mode, using the given Block. The length of iv must be the same as the
-// Block's block size.
+// NewCBCEncrypter 返回一个以密码块链接模式加密的 BlockMode，
+// 使用给定的 Block。iv 的长度必须与 Block 的块大小相同。
 func NewCBCEncrypter(b Block, iv []byte) BlockMode {
 	if len(iv) != b.BlockSize() {
 		panic("cipher.NewCBCEncrypter: IV length must equal block size")
@@ -63,10 +61,9 @@ func NewCBCEncrypter(b Block, iv []byte) BlockMode {
 	return (*cbcEncrypter)(newCBC(b, iv))
 }
 
-// newCBCGenericEncrypter returns a BlockMode which encrypts in cipher block chaining
-// mode, using the given Block. The length of iv must be the same as the
-// Block's block size. This always returns the generic non-asm encrypter for use
-// in fuzz testing.
+// newCBCGenericEncrypter 返回一个以密码块链接模式加密的 BlockMode，
+// 使用给定的 Block。iv 的长度必须与 Block 的块大小相同。
+// 这始终返回通用的非汇编加密器，用于模糊测试。
 func newCBCGenericEncrypter(b Block, iv []byte) BlockMode {
 	if len(iv) != b.BlockSize() {
 		panic("cipher.NewCBCEncrypter: IV length must equal block size")
@@ -93,17 +90,17 @@ func (x *cbcEncrypter) CryptBlocks(dst, src []byte) {
 	iv := x.iv
 
 	for len(src) > 0 {
-		// Write the xor to dst, then encrypt in place.
+		// 将异或结果写入 dst，然后就地加密。
 		subtle.XORBytes(dst[:x.blockSize], src[:x.blockSize], iv)
 		x.b.Encrypt(dst[:x.blockSize], dst[:x.blockSize])
 
-		// Move to the next block with this block as the next iv.
+		// 使用此块作为下一个 iv 移动到下一个块。
 		iv = dst[:x.blockSize]
 		src = src[x.blockSize:]
 		dst = dst[x.blockSize:]
 	}
 
-	// Save the iv for the next CryptBlocks call.
+	// 为下一次 CryptBlocks 调用保存 iv。
 	copy(x.iv, iv)
 }
 
@@ -116,16 +113,15 @@ func (x *cbcEncrypter) SetIV(iv []byte) {
 
 type cbcDecrypter cbc
 
-// cbcDecAble is an interface implemented by ciphers that have a specific
-// optimized implementation of CBC decryption. crypto/aes doesn't use this
-// anymore, and we'd like to eventually remove it.
+// cbcDecAble 是一个由具有 CBC 解密特定优化实现的密码实现的接口。
+// crypto/aes 不再使用它，我们最终希望将其移除。
 type cbcDecAble interface {
 	NewCBCDecrypter(iv []byte) BlockMode
 }
 
-// NewCBCDecrypter returns a BlockMode which decrypts in cipher block chaining
-// mode, using the given Block. The length of iv must be the same as the
-// Block's block size and must match the iv used to encrypt the data.
+// NewCBCDecrypter 返回一个以密码块链接模式解密的 BlockMode，
+// 使用给定的 Block。iv 的长度必须与 Block 的块大小相同，
+// 并且必须与用于加密数据的 iv 匹配。
 func NewCBCDecrypter(b Block, iv []byte) BlockMode {
 	if len(iv) != b.BlockSize() {
 		panic("cipher.NewCBCDecrypter: IV length must equal block size")
@@ -142,10 +138,9 @@ func NewCBCDecrypter(b Block, iv []byte) BlockMode {
 	return (*cbcDecrypter)(newCBC(b, iv))
 }
 
-// newCBCGenericDecrypter returns a BlockMode which encrypts in cipher block chaining
-// mode, using the given Block. The length of iv must be the same as the
-// Block's block size. This always returns the generic non-asm decrypter for use in
-// fuzz testing.
+// newCBCGenericDecrypter 返回一个以密码块链接模式加密的 BlockMode，
+// 使用给定的 Block。iv 的长度必须与 Block 的块大小相同。
+// 这始终返回通用的非汇编解密器，用于模糊测试。
 func newCBCGenericDecrypter(b Block, iv []byte) BlockMode {
 	if len(iv) != b.BlockSize() {
 		panic("cipher.NewCBCDecrypter: IV length must equal block size")
@@ -172,16 +167,16 @@ func (x *cbcDecrypter) CryptBlocks(dst, src []byte) {
 		return
 	}
 
-	// For each block, we need to xor the decrypted data with the previous block's ciphertext (the iv).
-	// To avoid making a copy each time, we loop over the blocks BACKWARDS.
+	// 对于每个块，我们需要将解密后的数据与前一个块的密文（iv）进行异或。
+	// 为了避免每次都复制，我们反向遍历块。
 	end := len(src)
 	start := end - x.blockSize
 	prev := start - x.blockSize
 
-	// Copy the last block of ciphertext in preparation as the new iv.
+	// 复制最后一个密文块作为新的 iv 的准备。
 	copy(x.tmp, src[start:end])
 
-	// Loop over all but the first block.
+	// 遍历除第一个块以外的所有块。
 	for start > 0 {
 		x.b.Decrypt(dst[start:end], src[start:end])
 		subtle.XORBytes(dst[start:end], dst[start:end], src[prev:start])
@@ -191,11 +186,11 @@ func (x *cbcDecrypter) CryptBlocks(dst, src []byte) {
 		prev -= x.blockSize
 	}
 
-	// The first block is special because it uses the saved iv.
+	// 第一个块比较特殊，因为它使用保存的 iv。
 	x.b.Decrypt(dst[start:end], src[start:end])
 	subtle.XORBytes(dst[start:end], dst[start:end], x.iv)
 
-	// Set the new iv to the first block we copied earlier.
+	// 将新的 iv 设置为我们之前复制的第一个块。
 	x.iv, x.tmp = x.tmp, x.iv
 }
 

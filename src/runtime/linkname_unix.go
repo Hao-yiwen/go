@@ -8,5 +8,5 @@ package runtime
 
 import _ "unsafe"
 
-// used in internal/syscall/unix
+// 用于 internal/syscall/unix
 //go:linkname fcntl

@@ -1,8 +1,8 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package mime implements parts of the MIME spec.
+// Package mime 实现了 MIME 规范的部分功能。
 package mime
 
 import (
@@ -16,13 +16,13 @@ var (
 	mimeTypes      sync.Map // map[string]string; ".Z" => "application/x-compress"
 	mimeTypesLower sync.Map // map[string]string; ".z" => "application/x-compress"
 
-	// extensions maps from MIME type to list of lowercase file
-	// extensions: "image/jpeg" => [".jfif", ".jpg", ".jpeg", ".pjp", ".pjpeg"]
-	extensionsMu sync.Mutex // Guards stores (but not loads) on extensions.
-	extensions   sync.Map   // map[string][]string; slice values are append-only.
+	// extensions 从 MIME 类型映射到小写文件扩展名列表：
+	// "image/jpeg" => [".jfif", ".jpg", ".jpeg", ".pjp", ".pjpeg"]
+	extensionsMu sync.Mutex // 保护 extensions 的存储操作（但不包括加载操作）。
+	extensions   sync.Map   // map[string][]string; 切片值只追加不修改。
 )
 
-// setMimeTypes is used by initMime's non-test path, and by tests.
+// setMimeTypes 由 initMime 的非测试路径和测试使用。
 func setMimeTypes(lowerExt, mixExt map[string]string) {
 	mimeTypes.Clear()
 	mimeTypesLower.Clear()
@@ -50,16 +50,16 @@ func setMimeTypes(lowerExt, mixExt map[string]string) {
 	}
 }
 
-// A type is listed here if both Firefox and Chrome included them in their own
-// lists.  In the case where they contradict they are deconflicted using IANA's
-// listed media types https://www.iana.org/assignments/media-types/media-types.xhtml
+// 如果 Firefox 和 Chrome 在各自的列表中都包含某个类型，则该类型会在此处列出。
+// 当两者存在冲突时，使用 IANA 列出的媒体类型进行解决冲突
+// https://www.iana.org/assignments/media-types/media-types.xhtml
 //
-// Chrome's MIME mappings to file extensions are defined at
+// Chrome 的 MIME 类型到文件扩展名的映射定义在
 // https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/net/base/mime_util.cc
 //
-// Firefox's MIME types can be found at
+// Firefox 的 MIME 类型可在以下位置找到
 // https://github.com/mozilla-firefox/firefox/blob/main/netwerk/mime/nsMimeTypes.h
-// and the mappings to file extensions at
+// 文件扩展名的映射在
 // https://github.com/mozilla-firefox/firefox/blob/main/uriloader/exthandler/nsExternalHelperAppService.cpp
 var builtinTypesLower = map[string]string{
 	".ai":    "application/postscript",
@@ -128,7 +128,7 @@ var builtinTypesLower = map[string]string{
 	".zip":   "application/zip",
 }
 
-var once sync.Once // guards initMime
+var once sync.Once // 保护 initMime
 
 var testInitMime, osInitMime func()
 
@@ -141,15 +141,14 @@ func initMime() {
 	}
 }
 
-// TypeByExtension returns the MIME type associated with the file extension ext.
-// The extension ext should begin with a leading dot, as in ".html".
-// When ext has no associated type, TypeByExtension returns "".
+// TypeByExtension 返回与文件扩展名 ext 关联的 MIME 类型。
+// 扩展名 ext 应以点开头，如 ".html"。
+// 当 ext 没有关联的类型时，TypeByExtension 返回 ""。
 //
-// Extensions are looked up first case-sensitively, then case-insensitively.
+// 扩展名首先进行区分大小写的查找，然后进行不区分大小写的查找。
 //
-// The built-in table is small but on unix it is augmented by the local
-// system's MIME-info database or mime.types file(s) if available under one or
-// more of these names:
+// 内置表较小，但在 unix 上会通过本地系统的 MIME-info 数据库或 mime.types 文件进行扩充，
+// 如果这些文件存在于以下一个或多个位置：
 //
 //	/usr/local/share/mime/globs2
 //	/usr/share/mime/globs2
@@ -158,27 +157,26 @@ func initMime() {
 //	/etc/apache/mime.types
 //	/etc/httpd/conf/mime.types
 //
-// On Windows, MIME types are extracted from the registry.
+// 在 Windows 上，MIME 类型从注册表中提取。
 //
-// Text types have the charset parameter set to "utf-8" by default.
+// 文本类型的 charset 参数默认设置为 "utf-8"。
 func TypeByExtension(ext string) string {
 	once.Do(initMime)
 
-	// Case-sensitive lookup.
+	// 区分大小写的查找。
 	if v, ok := mimeTypes.Load(ext); ok {
 		return v.(string)
 	}
 
-	// Case-insensitive lookup.
-	// Optimistically assume a short ASCII extension and be
-	// allocation-free in that case.
+	// 不区分大小写的查找。
+	// 乐观地假设是短 ASCII 扩展名，这种情况下不会分配内存。
 	var buf [10]byte
 	lower := buf[:0]
-	const utf8RuneSelf = 0x80 // from utf8 package, but not importing it.
+	const utf8RuneSelf = 0x80 // 来自 utf8 包，但不导入它。
 	for i := 0; i < len(ext); i++ {
 		c := ext[i]
 		if c >= utf8RuneSelf {
-			// Slow path.
+			// 慢路径。
 			si, _ := mimeTypesLower.Load(strings.ToLower(ext))
 			s, _ := si.(string)
 			return s
@@ -194,14 +192,12 @@ func TypeByExtension(ext string) string {
 	return s
 }
 
-// ExtensionsByType returns the extensions known to be associated with the MIME
-// type typ. The returned extensions will each begin with a leading dot, as in
-// ".html". When typ has no associated extensions, ExtensionsByType returns an
-// nil slice.
+// ExtensionsByType 返回已知与 MIME 类型 typ 关联的扩展名。
+// 返回的每个扩展名都以点开头，如 ".html"。
+// 当 typ 没有关联的扩展名时，ExtensionsByType 返回 nil 切片。
 //
-// The built-in table is small but on unix it is augmented by the local
-// system's MIME-info database or mime.types file(s) if available under one or
-// more of these names:
+// 内置表较小，但在 unix 上会通过本地系统的 MIME-info 数据库或 mime.types 文件进行扩充，
+// 如果这些文件存在于以下一个或多个位置：
 //
 //	/usr/local/share/mime/globs2
 //	/usr/share/mime/globs2
@@ -210,7 +206,7 @@ func TypeByExtension(ext string) string {
 //	/etc/apache/mime.types
 //	/etc/httpd/conf/mime.types
 //
-// On Windows, extensions are extracted from the registry.
+// 在 Windows 上，扩展名从注册表中提取。
 func ExtensionsByType(typ string) ([]string, error) {
 	justType, _, err := ParseMediaType(typ)
 	if err != nil {
@@ -227,9 +223,8 @@ func ExtensionsByType(typ string) ([]string, error) {
 	return ret, nil
 }
 
-// AddExtensionType sets the MIME type associated with
-// the extension ext to typ. The extension should begin with
-// a leading dot, as in ".html".
+// AddExtensionType 将扩展名 ext 关联的 MIME 类型设置为 typ。
+// 扩展名应以点开头，如 ".html"。
 func AddExtensionType(ext, typ string) error {
 	if !strings.HasPrefix(ext, ".") {
 		return fmt.Errorf("mime: extension %q missing leading dot", ext)

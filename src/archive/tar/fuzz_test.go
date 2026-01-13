@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package tar
 
@@ -53,8 +53,8 @@ func FuzzReader(f *testing.F) {
 			files = append(files, file{header: hdr, content: buf.Bytes()})
 		}
 
-		// If we were unable to read anything out of the archive don't
-		// bother trying to roundtrip it.
+		// 如果我们无法从归档中读取任何内容，
+		// 就不必尝试进行往返测试。
 		if len(files) == 0 {
 			return
 		}
@@ -73,8 +73,7 @@ func FuzzReader(f *testing.F) {
 			t.Fatalf("Unable to write archive: %s", err)
 		}
 
-		// TODO: We may want to check if the archive roundtrips. This would require
-		// taking into account addition of the two zero trailer blocks that Writer.Close
-		// appends.
+		// TODO: 我们可能想要检查归档是否能往返。这需要考虑
+		// Writer.Close 附加的两个零尾块的添加。
 	})
 }

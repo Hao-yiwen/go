@@ -6,7 +6,7 @@
 
 package runtime
 
-// A dummy version of inVDSOPage for targets that don't use a VDSO.
+// inVDSOPage 的虚拟版本，用于不使用 VDSO 的目标。
 
 func inVDSOPage(pc uintptr) bool {
 	return false

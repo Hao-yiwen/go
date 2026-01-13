@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -17,14 +17,14 @@ import (
 	"encoding/json/internal/jsonwire"
 )
 
-// NOTE: Value is analogous to v1 json.RawMessage.
+// NOTE: Value 是一个nalogous to v1 json.RawMessage.
 
 // AppendFormat formats the JSON value in src and appends it to dst
 // according to the specified options.
 // See [Value.Format] for more details about the formatting behavior.
 //
 // The dst and src may overlap.
-// If an error is reported, then the entirety of src is appended to dst.
+// If an error is reported, then the entirety of src 是一个ppended to dst.
 func AppendFormat(dst, src []byte, opts ...Options) ([]byte, error) {
 	e := getBufferedEncoder(opts...)
 	defer putBufferedEncoder(e)
@@ -35,7 +35,7 @@ func AppendFormat(dst, src []byte, opts ...Options) ([]byte, error) {
 	return append(dst, e.s.Buf...), nil
 }
 
-// Value represents a single raw JSON value, which may be one of the following:
+// Value 表示a single raw JSON value, which 可能是 one of the following:
 //   - a JSON literal (i.e., null, true, or false)
 //   - a JSON string (e.g., "hello, world!")
 //   - a JSON number (e.g., 123.456)
@@ -46,12 +46,12 @@ func AppendFormat(dst, src []byte, opts ...Options) ([]byte, error) {
 // Value may contain leading and/or trailing whitespace.
 type Value []byte
 
-// Clone returns a copy of v.
+// Clone 返回a copy of v.
 func (v Value) Clone() Value {
 	return bytes.Clone(v)
 }
 
-// String returns the string formatting of v.
+// String 返回the string formatting of v.
 func (v Value) String() string {
 	if v == nil {
 		return "null"
@@ -59,14 +59,14 @@ func (v Value) String() string {
 	return string(v)
 }
 
-// IsValid reports whether the raw JSON value is syntactically valid
+// IsValid 报告whether the raw JSON value is syntactically valid
 // according to the specified options.
 //
 // By default (if no options are specified), it validates according to RFC 7493.
-// It verifies whether the input is properly encoded as UTF-8,
+// It verifies whether the input is properly 编码为 UTF-8,
 // that escape sequences within strings decode to valid Unicode codepoints, and
 // that all names in each object are unique.
-// It does not verify whether numbers are representable within the limits
+// It 执行not verify whether numbers are representable within the limits
 // of any common numeric type (e.g., float64, int64, or uint64).
 //
 // Relevant options include:
@@ -83,7 +83,7 @@ func (v Value) IsValid(opts ...Options) bool {
 	return errVal == nil && errEOF == io.EOF
 }
 
-// Format formats the raw JSON value in place.
+// Format 格式化 the raw JSON value in place.
 //
 // By default (if no options are specified), it validates according to RFC 7493
 // and produces the minimal JSON representation, where
@@ -106,8 +106,8 @@ func (v Value) IsValid(opts ...Options) bool {
 //
 // All other options are ignored.
 //
-// It is guaranteed to succeed if the value is valid according to the same options.
-// If the value is already formatted, then the buffer is not mutated.
+// It is guaranteed to succeed 如果 value is valid according to the same options.
+// If the value 是一个lready formatted, then the buffer is not mutated.
 func (v *Value) Format(opts ...Options) error {
 	// TODO: Document support for [WithByteLimit] and [WithDepthLimit].
 	return v.format(opts, nil)
@@ -131,7 +131,7 @@ func (v *Value) format(opts1, opts2 []Options) error {
 
 // Compact removes all whitespace from the raw JSON value.
 //
-// It does not reformat JSON strings or numbers to use any other representation.
+// It 执行not reformat JSON strings or numbers to use any other representation.
 // To maximize the set of JSON values that can be formatted,
 // this permits values with duplicate names and invalid UTF-8.
 //
@@ -153,7 +153,7 @@ func (v *Value) Compact(opts ...Options) error {
 // Indent reformats the whitespace in the raw JSON value so that each element
 // in a JSON object or array begins on a indented line according to the nesting.
 //
-// It does not reformat JSON strings or numbers to use any other representation.
+// It 执行not reformat JSON strings or numbers to use any other representation.
 // To maximize the set of JSON values that can be formatted,
 // this permits values with duplicate names and invalid UTF-8.
 //
@@ -186,8 +186,8 @@ func (v *Value) Indent(opts ...Options) error {
 //
 // The output stability is dependent on the stability of the application data
 // (see RFC 8785, Appendix E). It cannot produce stable output from
-// fundamentally unstable input. For example, if the JSON value
-// contains ephemeral data (e.g., a frequently changing timestamp),
+// fundamentally unstable input. For example, 如果 JSON value
+// 包含 ephemeral data (e.g., a frequently changing timestamp),
 // then the value is still unstable regardless of whether this is called.
 //
 // Canonicalize is equivalent to calling [Value.Format] with the following options:
@@ -213,9 +213,9 @@ func (v *Value) Canonicalize(opts ...Options) error {
 	}, opts)
 }
 
-// MarshalJSON returns v as the JSON encoding of v.
-// It returns the stored value as the raw JSON output without any validation.
-// If v is nil, then this returns a JSON null.
+// MarshalJSON 返回v as the JSON encoding of v.
+// It 返回the stored value as the raw JSON output without any validation.
+// If v is nil, then this 返回一个JSON null.
 func (v Value) MarshalJSON() ([]byte, error) {
 	// NOTE: This matches the behavior of v1 json.RawMessage.MarshalJSON.
 	if v == nil {
@@ -224,7 +224,7 @@ func (v Value) MarshalJSON() ([]byte, error) {
 	return v, nil
 }
 
-// UnmarshalJSON sets v as the JSON encoding of b.
+// UnmarshalJSON 设置v as the JSON encoding of b.
 // It stores a copy of the provided raw JSON input without any validation.
 func (v *Value) UnmarshalJSON(b []byte) error {
 	// NOTE: This matches the behavior of v1 json.RawMessage.UnmarshalJSON.
@@ -235,7 +235,7 @@ func (v *Value) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Kind returns the starting token kind.
+// Kind 返回the starting token kind.
 // For a valid value, this will never include [KindEndObject] or [KindEndArray].
 func (v Value) Kind() Kind {
 	if v := v[jsonwire.ConsumeWhitespace(v):]; len(v) > 0 {
@@ -247,9 +247,9 @@ func (v Value) Kind() Kind {
 const commaAndWhitespace = ", \n\r\t"
 
 type objectMember struct {
-	// name is the unquoted name.
+	// name 是 unquoted name.
 	name []byte // e.g., "name"
-	// buffer is the entirety of the raw JSON object member
+	// buffer 是 entirety of the raw JSON object member
 	// starting from right after the previous member (or opening '{')
 	// until right after the member value.
 	buffer []byte // e.g., `, \n\r\t"name": "value"`
@@ -281,7 +281,7 @@ func putObjectMembers(ns *[]objectMember) {
 }
 
 // mustReorderObjects reorders in-place all object members in a JSON value,
-// which must be valid otherwise it panics.
+// which 必须是 valid 否则 it panics.
 func mustReorderObjects(b []byte) {
 	// Obtain a buffered encoder just to use its internal buffer as
 	// a scratch buffer for reordering object members.
@@ -307,8 +307,8 @@ func mustReorderObjects(b []byte) {
 //   - All fully-parsed JSON objects are reordered by directly moving
 //     the members in the value buffer.
 //
-// The runtime is approximately O(n·log(n)) + O(m·log(m)),
-// where n is len(v) and m is the total number of object members.
+// The runtime 是一个pproximately O(n·log(n)) + O(m·log(m)),
+// where n is len(v) and m 是 total number of object members.
 func mustReorderObjectsFromDecoder(d *Decoder, scratch *[]byte) {
 	switch tok, err := d.ReadToken(); tok.Kind() {
 	case '{':
@@ -347,7 +347,7 @@ func mustReorderObjectsFromDecoder(d *Decoder, scratch *[]byte) {
 
 		// Append the reordered members to a new buffer,
 		// then copy the reordered members back over the original members.
-		// Avoid swapping in place since each member may be a different size
+		// Avoid swapping in place since each member 可能是 a different size
 		// where moving a member over a smaller member may corrupt the data
 		// for subsequent members before they have been moved.
 		//
@@ -365,7 +365,7 @@ func mustReorderObjectsFromDecoder(d *Decoder, scratch *[]byte) {
 				sorted = append(sorted, commaAndWhitespacePrefix(firstBufferBeforeSorting)...)
 				sorted = append(sorted, bytes.TrimLeft(member.buffer, commaAndWhitespace)...)
 			case i != 0 && &member.buffer[0] == &firstBufferBeforeSorting[0]:
-				// Later member after sorting is the first member before sorting,
+				// Later member after sorting 是 first member before sorting,
 				// so use the prefix of the first member after sorting.
 				sorted = append(sorted, commaAndWhitespacePrefix(firstBufferAfterSorting)...)
 				sorted = append(sorted, bytes.TrimLeft(member.buffer, commaAndWhitespace)...)

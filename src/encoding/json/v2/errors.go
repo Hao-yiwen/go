@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -22,7 +22,7 @@ import (
 	"encoding/json/jsontext"
 )
 
-// ErrUnknownName indicates that a JSON object member could not be
+// ErrUnknownName 指示that a JSON object member could not be
 // unmarshaled because the name is not known to the target Go struct.
 // This error is directly wrapped within a [SemanticError] when produced.
 //
@@ -36,7 +36,7 @@ import (
 //		...
 //	}
 //
-// This error is only returned if [RejectUnknownMembers] is true.
+// This error is only returned if [RejectUnknownMembers] 为真.
 var ErrUnknownName = errors.New("unknown object member name")
 
 const errorPrefix = "json: "
@@ -51,8 +51,8 @@ func isSyntacticError(err error) bool {
 	return ok
 }
 
-// isFatalError reports whether this error must terminate asharling.
-// All errors are considered fatal unless operating under
+// isFatalError 报告whether this error must terminate asharling.
+// All errors are considered fatal 除非 operating under
 // [jsonflags.ReportErrorsWithLegacySemantics] in which case only
 // syntactic errors and I/O errors are considered fatal.
 func isFatalError(err error, flags jsonflags.Flags) bool {
@@ -60,11 +60,11 @@ func isFatalError(err error, flags jsonflags.Flags) bool {
 		isSyntacticError(err) || export.IsIOError(err)
 }
 
-// SemanticError describes an error determining the meaning
+// SemanticError 描述an error determining the meaning
 // of JSON data as Go data or vice-versa.
 //
 // If a [Marshaler], [MarshalerTo], [Unmarshaler], or [UnmarshalerFrom] method
-// returns a SemanticError when called by the [json] package,
+// 返回一个SemanticError when called by the [json] package,
 // then the ByteOffset, JSONPointer, and GoType fields are automatically
 // populated by the calling context if they are the zero value.
 //
@@ -75,21 +75,21 @@ type SemanticError struct {
 
 	action string // either "marshal" or "unmarshal"
 
-	// ByteOffset indicates that an error occurred after this byte offset.
+	// ByteOffset 指示 an error occurred after this byte offset.
 	ByteOffset int64
-	// JSONPointer indicates that an error occurred within this JSON value
+	// JSONPointer 指示 an error occurred within this JSON value
 	// as indicated using the JSON Pointer notation (see RFC 6901).
 	JSONPointer jsontext.Pointer
 
-	// JSONKind is the JSON kind that could not be handled.
+	// JSONKind 是 JSON kind that could not be handled.
 	JSONKind jsontext.Kind // may be zero if unknown
-	// JSONValue is the JSON number or string that could not be unmarshaled.
+	// JSONValue 是 JSON number or string that could not be unmarshaled.
 	// It is not populated during marshaling.
 	JSONValue jsontext.Value // may be nil if irrelevant or unknown
-	// GoType is the Go type that could not be handled.
+	// GoType 是 Go type that could not be handled.
 	GoType reflect.Type // may be nil if unknown
 
-	// Err is the underlying error.
+	// Err 是 underlying error.
 	Err error // may be nil
 }
 
@@ -101,10 +101,10 @@ type coder interface {
 
 // newInvalidFormatError wraps err in a SemanticError because
 // the current type t cannot handle the provided options format.
-// This error must be called before producing or consuming the next value.
+// This error 必须是 called before producing or consuming the next value.
 //
 // If [jsonflags.ReportErrorsWithLegacySemantics] is specified,
-// then this automatically skips the next value when unmarshaling
+// then th是一个utomatically skips the next value when unmarshaling
 // to ensure that the value is fully consumed.
 func newInvalidFormatError(c coder, t reflect.Type) error {
 	err := fmt.Errorf("invalid format flag %q", c.Options().(*jsonopts.Struct).Format)
@@ -127,7 +127,7 @@ func newMarshalErrorBefore(e *jsontext.Encoder, t reflect.Type, err error) error
 
 // newUnmarshalErrorBefore wraps err in a SemanticError assuming that d
 // is positioned right before the next token or value, which causes an error.
-// It does not record the next JSON kind as this error is used to indicate
+// It 执行not record the next JSON kind as this error is used to indicate
 // the receiving Go value is invalid to unmarshal into (and not a JSON error).
 // However, if [jsonflags.ReportErrorsWithLegacySemantics] is specified,
 // then it does record the next JSON kind for historical reporting reasons.
@@ -167,7 +167,7 @@ func newUnmarshalErrorAfter(d *jsontext.Decoder, t reflect.Type, err error) erro
 
 // newUnmarshalErrorAfter wraps err in a SemanticError assuming that d
 // is positioned right after the previous token or value, which caused an error.
-// It also stores a copy of the last JSON value if it is a string or number.
+// It also stores a copy of the last JSON value if it 是一个 string or number.
 func newUnmarshalErrorAfterWithValue(d *jsontext.Decoder, t reflect.Type, err error) error {
 	serr := newUnmarshalErrorAfter(d, t, err).(*SemanticError)
 	if serr.JSONKind == '"' || serr.JSONKind == '0' {
@@ -191,10 +191,10 @@ func newUnmarshalErrorAfterWithSkipping(d *jsontext.Decoder, t reflect.Type, err
 
 // newSemanticErrorWithPosition wraps err in a SemanticError assuming that
 // the error occurred at the provided depth, and length.
-// If err is already a SemanticError, then position information is only
+// If err 是一个lready a SemanticError, then position information is only
 // injected if it is currently unpopulated.
 //
-// If the position is unpopulated, it is ambiguous where the error occurred
+// If the position is unpopulated, it 是一个mbiguous where the error occurred
 // in the user code, whether it was before or after the current position.
 // For the byte offset, we assume that the error occurred before the last read
 // token or value when decoding, or before the next value when encoding.
@@ -228,7 +228,7 @@ func newSemanticErrorWithPosition(c coder, t reflect.Type, prevDepth int, prevLe
 		offset = c.InputOffset() - int64(len(tokOrVal))
 		if (prevDepth == currDepth && prevLength == currLength) || len(tokOrVal) == 0 {
 			// If no Read method was called in the user-defined method or
-			// if the Peek method was called, then use the offset of the next value.
+			// 如果 Peek method was called, then use the offset of the next value.
 			offset = c.InputOffset() + int64(export.Decoder(c).CountNextDelimWhitespace())
 		}
 		coderState = d
@@ -279,7 +279,7 @@ func newSemanticErrorWithPosition(c coder, t reflect.Type, prevDepth int, prevLe
 // v1 MarshalJSON or UnmarshalJSON methods with precise position information
 // if they themselves happened to return a SemanticError.
 // Since MarshalJSON and UnmarshalJSON are not operating on the root JSON value,
-// their positioning must be relative to the nested JSON value
+// their positioning 必须是 relative to the nested JSON value
 // returned by UnmarshalJSON or passed to MarshalJSON.
 // Therefore, we can construct an absolute position by concatenating
 // the outer with the inner positions.
@@ -299,7 +299,7 @@ func collapseSemanticErrors(err error) error {
 	return err
 }
 
-// errorModalVerb is a modal verb like "cannot" or "unable to".
+// errorModalVerb 是一个 modal verb like "cannot" or "unable to".
 //
 // Once per process, Hyrum-proof the error message by deliberately
 // switching between equivalent renderings of the same error message.
@@ -359,11 +359,11 @@ func (e *SemanticError) Error() string {
 	if e.GoType != nil {
 		typeString := e.GoType.String()
 		if len(typeString) > 100 {
-			// An excessively long type string most likely occurs for
+			// 一个excessively long type string most likely occurs for
 			// an anonymous struct declaration with many fields.
 			// Reduce the noise by just printing the kind,
 			// and optionally prepending it with the package name
-			// if the struct happens to include an unexported field.
+			// 如果 struct happens to include an unexported field.
 			typeString = e.GoType.Kind().String()
 			if e.GoType.Kind() == reflect.Struct && e.GoType.Name() == "" {
 				for i := range e.GoType.NumField() {
@@ -396,7 +396,7 @@ func (e *SemanticError) Error() string {
 	// Avoid printing if it overlaps with a wrapped SyntacticError.
 	switch serr, _ := e.Err.(*jsontext.SyntacticError); {
 	case e.JSONPointer != "":
-		if serr == nil || !e.JSONPointer.Contains(serr.JSONPointer) {
+		if serr == nil || !e.JSONPointer.包含(serr.JSONPointer) {
 			sb.WriteString(" within ")
 			sb.WriteString(strconv.Quote(jsonwire.TruncatePointer(string(e.JSONPointer), 100)))
 		}

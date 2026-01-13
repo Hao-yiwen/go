@@ -1,15 +1,14 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package crc32 implements the 32-bit cyclic redundancy check, or CRC-32,
-// checksum. See https://en.wikipedia.org/wiki/Cyclic_redundancy_check for
-// information.
+// crc32 包实现了 32 位循环冗余校验，即 CRC-32 校验和。
+// 有关信息，请参阅 https://en.wikipedia.org/wiki/Cyclic_redundancy_check。
 //
-// Polynomials are represented in LSB-first form also known as reversed representation.
+// 多项式以 LSB 优先形式表示，也称为反转表示。
 //
-// See https://en.wikipedia.org/wiki/Mathematics_of_cyclic_redundancy_checks#Reversed_representations_and_reciprocal_polynomials
-// for information.
+// 有关信息，请参阅
+// https://en.wikipedia.org/wiki/Mathematics_of_cyclic_redundancy_checks#Reversed_representations_and_reciprocal_polynomials。
 package crc32
 
 import (
@@ -20,61 +19,60 @@ import (
 	"sync/atomic"
 )
 
-// The size of a CRC-32 checksum in bytes.
+// Size 是 CRC-32 校验和的字节大小。
 const Size = 4
 
-// Predefined polynomials.
+// 预定义的多项式。
 const (
-	// IEEE is by far and away the most common CRC-32 polynomial.
-	// Used by ethernet (IEEE 802.3), v.42, fddi, gzip, zip, png, ...
+	// IEEE 是目前最常用的 CRC-32 多项式。
+	// 被以太网（IEEE 802.3）、v.42、fddi、gzip、zip、png 等使用...
 	IEEE = 0xedb88320
 
-	// Castagnoli's polynomial, used in iSCSI.
-	// Has better error detection characteristics than IEEE.
+	// Castagnoli 多项式，用于 iSCSI。
+	// 比 IEEE 具有更好的错误检测特性。
 	// https://dx.doi.org/10.1109/26.231911
 	Castagnoli = 0x82f63b78
 
-	// Koopman's polynomial.
-	// Also has better error detection characteristics than IEEE.
+	// Koopman 多项式。
+	// 同样比 IEEE 具有更好的错误检测特性。
 	// https://dx.doi.org/10.1109/DSN.2002.1028931
 	Koopman = 0xeb31d82e
 )
 
-// Table is a 256-word table representing the polynomial for efficient processing.
+// Table 是一个 256 字的表，用于高效处理多项式。
 type Table [256]uint32
 
-// This file makes use of functions implemented in architecture-specific files.
-// The interface that they implement is as follows:
+// 本文件使用了在特定架构文件中实现的函数。
+// 它们实现的接口如下：
 //
-//    // archAvailableIEEE reports whether an architecture-specific CRC32-IEEE
-//    // algorithm is available.
+//    // archAvailableIEEE 报告是否有特定架构的 CRC32-IEEE
+//    // 算法可用。
 //    archAvailableIEEE() bool
 //
-//    // archInitIEEE initializes the architecture-specific CRC3-IEEE algorithm.
-//    // It can only be called if archAvailableIEEE() returns true.
+//    // archInitIEEE 初始化特定架构的 CRC32-IEEE 算法。
+//    // 只有在 archAvailableIEEE() 返回 true 时才能调用。
 //    archInitIEEE()
 //
-//    // archUpdateIEEE updates the given CRC32-IEEE. It can only be called if
-//    // archInitIEEE() was previously called.
+//    // archUpdateIEEE 更新给定的 CRC32-IEEE。只有在
+//    // 之前调用过 archInitIEEE() 时才能调用。
 //    archUpdateIEEE(crc uint32, p []byte) uint32
 //
-//    // archAvailableCastagnoli reports whether an architecture-specific
-//    // CRC32-C algorithm is available.
+//    // archAvailableCastagnoli 报告是否有特定架构的
+//    // CRC32-C 算法可用。
 //    archAvailableCastagnoli() bool
 //
-//    // archInitCastagnoli initializes the architecture-specific CRC32-C
-//    // algorithm. It can only be called if archAvailableCastagnoli() returns
-//    // true.
+//    // archInitCastagnoli 初始化特定架构的 CRC32-C
+//    // 算法。只有在 archAvailableCastagnoli() 返回
+//    // true 时才能调用。
 //    archInitCastagnoli()
 //
-//    // archUpdateCastagnoli updates the given CRC32-C. It can only be called
-//    // if archInitCastagnoli() was previously called.
+//    // archUpdateCastagnoli 更新给定的 CRC32-C。只有在
+//    // 之前调用过 archInitCastagnoli() 时才能调用。
 //    archUpdateCastagnoli(crc uint32, p []byte) uint32
 
-// castagnoliTable points to a lazily initialized Table for the Castagnoli
-// polynomial. MakeTable will always return this value when asked to make a
-// Castagnoli table so we can compare against it to find when the caller is
-// using this polynomial.
+// castagnoliTable 指向一个为 Castagnoli 多项式延迟初始化的 Table。
+// 当被要求创建 Castagnoli 表时，MakeTable 将始终返回此值，
+// 这样我们可以与其比较以找出调用者何时使用此多项式。
 var castagnoliTable *Table
 var castagnoliTable8 *slicing8Table
 var updateCastagnoli func(crc uint32, p []byte) uint32
@@ -87,7 +85,7 @@ var castagnoliInitOnce = sync.OnceFunc(func() {
 		archInitCastagnoli()
 		updateCastagnoli = archUpdateCastagnoli
 	} else {
-		// Initialize the slicing-by-8 table.
+		// 初始化 slicing-by-8 表。
 		castagnoliTable8 = slicingMakeTable(Castagnoli)
 		updateCastagnoli = func(crc uint32, p []byte) uint32 {
 			return slicingUpdate(crc, castagnoliTable8, p)
@@ -97,10 +95,10 @@ var castagnoliInitOnce = sync.OnceFunc(func() {
 	haveCastagnoli.Store(true)
 })
 
-// IEEETable is the table for the [IEEE] polynomial.
+// IEEETable 是 [IEEE] 多项式的表。
 var IEEETable = simpleMakeTable(IEEE)
 
-// ieeeTable8 is the slicing8Table for IEEE
+// ieeeTable8 是 IEEE 的 slicing8Table
 var ieeeTable8 *slicing8Table
 var updateIEEE func(crc uint32, p []byte) uint32
 
@@ -109,7 +107,7 @@ var ieeeInitOnce = sync.OnceFunc(func() {
 		archInitIEEE()
 		updateIEEE = archUpdateIEEE
 	} else {
-		// Initialize the slicing-by-8 table.
+		// 初始化 slicing-by-8 表。
 		ieeeTable8 = slicingMakeTable(IEEE)
 		updateIEEE = func(crc uint32, p []byte) uint32 {
 			return slicingUpdate(crc, ieeeTable8, p)
@@ -117,8 +115,8 @@ var ieeeInitOnce = sync.OnceFunc(func() {
 	}
 })
 
-// MakeTable returns a [Table] constructed from the specified polynomial.
-// The contents of this [Table] must not be modified.
+// MakeTable 返回从指定多项式构造的 [Table]。
+// 此 [Table] 的内容不得修改。
 func MakeTable(poly uint32) *Table {
 	switch poly {
 	case IEEE:
@@ -132,17 +130,16 @@ func MakeTable(poly uint32) *Table {
 	}
 }
 
-// digest represents the partial evaluation of a checksum.
+// digest 表示校验和的部分计算结果。
 type digest struct {
 	crc uint32
 	tab *Table
 }
 
-// New creates a new [hash.Hash32] computing the CRC-32 checksum using the
-// polynomial represented by the [Table]. Its Sum method will lay the
-// value out in big-endian byte order. The returned Hash32 also
-// implements [encoding.BinaryMarshaler] and [encoding.BinaryUnmarshaler] to
-// marshal and unmarshal the internal state of the hash.
+// New 创建一个新的 [hash.Hash32]，使用 [Table] 表示的多项式
+// 计算 CRC-32 校验和。其 Sum 方法将以大端字节序输出值。
+// 返回的 Hash32 还实现了 [encoding.BinaryMarshaler] 和
+// [encoding.BinaryUnmarshaler]，用于序列化和反序列化哈希的内部状态。
 func New(tab *Table) hash.Hash32 {
 	if tab == IEEETable {
 		ieeeInitOnce()
@@ -150,11 +147,10 @@ func New(tab *Table) hash.Hash32 {
 	return &digest{0, tab}
 }
 
-// NewIEEE creates a new [hash.Hash32] computing the CRC-32 checksum using
-// the [IEEE] polynomial. Its Sum method will lay the value out in
-// big-endian byte order. The returned Hash32 also implements
-// [encoding.BinaryMarshaler] and [encoding.BinaryUnmarshaler] to marshal
-// and unmarshal the internal state of the hash.
+// NewIEEE 创建一个新的 [hash.Hash32]，使用 [IEEE] 多项式
+// 计算 CRC-32 校验和。其 Sum 方法将以大端字节序输出值。
+// 返回的 Hash32 还实现了 [encoding.BinaryMarshaler] 和
+// [encoding.BinaryUnmarshaler]，用于序列化和反序列化哈希的内部状态。
 func NewIEEE() hash.Hash32 { return New(IEEETable) }
 
 func (d *digest) Size() int { return Size }
@@ -213,16 +209,16 @@ func update(crc uint32, tab *Table, p []byte, checkInitIEEE bool) uint32 {
 	}
 }
 
-// Update returns the result of adding the bytes in p to the crc.
+// Update 返回将 p 中的字节添加到 crc 的结果。
 func Update(crc uint32, tab *Table, p []byte) uint32 {
-	// Unfortunately, because IEEETable is exported, IEEE may be used without a
-	// call to MakeTable. We have to make sure it gets initialized in that case.
+	// 不幸的是，因为 IEEETable 是导出的，IEEE 可能在没有
+	// 调用 MakeTable 的情况下被使用。在这种情况下，我们必须确保它被初始化。
 	return update(crc, tab, p, true)
 }
 
 func (d *digest) Write(p []byte) (n int, err error) {
-	// We only create digest objects through New() which takes care of
-	// initialization in this case.
+	// 我们只通过 New() 创建 digest 对象，
+	// 在这种情况下它会处理初始化。
 	d.crc = update(d.crc, d.tab, p, false)
 	return len(p), nil
 }
@@ -234,18 +230,18 @@ func (d *digest) Sum(in []byte) []byte {
 	return append(in, byte(s>>24), byte(s>>16), byte(s>>8), byte(s))
 }
 
-// Checksum returns the CRC-32 checksum of data
-// using the polynomial represented by the [Table].
+// Checksum 使用 [Table] 表示的多项式
+// 返回 data 的 CRC-32 校验和。
 func Checksum(data []byte, tab *Table) uint32 { return Update(0, tab, data) }
 
-// ChecksumIEEE returns the CRC-32 checksum of data
-// using the [IEEE] polynomial.
+// ChecksumIEEE 使用 [IEEE] 多项式
+// 返回 data 的 CRC-32 校验和。
 func ChecksumIEEE(data []byte) uint32 {
 	ieeeInitOnce()
 	return updateIEEE(0, data)
 }
 
-// tableSum returns the IEEE checksum of table t.
+// tableSum 返回表 t 的 IEEE 校验和。
 func tableSum(t *Table) uint32 {
 	var a [1024]byte
 	b := a[:0]

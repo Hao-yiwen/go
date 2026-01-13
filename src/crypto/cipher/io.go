@@ -1,16 +1,15 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package cipher
 
 import "io"
 
-// The Stream* objects are so simple that all their members are public. Users
-// can create them themselves.
+// Stream* 对象非常简单，所有成员都是公开的。用户可以自己创建它们。
 
-// StreamReader wraps a [Stream] into an [io.Reader]. It calls XORKeyStream
-// to process each slice of data which passes through.
+// StreamReader 将 [Stream] 包装成 [io.Reader]。
+// 它调用 XORKeyStream 来处理通过的每个数据切片。
 type StreamReader struct {
 	S Stream
 	R io.Reader
@@ -22,29 +21,28 @@ func (r StreamReader) Read(dst []byte) (n int, err error) {
 	return
 }
 
-// StreamWriter wraps a [Stream] into an io.Writer. It calls XORKeyStream
-// to process each slice of data which passes through. If any [StreamWriter.Write]
-// call returns short then the StreamWriter is out of sync and must be discarded.
-// A StreamWriter has no internal buffering; [StreamWriter.Close] does not need
-// to be called to flush write data.
+// StreamWriter 将 [Stream] 包装成 io.Writer。它调用 XORKeyStream
+// 来处理通过的每个数据切片。如果任何 [StreamWriter.Write] 调用返回短写，
+// 则 StreamWriter 已失去同步，必须丢弃。
+// StreamWriter 没有内部缓冲；不需要调用 [StreamWriter.Close] 来刷新写入数据。
 type StreamWriter struct {
 	S   Stream
 	W   io.Writer
-	Err error // unused
+	Err error // 未使用
 }
 
 func (w StreamWriter) Write(src []byte) (n int, err error) {
 	c := make([]byte, len(src))
 	w.S.XORKeyStream(c, src)
 	n, err = w.W.Write(c)
-	if n != len(src) && err == nil { // should never happen
+	if n != len(src) && err == nil { // 不应该发生
 		err = io.ErrShortWrite
 	}
 	return
 }
 
-// Close closes the underlying Writer and returns its Close return value, if the Writer
-// is also an io.Closer. Otherwise it returns nil.
+// Close 关闭底层 Writer 并返回其 Close 返回值（如果 Writer
+// 也是 io.Closer）。否则返回 nil。
 func (w StreamWriter) Close() error {
 	if c, ok := w.W.(io.Closer); ok {
 		return c.Close()

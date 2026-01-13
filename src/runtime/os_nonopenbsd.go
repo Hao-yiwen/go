@@ -6,12 +6,10 @@
 
 package runtime
 
-// osStackAlloc performs OS-specific initialization before s is used
-// as stack memory.
+// osStackAlloc 在 s 被用作堆栈内存前执行特定于操作系统的初始化。
 func osStackAlloc(s *mspan) {
 }
 
-// osStackFree undoes the effect of osStackAlloc before s is returned
-// to the heap.
+// osStackFree 在 s 返回到堆前撤销 osStackAlloc 的效果。
 func osStackFree(s *mspan) {
 }

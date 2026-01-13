@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -379,7 +379,7 @@ func (a *timeArshaler) unmarshal(b []byte) (err error) {
 			return err
 		}
 		// TODO(https://go.dev/issue/57912):
-		// RFC 3339 specifies the grammar for a valid timestamp.
+		// RFC 3339 指定 the grammar for a valid timestamp.
 		// However, the parsing functionality in "time" is too loose and
 		// incorrectly accepts invalid timestamps as valid.
 		// Remove these manual checks when "time" checks it for us.
@@ -412,7 +412,7 @@ func (a *timeArshaler) unmarshal(b []byte) (err error) {
 }
 
 // appendDurationBase10 appends d formatted as a decimal fractional number,
-// where pow10 is a power-of-10 used to scale down the number.
+// where pow10 是一个 power-of-10 used to scale down the number.
 func appendDurationBase10(b []byte, d time.Duration, pow10 uint64) []byte {
 	b, n := mayAppendDurationSign(b, d)            // append sign
 	whole, frac := bits.Div64(0, n, uint64(pow10)) // compute whole and frac fields
@@ -421,7 +421,7 @@ func appendDurationBase10(b []byte, d time.Duration, pow10 uint64) []byte {
 }
 
 // parseDurationBase10 parses d from a decimal fractional number,
-// where pow10 is a power-of-10 used to scale up the number.
+// where pow10 是一个 power-of-10 used to scale up the number.
 func parseDurationBase10(b []byte, pow10 uint64) (time.Duration, error) {
 	suffix, neg := consumeSign(b, false)                     // consume sign
 	wholeBytes, fracBytes := bytesCutByte(suffix, '.', true) // consume whole and frac fields
@@ -441,7 +441,7 @@ func parseDurationBase10(b []byte, pow10 uint64) (time.Duration, error) {
 
 // appendDurationISO8601 appends an ISO 8601 duration with a restricted grammar,
 // where leading and trailing zeroes and zero-value designators are omitted.
-// It only uses hour, minute, and second designators since ISO 8601 defines
+// It only uses hour, minute, and second designators since ISO 8601 定义
 // those as being "accurate", while year, month, week, and day are "nominal".
 func appendDurationISO8601(b []byte, d time.Duration) []byte {
 	if d == 0 {
@@ -464,10 +464,10 @@ func appendDurationISO8601(b []byte, d time.Duration) []byte {
 	return b
 }
 
-// daysPerYear is the exact average number of days in a year according to
+// daysPerYear 是 exact average number of days in a year according to
 // the Gregorian calendar, which has an extra day each year that is
-// a multiple of 4, unless it is evenly divisible by 100 but not by 400.
-// This does not take into account leap seconds, which are not deterministic.
+// a multiple of 4, 除非 it is evenly divisible by 100 but not by 400.
+// This 执行not take into account leap seconds, which are not deterministic.
 const daysPerYear = 365.2425
 
 var errInaccurateDateUnits = errors.New("inaccurate year, month, week, or day units")
@@ -482,7 +482,7 @@ var errInaccurateDateUnits = errors.New("inaccurate year, month, week, or day un
 //
 //   - A leading plus sign is permitted (and ignored).
 //     This is not required by ISO 8601, but not forbidden either.
-//     There is some precedent for this as it is supported by the principle of
+//     There is some precedent for th是一个s it is supported by the principle of
 //     duration arithmetic as specified in ISO 8601-2-2019, section 14.1.
 //     Of note, the JavaScript grammar for ISO 8601 permits a leading plus sign.
 //
@@ -512,7 +512,7 @@ var errInaccurateDateUnits = errors.New("inaccurate year, month, week, or day un
 // We follow JavaScript's grammar as JSON itself is derived from JavaScript.
 // The Temporal.Duration.toJSON method is guaranteed to produce an output
 // that can be parsed by this function so long as arithmetic in JavaScript
-// do not use a largestUnit value higher than "hours" (which is the default).
+// do not use a largestUnit value higher than "hours" (which 是 default).
 // Even if it does, this will do a best-effort parsing with inaccurate units,
 // but report [errInaccurateDateUnits].
 func parseDurationISO8601(b []byte) (time.Duration, error) {
@@ -531,7 +531,7 @@ func parseDurationISO8601(b []byte) (time.Duration, error) {
 
 	// mayParseUnit attempts to parse another date or time number
 	// identified by the desHi and desLo unit characters.
-	// If the part is absent for current unit, it returns b as is.
+	// If the part 是一个bsent for current unit, it returns b as is.
 	mayParseUnit := func(b []byte, desHi, desLo byte, unit time.Duration) []byte {
 		number, suffix, ok := cutBytes(b, desHi, desLo)
 		if !ok || sawFrac {
@@ -539,7 +539,7 @@ func parseDurationISO8601(b []byte) (time.Duration, error) {
 		}
 
 		// Parse the number.
-		// A fraction allowed for the accurate units in the last part.
+		// 一个fraction allowed for the accurate units in the last part.
 		whole, frac, ok := cutBytes(number, '.', ',')
 		if ok {
 			sawFrac = true
@@ -618,7 +618,7 @@ func mayApplyDurationSign(n uint64, neg bool) time.Duration {
 }
 
 // appendTimeUnix appends t formatted as a decimal fractional number,
-// where pow10 is a power-of-10 used to scale up the number.
+// where pow10 是一个 power-of-10 used to scale up the number.
 func appendTimeUnix(b []byte, t time.Time, pow10 uint64) []byte {
 	sec, nsec := t.Unix(), int64(t.Nanosecond())
 	if sec < 0 {
@@ -640,7 +640,7 @@ func appendTimeUnix(b []byte, t time.Time, pow10 uint64) []byte {
 }
 
 // parseTimeUnix parses t formatted as a decimal fractional number,
-// where pow10 is a power-of-10 used to scale down the number.
+// where pow10 是一个 power-of-10 used to scale down the number.
 func parseTimeUnix(b []byte, pow10 uint64) (time.Time, error) {
 	suffix, neg := consumeSign(b, false)                     // consume sign
 	wholeBytes, fracBytes := bytesCutByte(suffix, '.', true) // consume whole and frac fields
@@ -674,17 +674,17 @@ func parseTimeUnix(b []byte, pow10 uint64) (time.Time, error) {
 	}
 }
 
-// negateSecNano negates a Unix timestamp, where nsec must be within [0, 1e9).
+// negateSecNano negates a Unix timestamp, where nsec 必须是 within [0, 1e9).
 func negateSecNano(sec, nsec int64) (int64, int64) {
 	sec = ^sec               // twos-complement negation (i.e., -1*sec + 1)
-	nsec = -nsec + 1e9       // negate nsec and add 1e9 (which is the extra +1 from sec negation)
+	nsec = -nsec + 1e9       // negate nsec and add 1e9 (which 是 extra +1 from sec negation)
 	sec += int64(nsec / 1e9) // handle possible overflow of nsec if it started as zero
 	nsec %= 1e9              // ensure nsec stays within [0, 1e9)
 	return sec, nsec
 }
 
 // appendFracBase10 appends the fraction of n/max10,
-// where max10 is a power-of-10 that is larger than n.
+// where max10 是一个 power-of-10 that is larger than n.
 func appendFracBase10(b []byte, n, max10 uint64) []byte {
 	if n == 0 {
 		return b
@@ -693,7 +693,7 @@ func appendFracBase10(b []byte, n, max10 uint64) []byte {
 }
 
 // parseFracBase10 parses the fraction of n/max10,
-// where max10 is a power-of-10 that is larger than n.
+// where max10 是一个 power-of-10 that is larger than n.
 func parseFracBase10(b []byte, max10 uint64) (n uint64, ok bool) {
 	switch {
 	case len(b) == 0:
@@ -705,7 +705,7 @@ func parseFracBase10(b []byte, max10 uint64) (n uint64, ok bool) {
 }
 
 // appendPaddedBase10 appends a zero-padded encoding of n,
-// where max10 is a power-of-10 that is larger than n.
+// where max10 是一个 power-of-10 that is larger than n.
 func appendPaddedBase10(b []byte, n, max10 uint64) []byte {
 	if n < max10/10 {
 		// Formatting of n is shorter than log10(max10),
@@ -719,7 +719,7 @@ func appendPaddedBase10(b []byte, n, max10 uint64) []byte {
 }
 
 // parsePaddedBase10 parses b as the zero-padded encoding of n,
-// where max10 is a power-of-10 that is larger than n.
+// where max10 是一个 power-of-10 that is larger than n.
 // Truncated suffix is treated as implicit zeros.
 // Extended suffix is ignored, but verified to contain only digits.
 func parsePaddedBase10(b []byte, max10 uint64) (n uint64, ok bool) {

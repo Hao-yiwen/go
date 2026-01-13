@@ -1,95 +1,95 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
 /*
-	Floating-point sine and cosine.
+	浮点数正弦和余弦。
 */
 
-// The original C code, the long comment, and the constants
-// below were from http://netlib.sandia.gov/cephes/cmath/sin.c,
-// available from http://www.netlib.org/cephes/cmath.tgz.
-// The go code is a simplified version of the original C.
+// 原始 C 代码、长注释以及下面的常量来自
+// http://netlib.sandia.gov/cephes/cmath/sin.c，
+// 可从 http://www.netlib.org/cephes/cmath.tgz 获取。
+// Go 代码是原始 C 代码的简化版本。
 //
 //      sin.c
 //
-//      Circular sine
+//      圆正弦
 //
-// SYNOPSIS:
+// 概要：
 //
 // double x, y, sin();
 // y = sin( x );
 //
-// DESCRIPTION:
+// 描述：
 //
-// Range reduction is into intervals of pi/4.  The reduction error is nearly
-// eliminated by contriving an extended precision modular arithmetic.
+// 范围归约到 pi/4 的区间。通过设计扩展精度模运算，
+// 归约误差几乎被消除。
 //
-// Two polynomial approximating functions are employed.
-// Between 0 and pi/4 the sine is approximated by
-//      x  +  x**3 P(x**2).
-// Between pi/4 and pi/2 the cosine is represented as
-//      1  -  x**2 Q(x**2).
+// 采用两个多项式近似函数。
+// 在 0 和 pi/4 之间，正弦由以下近似：
+//      x  +  x**3 P(x**2)。
+// 在 pi/4 和 pi/2 之间，余弦表示为：
+//      1  -  x**2 Q(x**2)。
 //
-// ACCURACY:
+// 精度：
 //
-//                      Relative error:
-// arithmetic   domain      # trials      peak         rms
+//                      相对误差：
+// 算术运算   定义域      测试次数      峰值         均方根
 //    DEC       0, 10       150000       3.0e-17     7.8e-18
 //    IEEE -1.07e9,+1.07e9  130000       2.1e-16     5.4e-17
 //
-// Partial loss of accuracy begins to occur at x = 2**30 = 1.074e9.  The loss
-// is not gradual, but jumps suddenly to about 1 part in 10e7.  Results may
-// be meaningless for x > 2**49 = 5.6e14.
+// 精度的部分损失从 x = 2**30 = 1.074e9 开始发生。损失
+// 不是渐进的，而是突然跳跃到约 10e7 分之一。对于 x > 2**49 = 5.6e14，
+// 结果可能没有意义。
 //
 //      cos.c
 //
-//      Circular cosine
+//      圆余弦
 //
-// SYNOPSIS:
+// 概要：
 //
 // double x, y, cos();
 // y = cos( x );
 //
-// DESCRIPTION:
+// 描述：
 //
-// Range reduction is into intervals of pi/4.  The reduction error is nearly
-// eliminated by contriving an extended precision modular arithmetic.
+// 范围归约到 pi/4 的区间。通过设计扩展精度模运算，
+// 归约误差几乎被消除。
 //
-// Two polynomial approximating functions are employed.
-// Between 0 and pi/4 the cosine is approximated by
-//      1  -  x**2 Q(x**2).
-// Between pi/4 and pi/2 the sine is represented as
-//      x  +  x**3 P(x**2).
+// 采用两个多项式近似函数。
+// 在 0 和 pi/4 之间，余弦由以下近似：
+//      1  -  x**2 Q(x**2)。
+// 在 pi/4 和 pi/2 之间，正弦表示为：
+//      x  +  x**3 P(x**2)。
 //
-// ACCURACY:
+// 精度：
 //
-//                      Relative error:
-// arithmetic   domain      # trials      peak         rms
+//                      相对误差：
+// 算术运算   定义域      测试次数      峰值         均方根
 //    IEEE -1.07e9,+1.07e9  130000       2.1e-16     5.4e-17
 //    DEC        0,+1.07e9   17000       3.0e-17     7.2e-18
 //
-// Cephes Math Library Release 2.8:  June, 2000
-// Copyright 1984, 1987, 1989, 1992, 2000 by Stephen L. Moshier
+// Cephes 数学库版本 2.8：2000 年 6 月
+// 版权所有 1984, 1987, 1989, 1992, 2000 Stephen L. Moshier
 //
-// The readme file at http://netlib.sandia.gov/cephes/ says:
-//    Some software in this archive may be from the book _Methods and
-// Programs for Mathematical Functions_ (Prentice-Hall or Simon & Schuster
-// International, 1989) or from the Cephes Mathematical Library, a
-// commercial product. In either event, it is copyrighted by the author.
-// What you see here may be used freely but it comes with no support or
-// guarantee.
+// http://netlib.sandia.gov/cephes/ 的 readme 文件说：
+//    本存档中的某些软件可能来自书籍《数学函数的方法和
+// 程序》（Prentice-Hall 或 Simon & Schuster
+// International，1989）或来自 Cephes 数学库，
+// 一个商业产品。无论哪种情况，它都受作者版权保护。
+// 您在这里看到的内容可以自由使用，但不提供支持或
+// 保证。
 //
-//   The two known misprints in the book are repaired here in the
-// source listings for the gamma function and the incomplete beta
-// integral.
+//   书中两个已知的印刷错误已在此处的
+// gamma 函数和不完全 beta 积分的
+// 源代码清单中修复。
 //
 //   Stephen L. Moshier
 //   moshier@na-net.ornl.gov
 
-// sin coefficients
+// sin 系数
 var _sin = [...]float64{
 	1.58962301576546568060e-10, // 0x3de5d8fd1fd19ccd
 	-2.50507477628578072866e-8, // 0xbe5ae5e5a9291f5d
@@ -99,7 +99,7 @@ var _sin = [...]float64{
 	-1.66666666666666307295e-1, // 0xbfc5555555555548
 }
 
-// cos coefficients
+// cos 系数
 var _cos = [...]float64{
 	-1.13585365213876817300e-11, // 0xbda8fa49a0861a9b
 	2.08757008419747316778e-9,   // 0x3e21ee9d7b4e3f05
@@ -109,9 +109,9 @@ var _cos = [...]float64{
 	4.16666666666665929218e-2,   // 0x3fa555555555554b
 }
 
-// Cos returns the cosine of the radian argument x.
+// Cos 返回弧度参数 x 的余弦值。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Cos(±Inf) = NaN
 //	Cos(NaN) = NaN
@@ -124,17 +124,17 @@ func Cos(x float64) float64 {
 
 func cos(x float64) float64 {
 	const (
-		PI4A = 7.85398125648498535156e-1  // 0x3fe921fb40000000, Pi/4 split into three parts
-		PI4B = 3.77489470793079817668e-8  // 0x3e64442d00000000,
-		PI4C = 2.69515142907905952645e-15 // 0x3ce8469898cc5170,
+		PI4A = 7.85398125648498535156e-1  // 0x3fe921fb40000000，Pi/4 分成三部分
+		PI4B = 3.77489470793079817668e-8  // 0x3e64442d00000000，
+		PI4C = 2.69515142907905952645e-15 // 0x3ce8469898cc5170，
 	)
-	// special cases
+	// 特殊情况
 	switch {
 	case IsNaN(x) || IsInf(x, 0):
 		return NaN()
 	}
 
-	// make argument positive
+	// 使参数为正
 	sign := false
 	x = Abs(x)
 
@@ -143,16 +143,16 @@ func cos(x float64) float64 {
 	if x >= reduceThreshold {
 		j, z = trigReduce(x)
 	} else {
-		j = uint64(x * (4 / Pi)) // integer part of x/(Pi/4), as integer for tests on the phase angle
-		y = float64(j)           // integer part of x/(Pi/4), as float
+		j = uint64(x * (4 / Pi)) // x/(Pi/4) 的整数部分，作为整数用于相位角测试
+		y = float64(j)           // x/(Pi/4) 的整数部分，作为浮点数
 
-		// map zeros to origin
+		// 将零点映射到原点
 		if j&1 == 1 {
 			j++
 			y++
 		}
-		j &= 7                               // octant modulo 2Pi radians (360 degrees)
-		z = ((x - y*PI4A) - y*PI4B) - y*PI4C // Extended precision modular arithmetic
+		j &= 7                               // 八分圆对 2Pi 弧度（360 度）取模
+		z = ((x - y*PI4A) - y*PI4B) - y*PI4C // 扩展精度模运算
 	}
 
 	if j > 3 {
@@ -175,9 +175,9 @@ func cos(x float64) float64 {
 	return y
 }
 
-// Sin returns the sine of the radian argument x.
+// Sin 返回弧度参数 x 的正弦值。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Sin(±0) = ±0
 //	Sin(±Inf) = NaN
@@ -191,19 +191,19 @@ func Sin(x float64) float64 {
 
 func sin(x float64) float64 {
 	const (
-		PI4A = 7.85398125648498535156e-1  // 0x3fe921fb40000000, Pi/4 split into three parts
-		PI4B = 3.77489470793079817668e-8  // 0x3e64442d00000000,
-		PI4C = 2.69515142907905952645e-15 // 0x3ce8469898cc5170,
+		PI4A = 7.85398125648498535156e-1  // 0x3fe921fb40000000，Pi/4 分成三部分
+		PI4B = 3.77489470793079817668e-8  // 0x3e64442d00000000，
+		PI4C = 2.69515142907905952645e-15 // 0x3ce8469898cc5170，
 	)
-	// special cases
+	// 特殊情况
 	switch {
 	case x == 0 || IsNaN(x):
-		return x // return ±0 || NaN()
+		return x // 返回 ±0 或 NaN()
 	case IsInf(x, 0):
 		return NaN()
 	}
 
-	// make argument positive but save the sign
+	// 使参数为正但保存符号
 	sign := false
 	if x < 0 {
 		x = -x
@@ -215,18 +215,18 @@ func sin(x float64) float64 {
 	if x >= reduceThreshold {
 		j, z = trigReduce(x)
 	} else {
-		j = uint64(x * (4 / Pi)) // integer part of x/(Pi/4), as integer for tests on the phase angle
-		y = float64(j)           // integer part of x/(Pi/4), as float
+		j = uint64(x * (4 / Pi)) // x/(Pi/4) 的整数部分，作为整数用于相位角测试
+		y = float64(j)           // x/(Pi/4) 的整数部分，作为浮点数
 
-		// map zeros to origin
+		// 将零点映射到原点
 		if j&1 == 1 {
 			j++
 			y++
 		}
-		j &= 7                               // octant modulo 2Pi radians (360 degrees)
-		z = ((x - y*PI4A) - y*PI4B) - y*PI4C // Extended precision modular arithmetic
+		j &= 7                               // 八分圆对 2Pi 弧度（360 度）取模
+		z = ((x - y*PI4A) - y*PI4B) - y*PI4C // 扩展精度模运算
 	}
-	// reflect in x axis
+	// 关于 x 轴反射
 	if j > 3 {
 		sign = !sign
 		j -= 4

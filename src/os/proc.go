@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Process etc.
+// 进程等。
 
 package os
 
@@ -12,69 +12,67 @@ import (
 	"syscall"
 )
 
-// Args hold the command-line arguments, starting with the program name.
+// Args 保存命令行参数，从程序名称开始。
 var Args []string
 
 func init() {
 	if runtime.GOOS == "windows" {
-		// Initialized in exec_windows.go.
+		// 在 exec_windows.go 中初始化。
 		return
 	}
 	Args = runtime_args()
 }
 
-func runtime_args() []string // in package runtime
+func runtime_args() []string // 在 runtime 包中
 
-// Getuid returns the numeric user id of the caller.
+// Getuid 返回调用者的数字用户 ID。
 //
-// On Windows, it returns -1.
+// 在 Windows 上，它返回 -1。
 func Getuid() int { return syscall.Getuid() }
 
-// Geteuid returns the numeric effective user id of the caller.
+// Geteuid 返回调用者的数字有效用户 ID。
 //
-// On Windows, it returns -1.
+// 在 Windows 上，它返回 -1。
 func Geteuid() int { return syscall.Geteuid() }
 
-// Getgid returns the numeric group id of the caller.
+// Getgid 返回调用者的数字组 ID。
 //
-// On Windows, it returns -1.
+// 在 Windows 上，它返回 -1。
 func Getgid() int { return syscall.Getgid() }
 
-// Getegid returns the numeric effective group id of the caller.
+// Getegid 返回调用者的数字有效组 ID。
 //
-// On Windows, it returns -1.
+// 在 Windows 上，它返回 -1。
 func Getegid() int { return syscall.Getegid() }
 
-// Getgroups returns a list of the numeric ids of groups that the caller belongs to.
+// Getgroups 返回调用者所属组的数字 ID 列表。
 //
-// On Windows, it returns [syscall.EWINDOWS]. See the [os/user] package
-// for a possible alternative.
+// 在 Windows 上，它返回 [syscall.EWINDOWS]。
+// 请参阅 [os/user] 包以获取可能的替代方案。
 func Getgroups() ([]int, error) {
 	gids, e := syscall.Getgroups()
 	return gids, NewSyscallError("getgroups", e)
 }
 
-// Exit causes the current program to exit with the given status code.
-// Conventionally, code zero indicates success, non-zero an error.
-// The program terminates immediately; deferred functions are not run.
+// Exit 使当前程序以给定的状态码退出。
+// 按照惯例，代码零表示成功，非零表示错误。
+// 程序立即终止；延迟函数不会运行。
 //
-// For portability, the status code should be in the range [0, 125].
+// 为了可移植性，状态码应在 [0, 125] 范围内。
 func Exit(code int) {
 	if code == 0 && testlog.PanicOnExit0() {
-		// We were told to panic on calls to os.Exit(0).
-		// This is used to fail tests that make an early
-		// unexpected call to os.Exit(0).
+		// 我们被告知在调用 os.Exit(0) 时 panic。
+		// 这用于使过早意外调用 os.Exit(0) 的测试失败。
 		panic("unexpected call to os.Exit(0) during test")
 	}
 
-	// Inform the runtime that os.Exit is being called. If -race is
-	// enabled, this will give race detector a chance to fail the
-	// program (racy programs do not have the right to finish
-	// successfully). If coverage is enabled, then this call will
-	// enable us to write out a coverage data file.
+	// 通知运行时 os.Exit 正在被调用。如果启用了 -race，
+	// 这将给竞争检测器一个使程序失败的机会（有竞争的程序
+	// 无权成功完成）。如果启用了覆盖率，则此调用将
+	// 使我们能够写出覆盖率数据文件。
 	runtime_beforeExit(code)
 
 	syscall.Exit(code)
 }
 
-func runtime_beforeExit(exitCode int) // implemented in runtime
+func runtime_beforeExit(exitCode int) // 在 runtime 中实现

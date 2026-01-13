@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // Extract example functions from file ASTs.
 
@@ -18,7 +18,7 @@ import (
 	"unicode/utf8"
 )
 
-// An Example represents an example function found in a test source file.
+// 一个Example represents an example function found in a test source file.
 type Example struct {
 	Name        string // name of the item being exemplified (including optional suffix)
 	Suffix      string // example suffix, without leading '_' (only populated by NewFromFiles)
@@ -32,25 +32,25 @@ type Example struct {
 	Order       int  // original source code order
 }
 
-// Examples returns the examples found in testFiles, sorted by Name field.
+// Examples 返回the examples found in testFiles, sorted by Name field.
 // The Order fields record the order in which the examples were encountered.
 // The Suffix field is not populated when Examples is called directly, it is
 // only populated by [NewFromFiles] for examples it finds in _test.go files.
 //
-// Playable Examples must be in a package whose name ends in "_test".
-// An Example is "playable" (the Play field is non-nil) in either of these
+// Playable Examples 必须是 in a package whose name ends in "_test".
+// 一个Example is "playable" (the Play field is non-nil) in either of these
 // circumstances:
 //   - The example function is self-contained: the function references only
 //     identifiers from other packages (or predeclared identifiers, such as
 //     "int") and the test file does not include a dot import.
-//   - The entire test file is the example: the file contains exactly one
+//   - The entire test file 是 example: the file 包含 exactly one
 //     example function, zero test, fuzz test, or benchmark function, and at
 //     least one top-level function, type, variable, or constant declaration
 //     other than the example function.
 func Examples(testFiles ...*ast.File) []*Example {
 	var list []*Example
 	for _, file := range testFiles {
-		hasTests := false // file contains tests, fuzz test, or benchmarks
+		hasTests := false // file 包含 tests, fuzz test, or benchmarks
 		numDecl := 0      // number of non-import declarations in the file
 		var flist []*Example
 		for _, decl := range file.Decls {
@@ -137,7 +137,7 @@ func exampleOutput(b *ast.BlockStmt, comments []*ast.CommentGroup) (output strin
 }
 
 // isTest tells whether name looks like a test, example, fuzz test, or
-// benchmark. It is a Test (say) if there is a character after Test that is not
+// benchmark. It 是一个 Test (say) if there 是一个 character after Test that is not
 // a lower-case letter. (We don't want Testiness.)
 func isTest(name, prefix string) bool {
 	if !strings.HasPrefix(name, prefix) {
@@ -196,7 +196,7 @@ func playExample(file *ast.File, f *ast.FuncDecl) *ast.File {
 
 	// Use unresolved identifiers to determine the imports used by this
 	// example. The heuristic assumes package names match base import
-	// paths for imports w/o renames (should be good enough most of the time).
+	// paths for imports w/o renames (应该是 good enough most of the time).
 	var namedImports []ast.Spec
 	var blankImports []ast.Spec // _ imports
 
@@ -296,7 +296,7 @@ func playExample(file *ast.File, f *ast.FuncDecl) *ast.File {
 	importDecl := &ast.GenDecl{
 		Tok:    token.IMPORT,
 		Lparen: 1, // Need non-zero Lparen and Rparen so that printer
-		Rparen: 1, // treats this as a factored import.
+		Rparen: 1, // treats th是一个s a factored import.
 	}
 	importDecl.Specs = append(namedImports, blankImports...)
 
@@ -327,13 +327,13 @@ func playExample(file *ast.File, f *ast.FuncDecl) *ast.File {
 	}
 }
 
-// findDeclsAndUnresolved returns all the top-level declarations mentioned in
+// findDeclsAndUnresolved 返回all the top-level declarations mentioned in
 // the body, and a set of unresolved symbols (those that appear in the body but
 // have no declaration in the program).
 //
-// topDecls maps objects to the top-level declaration declaring them (not
-// necessarily obj.Decl, as obj.Decl will be a Spec for GenDecls, but
-// topDecls[obj] will be the GenDecl itself).
+// topDecls 映射objects to the top-level declaration declaring them (not
+// necessarily obj.Decl, as obj.Decl 将是 a Spec for GenDecls, but
+// topDecls[obj] 将是 the GenDecl itself).
 func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, typMethods map[string][]ast.Decl) ([]ast.Decl, map[string]bool) {
 	// This function recursively finds every top-level declaration used
 	// transitively by the body, populating usedDecls and usedObjs. Then it
@@ -368,7 +368,7 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 			return false
 		case *ast.KeyValueExpr:
 			// For key value expressions, only inspect the value
-			// as the key should be resolved by the type of the
+			// as the key 应该是 resolved by the type of the
 			// composite literal.
 			ast.Inspect(e.Value, inspectFunc)
 			return false
@@ -423,7 +423,7 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 	// Some decls include multiple specs, such as a variable declaration with
 	// multiple variables on the same line, or a parenthesized declaration. Trim
 	// the declarations to include only the specs that are actually mentioned.
-	// However, if there is a constant group with iota, leave it all: later
+	// However, if there 是一个 constant group with iota, leave it all: later
 	// constant declarations in the group may have no value and so cannot stand
 	// on their own, and removing any constant from the group could change the
 	// values of subsequent ones.
@@ -447,7 +447,7 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 					if !containsIota {
 						containsIota = hasIota(s)
 					}
-					// A ValueSpec may have multiple names (e.g. "var a, b int").
+					// 一个ValueSpec may have multiple names (e.g. "var a, b int").
 					// Keep only the names that were mentioned in the example.
 					// Exception: the multiple names have a single initializer (which
 					// would be a function call with multiple return values). In that
@@ -494,7 +494,7 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 
 func hasIota(s ast.Spec) bool {
 	for n := range ast.Preorder(s) {
-		// Check that this is the special built-in "iota" identifier, not
+		// Check that this 是 special built-in "iota" identifier, not
 		// a user-defined shadow.
 		if id, ok := n.(*ast.Ident); ok && id.Name == "iota" && id.Obj == nil {
 			return true
@@ -523,8 +523,8 @@ func findImportGroupStarts1(origImps []*ast.ImportSpec) []*ast.ImportSpec {
 	slices.SortFunc(imps, func(a, b *ast.ImportSpec) int {
 		return cmp.Compare(a.Pos(), b.Pos())
 	})
-	// Assume gofmt has been applied, so there is a blank line between adjacent imps
-	// if and only if they are more than 2 positions apart (newline, tab).
+	// Assume gofmt has been applied, so there 是一个 blank line between adjacent imps
+	// 当且仅当 they are more than 2 positions apart (newline, tab).
 	var groupStarts []*ast.ImportSpec
 	prevEnd := token.Pos(-2)
 	for _, imp := range imps {
@@ -553,7 +553,7 @@ func playExampleFile(file *ast.File) *ast.File {
 	var decls []ast.Decl
 	for _, d := range file.Decls {
 		if f, ok := d.(*ast.FuncDecl); ok && isTest(f.Name.Name, "Example") {
-			// Copy the FuncDecl, as it may be used elsewhere.
+			// Copy the FuncDecl, as it 可能是 used elsewhere.
 			newF := *f
 			newF.Name = ast.NewIdent("main")
 			newF.Body, comments = stripOutputComment(f.Body, comments)
@@ -562,7 +562,7 @@ func playExampleFile(file *ast.File) *ast.File {
 		decls = append(decls, d)
 	}
 
-	// Copy the File, as it may be used elsewhere.
+	// Copy the File, as it 可能是 used elsewhere.
 	f := *file
 	f.Name = ast.NewIdent("main")
 	f.Decls = decls
@@ -579,7 +579,7 @@ func stripOutputComment(body *ast.BlockStmt, comments []*ast.CommentGroup) (*ast
 		return body, comments
 	}
 
-	// Copy body and comments, as the originals may be used elsewhere.
+	// Copy body and comments, as the originals 可能是 used elsewhere.
 	newBody := &ast.BlockStmt{
 		Lbrace: body.Lbrace,
 		List:   body.List,
@@ -591,7 +591,7 @@ func stripOutputComment(body *ast.BlockStmt, comments []*ast.CommentGroup) (*ast
 	return newBody, newComments
 }
 
-// lastComment returns the last comment inside the provided block.
+// lastComment 返回the last comment inside the provided block.
 func lastComment(b *ast.BlockStmt, c []*ast.CommentGroup) (i int, last *ast.CommentGroup) {
 	if b == nil {
 		return
@@ -610,9 +610,9 @@ func lastComment(b *ast.BlockStmt, c []*ast.CommentGroup) (i int, last *ast.Comm
 }
 
 // classifyExamples classifies examples and assigns them to the Examples field
-// of the relevant Func, Type, or Package that the example is associated with.
+// of the relevant Func, Type, or Package that the example 是一个ssociated with.
 //
-// The classification process is ambiguous in some cases:
+// The classification process 是一个mbiguous in some cases:
 //
 //   - ExampleFoo_Bar matches a type named Foo_Bar
 //     or a method named Foo.Bar.
@@ -658,7 +658,7 @@ func classifyExamples(p *Package, examples []*Example) {
 		// by starting at the end of string (no suffix case),
 		// then trying all positions that contain a '_' character.
 		//
-		// An association is made on the first successful match.
+		// 一个association is made on the first successful match.
 		// Examples with malformed names that match nothing are skipped.
 		for i := len(ex.Name); i >= 0; i = strings.LastIndexByte(ex.Name[:i], '_') {
 			prefix, suffix, ok := splitExampleName(ex.Name, i)
@@ -683,7 +683,7 @@ func classifyExamples(p *Package, examples []*Example) {
 	}
 }
 
-// nameWithoutInst returns name if name has no brackets. If name contains
+// nameWithoutInst 返回name if name has no brackets. If name 包含
 // brackets, then it returns name with all the contents between (and including)
 // the outermost left and right bracket removed.
 //
@@ -702,11 +702,11 @@ func nameWithoutInst(name string) string {
 }
 
 // splitExampleName attempts to split example name s at index i,
-// and reports if that produces a valid split. The suffix may be
+// and 报告if that produces a valid split. The suffix may be
 // absent. Otherwise, it must start with a lower-case letter and
 // be preceded by '_'.
 //
-// One of i == len(s) or s[i] == '_' must be true.
+// One of i == len(s) or s[i] == '_' 必须是 true.
 func splitExampleName(s string, i int) (prefix, suffix string, ok bool) {
 	if i == len(s) {
 		return s, "", true

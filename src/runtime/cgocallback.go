@@ -4,9 +4,9 @@
 
 package runtime
 
-// These functions are called from C code via cgo/callbacks.go.
+// 这些函数通过 cgo/callbacks.go 从 C 代码中调用。
 
-// Panic.
+// Panic。
 
 func _cgo_panic_internal(p *byte) {
 	panic(gostringnocopy(p))

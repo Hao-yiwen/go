@@ -1,12 +1,12 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package binary implements simple translation between numbers and byte
+// binary 包实现了 simple translation between numbers and byte
 // sequences and encoding and decoding of varints.
 //
 // Numbers are translated by reading and writing fixed-size values.
-// A fixed-size value is either a fixed-size arithmetic
+// 一个fixed-size value is either a fixed-size arithmetic
 // type (bool, int8, uint8, int16, float32, complex64, ...)
 // or an array or struct containing only fixed-size values.
 //
@@ -32,7 +32,7 @@ import (
 
 var errBufferTooSmall = errors.New("buffer too small")
 
-// A ByteOrder specifies how to convert byte slices into
+// 一个ByteOrder 指定 how to convert byte slices into
 // 16-, 32-, or 64-bit unsigned integers.
 //
 // It is implemented by [LittleEndian], [BigEndian], and [NativeEndian].
@@ -46,7 +46,7 @@ type ByteOrder interface {
 	String() string
 }
 
-// AppendByteOrder specifies how to append 16-, 32-, or 64-bit unsigned integers
+// AppendByteOrder 指定how to append 16-, 32-, or 64-bit unsigned integers
 // into a byte slice.
 //
 // It is implemented by [LittleEndian], [BigEndian], and [NativeEndian].
@@ -57,15 +57,15 @@ type AppendByteOrder interface {
 	String() string
 }
 
-// LittleEndian is the little-endian implementation of [ByteOrder] and [AppendByteOrder].
+// LittleEndian 是 little-endian implementation of [ByteOrder] and [AppendByteOrder].
 var LittleEndian littleEndian
 
-// BigEndian is the big-endian implementation of [ByteOrder] and [AppendByteOrder].
+// BigEndian 是 big-endian implementation of [ByteOrder] and [AppendByteOrder].
 var BigEndian bigEndian
 
 type littleEndian struct{}
 
-// Uint16 returns the uint16 representation of b[0:2].
+// Uint16 返回the uint16 representation of b[0:2].
 func (littleEndian) Uint16(b []byte) uint16 {
 	_ = b[1] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint16(b[0]) | uint16(b[1])<<8
@@ -78,7 +78,7 @@ func (littleEndian) PutUint16(b []byte, v uint16) {
 	b[1] = byte(v >> 8)
 }
 
-// AppendUint16 appends the bytes of v to b and returns the appended slice.
+// AppendUint16 appends the bytes of v to b and 返回 appended slice.
 func (littleEndian) AppendUint16(b []byte, v uint16) []byte {
 	return append(b,
 		byte(v),
@@ -86,7 +86,7 @@ func (littleEndian) AppendUint16(b []byte, v uint16) []byte {
 	)
 }
 
-// Uint32 returns the uint32 representation of b[0:4].
+// Uint32 返回the uint32 representation of b[0:4].
 func (littleEndian) Uint32(b []byte) uint32 {
 	_ = b[3] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint32(b[0]) | uint32(b[1])<<8 | uint32(b[2])<<16 | uint32(b[3])<<24
@@ -101,7 +101,7 @@ func (littleEndian) PutUint32(b []byte, v uint32) {
 	b[3] = byte(v >> 24)
 }
 
-// AppendUint32 appends the bytes of v to b and returns the appended slice.
+// AppendUint32 appends the bytes of v to b and 返回 appended slice.
 func (littleEndian) AppendUint32(b []byte, v uint32) []byte {
 	return append(b,
 		byte(v),
@@ -111,7 +111,7 @@ func (littleEndian) AppendUint32(b []byte, v uint32) []byte {
 	)
 }
 
-// Uint64 returns the uint64 representation of b[0:8].
+// Uint64 返回the uint64 representation of b[0:8].
 func (littleEndian) Uint64(b []byte) uint64 {
 	_ = b[7] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint64(b[0]) | uint64(b[1])<<8 | uint64(b[2])<<16 | uint64(b[3])<<24 |
@@ -131,7 +131,7 @@ func (littleEndian) PutUint64(b []byte, v uint64) {
 	b[7] = byte(v >> 56)
 }
 
-// AppendUint64 appends the bytes of v to b and returns the appended slice.
+// AppendUint64 appends the bytes of v to b and 返回 appended slice.
 func (littleEndian) AppendUint64(b []byte, v uint64) []byte {
 	return append(b,
 		byte(v),
@@ -151,7 +151,7 @@ func (littleEndian) GoString() string { return "binary.LittleEndian" }
 
 type bigEndian struct{}
 
-// Uint16 returns the uint16 representation of b[0:2].
+// Uint16 返回the uint16 representation of b[0:2].
 func (bigEndian) Uint16(b []byte) uint16 {
 	_ = b[1] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint16(b[1]) | uint16(b[0])<<8
@@ -164,7 +164,7 @@ func (bigEndian) PutUint16(b []byte, v uint16) {
 	b[1] = byte(v)
 }
 
-// AppendUint16 appends the bytes of v to b and returns the appended slice.
+// AppendUint16 appends the bytes of v to b and 返回 appended slice.
 func (bigEndian) AppendUint16(b []byte, v uint16) []byte {
 	return append(b,
 		byte(v>>8),
@@ -172,7 +172,7 @@ func (bigEndian) AppendUint16(b []byte, v uint16) []byte {
 	)
 }
 
-// Uint32 returns the uint32 representation of b[0:4].
+// Uint32 返回the uint32 representation of b[0:4].
 func (bigEndian) Uint32(b []byte) uint32 {
 	_ = b[3] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
@@ -187,7 +187,7 @@ func (bigEndian) PutUint32(b []byte, v uint32) {
 	b[3] = byte(v)
 }
 
-// AppendUint32 appends the bytes of v to b and returns the appended slice.
+// AppendUint32 appends the bytes of v to b and 返回 appended slice.
 func (bigEndian) AppendUint32(b []byte, v uint32) []byte {
 	return append(b,
 		byte(v>>24),
@@ -197,7 +197,7 @@ func (bigEndian) AppendUint32(b []byte, v uint32) []byte {
 	)
 }
 
-// Uint64 returns the uint64 representation of b[0:8].
+// Uint64 返回the uint64 representation of b[0:8].
 func (bigEndian) Uint64(b []byte) uint64 {
 	_ = b[7] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint64(b[7]) | uint64(b[6])<<8 | uint64(b[5])<<16 | uint64(b[4])<<24 |
@@ -217,7 +217,7 @@ func (bigEndian) PutUint64(b []byte, v uint64) {
 	b[7] = byte(v)
 }
 
-// AppendUint64 appends the bytes of v to b and returns the appended slice.
+// AppendUint64 appends the bytes of v to b and 返回 appended slice.
 func (bigEndian) AppendUint64(b []byte, v uint64) []byte {
 	return append(b,
 		byte(v>>56),
@@ -240,7 +240,7 @@ func (nativeEndian) String() string { return "NativeEndian" }
 func (nativeEndian) GoString() string { return "binary.NativeEndian" }
 
 // Read reads structured binary data from r into data.
-// Data must be a pointer to a fixed-size value or a slice
+// Data 必须是 a pointer to a fixed-size value or a slice
 // of fixed-size values.
 // Bytes read from r are decoded using the specified byte order
 // and written to successive fields of the data.
@@ -248,13 +248,13 @@ func (nativeEndian) GoString() string { return "binary.NativeEndian" }
 // any other non-zero byte is decoded as true.
 // When reading into structs, the field data for fields with
 // blank (_) field names is skipped; i.e., blank field names
-// may be used for padding.
-// When reading into a struct, all non-blank fields must be exported
+// 可能是 used for padding.
+// When reading into a struct, all non-blank fields 必须是 exported
 // or Read may panic.
 //
 // The error is [io.EOF] only if no bytes were read.
 // If an [io.EOF] happens after reading some but not all the bytes,
-// Read returns [io.ErrUnexpectedEOF].
+// Read 返回[io.ErrUnexpectedEOF].
 func Read(r io.Reader, order ByteOrder, data any) error {
 	// Fast path for basic types and slices.
 	if n, _ := intDataSize(data); n != 0 {
@@ -292,7 +292,7 @@ func Read(r io.Reader, order ByteOrder, data any) error {
 
 // Decode decodes binary data from buf into data according to
 // the given byte order.
-// It returns an error if buf is too small, otherwise the number of
+// It 返回an error if buf is too small, 否则 the number of
 // bytes consumed from buf.
 func Decode(buf []byte, order ByteOrder, data any) (int, error) {
 	if n, _ := intDataSize(data); n != 0 {
@@ -400,7 +400,7 @@ func decodeFast(bs []byte, order ByteOrder, data any) bool {
 }
 
 // Write writes the binary representation of data into w.
-// Data must be a fixed-size value or a slice of fixed-size
+// Data 必须是 a fixed-size value or a slice of fixed-size
 // values, or a pointer to such data.
 // Boolean values encode as one byte: 1 for true, and 0 for false.
 // Bytes written to w are encoded using the specified byte order
@@ -435,7 +435,7 @@ func Write(w io.Writer, order ByteOrder, data any) error {
 
 // Encode encodes the binary representation of data into buf according to
 // the given byte order.
-// It returns an error if buf is too small, otherwise the number of
+// It 返回an error if buf is too small, 否则 the number of
 // bytes written into buf.
 func Encode(buf []byte, order ByteOrder, data any) (int, error) {
 	// Fast path for basic types and slices.
@@ -464,9 +464,9 @@ func Encode(buf []byte, order ByteOrder, data any) (int, error) {
 }
 
 // Append appends the binary representation of data to buf.
-// buf may be nil, in which case a new buffer will be allocated.
+// buf 可能是 nil, in which case a new buffer 将是 allocated.
 // See [Write] on which data are acceptable.
-// It returns the (possibly extended) buffer containing data or an error.
+// It 返回the (possibly extended) buffer containing data or an error.
 func Append(buf []byte, order ByteOrder, data any) ([]byte, error) {
 	// Fast path for basic types and slices.
 	if n, _ := intDataSize(data); n != 0 {
@@ -591,8 +591,8 @@ func encodeFast(bs []byte, order ByteOrder, data any) {
 	}
 }
 
-// Size returns how many bytes [Write] would generate to encode the value v, which
-// must be a fixed-size value or a slice of fixed-size values, or a pointer to such data.
+// Size 返回how many bytes [Write] would generate to encode the value v, which
+// 必须是 a fixed-size value or a slice of fixed-size values, or a pointer to such data.
 // If v is neither of these, Size returns -1.
 func Size(v any) int {
 	switch data := v.(type) {
@@ -691,9 +691,9 @@ func Size(v any) int {
 
 var structSize sync.Map // map[reflect.Type]int
 
-// dataSize returns the number of bytes the actual data represented by v occupies in memory.
+// dataSize 返回the number of bytes the actual data represented by v occupies in memory.
 // For compound structures, it sums the sizes of the elements. Thus, for instance, for a slice
-// it returns the length of the slice times the element size and does not count the memory
+// it 返回the length of the slice times the element size and does not count the memory
 // occupied by the header. If the type of v is not acceptable, dataSize returns -1.
 func dataSize(v reflect.Value) int {
 	switch v.Kind() {
@@ -729,7 +729,7 @@ func dataSize(v reflect.Value) int {
 	return -1
 }
 
-// sizeof returns the size >= 0 of variables for the given type or -1 if the type is not acceptable.
+// sizeof 返回the size >= 0 of variables for the given type or -1 如果 type is not acceptable.
 func sizeof(t reflect.Type) int {
 	switch t.Kind() {
 	case reflect.Array:
@@ -854,7 +854,7 @@ func (d *decoder) value(v reflect.Value) {
 		t := v.Type()
 		l := v.NumField()
 		for i := 0; i < l; i++ {
-			// Note: Calling v.CanSet() below is an optimization.
+			// Note: Calling v.CanSet() below 是一个n optimization.
 			// It would be sufficient to check the field name,
 			// but creating the StructField info for each field is
 			// costly (run "go test -bench=ReadStruct" and compare
@@ -984,9 +984,9 @@ func (e *encoder) skip(v reflect.Value) {
 	e.offset += n
 }
 
-// intDataSize returns the size of the data required to represent the data when encoded,
+// intDataSize 返回the size of the data required to represent the data when encoded,
 // and optionally a byte slice containing the encoded data if no conversion is necessary.
-// It returns zero, nil if the type cannot be implemented by the fast path in Read or Write.
+// It 返回zero, nil 如果 type cannot be implemented by the fast path in Read or Write.
 func intDataSize(data any) (int, []byte) {
 	switch data := data.(type) {
 	case bool, int8, uint8, *bool, *int8, *uint8:
@@ -1027,7 +1027,7 @@ func intDataSize(data any) (int, []byte) {
 	return 0, nil
 }
 
-// ensure grows buf to length len(buf) + n and returns the grown buffer
+// ensure grows buf to length len(buf) + n and 返回 grown buffer
 // and a slice starting at the original length of buf (that is, buf2[len(buf):]).
 func ensure(buf []byte, n int) (buf2, pos []byte) {
 	l := len(buf)

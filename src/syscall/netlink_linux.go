@@ -1,8 +1,8 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Netlink sockets and messages
+// Netlink 套接字和消息
 
 package syscall
 
@@ -11,19 +11,17 @@ import (
 	"unsafe"
 )
 
-// Round the length of a netlink message up to align it properly.
+// 将 netlink 消息的长度向上舍入以正确对齐。
 func nlmAlignOf(msglen int) int {
 	return (msglen + NLMSG_ALIGNTO - 1) & ^(NLMSG_ALIGNTO - 1)
 }
 
-// Round the length of a netlink route attribute up to align it
-// properly.
+// 将 netlink 路由属性的长度向上舍入以正确对齐。
 func rtaAlignOf(attrlen int) int {
 	return (attrlen + RTA_ALIGNTO - 1) & ^(RTA_ALIGNTO - 1)
 }
 
-// NetlinkRouteRequest represents a request message to receive routing
-// and link states from the kernel.
+// NetlinkRouteRequest 表示从内核接收路由和链路状态的请求消息。
 type NetlinkRouteRequest struct {
 	Header NlMsghdr
 	Data   RtGenmsg
@@ -55,8 +53,7 @@ var pageBufPool = &sync.Pool{New: func() any {
 	return &b
 }}
 
-// NetlinkRIB returns routing information base, as known as RIB, which
-// consists of network facility information, states and parameters.
+// NetlinkRIB 返回路由信息库（RIB），它包含网络设施信息、状态和参数。
 func NetlinkRIB(proto, family int) ([]byte, error) {
 	s, err := Socket(AF_NETLINK, SOCK_RAW|SOCK_CLOEXEC, NETLINK_ROUTE)
 	if err != nil {
@@ -114,14 +111,14 @@ done:
 	return tab, nil
 }
 
-// NetlinkMessage represents a netlink message.
+// NetlinkMessage 表示一个 netlink 消息。
 type NetlinkMessage struct {
 	Header NlMsghdr
 	Data   []byte
 }
 
-// ParseNetlinkMessage parses b as an array of netlink messages and
-// returns the slice containing the NetlinkMessage structures.
+// ParseNetlinkMessage 将 b 解析为 netlink 消息数组，
+// 并返回包含 NetlinkMessage 结构的切片。
 func ParseNetlinkMessage(b []byte) ([]NetlinkMessage, error) {
 	var msgs []NetlinkMessage
 	for len(b) >= NLMSG_HDRLEN {
@@ -145,15 +142,14 @@ func netlinkMessageHeaderAndData(b []byte) (*NlMsghdr, []byte, int, error) {
 	return h, b[NLMSG_HDRLEN:], l, nil
 }
 
-// NetlinkRouteAttr represents a netlink route attribute.
+// NetlinkRouteAttr 表示一个 netlink 路由属性。
 type NetlinkRouteAttr struct {
 	Attr  RtAttr
 	Value []byte
 }
 
-// ParseNetlinkRouteAttr parses m's payload as an array of netlink
-// route attributes and returns the slice containing the
-// NetlinkRouteAttr structures.
+// ParseNetlinkRouteAttr 将 m 的载荷解析为 netlink 路由属性数组，
+// 并返回包含 NetlinkRouteAttr 结构的切片。
 func ParseNetlinkRouteAttr(m *NetlinkMessage) ([]NetlinkRouteAttr, error) {
 	var b []byte
 	switch m.Header.Type {

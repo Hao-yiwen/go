@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build 386 || amd64 || amd64p32 || alpha || arm || arm64 || loong64 || mipsle || mips64le || mips64p32le || nios2 || ppc64le || riscv || riscv64 || sh || wasm
 
@@ -10,5 +10,5 @@ type nativeEndian struct {
 	littleEndian
 }
 
-// NativeEndian is the native-endian implementation of [ByteOrder] and [AppendByteOrder].
+// NativeEndian 是 native-endian implementation of [ByteOrder] and [AppendByteOrder].
 var NativeEndian nativeEndian

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	// We use 32-bit hash on Wasm, see hash32.go.
+	// 在 Wasm 上我们使用 32 位哈希，参见 hash32.go。
 	hashSize = (1-goarch.IsWasm)*goarch.PtrSize + goarch.IsWasm*4
 	c0       = uintptr((8-hashSize)/4*2860486313 + (hashSize-4)/4*33054211828000289)
 	c1       = uintptr((8-hashSize)/4*3267000013 + (hashSize-4)/4*23344194077549503)
@@ -22,10 +22,9 @@ const (
 
 func trimHash(h uintptr) uintptr {
 	if goarch.IsWasm != 0 {
-		// On Wasm, we use 32-bit hash, despite that uintptr is 64-bit.
-		// memhash* always returns a uintptr with high 32-bit being 0
-		// (see hash32.go). We trim the hash in other places where we
-		// compute the hash manually, e.g. in interhash.
+		// 在 Wasm 上，尽管 uintptr 是 64 位的，我们仍使用 32 位哈希。
+		// memhash* 总是返回一个高 32 位为 0 的 uintptr（参见 hash32.go）。
+		// 我们在其他手动计算哈希的地方也会截断哈希值，例如在 interhash 中。
 		return uintptr(uint32(h))
 	}
 	return h
@@ -54,16 +53,15 @@ func memhash_varlen(p unsafe.Pointer, h uintptr) uintptr {
 	return memhash(p, h, size)
 }
 
-// runtime variable to check if the processor we're running on
-// actually supports the instructions used by the AES-based
-// hash implementation.
+// 运行时变量，用于检查当前运行的处理器是否
+// 实际支持基于 AES 的哈希实现所使用的指令。
 var useAeshash bool
 
-// in asm_*.s
+// 在 asm_*.s 中
 
-// memhash should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// memhash 应该是一个内部实现细节，
+// 但许多广泛使用的包通过 linkname 访问它。
+// 耻辱榜上的知名成员包括：
 //   - github.com/aacfactory/fns
 //   - github.com/dgraph-io/ristretto
 //   - github.com/minio/simdjson-go
@@ -74,8 +72,8 @@ var useAeshash bool
 //   - github.com/authzed/spicedb
 //   - github.com/pingcap/badger
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname memhash
 func memhash(p unsafe.Pointer, h, s uintptr) uintptr
@@ -84,17 +82,17 @@ func memhash32(p unsafe.Pointer, h uintptr) uintptr
 
 func memhash64(p unsafe.Pointer, h uintptr) uintptr
 
-// strhash should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// strhash 应该是一个内部实现细节，
+// 但许多广泛使用的包通过 linkname 访问它。
+// 耻辱榜上的知名成员包括：
 //   - github.com/aristanetworks/goarista
 //   - github.com/bytedance/sonic
 //   - github.com/bytedance/go-tagexpr/v2
 //   - github.com/cloudwego/dynamicgo
 //   - github.com/v2fly/v2ray-core/v5
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname strhash
 func strhash(p unsafe.Pointer, h uintptr) uintptr
@@ -104,10 +102,9 @@ func strhashFallback(a unsafe.Pointer, h uintptr) uintptr {
 	return memhashFallback(x.str, h, uintptr(x.len))
 }
 
-// NOTE: Because NaN != NaN, a map can contain any
-// number of (mostly useless) entries keyed with NaNs.
-// To avoid long hash chains, we assign a random number
-// as the hash value for a NaN.
+// 注意：由于 NaN != NaN，一个 map 可以包含任意数量的
+// 以 NaN 为键的（大多是无用的）条目。
+// 为了避免长哈希链，我们为 NaN 分配一个随机数作为哈希值。
 
 func f32hash(p unsafe.Pointer, h uintptr) uintptr {
 	f := *(*float32)(p)
@@ -115,7 +112,7 @@ func f32hash(p unsafe.Pointer, h uintptr) uintptr {
 	case f == 0:
 		return trimHash(c1 * (c0 ^ h)) // +0, -0
 	case f != f:
-		return trimHash(c1 * (c0 ^ h ^ uintptr(rand()))) // any kind of NaN
+		return trimHash(c1 * (c0 ^ h ^ uintptr(rand()))) // 任何类型的 NaN
 	default:
 		return memhash(p, h, 4)
 	}
@@ -127,7 +124,7 @@ func f64hash(p unsafe.Pointer, h uintptr) uintptr {
 	case f == 0:
 		return trimHash(c1 * (c0 ^ h)) // +0, -0
 	case f != f:
-		return trimHash(c1 * (c0 ^ h ^ uintptr(rand()))) // any kind of NaN
+		return trimHash(c1 * (c0 ^ h ^ uintptr(rand()))) // 任何类型的 NaN
 	default:
 		return memhash(p, h, 8)
 	}
@@ -151,10 +148,10 @@ func interhash(p unsafe.Pointer, h uintptr) uintptr {
 	}
 	t := tab.Type
 	if t.Equal == nil {
-		// Check hashability here. We could do this check inside
-		// typehash, but we want to report the topmost type in
-		// the error text (e.g. in a struct with a field of slice type
-		// we want to report the struct, not the slice).
+		// 在这里检查可哈希性。我们可以在 typehash 内部做这个检查，
+		// 但我们希望在错误文本中报告最顶层的类型
+		// （例如，在一个包含切片类型字段的结构体中，
+		// 我们希望报告结构体，而不是切片）。
 		panic(errorString("hash of unhashable type " + toRType(t).string()))
 	}
 	if t.IsDirectIface() {
@@ -164,14 +161,14 @@ func interhash(p unsafe.Pointer, h uintptr) uintptr {
 	}
 }
 
-// nilinterhash should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// nilinterhash 应该是一个内部实现细节，
+// 但许多广泛使用的包通过 linkname 访问它。
+// 耻辱榜上的知名成员包括：
 //   - github.com/anacrolix/stm
 //   - github.com/aristanetworks/goarista
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname nilinterhash
 func nilinterhash(p unsafe.Pointer, h uintptr) uintptr {
@@ -181,7 +178,7 @@ func nilinterhash(p unsafe.Pointer, h uintptr) uintptr {
 		return h
 	}
 	if t.Equal == nil {
-		// See comment in interhash above.
+		// 参见上面 interhash 中的注释。
 		panic(errorString("hash of unhashable type " + toRType(t).string()))
 	}
 	if t.IsDirectIface() {
@@ -191,30 +188,28 @@ func nilinterhash(p unsafe.Pointer, h uintptr) uintptr {
 	}
 }
 
-// typehash computes the hash of the object of type t at address p.
-// h is the seed.
-// This function is seldom used. Most maps use for hashing either
-// fixed functions (e.g. f32hash) or compiler-generated functions
-// (e.g. for a type like struct { x, y string }). This implementation
-// is slower but more general and is used for hashing interface types
-// (called from interhash or nilinterhash, above) or for hashing in
-// maps generated by reflect.MapOf (reflect_typehash, below).
-// Note: this function must match the compiler generated
-// functions exactly. See issue 37716.
+// typehash 计算地址 p 处类型 t 的对象的哈希值。
+// h 是种子。
+// 这个函数很少使用。大多数 map 使用固定函数（如 f32hash）
+// 或编译器生成的函数（如用于 struct { x, y string } 这样的类型）进行哈希。
+// 这个实现较慢但更通用，用于接口类型的哈希计算
+// （从上面的 interhash 或 nilinterhash 调用）或用于
+// reflect.MapOf 生成的 map 中的哈希计算（下面的 reflect_typehash）。
+// 注意：这个函数必须与编译器生成的函数完全匹配。参见 issue 37716。
 //
-// typehash should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// typehash 应该是一个内部实现细节，
+// 但许多广泛使用的包通过 linkname 访问它。
+// 耻辱榜上的知名成员包括：
 //   - github.com/puzpuzpuz/xsync/v2
 //   - github.com/puzpuzpuz/xsync/v3
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname typehash
 func typehash(t *_type, p unsafe.Pointer, h uintptr) uintptr {
 	if t.TFlag&abi.TFlagRegularMemory != 0 {
-		// Handle ptr sizes specially, see issue 37086.
+		// 特殊处理指针大小，参见 issue 37086。
 		switch t.Size_ {
 		case 4:
 			return memhash32(p, h)
@@ -257,8 +252,7 @@ func typehash(t *_type, p unsafe.Pointer, h uintptr) uintptr {
 		}
 		return h
 	default:
-		// Should never happen, as typehash should only be called
-		// with comparable types.
+		// 这种情况不应该发生，因为 typehash 只应该用可比较类型调用。
 		panic(errorString("hash of unhashable type " + toRType(t).string()))
 	}
 }
@@ -320,9 +314,9 @@ func efaceeq(t *_type, x, y unsafe.Pointer) bool {
 		panic(errorString("comparing uncomparable type " + toRType(t).string()))
 	}
 	if t.IsDirectIface() {
-		// Direct interface types are ptr, chan, map, func, and single-element structs/arrays thereof.
-		// Maps and funcs are not comparable, so they can't reach here.
-		// Ptrs, chans, and single-element items can be compared directly using ==.
+		// 直接接口类型包括 ptr、chan、map、func，以及它们的单元素结构体/数组。
+		// map 和 func 不可比较，所以它们不会到达这里。
+		// ptr、chan 和单元素项可以直接使用 == 进行比较。
 		return x == y
 	}
 	return eq(x, y)
@@ -337,21 +331,21 @@ func ifaceeq(tab *itab, x, y unsafe.Pointer) bool {
 		panic(errorString("comparing uncomparable type " + toRType(t).string()))
 	}
 	if t.IsDirectIface() {
-		// See comment in efaceeq.
+		// 参见 efaceeq 中的注释。
 		return x == y
 	}
 	return eq(x, y)
 }
 
-// Testing adapters for hash quality tests (see hash_test.go)
+// 哈希质量测试的测试适配器（参见 hash_test.go）
 //
-// stringHash should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// stringHash 应该是一个内部实现细节，
+// 但许多广泛使用的包通过 linkname 访问它。
+// 耻辱榜上的知名成员包括：
 //   - github.com/k14s/starlark-go
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname stringHash
 func stringHash(s string, seed uintptr) uintptr {
@@ -383,14 +377,14 @@ func ifaceHash(i interface {
 
 const hashRandomBytes = goarch.PtrSize / 4 * 64
 
-// used in asm_{386,amd64,arm64}.s to seed the hash function
+// 在 asm_{386,amd64,arm64}.s 中用于初始化哈希函数的种子
 var aeskeysched [hashRandomBytes]byte
 
-// used in hash{32,64}.go to seed the hash function
+// 在 hash{32,64}.go 中用于初始化哈希函数的种子
 var hashkey [4]uintptr
 
 func alginit() {
-	// Install AES hash algorithms if the instructions needed are present.
+	// 如果存在所需的指令，则安装 AES 哈希算法。
 	if (GOARCH == "386" || GOARCH == "amd64") &&
 		cpu.X86.HasAES && // AESENC
 		cpu.X86.HasSSSE3 && // PSHUFB
@@ -409,14 +403,14 @@ func alginit() {
 
 func initAlgAES() {
 	useAeshash = true
-	// Initialize with random data so hash collisions will be hard to engineer.
+	// 使用随机数据初始化，使哈希冲突难以被人为构造。
 	key := (*[hashRandomBytes / 8]uint64)(unsafe.Pointer(&aeskeysched))
 	for i := range key {
 		key[i] = bootstrapRand()
 	}
 }
 
-// Note: These routines perform the read with a native endianness.
+// 注意：这些函数使用本机字节序执行读取。
 func readUnaligned32(p unsafe.Pointer) uint32 {
 	q := (*[4]byte)(p)
 	if goarch.BigEndian {

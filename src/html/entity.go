@@ -1,23 +1,23 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package html
 
 import "sync"
 
-// All entities that do not end with ';' are 6 or fewer bytes long.
+// 所有不以 ';' 结尾的实体长度都不超过 6 个字节。
 const longestEntityWithoutSemicolon = 6
 
-// entityMaps returns entity and entity2.
+// entityMaps 返回 entity 和 entity2。
 //
-// entity is a map from HTML entity names to their values. The semicolon matters:
+// entity 是从 HTML 实体名称到其值的映射。分号很重要：
 // https://html.spec.whatwg.org/multipage/named-characters.html
-// lists both "amp" and "amp;" as two separate entries.
-// Note that the HTML5 list is larger than the HTML4 list at
-// http://www.w3.org/TR/html4/sgml/entities.html
+// 将 "amp" 和 "amp;" 列为两个独立的条目。
+// 注意 HTML5 列表比位于
+// http://www.w3.org/TR/html4/sgml/entities.html 的 HTML4 列表更大。
 //
-// entity2 is a map of HTML entities to two unicode codepoints.
+// entity2 是从 HTML 实体到两个 Unicode 码点的映射。
 var entityMaps = sync.OnceValues(func() (entity map[string]rune, entity2 map[string][2]rune) {
 	entity = map[string]rune{
 		"AElig;":                           '\U000000C6',

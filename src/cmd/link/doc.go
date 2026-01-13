@@ -3,132 +3,132 @@
 // license that can be found in the LICENSE file.
 
 /*
-Link, typically invoked as “go tool link”, reads the Go archive or object
-for a package main, along with its dependencies, and combines them
-into an executable binary.
+Link 通常作为 "go tool link" 调用，读取包 main 的 Go 存档或对象，
+以及其依赖项，并将它们组合
+成可执行二进制文件。
 
-# Command Line
+# 命令行
 
-Usage:
+用法：
 
 	go tool link [flags] main.a
 
-Flags:
+标志：
 
 	-B note
-		Add an ELF_NT_GNU_BUILD_ID note when using ELF.
-		The value should start with 0x and be an even number of hex digits.
-		Alternatively, you can pass "gobuildid" in order to derive the
-		GNU build ID from the Go build ID.
+		添加使用 ELF 时的 ELF_NT_GNU_BUILD_ID 注释。
+		该值应以 0x 开头，为偶数个十六进制数字。
+		或者，你可以传递 "gobuildid" 以从
+		Go 构建 ID 派生 GNU 构建 ID。
 	-E entry
-		Set entry symbol name.
+		设置入口符号名称。
 	-H type
-		Set executable format type.
-		The default format is inferred from GOOS and GOARCH.
-		On Windows, -H windowsgui writes a "GUI binary" instead of a "console binary."
+		设置可执行格式类型。
+		默认格式从 GOOS 和 GOARCH 推断。
+		在 Windows 上，-H windowsgui 写入 "GUI 二进制文件" 而不是 "控制台二进制文件"。
 	-I interpreter
-		Set the ELF dynamic linker to use.
+		设置要使用的 ELF 动态链接器。
 	-L dir1 -L dir2
-		Search for imported packages in dir1, dir2, etc,
-		after consulting $GOROOT/pkg/$GOOS_$GOARCH.
+		在 dir1, dir2 等中搜索导入的包，
+		在咨询 $GOROOT/pkg/$GOOS_$GOARCH 之后。
 	-R quantum
-		Set address rounding quantum.
+		设置地址舍入量子。
 	-T address
-		Set the start address of text symbols.
+		设置文本符号的起始地址。
 	-V
-		Print linker version and exit.
+		打印链接器版本并退出。
 	-X importpath.name=value
-		Set the value of the string variable in importpath named name to value.
-		This is only effective if the variable is declared in the source code either uninitialized
-		or initialized to a constant string expression. -X will not work if the initializer makes
-		a function call or refers to other variables.
-		Note that before Go 1.5 this option took two separate arguments.
+		将 importpath 中名为 name 的字符串变量的值设置为 value。
+		这仅在变量在源代码中声明为未初始化
+		或初始化为常量字符串表达式时有效。如果初始化程序
+		进行函数调用或引用其他变量，-X 将不起作用。
+		注意，在 Go 1.5 之前，此选项需要两个单独的参数。
 	-asan
-		Link with C/C++ address sanitizer support.
+		与 C/C++ 地址清理程序支持链接。
 	-aslr
-		Enable ASLR for buildmode=c-shared on windows (default true).
+		在 Windows 上为 buildmode=c-shared 启用 ASLR（默认 true）。
 	-bindnow
-		Mark a dynamically linked ELF object for immediate function binding (default false).
+		标记动态链接的 ELF 对象以供立即函数绑定（默认 false）。
 	-buildid id
-		Record id as Go toolchain build id.
+		记录 id 作为 Go 工具链构建 id。
 	-buildmode mode
-		Set build mode (default exe).
+		设置构建模式（默认 exe）。
 	-c
-		Dump call graphs.
+		转储调用图。
 	-checklinkname=value
-		If value is 0, all go:linkname directives are permitted.
-		If value is 1 (the default), only a known set of widely-used
-		linknames are permitted.
+		如果值为 0，允许所有 go:linkname 指令。
+		如果值为 1（默认值），仅允许已知的一组广泛使用的
+		链接名称。
 	-compressdwarf
-		Compress DWARF if possible (default true).
+		如果可能，压缩 DWARF（默认 true）。
 	-cpuprofile file
-		Write CPU profile to file.
+		将 CPU 配置文件写入文件。
 	-d
-		Disable generation of dynamic executables.
-		The emitted code is the same in either case; the option
-		controls only whether a dynamic header is included.
-		The dynamic header is on by default, even without any
-		references to dynamic libraries, because many common
-		system tools now assume the presence of the header.
+		禁用动态可执行文件的生成。
+		发出的代码在两种情况下都相同；该选项
+		仅控制是否包含动态头。
+		动态头默认启用，即使没有
+		对动态库的引用，因为许多常见的
+		系统工具现在假设头的存在。
 	-dumpdep
-		Dump symbol dependency graph.
+		转储符号依赖关系图。
 	-e
-		No limit on number of errors reported.
+		对报告的错误数量没有限制。
 	-extar ar
-		Set the external archive program (default "ar").
-		Used only for -buildmode=c-archive.
+		设置外部存档程序（默认 "ar"）。
+		仅用于 -buildmode=c-archive。
 	-extld linker
-		Set the external linker (default "clang" or "gcc").
+		设置外部链接器（默认 "clang" 或 "gcc"）。
 	-extldflags flags
-		Set space-separated flags to pass to the external linker.
+		设置要传递给外部链接器的以空格分隔的标志。
 	-f
-		Ignore version mismatch in the linked archives.
+		忽略链接存档中的版本不匹配。
 	-funcalign N
-		Set function alignment to N bytes
+		将函数对齐设置为 N 字节
 	-g
-		Disable Go package data checks.
+		禁用 Go 包数据检查。
 	-importcfg file
-		Read import configuration from file.
-		In the file, set packagefile, packageshlib to specify import resolution.
+		从文件读取导入配置。
+		在文件中，设置 packagefile、packageshlib 以指定导入解析。
 	-installsuffix suffix
-		Look for packages in $GOROOT/pkg/$GOOS_$GOARCH_suffix
-		instead of $GOROOT/pkg/$GOOS_$GOARCH.
+		在 $GOROOT/pkg/$GOOS_$GOARCH_suffix 中查找包
+		而不是 $GOROOT/pkg/$GOOS_$GOARCH。
 	-k symbol
-		Set field tracking symbol. Use this flag when GOEXPERIMENT=fieldtrack is set.
+		设置字段跟踪符号。设置 GOEXPERIMENT=fieldtrack 时使用此标志。
 	-libgcc file
-		Set name of compiler support library.
-		This is only used in internal link mode.
-		If not set, default value comes from running the compiler,
-		which may be set by the -extld option.
-		Set to "none" to use no support library.
+		设置编译器支持库的名称。
+		这仅在内部链接模式下使用。
+		如果未设置，默认值来自运行编译器，
+		该编译器可以由 -extld 选项设置。
+		设置为 "none" 以不使用支持库。
 	-linkmode mode
-		Set link mode (internal, external, auto).
-		This sets the linking mode as described in cmd/cgo/doc.go.
+		设置链接模式（internal、external、auto）。
+		这设置 cmd/cgo/doc.go 中描述的链接模式。
 	-linkshared
-		Link against installed Go shared libraries (experimental).
+		与已安装的 Go 共享库链接（实验性）。
 	-memprofile file
-		Write memory profile to file.
+		将内存配置文件写入文件。
 	-memprofilerate rate
-		Set runtime.MemProfileRate to rate.
+		将 runtime.MemProfileRate 设置为 rate。
 	-msan
-		Link with C/C++ memory sanitizer support.
+		与 C/C++ 内存清理程序支持链接。
 	-o file
-		Write output to file (default a.out, or a.out.exe on Windows).
+		将输出写入文件（默认 a.out，或在 Windows 上为 a.out.exe）。
 	-pluginpath path
-		The path name used to prefix exported plugin symbols.
+		用于前缀导出的插件符号的路径名。
 	-r dir1:dir2:...
-		Set the ELF dynamic linker search path.
+		设置 ELF 动态链接器搜索路径。
 	-race
-		Link with race detection libraries.
+		与竞态检测库链接。
 	-s
-		Omit the symbol table and debug information.
-		Implies the -w flag, which can be negated with -w=0.
+		省略符号表和调试信息。
+		暗示 -w 标志，可以用 -w=0 否定。
 	-tmpdir dir
-		Write temporary files to dir.
-		Temporary files are only used in external linking mode.
+		将临时文件写入 dir。
+		临时文件仅在外部链接模式下使用。
 	-v
-		Print trace of linker operations.
+		打印链接器操作的跟踪。
 	-w
-		Omit the DWARF symbol table.
+		省略 DWARF 符号表。
 */
 package main

@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package filepath
 
@@ -10,10 +10,10 @@ import (
 	"syscall"
 )
 
-// HasPrefix exists for historical compatibility and should not be used.
+// HasPrefix 出于历史兼容性而存在，不应使用。
 //
-// Deprecated: HasPrefix does not respect path boundaries and
-// does not ignore case when required.
+// 已弃用：HasPrefix 不尊重路径边界，
+// 也不在需要时忽略大小写。
 func HasPrefix(p, prefix string) bool {
 	if strings.HasPrefix(p, prefix) {
 		return true
@@ -22,14 +22,14 @@ func HasPrefix(p, prefix string) bool {
 }
 
 func splitList(path string) []string {
-	// The same implementation is used in LookPath in os/exec;
-	// consider changing os/exec when changing this.
+	// 相同的实现用于 os/exec 中的 LookPath；
+	// 更改此处时考虑更改 os/exec。
 
 	if path == "" {
 		return []string{}
 	}
 
-	// Split path, respecting but preserving quotes.
+	// 分割路径，尊重但保留引号。
 	list := []string{}
 	start := 0
 	quo := false
@@ -44,7 +44,7 @@ func splitList(path string) []string {
 	}
 	list = append(list, path[start:])
 
-	// Remove quotes.
+	// 移除引号。
 	for i, s := range list {
 		list[i] = strings.ReplaceAll(s, `"`, ``)
 	}
@@ -54,9 +54,9 @@ func splitList(path string) []string {
 
 func abs(path string) (string, error) {
 	if path == "" {
-		// syscall.FullPath returns an error on empty path, because it's not a valid path.
-		// To implement Abs behavior of returning working directory on empty string input,
-		// special-case empty path by changing it to "." path. See golang.org/issue/24441.
+		// syscall.FullPath 在空路径上返回错误，因为它不是有效路径。
+		// 为了实现 Abs 在空字符串输入时返回工作目录的行为，
+		// 通过将空路径改为 "." 路径来特殊处理。见 golang.org/issue/24441。
 		path = "."
 	}
 	fullPath, err := syscall.FullPath(path)
@@ -72,33 +72,32 @@ func join(elem []string) string {
 	for _, e := range elem {
 		switch {
 		case b.Len() == 0:
-			// Add the first non-empty path element unchanged.
+			// 不修改地添加第一个非空路径元素。
 		case os.IsPathSeparator(lastChar):
-			// If the path ends in a slash, strip any leading slashes from the next
-			// path element to avoid creating a UNC path (any path starting with "\\")
-			// from non-UNC elements.
+			// 如果路径以斜杠结尾，从下一个路径元素中去掉任何前导斜杠，
+			// 以避免从非 UNC 元素创建 UNC 路径（任何以 "\\" 开头的路径）。
 			//
-			// The correct behavior for Join when the first element is an incomplete UNC
-			// path (for example, "\\") is underspecified. We currently join subsequent
-			// elements so Join("\\", "host", "share") produces "\\host\share".
+			// 当第一个元素是不完整的 UNC 路径（例如 "\\"）时，
+			// Join 的正确行为未明确指定。我们目前连接后续元素，
+			// 所以 Join("\\", "host", "share") 产生 "\\host\share"。
 			for len(e) > 0 && os.IsPathSeparator(e[0]) {
 				e = e[1:]
 			}
-			// If the path is \ and the next path element is ??,
-			// add an extra .\ to create \.\?? rather than \??\
-			// (a Root Local Device path).
+			// 如果路径是 \ 且下一个路径元素是 ??，
+			// 添加额外的 .\ 以创建 \.\?? 而不是 \??\
+			// （根本地设备路径）。
 			if b.Len() == 1 && strings.HasPrefix(e, "??") && (len(e) == len("??") || os.IsPathSeparator(e[2])) {
 				b.WriteString(`.\`)
 			}
 		case lastChar == ':':
-			// If the path ends in a colon, keep the path relative to the current directory
-			// on a drive and don't add a separator. Preserve leading slashes in the next
-			// path element, which may make the path absolute.
+			// 如果路径以冒号结尾，保持路径相对于驱动器上的当前目录，
+			// 不添加分隔符。保留下一个路径元素中的前导斜杠，
+			// 这可能使路径成为绝对路径。
 			//
 			// 	Join(`C:`, `f`) = `C:f`
 			//	Join(`C:`, `\f`) = `C:\f`
 		default:
-			// In all other cases, add a separator between elements.
+			// 在所有其他情况下，在元素之间添加分隔符。
 			b.WriteByte('\\')
 			lastChar = '\\'
 		}

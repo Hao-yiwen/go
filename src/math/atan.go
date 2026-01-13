@@ -1,57 +1,57 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
 /*
-	Floating-point arctangent.
+	浮点数反正切。
 */
 
-// The original C code, the long comment, and the constants below were
-// from http://netlib.sandia.gov/cephes/cmath/atan.c, available from
-// http://www.netlib.org/cephes/cmath.tgz.
-// The go code is a version of the original C.
+// 原始 C 代码、长注释以及下面的常量来自
+// http://netlib.sandia.gov/cephes/cmath/atan.c，可从
+// http://www.netlib.org/cephes/cmath.tgz 获取。
+// Go 代码是原始 C 代码的一个版本。
 //
 // atan.c
-// Inverse circular tangent (arctangent)
+// 反圆正切（反正切）
 //
-// SYNOPSIS:
+// 概要：
 // double x, y, atan();
 // y = atan( x );
 //
-// DESCRIPTION:
-// Returns radian angle between -pi/2 and +pi/2 whose tangent is x.
+// 描述：
+// 返回正切值为 x 的弧度角，范围在 -pi/2 和 +pi/2 之间。
 //
-// Range reduction is from three intervals into the interval from zero to 0.66.
-// The approximant uses a rational function of degree 4/5 of the form
-// x + x**3 P(x)/Q(x).
+// 范围归约是从三个区间归约到从零到 0.66 的区间。
+// 近似使用 4/5 次有理函数，形式为
+// x + x**3 P(x)/Q(x)。
 //
-// ACCURACY:
-//                      Relative error:
-// arithmetic   domain    # trials  peak     rms
+// 精度：
+//                      相对误差：
+// 算术运算   定义域    测试次数  峰值     均方根
 //    DEC       -10, 10   50000     2.4e-17  8.3e-18
 //    IEEE      -10, 10   10^6      1.8e-16  5.0e-17
 //
-// Cephes Math Library Release 2.8:  June, 2000
-// Copyright 1984, 1987, 1989, 1992, 2000 by Stephen L. Moshier
+// Cephes 数学库版本 2.8：2000 年 6 月
+// 版权所有 1984, 1987, 1989, 1992, 2000 Stephen L. Moshier
 //
-// The readme file at http://netlib.sandia.gov/cephes/ says:
-//    Some software in this archive may be from the book _Methods and
-// Programs for Mathematical Functions_ (Prentice-Hall or Simon & Schuster
-// International, 1989) or from the Cephes Mathematical Library, a
-// commercial product. In either event, it is copyrighted by the author.
-// What you see here may be used freely but it comes with no support or
-// guarantee.
+// http://netlib.sandia.gov/cephes/ 的 readme 文件说：
+//    本存档中的某些软件可能来自书籍《数学函数的方法和
+// 程序》（Prentice-Hall 或 Simon & Schuster
+// International，1989）或来自 Cephes 数学库，
+// 一个商业产品。无论哪种情况，它都受作者版权保护。
+// 您在这里看到的内容可以自由使用，但不提供支持或
+// 保证。
 //
-//   The two known misprints in the book are repaired here in the
-// source listings for the gamma function and the incomplete beta
-// integral.
+//   书中两个已知的印刷错误已在此处的
+// gamma 函数和不完全 beta 积分的
+// 源代码清单中修复。
 //
 //   Stephen L. Moshier
 //   moshier@na-net.ornl.gov
 
-// xatan evaluates a series valid in the range [0, 0.66].
+// xatan 计算在 [0, 0.66] 范围内有效的级数。
 func xatan(x float64) float64 {
 	const (
 		P0 = -8.750608600031904122785e-01
@@ -71,8 +71,8 @@ func xatan(x float64) float64 {
 	return z
 }
 
-// satan reduces its argument (known to be positive)
-// to the range [0, 0.66] and calls xatan.
+// satan 将其参数（已知为正）归约到
+// [0, 0.66] 范围并调用 xatan。
 func satan(x float64) float64 {
 	const (
 		Morebits = 6.123233995736765886130e-17 // pi/2 = PIO2 + Morebits
@@ -87,9 +87,9 @@ func satan(x float64) float64 {
 	return Pi/4 + xatan((x-1)/(x+1)) + 0.5*Morebits
 }
 
-// Atan returns the arctangent, in radians, of x.
+// Atan 返回 x 的反正切值，以弧度表示。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Atan(±0) = ±0
 //	Atan(±Inf) = ±Pi/2

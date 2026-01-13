@@ -1,18 +1,16 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package reflect
 
-// VisibleFields returns all the visible fields in t, which must be a
-// struct type. A field is defined as visible if it's accessible
-// directly with a FieldByName call. The returned fields include fields
-// inside anonymous struct members and unexported fields. They follow
-// the same order found in the struct, with anonymous fields followed
-// immediately by their promoted fields.
+// VisibleFields 返回 t 中所有可见的字段，t 必须是结构体类型。
+// 如果一个字段可以通过 FieldByName 调用直接访问，则定义为可见的。
+// 返回的字段包括匿名结构体成员内部的字段和未导出的字段。
+// 它们遵循与结构体中相同的顺序，匿名字段后面紧跟着它们的提升字段。
 //
-// For each element e of the returned slice, the corresponding field
-// can be retrieved from a value v of type t by calling v.FieldByIndex(e.Index).
+// 对于返回切片的每个元素 e，可以通过调用 v.FieldByIndex(e.Index)
+// 从类型为 t 的值 v 中检索相应的字段。
 func VisibleFields(t Type) []StructField {
 	if t == nil {
 		panic("reflect: VisibleFields(nil)")
@@ -27,9 +25,8 @@ func VisibleFields(t Type) []StructField {
 		index:    make([]int, 0, 2),
 	}
 	w.walk(t)
-	// Remove all the fields that have been hidden.
-	// Use an in-place removal that avoids copying in
-	// the common case that there are no hidden fields.
+	// 移除所有已被隐藏的字段。
+	// 使用原地移除，在没有隐藏字段的常见情况下避免复制。
 	j := 0
 	for i := range w.fields {
 		f := &w.fields[i]
@@ -37,8 +34,7 @@ func VisibleFields(t Type) []StructField {
 			continue
 		}
 		if i != j {
-			// A field has been removed. We need to shuffle
-			// all the subsequent elements up.
+			// 一个字段已被移除。我们需要将所有后续元素向上移动。
 			w.fields[j] = *f
 		}
 		j++
@@ -53,11 +49,9 @@ type visibleFieldsWalker struct {
 	index    []int
 }
 
-// walk walks all the fields in the struct type t, visiting
-// fields in index preorder and appending them to w.fields
-// (this maintains the required ordering).
-// Fields that have been overridden have their
-// Name field cleared.
+// walk 遍历结构体类型 t 中的所有字段，按索引前序访问字段
+// 并将它们追加到 w.fields（这保持了所需的顺序）。
+// 已被覆盖的字段的 Name 字段会被清空。
 func (w *visibleFieldsWalker) walk(t Type) {
 	if w.visiting[t] {
 		return
@@ -70,23 +64,20 @@ func (w *visibleFieldsWalker) walk(t Type) {
 		if oldIndex, ok := w.byName[f.Name]; ok {
 			old := &w.fields[oldIndex]
 			if len(w.index) == len(old.Index) {
-				// Fields with the same name at the same depth
-				// cancel one another out. Set the field name
-				// to empty to signify that has happened, and
-				// there's no need to add this field.
+				// 相同深度的同名字段相互抵消。将字段名设置为空
+				// 以表示这种情况已发生，不需要添加此字段。
 				old.Name = ""
 				add = false
 			} else if len(w.index) < len(old.Index) {
-				// The old field loses because it's deeper than the new one.
+				// 旧字段输了，因为它比新字段更深。
 				old.Name = ""
 			} else {
-				// The old field wins because it's shallower than the new one.
+				// 旧字段赢了，因为它比新字段更浅。
 				add = false
 			}
 		}
 		if add {
-			// Copy the index so that it's not overwritten
-			// by the other appends.
+			// 复制索引，这样它就不会被其他追加操作覆盖。
 			f.Index = append([]int(nil), w.index...)
 			w.byName[f.Name] = len(w.fields)
 			w.fields = append(w.fields, f)

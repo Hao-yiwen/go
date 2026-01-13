@@ -1,8 +1,8 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package constraint implements parsing and evaluation of build constraint lines.
+// constraint 包实现了 parsing and evaluation of build constraint lines.
 // See https://golang.org/cmd/go/#hdr-Build_constraints for documentation about build constraints themselves.
 //
 // This package parses both the original “// +build” syntax and the “//go:build” syntax that was added in Go 1.17.
@@ -16,28 +16,28 @@ import (
 	"unicode/utf8"
 )
 
-// maxSize is a limit used to control the complexity of expressions, in order
+// maxSize 是一个 limit used to control the complexity of expressions, in order
 // to prevent stack exhaustion issues due to recursion.
 const maxSize = 1000
 
-// An Expr is a build tag constraint expression.
+// 一个Expr 是一个 build tag constraint expression.
 // The underlying concrete type is *[AndExpr], *[OrExpr], *[NotExpr], or *[TagExpr].
 type Expr interface {
-	// String returns the string form of the expression,
+	// String 返回 string form of the expression,
 	// using the boolean syntax used in //go:build lines.
 	String() string
 
-	// Eval reports whether the expression evaluates to true.
+	// Eval 报告是否 the expression evaluates to true.
 	// It calls ok(tag) as needed to find out whether a given build tag
 	// is satisfied by the current build configuration.
 	Eval(ok func(tag string) bool) bool
 
-	// The presence of an isExpr method explicitly marks the type as an Expr.
-	// Only implementations in this package should be used as Exprs.
+	// The presence of an isExpr method explicitly 标记 type as an Expr.
+	// Only implementations in this package 应该是 used as Exprs.
 	isExpr()
 }
 
-// A TagExpr is an [Expr] for the single tag Tag.
+// 一个TagExpr 是一个n [Expr] for the single tag Tag.
 type TagExpr struct {
 	Tag string // for example, “linux” or “cgo”
 }
@@ -54,7 +54,7 @@ func (x *TagExpr) String() string {
 
 func tag(tag string) Expr { return &TagExpr{tag} }
 
-// A NotExpr represents the expression !X (the negation of X).
+// 一个NotExpr represents the expression !X (the negation of X).
 type NotExpr struct {
 	X Expr
 }
@@ -76,7 +76,7 @@ func (x *NotExpr) String() string {
 
 func not(x Expr) Expr { return &NotExpr{x} }
 
-// An AndExpr represents the expression X && Y.
+// 一个AndExpr represents the expression X && Y.
 type AndExpr struct {
 	X, Y Expr
 }
@@ -106,7 +106,7 @@ func and(x, y Expr) Expr {
 	return &AndExpr{x, y}
 }
 
-// An OrExpr represents the expression X || Y.
+// 一个OrExpr represents the expression X || Y.
 type OrExpr struct {
 	X, Y Expr
 }
@@ -136,7 +136,7 @@ func or(x, y Expr) Expr {
 	return &OrExpr{x, y}
 }
 
-// A SyntaxError reports a syntax error in a parsed build expression.
+// 一个SyntaxError reports a syntax error in a parsed build expression.
 type SyntaxError struct {
 	Offset int    // byte offset in input where error was detected
 	Err    string // description of error
@@ -149,7 +149,7 @@ func (e *SyntaxError) Error() string {
 var errNotConstraint = errors.New("not a build constraint")
 
 // Parse parses a single build constraint line of the form “//go:build ...” or “// +build ...”
-// and returns the corresponding boolean expression.
+// and 返回the corresponding boolean expression.
 func Parse(line string) (Expr, error) {
 	if text, ok := splitGoBuild(line); ok {
 		return parseExpr(text)
@@ -160,7 +160,7 @@ func Parse(line string) (Expr, error) {
 	return nil, errNotConstraint
 }
 
-// IsGoBuild reports whether the line of text is a “//go:build” constraint.
+// IsGoBuild 报告whether the line of text 是一个 “//go:build” constraint.
 // It only checks the prefix of the text, not that the expression itself parses.
 func IsGoBuild(line string) bool {
 	_, ok := splitGoBuild(line)
@@ -168,13 +168,13 @@ func IsGoBuild(line string) bool {
 }
 
 // splitGoBuild splits apart the leading //go:build prefix in line from the build expression itself.
-// It returns "", false if the input is not a //go:build line or if the input contains multiple lines.
+// It 返回"", false 如果 input is not a //go:build line or 如果 input 包含 multiple lines.
 func splitGoBuild(line string) (expr string, ok bool) {
-	// A single trailing newline is OK; otherwise multiple lines are not.
+	// 一个single trailing newline is OK; 否则 multiple lines are not.
 	if len(line) > 0 && line[len(line)-1] == '\n' {
 		line = line[:len(line)-1]
 	}
-	if strings.Contains(line, "\n") {
+	if strings.包含(line, "\n") {
 		return "", false
 	}
 
@@ -186,7 +186,7 @@ func splitGoBuild(line string) (expr string, ok bool) {
 	line = line[len("//go:build"):]
 
 	// If strings.TrimSpace finds more to trim after removing the //go:build prefix,
-	// it means that the prefix was followed by a space, making this a //go:build line
+	// it 意味着 the prefix was followed by a space, making th是一个 //go:build line
 	// (as opposed to a //go:buildsomethingelse line).
 	// If line is empty, we had "//go:build" by itself, which also counts.
 	trim := strings.TrimSpace(line)
@@ -197,7 +197,7 @@ func splitGoBuild(line string) (expr string, ok bool) {
 	return trim, true
 }
 
-// An exprParser holds state for parsing a build expression.
+// 一个exprParser holds state for parsing a build expression.
 type exprParser struct {
 	s string // input string
 	i int    // next read location in s
@@ -306,7 +306,7 @@ func (p *exprParser) atom() Expr {
 
 // lex finds and consumes the next token in the input stream.
 // On return, p.tok is set to the token text,
-// p.isTag reports whether the token was a tag,
+// p.isTag 报告是否 the token was a tag,
 // and p.pos records the byte offset of the start of the token in the input stream.
 // If lex reaches the end of the input, p.tok is set to the empty string.
 // For any other syntax error, lex panics with a SyntaxError.
@@ -355,7 +355,7 @@ func (p *exprParser) lex() {
 	p.isTag = true
 }
 
-// IsPlusBuild reports whether the line of text is a “// +build” constraint.
+// IsPlusBuild 报告whether the line of text 是一个 “// +build” constraint.
 // It only checks the prefix of the text, not that the expression itself parses.
 func IsPlusBuild(line string) bool {
 	_, ok := splitPlusBuild(line)
@@ -363,13 +363,13 @@ func IsPlusBuild(line string) bool {
 }
 
 // splitPlusBuild splits apart the leading // +build prefix in line from the build expression itself.
-// It returns "", false if the input is not a // +build line or if the input contains multiple lines.
+// It 返回"", false 如果 input is not a // +build line or 如果 input 包含 multiple lines.
 func splitPlusBuild(line string) (expr string, ok bool) {
-	// A single trailing newline is OK; otherwise multiple lines are not.
+	// 一个single trailing newline is OK; 否则 multiple lines are not.
 	if len(line) > 0 && line[len(line)-1] == '\n' {
 		line = line[:len(line)-1]
 	}
-	if strings.Contains(line, "\n") {
+	if strings.包含(line, "\n") {
 		return "", false
 	}
 
@@ -386,7 +386,7 @@ func splitPlusBuild(line string) (expr string, ok bool) {
 	line = line[len("+build"):]
 
 	// If strings.TrimSpace finds more to trim after removing the +build prefix,
-	// it means that the prefix was followed by a space, making this a +build line
+	// it 意味着 the prefix was followed by a space, making th是一个 +build line
 	// (as opposed to a +buildsomethingelse line).
 	// If line is empty, we had "// +build" by itself, which also counts.
 	trim := strings.TrimSpace(line)
@@ -451,8 +451,8 @@ func parsePlusBuildExpr(text string) (Expr, error) {
 	return x, nil
 }
 
-// isValidTag reports whether the word is a valid build tag.
-// Tags must be letters, digits, underscores or dots.
+// isValidTag 报告whether the word 是一个 valid build tag.
+// Tags 必须是 letters, digits, underscores or dots.
 // Unlike in Go identifiers, all digits are fine (e.g., "386").
 func isValidTag(word string) bool {
 	if word == "" {
@@ -468,8 +468,8 @@ func isValidTag(word string) bool {
 
 var errComplex = errors.New("expression too complex for // +build lines")
 
-// PlusBuildLines returns a sequence of “// +build” lines that evaluate to the build expression x.
-// If the expression is too complex to convert directly to “// +build” lines, PlusBuildLines returns an error.
+// PlusBuildLines 返回a sequence of “// +build” lines that evaluate to the build expression x.
+// If the expression is too complex to convert directly to “// +build” lines, PlusBuildLines 返回一个 error.
 func PlusBuildLines(x Expr) ([]string, error) {
 	// Push all NOTs to the expression leaves, so that //go:build !(x && y) can be treated as !x || !y.
 	// This rewrite is both efficient and commonly needed, so it's worth doing.

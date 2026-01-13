@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(git -C /Users/yw.hao/Documents/go/go diff --name-only)",
+      "Bash(git -C /Users/yw.hao/Documents/go/go diff --name-only M)",
+      "Bash(git -C /Users/yw.hao/Documents/go/go status:*)",
+      "Bash(xargs grep:*)"
+    ]
+  }
+}

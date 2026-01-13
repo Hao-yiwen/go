@@ -9,6 +9,7 @@ package slices
 import "cmp"
 
 // insertionSortOrdered sorts data[a:b] using insertion sort.
+// insertionSortOrdered 使用插入排序对 data[a:b] 进行排序。
 func insertionSortOrdered[E cmp.Ordered](data []E, a, b int) {
 	for i := a + 1; i < b; i++ {
 		for j := i; j > a && cmp.Less(data[j], data[j-1]); j-- {

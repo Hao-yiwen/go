@@ -7,7 +7,6 @@
 package runtime
 
 func resetMemoryDataView() {
-	// This function is a no-op on WASI, it is only used to notify the browser
-	// that its view of the WASM memory needs to be updated when compiling for
-	// GOOS=js.
+	// 此函数在 WASI 上是无操作的，仅用于通知浏览器
+	// 当为 GOOS=js 编译时，需要更新其对 WASM 内存的视图。
 }

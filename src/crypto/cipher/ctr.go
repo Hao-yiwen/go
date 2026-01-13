@@ -1,14 +1,13 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Counter (CTR) mode.
+// 计数器（CTR）模式。
 
-// CTR converts a block cipher into a stream cipher by
-// repeatedly encrypting an incrementing counter and
-// xoring the resulting stream of data with the input.
+// CTR 通过重复加密递增的计数器并将生成的数据流与输入进行异或，
+// 将块密码转换为流密码。
 
-// See NIST SP 800-38A, pp 13-15
+// 参见 NIST SP 800-38A，第 13-15 页
 
 package cipher
 
@@ -29,15 +28,14 @@ type ctr struct {
 
 const streamBufferSize = 512
 
-// ctrAble is an interface implemented by ciphers that have a specific optimized
-// implementation of CTR. crypto/aes doesn't use this anymore, and we'd like to
-// eventually remove it.
+// ctrAble 是一个由具有 CTR 特定优化实现的密码实现的接口。
+// crypto/aes 不再使用它，我们最终希望将其移除。
 type ctrAble interface {
 	NewCTR(iv []byte) Stream
 }
 
-// NewCTR returns a [Stream] which encrypts/decrypts using the given [Block] in
-// counter mode. The length of iv must be the same as the [Block]'s block size.
+// NewCTR 返回一个使用给定 [Block] 在计数器模式下加密/解密的 [Stream]。
+// iv 的长度必须与 [Block] 的块大小相同。
 func NewCTR(block Block, iv []byte) Stream {
 	if block, ok := block.(*aes.Block); ok {
 		return aesCtrWrapper{aes.NewCTR(block, iv)}
@@ -63,7 +61,7 @@ func NewCTR(block Block, iv []byte) Stream {
 	}
 }
 
-// aesCtrWrapper hides extra methods from aes.CTR.
+// aesCtrWrapper 隐藏 aes.CTR 的额外方法。
 type aesCtrWrapper struct {
 	c *aes.CTR
 }
@@ -81,7 +79,7 @@ func (x *ctr) refill() {
 		x.b.Encrypt(x.out[remain:], x.ctr)
 		remain += bs
 
-		// Increment counter
+		// 递增计数器
 		for i := len(x.ctr) - 1; i >= 0; i-- {
 			x.ctr[i]++
 			if x.ctr[i] != 0 {

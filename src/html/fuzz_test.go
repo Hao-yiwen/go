@@ -1,6 +1,6 @@
-// Copyright 2019 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2019 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package html
 
@@ -14,9 +14,8 @@ func FuzzEscapeUnescape(f *testing.F) {
 			t.Errorf("EscapeString(%q) = %q, UnescapeString(%q) = %q, want %q", v, e, e, u, v)
 		}
 
-		// As per the documentation, this isn't always equal to v, so it makes
-		// no sense to check for equality. It can still be interesting to find
-		// panics in it though.
+		// 根据文档，这不一定总是等于 v，所以检查相等性没有意义。
+		// 不过，找出其中的 panic 仍然是有意义的。
 		EscapeString(UnescapeString(v))
 	})
 }

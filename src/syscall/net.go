@@ -1,34 +1,29 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package syscall
 
-// A RawConn is a raw network connection.
+// RawConn 是一个原始网络连接。
 type RawConn interface {
-	// Control invokes f on the underlying connection's file
-	// descriptor or handle.
-	// The file descriptor fd is guaranteed to remain valid while
-	// f executes but not after f returns.
+	// Control 在底层连接的文件描述符或句柄上调用 f。
+	// 文件描述符 fd 保证在 f 执行期间保持有效，但在 f 返回后不再有效。
 	Control(f func(fd uintptr)) error
 
-	// Read invokes f on the underlying connection's file
-	// descriptor or handle; f is expected to try to read from the
-	// file descriptor.
-	// If f returns true, Read returns. Otherwise Read blocks
-	// waiting for the connection to be ready for reading and
-	// tries again repeatedly.
-	// The file descriptor is guaranteed to remain valid while f
-	// executes but not after f returns.
+	// Read 在底层连接的文件描述符或句柄上调用 f；
+	// f 应该尝试从文件描述符读取。
+	// 如果 f 返回 true，Read 返回。否则 Read 阻塞等待连接准备好读取，
+	// 并反复重试。
+	// 文件描述符保证在 f 执行期间保持有效，但在 f 返回后不再有效。
 	Read(f func(fd uintptr) (done bool)) error
 
-	// Write is like Read but for writing.
+	// Write 类似于 Read，但用于写入。
 	Write(f func(fd uintptr) (done bool)) error
 }
 
-// Conn is implemented by some types in the net and os packages to provide
-// access to the underlying file descriptor or handle.
+// Conn 由 net 和 os 包中的一些类型实现，
+// 以提供对底层文件描述符或句柄的访问。
 type Conn interface {
-	// SyscallConn returns a raw network connection.
+	// SyscallConn 返回一个原始网络连接。
 	SyscallConn() (RawConn, error)
 }

@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements method sets.
 
@@ -12,9 +12,9 @@ import (
 	"strings"
 )
 
-// A MethodSet is an ordered set of concrete or abstract (interface) methods;
-// a method is a [MethodVal] selection, and they are ordered by ascending m.Obj().Id().
-// The zero value for a MethodSet is a ready-to-use empty method set.
+// 一个MethodSet 是一个n ordered set of concrete or abstract (interface) methods;
+// a method 是一个 [MethodVal] selection, and they are ordered by ascending m.Obj().Id().
+// The zero value for a MethodSet 是一个 ready-to-use empty method set.
 type MethodSet struct {
 	list []*Selection
 }
@@ -33,13 +33,13 @@ func (s *MethodSet) String() string {
 	return buf.String()
 }
 
-// Len returns the number of methods in s.
+// Len 返回the number of methods in s.
 func (s *MethodSet) Len() int { return len(s.list) }
 
-// At returns the i'th method in s for 0 <= i < s.Len().
+// At 返回the i'th method in s for 0 <= i < s.Len().
 func (s *MethodSet) At(i int) *Selection { return s.list[i] }
 
-// Lookup returns the method with matching package and name, or nil if not found.
+// Lookup 返回the method with matching package and name, or nil if not found.
 func (s *MethodSet) Lookup(pkg *Package, name string) *Selection {
 	if s.Len() == 0 {
 		return nil
@@ -63,22 +63,22 @@ func (s *MethodSet) Lookup(pkg *Package, name string) *Selection {
 var emptyMethodSet MethodSet
 
 // Note: NewMethodSet is intended for external use only as it
-//       requires interfaces to be complete. It may be used
+//       requires interfaces to be complete. It 可能是 used
 //       internally if LookupFieldOrMethod completed the same
 //       interfaces beforehand.
 
-// NewMethodSet returns the method set for the given type T.
-// It always returns a non-nil method set, even if it is empty.
+// NewMethodSet 返回the method set for the given type T.
+// It always 返回一个non-nil method set, even if it is empty.
 func NewMethodSet(T Type) *MethodSet {
 	// WARNING: The code in this function is extremely subtle - do not modify casually!
-	//          This function and lookupFieldOrMethod should be kept in sync.
+	//          This function and lookupFieldOrMethod 应该是 kept in sync.
 
 	// TODO(rfindley) confirm that this code is in sync with lookupFieldOrMethod
 	//                with respect to type params.
 
 	// Methods cannot be associated with a named pointer type.
 	// (spec: "The type denoted by T is called the receiver base type;
-	// it must not be a pointer or interface type and it must be declared
+	// it must not be a pointer or interface type and it 必须是 declared
 	// in the same package as the method.").
 	if t := asNamed(T); t != nil && isPointer(t) {
 		return &emptyMethodSet
@@ -89,7 +89,7 @@ func NewMethodSet(T Type) *MethodSet {
 
 	typ, isPtr := deref(T)
 
-	// *typ where typ is an interface has no methods.
+	// *typ where typ 是一个n interface has no methods.
 	if isPtr && IsInterface(typ) {
 		return &emptyMethodSet
 	}
@@ -101,7 +101,7 @@ func NewMethodSet(T Type) *MethodSet {
 	// Used to avoid endless searches in case of recursive types.
 	//
 	// We must use a lookup on identity rather than a simple map[*Named]bool as
-	// instantiated types may be identical but not equal.
+	// instantiated types 可能是 identical but not equal.
 	var seen instanceLookup
 
 	// collect methods at current depth
@@ -142,7 +142,7 @@ func NewMethodSet(T Type) *MethodSet {
 					fset[f.Id()] = true
 
 					// Embedded fields are always of the form T or *T where
-					// T is a type name. If typ appeared multiple times at
+					// T 是一个 type name. If typ appeared multiple times at
 					// this depth, f.Type appears multiple times at the next
 					// depth.
 					if f.embedded {
@@ -207,8 +207,8 @@ func NewMethodSet(T Type) *MethodSet {
 	return &MethodSet{list}
 }
 
-// A methodSet is a set of methods and name collisions.
-// A collision indicates that multiple methods with the
+// 一个methodSet 是一个 set of methods and name collisions.
+// 一个collision 指示 multiple methods with the
 // same unique id, or a field with that id appeared.
 type methodSet map[string]*Selection // a nil entry indicates a name collision
 
@@ -233,7 +233,7 @@ func (s methodSet) addOne(f *Func, index []int, indirect bool, multiples bool) m
 	// if f is not in the set, add it
 	if !multiples {
 		// TODO(gri) A found method may not be added because it's not in the method set
-		// (!indirect && f.hasPtrRecv()). A 2nd method on the same level may be in the method
+		// (!indirect && f.hasPtrRecv()). A 2nd method on the same level 可能是 in the method
 		// set and may not collide with the first one, thus leading to a false positive.
 		// Is that possible? Investigate.
 		if _, found := s[key]; !found && (indirect || !f.hasPtrRecv()) {

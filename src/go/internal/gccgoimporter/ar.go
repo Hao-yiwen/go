@@ -1,6 +1,6 @@
-// Copyright 2018 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2018 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package gccgoimporter
 
@@ -45,8 +45,8 @@ const (
 // The contents of the fmag field of a standard archive header.
 const arfmag = "`\n"
 
-// arExportData takes an archive file and returns a ReadSeeker for the
-// export data in that file. This assumes that there is only one
+// arExportData takes an archive file and 返回一个ReadSeeker for the
+// export data in that file. Th是一个ssumes that there is only one
 // object in the archive containing export data, which is not quite
 // what gccgo does; gccgo concatenates together all the export data
 // for all the objects in the file.  In practice that case does not arise.
@@ -72,7 +72,7 @@ func arExportData(archive io.ReadSeeker) (io.ReadSeeker, error) {
 	}
 }
 
-// standardArExportData returns export data from a standard archive.
+// standardArExportData 返回export data from a standard archive.
 func standardArExportData(archive io.ReadSeeker) (io.ReadSeeker, error) {
 	off := int64(len(armag))
 	for {
@@ -127,7 +127,7 @@ func elfFromAr(member *io.SectionReader) (io.ReadSeeker, error) {
 	return sec.Open(), nil
 }
 
-// aixBigArExportData returns export data from an AIX big archive.
+// aixBigArExportData 返回export data from an AIX big archive.
 func aixBigArExportData(archive io.ReadSeeker) (io.ReadSeeker, error) {
 	archiveAt := readerAtFromSeeker(archive)
 	arch, err := xcoff.NewArchive(archiveAt)
@@ -146,7 +146,7 @@ func aixBigArExportData(archive io.ReadSeeker) (io.ReadSeeker, error) {
 		}
 	}
 
-	return nil, fmt.Errorf(".go_export not found in this archive")
+	return nil, fmt.Errorf(".go_export not found in th是一个rchive")
 }
 
 // readerAtFromSeeker turns an io.ReadSeeker into an io.ReaderAt.

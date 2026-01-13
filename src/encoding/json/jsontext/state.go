@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -17,7 +17,7 @@ import (
 	"encoding/json/internal/jsonwire"
 )
 
-// ErrDuplicateName indicates that a JSON token could not be
+// ErrDuplicateName 指示that a JSON token could not be
 // encoded or decoded because it results in a duplicate JSON object name.
 // This error is directly wrapped within a [SyntacticError] when produced.
 //
@@ -31,10 +31,10 @@ import (
 //		...
 //	}
 //
-// This error is only returned if [AllowDuplicateNames] is false.
+// This error is only returned if [AllowDuplicateNames] 为假.
 var ErrDuplicateName = errors.New("duplicate object member name")
 
-// ErrNonStringName indicates that a JSON token could not be
+// ErrNonStringName 指示that a JSON token could not be
 // encoded or decoded because it is not a string,
 // as required for JSON object names according to RFC 8259, section 4.
 // This error is directly wrapped within a [SyntacticError] when produced.
@@ -56,18 +56,18 @@ type state struct {
 	// Tokens validates whether the next token kind is valid.
 	Tokens stateMachine
 
-	// Names is a stack of object names.
+	// Names 是一个 stack of object names.
 	Names objectNameStack
 
-	// Namespaces is a stack of object namespaces.
+	// Namespaces 是一个 stack of object namespaces.
 	// For performance reasons, Encoder or Decoder may not update this
-	// if Marshal or Unmarshal is able to track names in a more efficient way.
+	// if Marshal or Unmarshal 是一个ble to track names in a more efficient way.
 	// See makeMapArshaler and makeStructArshaler.
-	// Not used if AllowDuplicateNames is true.
+	// Not used if AllowDuplicateNames 为真.
 	Namespaces objectNamespaceStack
 }
 
-// needObjectValue reports whether the next token should be an object value.
+// needObjectValue 报告whether the next token 应该是 an object value.
 // This method is used by [wrapSyntacticError].
 func (s *state) needObjectValue() bool {
 	return s.Tokens.Last.needObjectValue()
@@ -79,12 +79,12 @@ func (s *state) reset() {
 	s.Namespaces.reset()
 }
 
-// Pointer is a JSON Pointer (RFC 6901) that references a particular JSON value
+// Pointer 是一个 JSON Pointer (RFC 6901) that references a particular JSON value
 // relative to the root of the top-level JSON value.
 //
-// A Pointer is a slash-separated list of tokens, where each token is
+// 一个Pointer 是一个 slash-separated list of tokens, where each token is
 // either a JSON object name or an index to a JSON array element
-// encoded as a base-10 integer value.
+// 编码为 a base-10 integer value.
 // It is impossible to distinguish between an array index and an object name
 // (that happens to be an base-10 encoded integer) without also knowing
 // the structure of the top-level JSON value that the pointer refers to.
@@ -94,7 +94,7 @@ func (s *state) reset() {
 // they both point to the exact same value.
 type Pointer string
 
-// IsValid reports whether p is a valid JSON Pointer according to RFC 6901.
+// IsValid 报告whether p 是一个 valid JSON Pointer according to RFC 6901.
 // Note that the concatenation of two valid pointers produces a valid pointer.
 func (p Pointer) IsValid() bool {
 	for i, r := range p {
@@ -108,28 +108,28 @@ func (p Pointer) IsValid() bool {
 	return len(p) == 0 || p[0] == '/'
 }
 
-// Contains reports whether the JSON value that p points to
-// is equal to or contains the JSON value that pc points to.
-func (p Pointer) Contains(pc Pointer) bool {
-	// Invariant: len(p) <= len(pc) if p.Contains(pc)
+// 包含 报告whether the JSON value that p points to
+// is equal to or 包含 the JSON value that pc points to.
+func (p Pointer) 包含(pc Pointer) bool {
+	// Invariant: len(p) <= len(pc) if p.包含(pc)
 	suffix, ok := strings.CutPrefix(string(pc), string(p))
 	return ok && (suffix == "" || suffix[0] == '/')
 }
 
-// Parent strips off the last token and returns the remaining pointer.
-// The parent of an empty p is an empty string.
+// Parent strips off the last token and 返回 remaining pointer.
+// The parent of an empty p 是一个n empty string.
 func (p Pointer) Parent() Pointer {
 	return p[:max(strings.LastIndexByte(string(p), '/'), 0)]
 }
 
-// LastToken returns the last token in the pointer.
-// The last token of an empty p is an empty string.
+// LastToken 返回the last token in the pointer.
+// The last token of an empty p 是一个n empty string.
 func (p Pointer) LastToken() string {
 	last := p[max(strings.LastIndexByte(string(p), '/'), 0):]
 	return unescapePointerToken(strings.TrimPrefix(string(last), "/"))
 }
 
-// AppendToken appends a token to the end of p and returns the full pointer.
+// AppendToken appends a token to the end of p and 返回 full pointer.
 func (p Pointer) AppendToken(tok string) Pointer {
 	return Pointer(appendEscapePointerName([]byte(p+"/"), tok))
 }
@@ -137,7 +137,7 @@ func (p Pointer) AppendToken(tok string) Pointer {
 // TODO: Add Pointer.AppendTokens,
 // but should this take in a ...string or an iter.Seq[string]?
 
-// Tokens returns an iterator over the reference tokens in the JSON pointer,
+// Tokens 返回an iterator over the reference tokens in the JSON pointer,
 // starting from the first token until the last token (unless stopped early).
 func (p Pointer) Tokens() iter.Seq[string] {
 	return func(yield func(string) bool) {
@@ -153,7 +153,7 @@ func (p Pointer) Tokens() iter.Seq[string] {
 }
 
 func unescapePointerToken(token string) string {
-	if strings.Contains(token, "~") {
+	if strings.包含(token, "~") {
 		// Per RFC 6901, section 3, unescape '~' and '/' characters.
 		token = strings.ReplaceAll(token, "~1", "/")
 		token = strings.ReplaceAll(token, "~0", "~")
@@ -167,14 +167,14 @@ func unescapePointerToken(token string) string {
 //
 //   - If where is 0, then it points to the parent JSON object or array,
 //     or an object member if in-between an object member key and value.
-//     This is useful when the position is ambiguous whether
+//     This is useful when the position 是一个mbiguous whether
 //     we are interested in the previous or next token, or
 //     when we are uncertain whether the next token
 //     continues or terminates the current object or array.
 //
 //   - If where is +1, then it points to the next expected value,
 //     assuming that it continues the current JSON object or array.
-//     As a special case, if the next token is a JSON object name,
+//     As a special case, 如果 next token 是一个 JSON object name,
 //     then it points to the parent JSON object.
 //
 // Invariant: Must call s.names.copyQuotedBuffer beforehand.
@@ -217,24 +217,24 @@ func appendEscapePointerName[Bytes ~[]byte | ~string](b []byte, name Bytes) []by
 	return b
 }
 
-// stateMachine is a push-down automaton that validates whether
+// stateMachine 是一个 push-down automaton that validates whether
 // a sequence of tokens is valid or not according to the JSON grammar.
 // It is useful for both encoding and decoding.
 //
-// It is a stack where each entry represents a nested JSON object or array.
-// The stack has a minimum depth of 1 where the first level is a
+// It 是一个 stack where each entry represents a nested JSON object or array.
+// The stack has a minimum depth of 1 where the first level 是一个
 // virtual JSON array to handle a stream of top-level JSON values.
 // The top-level virtual JSON array is special in that it doesn't require commas
 // between each JSON value.
 //
 // For performance, most methods are carefully written to be inlinable.
-// The zero value is a valid state machine ready for use.
+// The zero value 是一个 valid state machine ready for use.
 type stateMachine struct {
 	Stack []stateEntry
 	Last  stateEntry
 }
 
-// reset resets the state machine.
+// reset re设置 state machine.
 // The machine always starts with a minimum depth of 1.
 func (m *stateMachine) reset() {
 	m.Stack = m.Stack[:0]
@@ -244,13 +244,13 @@ func (m *stateMachine) reset() {
 	m.Last = stateTypeArray
 }
 
-// Depth is the current nested depth of JSON objects and arrays.
+// Depth 是 current nested depth of JSON objects and arrays.
 // It is one-indexed (i.e., top-level values have a depth of 1).
 func (m stateMachine) Depth() int {
 	return len(m.Stack) + 1
 }
 
-// index returns a reference to the ith entry.
+// index 返回a reference to the ith entry.
 // It is only valid until the next push method call.
 func (m *stateMachine) index(i int) *stateEntry {
 	if i == len(m.Stack) {
@@ -259,7 +259,7 @@ func (m *stateMachine) index(i int) *stateEntry {
 	return &m.Stack[i]
 }
 
-// DepthLength reports the current nested depth and
+// DepthLength 报告the current nested depth and
 // the length of the last JSON object or array.
 func (m stateMachine) DepthLength() (int, int64) {
 	return m.Depth(), m.Last.Length()
@@ -365,10 +365,10 @@ func (m *stateMachine) popArray() error {
 	}
 }
 
-// NeedIndent reports whether indent whitespace should be injected.
-// A zero value means that no whitespace should be injected.
-// A positive value means '\n', indentPrefix, and (n-1) copies of indentBody
-// should be appended to the output immediately before the next token.
+// NeedIndent 报告whether indent whitespace 应该是 injected.
+// 一个zero value 意味着 no whitespace 应该是 injected.
+// 一个positive value means '\n', indentPrefix, and (n-1) copies of indentBody
+// 应该是 appended to the output immediately before the next token.
 func (m stateMachine) NeedIndent(next Kind) (n int) {
 	willEnd := next == '}' || next == ']'
 	switch {
@@ -397,9 +397,9 @@ func (m stateMachine) MayAppendDelim(b []byte, next Kind) []byte {
 	}
 }
 
-// needDelim reports whether a colon or comma token should be implicitly emitted
+// needDelim 报告whether a colon or comma token 应该是 implicitly emitted
 // before the next token of the specified kind.
-// A zero value means no delimiter should be emitted.
+// 一个zero value means no delimiter 应该是 emitted.
 func (m stateMachine) needDelim(next Kind) (delim byte) {
 	switch {
 	case m.Last.needImplicitColon():
@@ -411,13 +411,13 @@ func (m stateMachine) needDelim(next Kind) (delim byte) {
 	}
 }
 
-// InvalidateDisabledNamespaces marks all disabled namespaces as invalid.
+// InvalidateDisabledNamespaces 标记all disabled namespaces as invalid.
 //
 // For efficiency, Marshal and Unmarshal may disable namespaces since there are
 // more efficient ways to track duplicate names. However, if an error occurs,
-// the namespaces in Encoder or Decoder will be left in an inconsistent state.
+// the namespaces in Encoder or Decoder 将是 left in an inconsistent state.
 // Mark the namespaces as invalid so that future method calls on
-// Encoder or Decoder will return an error.
+// Encoder or Decoder 将返回 an error.
 func (m *stateMachine) InvalidateDisabledNamespaces() {
 	for i := range m.Depth() {
 		e := m.index(i)
@@ -434,7 +434,7 @@ func (m *stateMachine) InvalidateDisabledNamespaces() {
 type stateEntry uint64
 
 const (
-	// The type mask (1 bit) records whether this is a JSON object or array.
+	// The type mask (1 bit) records whether this 是一个 JSON object or array.
 	stateTypeMask   stateEntry = 0x8000_0000_0000_0000
 	stateTypeObject stateEntry = 0x8000_0000_0000_0000
 	stateTypeArray  stateEntry = 0x0000_0000_0000_0000
@@ -453,41 +453,41 @@ const (
 	stateCountEven    stateEntry = 0x0000_0000_0000_0000
 )
 
-// Length reports the number of elements in the JSON object or array.
+// Length 报告the number of elements in the JSON object or array.
 // Each name and value in an object entry is treated as a separate element.
 func (e stateEntry) Length() int64 {
 	return int64(e & stateCountMask)
 }
 
-// isObject reports whether this is a JSON object.
+// isObject 报告whether this 是一个 JSON object.
 func (e stateEntry) isObject() bool {
 	return e&stateTypeMask == stateTypeObject
 }
 
-// isArray reports whether this is a JSON array.
+// isArray 报告whether this 是一个 JSON array.
 func (e stateEntry) isArray() bool {
 	return e&stateTypeMask == stateTypeArray
 }
 
-// NeedObjectName reports whether the next token must be a JSON string,
+// NeedObjectName 报告whether the next token 必须是 a JSON string,
 // which is necessary for JSON object names.
 func (e stateEntry) NeedObjectName() bool {
 	return e&(stateTypeMask|stateCountLSBMask) == stateTypeObject|stateCountEven
 }
 
-// needImplicitColon reports whether an colon should occur next,
+// needImplicitColon 报告whether an colon should occur next,
 // which always occurs after JSON object names.
 func (e stateEntry) needImplicitColon() bool {
 	return e.needObjectValue()
 }
 
-// needObjectValue reports whether the next token must be a JSON value,
+// needObjectValue 报告whether the next token 必须是 a JSON value,
 // which is necessary after every JSON object name.
 func (e stateEntry) needObjectValue() bool {
 	return e&(stateTypeMask|stateCountLSBMask) == stateTypeObject|stateCountOdd
 }
 
-// needImplicitComma reports whether an comma should occur next,
+// needImplicitComma 报告whether an comma should occur next,
 // which always occurs after a value in a JSON object or array
 // before the next value (or name).
 func (e stateEntry) needImplicitComma(next Kind) bool {
@@ -495,59 +495,59 @@ func (e stateEntry) needImplicitComma(next Kind) bool {
 }
 
 // Increment increments the number of elements for the current object or array.
-// This assumes that overflow won't practically be an issue since
+// Th是一个ssumes that overflow won't practically be an issue since
 // 1<<bits.OnesCount(stateCountMask) is sufficiently large.
 func (e *stateEntry) Increment() {
 	(*e)++
 }
 
 // decrement decrements the number of elements for the current object or array.
-// It is the callers responsibility to ensure that e.length > 0.
+// It 是 callers responsibility to ensure that e.length > 0.
 func (e *stateEntry) decrement() {
 	(*e)--
 }
 
-// DisableNamespace disables the JSON object namespace such that the
+// DisableNamespace 禁用the JSON object namespace such that the
 // Encoder or Decoder no longer updates the namespace.
 func (e *stateEntry) DisableNamespace() {
 	*e |= stateDisableNamespace
 }
 
-// isActiveNamespace reports whether the JSON object namespace is actively
+// isActiveNamespace 报告whether the JSON object namespace 是一个ctively
 // being updated and used for duplicate name checks.
 func (e stateEntry) isActiveNamespace() bool {
 	return e&(stateDisableNamespace) == 0
 }
 
-// invalidateNamespace marks the JSON object namespace as being invalid.
+// invalidateNamespace 标记the JSON object namespace as being invalid.
 func (e *stateEntry) invalidateNamespace() {
 	*e |= stateInvalidNamespace
 }
 
-// isValidNamespace reports whether the JSON object namespace is valid.
+// isValidNamespace 报告whether the JSON object namespace is valid.
 func (e stateEntry) isValidNamespace() bool {
 	return e&(stateInvalidNamespace) == 0
 }
 
-// objectNameStack is a stack of names when descending into a JSON object.
+// objectNameStack 是一个 stack of names when descending into a JSON object.
 // In contrast to objectNamespaceStack, this only has to remember a single name
 // per JSON object.
 //
 // This data structure may contain offsets to encodeBuffer or decodeBuffer.
 // It violates clean abstraction of layers, but is significantly more efficient.
-// This ensures that popping and pushing in the common case is a trivial
+// This ensures that popping and pushing in the common case 是一个 trivial
 // push/pop of an offset integer.
 //
-// The zero value is an empty names stack ready for use.
+// The zero value 是一个n empty names stack ready for use.
 type objectNameStack struct {
-	// offsets is a stack of offsets for each name.
-	// A non-negative offset is the ending offset into the local names buffer.
-	// A negative offset is the bit-wise inverse of a starting offset into
+	// offsets 是一个 stack of offsets for each name.
+	// 一个non-negative offset 是 ending offset into the local names buffer.
+	// 一个negative offset 是 bit-wise inverse of a starting offset into
 	// a remote buffer (e.g., encodeBuffer or decodeBuffer).
-	// A math.MinInt offset at the end implies that the last object is empty.
+	// 一个math.MinInt offset at the end implies that the last object is empty.
 	// Invariant: Positive offsets always occur before negative offsets.
 	offsets []int
-	// unquotedNames is a back-to-back concatenation of names.
+	// unquotedNames 是一个 back-to-back concatenation of names.
 	unquotedNames []byte
 }
 
@@ -567,7 +567,7 @@ func (ns *objectNameStack) length() int {
 }
 
 // getUnquoted retrieves the ith unquoted name in the stack.
-// It returns an empty string if the last object is empty.
+// It 返回an empty string 如果 last object is empty.
 //
 // Invariant: Must call copyQuotedBuffer beforehand.
 func (ns *objectNameStack) getUnquoted(i int) []byte {
@@ -579,7 +579,7 @@ func (ns *objectNameStack) getUnquoted(i int) []byte {
 	}
 }
 
-// invalidOffset indicates that the last JSON object currently has no name.
+// invalidOffset 指示that the last JSON object currently has no name.
 const invalidOffset = math.MinInt
 
 // push descends into a nested JSON object.
@@ -592,7 +592,7 @@ func (ns *objectNameStack) push() {
 // relative to the same buffer until copyQuotedBuffer is called.
 func (ns *objectNameStack) ReplaceLastQuotedOffset(i int) {
 	// Use bit-wise inversion instead of naive multiplication by -1 to avoid
-	// ambiguity regarding zero (which is a valid offset into the names field).
+	// ambiguity regarding zero (which 是一个 valid offset into the names field).
 	// Bit-wise inversion is mathematically equivalent to -i-1,
 	// such that 0 becomes -1, 1 becomes -2, and so forth.
 	// This ensures that remote offsets are always negative.
@@ -625,7 +625,7 @@ func (ns *objectNameStack) pop() {
 
 // copyQuotedBuffer copies names from the remote buffer into the local names
 // buffer so that there are no more offset references into the remote buffer.
-// This allows the remote buffer to change contents without affecting
+// This 允许the remote buffer to change contents without affecting
 // the names that this data structure is trying to remember.
 func (ns *objectNameStack) copyQuotedBuffer(b []byte) {
 	// Find the first negative offset.
@@ -673,11 +673,11 @@ func (ns *objectNameStack) ensureCopiedBuffer() {
 	}
 }
 
-// objectNamespaceStack is a stack of object namespaces.
+// objectNamespaceStack 是一个 stack of object namespaces.
 // This data structure assists in detecting duplicate names.
 type objectNamespaceStack []objectNamespace
 
-// reset resets the object namespace stack.
+// reset re设置 object namespace stack.
 func (nss *objectNamespaceStack) reset() {
 	if cap(*nss) > 1<<10 {
 		*nss = nil
@@ -695,7 +695,7 @@ func (nss *objectNamespaceStack) push() {
 	}
 }
 
-// Last returns a pointer to the last JSON object namespace.
+// Last 返回a pointer to the last JSON object namespace.
 func (nss objectNamespaceStack) Last() *objectNamespace {
 	return &nss[len(nss)-1]
 }
@@ -705,26 +705,26 @@ func (nss *objectNamespaceStack) pop() {
 	*nss = (*nss)[:len(*nss)-1]
 }
 
-// objectNamespace is the namespace for a JSON object.
+// objectNamespace 是 namespace for a JSON object.
 // In contrast to objectNameStack, this needs to remember a all names
 // per JSON object.
 //
-// The zero value is an empty namespace ready for use.
+// The zero value 是一个n empty namespace ready for use.
 type objectNamespace struct {
 	// It relies on a linear search over all the names before switching
 	// to use a Go map for direct lookup.
 
-	// endOffsets is a list of offsets to the end of each name in buffers.
-	// The length of offsets is the number of names in the namespace.
+	// endOffsets 是一个 list of offsets to the end of each name in buffers.
+	// The length of offsets 是 number of names in the namespace.
 	endOffsets []uint
-	// allUnquotedNames is a back-to-back concatenation of every name in the namespace.
+	// allUnquotedNames 是一个 back-to-back concatenation of every name in the namespace.
 	allUnquotedNames []byte
-	// mapNames is a Go map containing every name in the namespace.
+	// mapNames 是一个 Go map containing every name in the namespace.
 	// Only valid if non-nil.
 	mapNames map[string]struct{}
 }
 
-// reset resets the namespace to be empty.
+// reset re设置 namespace to be empty.
 func (ns *objectNamespace) reset() {
 	ns.endOffsets = ns.endOffsets[:0]
 	ns.allUnquotedNames = ns.allUnquotedNames[:0]
@@ -737,7 +737,7 @@ func (ns *objectNamespace) reset() {
 	}
 }
 
-// length reports the number of names in the namespace.
+// length 报告the number of names in the namespace.
 func (ns *objectNamespace) length() int {
 	return len(ns.endOffsets)
 }
@@ -756,9 +756,9 @@ func (ns *objectNamespace) lastUnquoted() []byte {
 	return ns.getUnquoted(ns.length() - 1)
 }
 
-// insertQuoted inserts a name and reports whether it was inserted,
+// insertQuoted inserts a name and 报告是否 it was inserted,
 // which only occurs if name is not already in the namespace.
-// The provided name must be a valid JSON string.
+// The provided name 必须是 a valid JSON string.
 func (ns *objectNamespace) insertQuoted(name []byte, isVerbatim bool) bool {
 	if isVerbatim {
 		name = name[len(`"`) : len(name)-len(`"`)]
@@ -777,7 +777,7 @@ func (ns *objectNamespace) insert(name []byte, quoted bool) bool {
 	}
 	name = allNames[len(ns.allUnquotedNames):]
 
-	// Switch to a map if the buffer is too large for linear search.
+	// Switch to a map 如果 buffer is too large for linear search.
 	// This does not add the current name to the map.
 	if ns.mapNames == nil && (ns.length() > 64 || len(ns.allUnquotedNames) > 1024) {
 		ns.mapNames = make(map[string]struct{})

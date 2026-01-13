@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
@@ -13,13 +13,13 @@ import (
 // ----------------------------------------------------------------------------
 // API
 
-// A Union represents a union of terms embedded in an interface.
+// 一个Union represents a union of terms embedded in an interface.
 type Union struct {
 	terms []*Term // list of syntactical terms (not a canonicalized termlist)
 }
 
-// NewUnion returns a new [Union] type with the given terms.
-// It is an error to create an empty union; they are syntactically not possible.
+// NewUnion 返回a new [Union] type with the given terms.
+// It 是一个n error to create an empty union; they are syntactically not possible.
 func NewUnion(terms []*Term) *Union {
 	if len(terms) == 0 {
 		panic("empty union")
@@ -33,10 +33,10 @@ func (u *Union) Term(i int) *Term { return u.terms[i] }
 func (u *Union) Underlying() Type { return u }
 func (u *Union) String() string   { return TypeString(u, nil) }
 
-// A Term represents a term in a [Union].
+// 一个Term represents a term in a [Union].
 type Term term
 
-// NewTerm returns a new union term.
+// NewTerm 返回a new union term.
 func NewTerm(tilde bool, typ Type) *Term { return &Term{tilde, typ} }
 
 func (t *Term) Tilde() bool    { return t.tilde }
@@ -50,7 +50,7 @@ func (t *Term) String() string { return (*term)(t).String() }
 const maxTermCount = 100
 
 // parseUnion parses uexpr as a union of expressions.
-// The result is a Union type, or Typ[Invalid] for some errors.
+// The result 是一个 Union type, or Typ[Invalid] for some errors.
 func parseUnion(check *Checker, uexpr ast.Expr) Type {
 	blist, tlist := flattenUnion(nil, uexpr)
 	assert(len(blist) == len(tlist)-1)
@@ -87,7 +87,7 @@ func parseUnion(check *Checker, uexpr ast.Expr) Type {
 
 	// Check validity of terms.
 	// Do this check later because it requires types to be set up.
-	// Note: This is a quadratic algorithm, but unions tend to be short.
+	// Note: This 是一个 quadratic algorithm, but unions tend to be short.
 	check.later(func() {
 		for i, t := range terms {
 			if !isValid(t.typ) {
@@ -98,7 +98,7 @@ func parseUnion(check *Checker, uexpr ast.Expr) Type {
 			f, _ := u.(*Interface)
 			if t.tilde {
 				if f != nil {
-					check.errorf(tlist[i], InvalidUnion, "invalid use of ~ (%s is an interface)", t.typ)
+					check.errorf(tlist[i], InvalidUnion, "invalid use of ~ (%s 是一个n interface)", t.typ)
 					continue // don't report another error for t
 				}
 
@@ -116,7 +116,7 @@ func parseUnion(check *Checker, uexpr ast.Expr) Type {
 				tset := f.typeSet()
 				switch {
 				case tset.NumMethods() != 0:
-					check.errorf(tlist[i], InvalidUnion, "cannot use %s in union (%s contains methods)", t, t)
+					check.errorf(tlist[i], InvalidUnion, "cannot use %s in union (%s 包含 methods)", t, t)
 				case t.typ == universeComparable.Type():
 					check.error(tlist[i], InvalidUnion, "cannot use comparable in union")
 				case tset.comparable:
@@ -148,7 +148,7 @@ func parseTilde(check *Checker, tx ast.Expr) *Term {
 	// We don't need this restriction anymore if we make the underlying type of a type
 	// parameter its constraint interface: if we embed a lone type parameter, we will
 	// simply use its underlying type (like we do for other named, embedded interfaces),
-	// and since the underlying type is an interface the embedding is well defined.
+	// and since the underlying type 是一个n interface the embedding is well defined.
 	if isTypeParam(typ) {
 		if tilde {
 			check.errorf(x, MisplacedTypeParam, "type in term %s cannot be a type parameter", tx)
@@ -164,7 +164,7 @@ func parseTilde(check *Checker, tx ast.Expr) *Term {
 	return term
 }
 
-// overlappingTerm reports the index of the term x in terms which is
+// overlappingTerm 报告the index of the term x in terms which is
 // overlapping (not disjoint) from y. The result is < 0 if there is no
 // such term. The type of term y must not be an interface, and terms
 // with an interface type are ignored in the terms list.

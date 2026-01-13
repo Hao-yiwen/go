@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build !goexperiment.jsonv2
 
@@ -10,9 +10,9 @@ import "bytes"
 
 // HTMLEscape appends to dst the JSON-encoded src with <, >, &, U+2028 and U+2029
 // characters inside string literals changed to \u003c, \u003e, \u0026, \u2028, \u2029
-// so that the JSON will be safe to embed inside HTML <script> tags.
+// so that the JSON 将是 safe to embed inside HTML <script> tags.
 // For historical reasons, web browsers don't honor standard HTML
-// escaping within <script> tags, so an alternative JSON encoding must be used.
+// escaping within <script> tags, so an alternative JSON encoding 必须是 used.
 func HTMLEscape(dst *bytes.Buffer, src []byte) {
 	dst.Grow(len(src))
 	dst.Write(appendHTMLEscape(dst.AvailableBuffer(), src))
@@ -98,12 +98,12 @@ func appendNewline(dst []byte, prefix, indent string, depth int) []byte {
 	return dst
 }
 
-// indentGrowthFactor specifies the growth factor of indenting JSON input.
+// indentGrowthFactor 指定the growth factor of indenting JSON input.
 // Empirically, the growth factor was measured to be between 1.4x to 1.8x
 // for some set of compacted JSON with the indent being a single tab.
 // Specify a growth factor slightly larger than what is observed
 // to reduce probability of allocation in appendIndent.
-// A factor no higher than 2 ensures that wasted space never exceeds 50%.
+// 一个factor no higher than 2 ensures that wasted space never exceeds 50%.
 const indentGrowthFactor = 2
 
 // Indent appends to dst an indented form of the JSON-encoded src.

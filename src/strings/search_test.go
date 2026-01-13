@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package strings_test
 
@@ -57,7 +57,7 @@ func TestFinderCreation(t *testing.T) {
 			[256]int{'i': 3, 'm': 7, 's': 1},
 			[]int{15, 14, 13, 7, 11, 10, 7, 1},
 		},
-		// From https://www.cs.utexas.edu/~moore/publications/fstrpos.pdf
+		// 来自 https://www.cs.utexas.edu/~moore/publications/fstrpos.pdf
 		{
 			"abcxxxabc",
 			[256]int{'a': 2, 'b': 1, 'c': 6, 'x': 3},

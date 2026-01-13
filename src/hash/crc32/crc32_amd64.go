@@ -1,10 +1,9 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// AMD64-specific hardware-assisted CRC32 algorithms. See crc32.go for a
-// description of the interface that each architecture-specific file
-// implements.
+// AMD64 特定的硬件加速 CRC32 算法。有关每个架构特定文件
+// 实现的接口描述，请参阅 crc32.go。
 
 package crc32
 
@@ -13,22 +12,19 @@ import (
 	"unsafe"
 )
 
-// Offset into internal/cpu records for use in assembly.
+// 用于汇编的 internal/cpu 记录的偏移量。
 const (
 	offsetX86HasAVX512VPCLMULQDQL = unsafe.Offsetof(cpu.X86.HasAVX512VPCLMULQDQ)
 )
 
-// This file contains the code to call the SSE 4.2 version of the Castagnoli
-// and IEEE CRC.
+// 本文件包含调用 SSE 4.2 版本的 Castagnoli 和 IEEE CRC 的代码。
 
-// castagnoliSSE42 is defined in crc32_amd64.s and uses the SSE 4.2 CRC32
-// instruction.
+// castagnoliSSE42 在 crc32_amd64.s 中定义，使用 SSE 4.2 CRC32 指令。
 //
 //go:noescape
 func castagnoliSSE42(crc uint32, p []byte) uint32
 
-// castagnoliSSE42Triple is defined in crc32_amd64.s and uses the SSE 4.2 CRC32
-// instruction.
+// castagnoliSSE42Triple 在 crc32_amd64.s 中定义，使用 SSE 4.2 CRC32 指令。
 //
 //go:noescape
 func castagnoliSSE42Triple(
@@ -37,8 +33,7 @@ func castagnoliSSE42Triple(
 	rounds uint32,
 ) (retA uint32, retB uint32, retC uint32)
 
-// ieeeCLMUL is defined in crc_amd64.s and uses the PCLMULQDQ
-// instruction as well as SSE 4.1.
+// ieeeCLMUL 在 crc_amd64.s 中定义，使用 PCLMULQDQ 指令和 SSE 4.1。
 //
 //go:noescape
 func ieeeCLMUL(crc uint32, p []byte) uint32
@@ -61,12 +56,12 @@ func archInitCastagnoli() {
 	}
 	castagnoliSSE42TableK1 = new(sse42Table)
 	castagnoliSSE42TableK2 = new(sse42Table)
-	// See description in updateCastagnoli.
+	// 参见 updateCastagnoli 中的描述。
 	//    t[0][i] = CRC(i000, O)
 	//    t[1][i] = CRC(0i00, O)
 	//    t[2][i] = CRC(00i0, O)
 	//    t[3][i] = CRC(000i, O)
-	// where O is a sequence of K zeros.
+	// 其中 O 是 K 个零的序列。
 	var tmp [castagnoliK2]byte
 	for b := 0; b < 4; b++ {
 		for i := 0; i < 256; i++ {
@@ -77,9 +72,9 @@ func archInitCastagnoli() {
 	}
 }
 
-// castagnoliShift computes the CRC32-C of K1 or K2 zeroes (depending on the
-// table given) with the given initial crc value. This corresponds to
-// CRC(crc, O) in the description in updateCastagnoli.
+// castagnoliShift 使用给定的初始 crc 值计算 K1 或 K2 个零
+//（取决于给定的表）的 CRC32-C。这对应于 updateCastagnoli
+// 描述中的 CRC(crc, O)。
 func castagnoliShift(table *sse42Table, crc uint32) uint32 {
 	return table[3][crc>>24] ^
 		table[2][(crc>>16)&0xFF] ^
@@ -92,42 +87,38 @@ func archUpdateCastagnoli(crc uint32, p []byte) uint32 {
 		panic("not available")
 	}
 
-	// This method is inspired from the algorithm in Intel's white paper:
+	// 此方法灵感来自 Intel 白皮书中的算法：
 	//    "Fast CRC Computation for iSCSI Polynomial Using CRC32 Instruction"
-	// The same strategy of splitting the buffer in three is used but the
-	// combining calculation is different; the complete derivation is explained
-	// below.
+	// 使用了相同的将缓冲区分成三部分的策略，但合并计算不同；
+	// 完整的推导在下面解释。
 	//
-	// -- The basic idea --
+	// -- 基本思想 --
 	//
-	// The CRC32 instruction (available in SSE4.2) can process 8 bytes at a
-	// time. In recent Intel architectures the instruction takes 3 cycles;
-	// however the processor can pipeline up to three instructions if they
-	// don't depend on each other.
+	// CRC32 指令（在 SSE4.2 中可用）一次可以处理 8 字节。
+	// 在最近的 Intel 架构中，该指令需要 3 个周期；
+	// 但是，如果三条指令不相互依赖，处理器可以流水线执行多达三条指令。
 	//
-	// Roughly this means that we can process three buffers in about the same
-	// time we can process one buffer.
+	// 粗略地说，这意味着我们可以在大约相同的时间内处理三个缓冲区，
+	// 与处理一个缓冲区的时间相同。
 	//
-	// The idea is then to split the buffer in three, CRC the three pieces
-	// separately and then combine the results.
+	// 因此，思路是将缓冲区分成三部分，分别对三部分进行 CRC 计算，
+	// 然后合并结果。
 	//
-	// Combining the results requires precomputed tables, so we must choose a
-	// fixed buffer length to optimize. The longer the length, the faster; but
-	// only buffers longer than this length will use the optimization. We choose
-	// two cutoffs and compute tables for both:
-	//  - one around 512: 168*3=504
-	//  - one around 4KB: 1344*3=4032
+	// 合并结果需要预计算的表，因此我们必须选择一个固定的缓冲区长度来优化。
+	// 长度越长，速度越快；但只有长于此长度的缓冲区才会使用此优化。
+	// 我们选择两个阈值并为两者计算表：
+	//  - 一个约为 512：168*3=504
+	//  - 一个约为 4KB：1344*3=4032
 	//
-	// -- The nitty gritty --
+	// -- 具体细节 --
 	//
-	// Let CRC(I, X) be the non-inverted CRC32-C of the sequence X (with
-	// initial non-inverted CRC I). This function has the following properties:
+	// 设 CRC(I, X) 为序列 X 的非反转 CRC32-C（初始非反转 CRC 为 I）。
+	// 此函数具有以下属性：
 	//   (a) CRC(I, AB) = CRC(CRC(I, A), B)
 	//   (b) CRC(I, A xor B) = CRC(I, A) xor CRC(0, B)
 	//
-	// Say we want to compute CRC(I, ABC) where A, B, C are three sequences of
-	// K bytes each, where K is a fixed constant. Let O be the sequence of K zero
-	// bytes.
+	// 假设我们想计算 CRC(I, ABC)，其中 A、B、C 是三个各 K 字节的序列，
+	// K 是固定常数。设 O 为 K 个零字节的序列。
 	//
 	// CRC(I, ABC) = CRC(I, ABO xor C)
 	//             = CRC(I, ABO) xor CRC(0, C)
@@ -136,24 +127,22 @@ func archUpdateCastagnoli(crc uint32, p []byte) uint32 {
 	//             = CRC(CRC(I, AO) xor CRC(0, B), O) xor CRC(0, C)
 	//             = CRC(CRC(CRC(I, A), O) xor CRC(0, B), O) xor CRC(0, C)
 	//
-	// The castagnoliSSE42Triple function can compute CRC(I, A), CRC(0, B),
-	// and CRC(0, C) efficiently.  We just need to find a way to quickly compute
-	// CRC(uvwx, O) given a 4-byte initial value uvwx. We can precompute these
-	// values; since we can't have a 32-bit table, we break it up into four
-	// 8-bit tables:
+	// castagnoliSSE42Triple 函数可以高效地计算 CRC(I, A)、CRC(0, B)
+	// 和 CRC(0, C)。我们只需要找到一种方法，在给定 4 字节初始值 uvwx 的情况下
+	// 快速计算 CRC(uvwx, O)。我们可以预计算这些值；由于我们不能有一个 32 位表，
+	// 我们将其分解为四个 8 位表：
 	//
 	//    CRC(uvwx, O) = CRC(u000, O) xor
 	//                   CRC(0v00, O) xor
 	//                   CRC(00w0, O) xor
 	//                   CRC(000x, O)
 	//
-	// We can compute tables corresponding to the four terms for all 8-bit
-	// values.
+	// 我们可以为所有 8 位值计算对应于四个项的表。
 
 	crc = ^crc
 
-	// If a buffer is long enough to use the optimization, process the first few
-	// bytes to align the buffer to an 8 byte boundary (if necessary).
+	// 如果缓冲区足够长以使用优化，处理前几个字节
+	// 以将缓冲区对齐到 8 字节边界（如有必要）。
 	if len(p) >= castagnoliK1*3 {
 		delta := int(uintptr(unsafe.Pointer(&p[0])) & 7)
 		if delta != 0 {
@@ -163,9 +152,9 @@ func archUpdateCastagnoli(crc uint32, p []byte) uint32 {
 		}
 	}
 
-	// Process 3*K2 at a time.
+	// 每次处理 3*K2。
 	for len(p) >= castagnoliK2*3 {
-		// Compute CRC(I, A), CRC(0, B), and CRC(0, C).
+		// 计算 CRC(I, A)、CRC(0, B) 和 CRC(0, C)。
 		crcA, crcB, crcC := castagnoliSSE42Triple(
 			crc, 0, 0,
 			p, p[castagnoliK2:], p[castagnoliK2*2:],
@@ -178,9 +167,9 @@ func archUpdateCastagnoli(crc uint32, p []byte) uint32 {
 		p = p[castagnoliK2*3:]
 	}
 
-	// Process 3*K1 at a time.
+	// 每次处理 3*K1。
 	for len(p) >= castagnoliK1*3 {
-		// Compute CRC(I, A), CRC(0, B), and CRC(0, C).
+		// 计算 CRC(I, A)、CRC(0, B) 和 CRC(0, C)。
 		crcA, crcB, crcC := castagnoliSSE42Triple(
 			crc, 0, 0,
 			p, p[castagnoliK1:], p[castagnoliK1*2:],
@@ -193,7 +182,7 @@ func archUpdateCastagnoli(crc uint32, p []byte) uint32 {
 		p = p[castagnoliK1*3:]
 	}
 
-	// Use the simple implementation for what's left.
+	// 对剩余部分使用简单实现。
 	crc = castagnoliSSE42(crc, p)
 	return ^crc
 }
@@ -208,7 +197,7 @@ func archInitIEEE() {
 	if !cpu.X86.HasPCLMULQDQ || !cpu.X86.HasSSE41 {
 		panic("not available")
 	}
-	// We still use slicing-by-8 for small buffers.
+	// 对于小缓冲区，我们仍然使用 slicing-by-8。
 	archIeeeTable8 = slicingMakeTable(IEEE)
 }
 

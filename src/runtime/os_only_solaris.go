@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Solaris code that doesn't also apply to illumos.
+// 不适用于 illumos 的 Solaris 代码。
 
 //go:build !illumos
 

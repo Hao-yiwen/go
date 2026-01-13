@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package xml
 
@@ -11,13 +11,13 @@ import (
 	"sync"
 )
 
-// typeInfo holds details for the xml representation of a type.
+// typeInfo 保存details for the xml representation of a type.
 type typeInfo struct {
 	xmlname *fieldInfo
 	fields  []fieldInfo
 }
 
-// fieldInfo holds details for the xml representation of a single field.
+// fieldInfo 保存details for the xml representation of a single field.
 type fieldInfo struct {
 	idx     []int
 	name    string
@@ -48,7 +48,7 @@ var tinfoMap sync.Map // map[reflect.Type]*typeInfo
 
 var nameType = reflect.TypeFor[Name]()
 
-// getTypeInfo returns the typeInfo structure with details necessary
+// getTypeInfo 返回the typeInfo structure with details necessary
 // for marshaling and unmarshaling typ.
 func getTypeInfo(typ reflect.Type) (*typeInfo, error) {
 	if ti, ok := tinfoMap.Load(typ); ok {
@@ -109,7 +109,7 @@ func getTypeInfo(typ reflect.Type) (*typeInfo, error) {
 	return ti.(*typeInfo), nil
 }
 
-// structFieldInfo builds and returns a fieldInfo for f.
+// structFieldInfo builds and 返回一个fieldInfo for f.
 func structFieldInfo(typ reflect.Type, f *reflect.StructField) (*fieldInfo, error) {
 	finfo := &fieldInfo{idx: f.Index}
 
@@ -225,9 +225,9 @@ func structFieldInfo(typ reflect.Type, f *reflect.StructField) (*fieldInfo, erro
 	return finfo, nil
 }
 
-// lookupXMLName returns the fieldInfo for typ's XMLName field
+// lookupXMLName 返回the fieldInfo for typ's XMLName field
 // in case it exists and has a valid xml field tag, otherwise
-// it returns nil.
+// it 返回nil.
 func lookupXMLName(typ reflect.Type) (xmlname *fieldInfo) {
 	for typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
@@ -255,7 +255,7 @@ func lookupXMLName(typ reflect.Type) (xmlname *fieldInfo) {
 // conflicts, or if conflicts arise from previous fields that were
 // obtained from deeper embedded structures than finfo. In the latter
 // case, the conflicting entries are dropped.
-// A conflict occurs when the path (parent + name) to a field is
+// 一个conflict occurs when the path (parent + name) to a field is
 // itself a prefix of another path, or when two paths match exactly.
 // It is okay for field paths to share a common, shorter prefix.
 func addFieldInfo(typ reflect.Type, tinfo *typeInfo, newf *fieldInfo) error {
@@ -304,7 +304,7 @@ Loop:
 		}
 	}
 
-	// Otherwise, if any of them is at the same depth level, it's an error.
+	// Otherwise, if any of them 是一个t the same depth level, it's an error.
 	for _, i := range conflicts {
 		oldf := &tinfo.fields[i]
 		if len(oldf.idx) == len(newf.idx) {
@@ -325,7 +325,7 @@ Loop:
 	return nil
 }
 
-// A TagPathError represents an error in the unmarshaling process
+// 一个TagPathError represents an error in the unmarshaling process
 // caused by the use of field tags with conflicting paths.
 type TagPathError struct {
 	Struct       reflect.Type
@@ -342,11 +342,11 @@ const (
 	dontInitNilPointers = false
 )
 
-// value returns v's field value corresponding to finfo.
+// value 返回v's field value corresponding to finfo.
 // It's equivalent to v.FieldByIndex(finfo.idx), but when passed
 // initNilPointers, it initializes and dereferences pointers as necessary.
 // When passed dontInitNilPointers and a nil pointer is reached, the function
-// returns a zero reflect.Value.
+// 返回一个zero reflect.Value.
 func (finfo *fieldInfo) value(v reflect.Value, shouldInitNilPointers bool) reflect.Value {
 	for i, x := range finfo.idx {
 		if i > 0 {

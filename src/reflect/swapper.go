@@ -1,6 +1,6 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2016 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package reflect
 
@@ -11,16 +11,15 @@ import (
 	"unsafe"
 )
 
-// Swapper returns a function that swaps the elements in the provided
-// slice.
+// Swapper 返回一个函数，该函数交换提供的切片中的元素。
 //
-// Swapper panics if the provided interface is not a slice.
+// 如果提供的接口不是切片，Swapper 会 panic。
 func Swapper(slice any) func(i, j int) {
 	v := ValueOf(slice)
 	if v.Kind() != Slice {
 		panic(&ValueError{Method: "Swapper", Kind: v.Kind()})
 	}
-	// Fast path for slices of size 0 and 1. Nothing to swap.
+	// 大小为 0 和 1 的切片的快速路径。没有需要交换的。
 	switch v.Len() {
 	case 0:
 		return func(i, j int) { panic("reflect: slice index out of range") }
@@ -36,7 +35,7 @@ func Swapper(slice any) func(i, j int) {
 	size := typ.Size()
 	hasPtr := typ.Pointers()
 
-	// Some common & small cases, without using memmove:
+	// 一些常见的小型情况，不使用 memmove：
 	if hasPtr {
 		if size == goarch.PtrSize {
 			ps := *(*[]unsafe.Pointer)(v.ptr)
@@ -64,7 +63,7 @@ func Swapper(slice any) func(i, j int) {
 	}
 
 	s := (*unsafeheader.Slice)(v.ptr)
-	tmp := unsafe_New(typ) // swap scratch space
+	tmp := unsafe_New(typ) // 交换用的临时空间
 
 	return func(i, j int) {
 		if uint(i) >= uint(s.Len) || uint(j) >= uint(s.Len) {

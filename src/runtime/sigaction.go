@@ -6,8 +6,7 @@
 
 package runtime
 
-// This version is used on Linux and FreeBSD systems on which we don't
-// use cgo to call the C version of sigaction.
+// 此版本用于不使用 cgo 调用 C 版本 sigaction 的 Linux 和 FreeBSD 系统。
 
 //go:nosplit
 //go:nowritebarrierrec

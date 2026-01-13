@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Parse input AST and prepare Prog structure.
+// 解析输入 AST 并准备 Prog 结构。
 
 package main
 
@@ -21,10 +21,9 @@ func parse(name string, src []byte, flags parser.Mode) *ast.File {
 	ast1, err := parser.ParseFile(fset, name, src, flags)
 	if err != nil {
 		if list, ok := err.(scanner.ErrorList); ok {
-			// If err is a scanner.ErrorList, its String will print just
-			// the first error and then (+n more errors).
-			// Instead, turn it into a new Error that will return
-			// details for all the errors.
+			// 如果 err 是 scanner.ErrorList，其 String 方法只会打印
+			// 第一个错误，然后是 (+n more errors)。
+			// 相反，将其转换为一个新的 Error，返回所有错误的详细信息。
 			for _, e := range list {
 				fmt.Fprintln(os.Stderr, e)
 			}
@@ -39,20 +38,16 @@ func sourceLine(n ast.Node) int {
 	return fset.Position(n.Pos()).Line
 }
 
-// ParseGo populates f with information learned from the Go source code
-// which was read from the named file. It gathers the C preamble
-// attached to the import "C" comment, a list of references to C.xxx,
-// a list of exported functions, and the actual AST, to be rewritten and
-// printed.
+// ParseGo 使用从指定文件读取的 Go 源代码中获取的信息填充 f。
+// 它收集附加到 import "C" 注释的 C 前导代码、对 C.xxx 的引用列表、
+// 导出函数列表以及实际的 AST，以便重写和打印。
 func (f *File) ParseGo(abspath string, src []byte) {
-	// Two different parses: once with comments, once without.
-	// The printer is not good enough at printing comments in the
-	// right place when we start editing the AST behind its back,
-	// so we use ast1 to look for the doc comments on import "C"
-	// and on exported functions, and we use ast2 for translating
-	// and reprinting.
-	// In cgo mode, we ignore ast2 and just apply edits directly
-	// the text behind ast1. In godefs mode we modify and print ast2.
+	// 两次不同的解析：一次带注释，一次不带。
+	// 当我们在背后编辑 AST 时，打印器在正确位置打印注释方面不够好，
+	// 所以我们使用 ast1 来查找 import "C" 和导出函数上的文档注释，
+	// 我们使用 ast2 进行翻译和重新打印。
+	// 在 cgo 模式下，我们忽略 ast2，直接对 ast1 背后的文本应用编辑。
+	// 在 godefs 模式下，我们修改并打印 ast2。
 	ast1 := parse(abspath, src, parser.SkipObjectResolution|parser.ParseComments)
 	ast2 := parse(abspath, src, parser.SkipObjectResolution)
 
@@ -60,7 +55,7 @@ func (f *File) ParseGo(abspath string, src []byte) {
 	f.Name = make(map[string]*Name)
 	f.NamePos = make(map[*Name]token.Pos)
 
-	// In ast1, find the import "C" line and get any extra C preamble.
+	// 在 ast1 中，找到 import "C" 行并获取任何额外的 C 前导代码。
 	sawC := false
 	for _, decl := range ast1.Decls {
 		switch decl := decl.(type) {
@@ -80,8 +75,8 @@ func (f *File) ParseGo(abspath string, src []byte) {
 				}
 				if cg != nil {
 					if strings.ContainsAny(abspath, "\r\n") {
-						// This should have been checked when the file path was first resolved,
-						// but we double check here just to be sure.
+						// 这应该在文件路径首次解析时就检查过了，
+						// 但我们在这里再次检查以确保安全。
 						fatalf("internal error: ParseGo: abspath contains unexpected newline character: %q", abspath)
 					}
 					f.Preamble += fmt.Sprintf("#line %d %q\n", sourceLine(cg), abspath)
@@ -91,9 +86,8 @@ func (f *File) ParseGo(abspath string, src []byte) {
 			}
 
 		case *ast.FuncDecl:
-			// Also, reject attempts to declare methods on C.T or *C.T.
-			// (The generated code would otherwise accept this
-			// invalid input; see issue #57926.)
+			// 同时，拒绝在 C.T 或 *C.T 上声明方法的尝试。
+			// （否则生成的代码会接受这种无效的输入；参见 issue #57926。）
 			if decl.Recv != nil && len(decl.Recv.List) > 0 {
 				recvType := decl.Recv.List[0].Type
 				if recvType != nil {
@@ -115,7 +109,7 @@ func (f *File) ParseGo(abspath string, src []byte) {
 		error_(ast1.Package, `cannot find import "C"`)
 	}
 
-	// In ast2, strip the import "C" line.
+	// 在 ast2 中，去除 import "C" 行。
 	if *godefs {
 		w := 0
 		for _, decl := range ast2.Decls {
@@ -149,28 +143,25 @@ func (f *File) ParseGo(abspath string, src []byte) {
 			}
 			for _, spec := range d.Specs {
 				if s, ok := spec.(*ast.ImportSpec); ok && s.Path.Value == `"C"` {
-					// Replace "C" with _ "unsafe", to keep program valid.
-					// (Deleting import statement or clause is not safe if it is followed
-					// in the source by an explicit semicolon.)
+					// 将 "C" 替换为 _ "unsafe"，以保持程序有效。
+					// （如果源代码中后面跟着显式分号，删除 import 语句或子句是不安全的。）
 					f.Edit.Replace(f.offset(s.Path.Pos()), f.offset(s.Path.End()), `_ "unsafe"`)
 				}
 			}
 		}
 	}
 
-	// Accumulate pointers to uses of C.x.
+	// 累积对 C.x 使用的指针。
 	if f.Ref == nil {
 		f.Ref = make([]*Ref, 0, 8)
 	}
 	f.walk(ast2, ctxProg, (*File).validateIdents)
 	f.walk(ast2, ctxProg, (*File).saveExprs)
 
-	// Accumulate exported functions.
-	// The comments are only on ast1 but we need to
-	// save the function bodies from ast2.
-	// The first walk fills in ExpFunc, and the
-	// second walk changes the entries to
-	// refer to ast2 instead.
+	// 累积导出的函数。
+	// 注释只在 ast1 中，但我们需要从 ast2 保存函数体。
+	// 第一次遍历填充 ExpFunc，第二次遍历将条目更改为
+	// 引用 ast2。
 	f.walk(ast1, ctxProg, (*File).saveExport)
 	f.walk(ast2, ctxProg, (*File).saveExport2)
 
@@ -178,20 +169,20 @@ func (f *File) ParseGo(abspath string, src []byte) {
 	f.AST = ast2
 }
 
-// Like ast.CommentGroup's Text method but preserves
-// leading blank lines, so that line numbers line up.
+// 类似于 ast.CommentGroup 的 Text 方法，但保留前导空行，
+// 以便行号对齐。
 func commentText(g *ast.CommentGroup) string {
 	pieces := make([]string, 0, len(g.List))
 	for _, com := range g.List {
 		c := com.Text
-		// Remove comment markers.
-		// The parser has given us exactly the comment text.
+		// 移除注释标记。
+		// 解析器给我们的正是注释文本。
 		switch c[1] {
 		case '/':
-			//-style comment (no newline at the end)
+			// //-风格的注释（末尾没有换行符）
 			c = c[2:] + "\n"
 		case '*':
-			/*-style comment */
+			// /*-风格的注释 */
 			c = c[2 : len(c)-2]
 		}
 		pieces = append(pieces, c)
@@ -207,7 +198,7 @@ func (f *File) validateIdents(x any, context astContext) {
 	}
 }
 
-// Save various references we are going to need later.
+// 保存我们稍后需要的各种引用。
 func (f *File) saveExprs(x any, context astContext) {
 	switch x := x.(type) {
 	case *ast.Expr:
@@ -220,14 +211,12 @@ func (f *File) saveExprs(x any, context astContext) {
 	}
 }
 
-// Save references to C.xxx for later processing.
+// 保存对 C.xxx 的引用以供后续处理。
 func (f *File) saveRef(n *ast.Expr, context astContext) {
 	sel := (*n).(*ast.SelectorExpr)
-	// For now, assume that the only instance of capital C is when
-	// used as the imported package identifier.
-	// The parser should take care of scoping in the future, so
-	// that we will be able to distinguish a "top-level C" from a
-	// local C.
+	// 目前，假设大写 C 的唯一实例是作为导入的包标识符使用。
+	// 解析器将来应该处理作用域问题，以便我们能够区分
+	// "顶级 C" 和局部 C。
 	if l, ok := sel.X.(*ast.Ident); !ok || l.Name != "C" {
 		return
 	}
@@ -264,7 +253,7 @@ func (f *File) saveRef(n *ast.Expr, context astContext) {
 	})
 }
 
-// Save calls to C.xxx for later processing.
+// 保存对 C.xxx 的调用以供后续处理。
 func (f *File) saveCall(call *ast.CallExpr, context astContext) {
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	if !ok {
@@ -277,7 +266,7 @@ func (f *File) saveCall(call *ast.CallExpr, context astContext) {
 	f.Calls = append(f.Calls, c)
 }
 
-// If a function should be exported add it to ExpFunc.
+// 如果函数应该被导出，则将其添加到 ExpFunc。
 func (f *File) saveExport(x any, context astContext) {
 	n, ok := x.(*ast.FuncDecl)
 	if !ok {
@@ -304,15 +293,15 @@ func (f *File) saveExport(x any, context astContext) {
 		f.ExpFunc = append(f.ExpFunc, &ExpFunc{
 			Func:    n,
 			ExpName: name,
-			// Caution: Do not set the Doc field on purpose
-			// to ensure that there are no unintended artifacts
-			// in the binary. See https://go.dev/issue/76697.
+			// 注意：故意不设置 Doc 字段，
+			// 以确保二进制文件中没有意外的产物。
+			// 参见 https://go.dev/issue/76697。
 		})
 		break
 	}
 }
 
-// Make f.ExpFunc[i] point at the Func from this AST instead of the other one.
+// 使 f.ExpFunc[i] 指向此 AST 中的 Func，而不是另一个。
 func (f *File) saveExport2(x any, context astContext) {
 	n, ok := x.(*ast.FuncDecl)
 	if !ok {
@@ -337,33 +326,33 @@ const (
 	ctxExpr
 	ctxField
 	ctxParam
-	ctxAssign2 // assignment of a single expression to two variables
+	ctxAssign2 // 将单个表达式赋值给两个变量
 	ctxSwitch
 	ctxTypeSwitch
 	ctxFile
 	ctxDecl
 	ctxSpec
 	ctxDefer
-	ctxCall  // any function call other than ctxCall2
-	ctxCall2 // function call whose result is assigned to two variables
+	ctxCall  // 除 ctxCall2 之外的任何函数调用
+	ctxCall2 // 结果被赋值给两个变量的函数调用
 	ctxSelector
 )
 
-// walk walks the AST x, calling visit(f, x, context) for each node.
+// walk 遍历 AST x，对每个节点调用 visit(f, x, context)。
 func (f *File) walk(x any, context astContext, visit func(*File, any, astContext)) {
 	visit(f, x, context)
 	switch n := x.(type) {
 	case *ast.Expr:
 		f.walk(*n, context, visit)
 
-	// everything else just recurs
+	// 其他所有情况只是递归
 	default:
 		error_(token.NoPos, "unexpected type %T in walk", x)
 		panic("unexpected type")
 
 	case nil:
 
-	// These are ordered and grouped to match ../../go/ast/ast.go
+	// 这些按照 ../../go/ast/ast.go 的顺序和分组排列
 	case *ast.Field:
 		if len(n.Names) == 0 && context == ctxField {
 			f.walk(&n.Type, ctxEmbedType, visit)
@@ -567,7 +556,7 @@ func (f *File) walk(x any, context astContext, visit func(*File, any, astContext
 	}
 }
 
-// If x is of the form (T), unparen returns unparen(T), otherwise it returns x.
+// 如果 x 的形式是 (T)，unparen 返回 unparen(T)，否则返回 x。
 func unparen(x ast.Expr) ast.Expr {
 	if p, isParen := x.(*ast.ParenExpr); isParen {
 		x = unparen(p.X)

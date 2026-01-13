@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package filepath_test
 
@@ -64,7 +64,7 @@ func testWinSplitListTestIsValid(t *testing.T, ti int, tt SplitListTest,
 		}
 	}
 
-	// on some systems, SystemRoot is required for cmd to work
+	// 在某些系统上，SystemRoot 是 cmd 工作所必需的
 	systemRoot := os.Getenv("SystemRoot")
 
 	for i, d := range tt.result {
@@ -87,7 +87,7 @@ func testWinSplitListTestIsValid(t *testing.T, ti int, tt SplitListTest,
 			t.Errorf("%d,%d: expected %#q, got %#q", ti, i, exp, out)
 			return
 		default:
-			// unshadow cmdfile in next directory
+			// 取消下一个目录中 cmdfile 的遮蔽
 			err = os.Remove(filepath.Join(tmp, d, cmdfile))
 			if err != nil {
 				t.Fatalf("Remove test command failed: %v", err)
@@ -109,7 +109,7 @@ func TestWindowsEvalSymlinks(t *testing.T) {
 	}
 	test := EvalSymlinksTest{"test/linkabswin", tmpDir[:3]}
 
-	// Create the symlink farm using relative paths.
+	// 使用相对路径创建符号链接农场。
 	testdirs := append(EvalSymlinksTestDirs, test)
 	for _, d := range testdirs {
 		var err error
@@ -143,8 +143,8 @@ func TestWindowsEvalSymlinks(t *testing.T) {
 	testEvalSymlinksAfterChdir(t, tmpDir, test.path, test.dest)
 }
 
-// TestEvalSymlinksCanonicalNames verify that EvalSymlinks
-// returns "canonical" path names on windows.
+// TestEvalSymlinksCanonicalNames 验证 EvalSymlinks
+// 在 Windows 上返回"规范"路径名。
 func TestEvalSymlinksCanonicalNames(t *testing.T) {
 	ctmp := tempDirCanonical(t)
 	dirs := []string{
@@ -169,7 +169,7 @@ func TestEvalSymlinksCanonicalNames(t *testing.T) {
 			t.Errorf("EvalSymlinks(%q) returns %q, but should return %q", dir, cname, dir)
 			continue
 		}
-		// test non-canonical names
+		// 测试非规范名称
 		test := strings.ToUpper(dir)
 		p, err := filepath.EvalSymlinks(test)
 		if err != nil {
@@ -180,7 +180,7 @@ func TestEvalSymlinksCanonicalNames(t *testing.T) {
 			t.Errorf("EvalSymlinks(%q) returns %q, but should return %q", test, p, cname)
 			continue
 		}
-		// another test
+		// 另一个测试
 		test = strings.ToLower(dir)
 		p, err = filepath.EvalSymlinks(test)
 		if err != nil {
@@ -194,38 +194,37 @@ func TestEvalSymlinksCanonicalNames(t *testing.T) {
 	}
 }
 
-// checkVolume8dot3Setting runs "fsutil 8dot3name query c:" command
-// (where c: is vol parameter) to discover "8dot3 name creation state".
-// The state is combination of 2 flags. The global flag controls if it
-// is per volume or global setting:
+// checkVolume8dot3Setting 运行 "fsutil 8dot3name query c:" 命令
+// （其中 c: 是 vol 参数）以发现"8dot3 名称创建状态"。
+// 该状态是 2 个标志的组合。全局标志控制它是按卷还是全局设置：
 //
-//	0 - Enable 8dot3 name creation on all volumes on the system
-//	1 - Disable 8dot3 name creation on all volumes on the system
-//	2 - Set 8dot3 name creation on a per volume basis
-//	3 - Disable 8dot3 name creation on all volumes except the system volume
+//	0 - 在系统上的所有卷上启用 8dot3 名称创建
+//	1 - 在系统上的所有卷上禁用 8dot3 名称创建
+//	2 - 在每个卷的基础上设置 8dot3 名称创建
+//	3 - 在除系统卷之外的所有卷上禁用 8dot3 名称创建
 //
-// If global flag is set to 2, then per-volume flag needs to be examined:
+// 如果全局标志设置为 2，则需要检查每卷标志：
 //
-//	0 - Enable 8dot3 name creation on this volume
-//	1 - Disable 8dot3 name creation on this volume
+//	0 - 在此卷上启用 8dot3 名称创建
+//	1 - 在此卷上禁用 8dot3 名称创建
 //
-// checkVolume8dot3Setting verifies that "8dot3 name creation" flags
-// are set to 2 and 0, if enabled parameter is true, or 2 and 1, if enabled
-// is false. Otherwise checkVolume8dot3Setting returns error.
+// checkVolume8dot3Setting 验证"8dot3 名称创建"标志
+// 如果 enabled 参数为 true 则设置为 2 和 0，如果 enabled
+// 为 false 则设置为 2 和 1。否则 checkVolume8dot3Setting 返回错误。
 func checkVolume8dot3Setting(vol string, enabled bool) error {
-	// It appears, on some systems "fsutil 8dot3name query ..." command always
-	// exits with error. Ignore exit code, and look at fsutil output instead.
+	// 看起来在某些系统上 "fsutil 8dot3name query ..." 命令总是
+	// 以错误退出。忽略退出代码，而是查看 fsutil 输出。
 	out, _ := exec.Command("fsutil", "8dot3name", "query", vol).CombinedOutput()
-	// Check that system has "Volume level setting" set.
+	// 检查系统是否设置了"卷级别设置"。
 	expected := "The registry state of NtfsDisable8dot3NameCreation is 2, the default (Volume level setting)"
 	if !strings.Contains(string(out), expected) {
-		// Windows 10 version of fsutil has different output message.
+		// Windows 10 版本的 fsutil 有不同的输出消息。
 		expectedWindow10 := "The registry state is: 2 (Per volume setting - the default)"
 		if !strings.Contains(string(out), expectedWindow10) {
 			return fmt.Errorf("fsutil output should contain %q, but is %q", expected, string(out))
 		}
 	}
-	// Now check the volume setting.
+	// 现在检查卷设置。
 	expected = "Based on the above two settings, 8dot3 name creation is %s on %s"
 	if enabled {
 		expected = fmt.Sprintf(expected, "enabled", vol)
@@ -245,11 +244,11 @@ func setVolume8dot3Setting(vol string, enabled bool) error {
 	} else {
 		cmd = append(cmd, "1")
 	}
-	// It appears, on some systems "fsutil 8dot3name set ..." command always
-	// exits with error. Ignore exit code, and look at fsutil output instead.
+	// 看起来在某些系统上 "fsutil 8dot3name set ..." 命令总是
+	// 以错误退出。忽略退出代码，而是查看 fsutil 输出。
 	out, _ := exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
 	if string(out) != "\r\nSuccessfully set 8dot3name behavior.\r\n" {
-		// Windows 10 version of fsutil has different output message.
+		// Windows 10 版本的 fsutil 有不同的输出消息。
 		expectedWindow10 := "Successfully %s 8dot3name generation on %s\r\n"
 		if enabled {
 			expectedWindow10 = fmt.Sprintf(expectedWindow10, "enabled", vol)
@@ -265,8 +264,8 @@ func setVolume8dot3Setting(vol string, enabled bool) error {
 
 var runFSModifyTests = flag.Bool("run_fs_modify_tests", false, "run tests which modify filesystem parameters")
 
-// This test assumes registry state of NtfsDisable8dot3NameCreation is 2,
-// the default (Volume level setting).
+// 此测试假设 NtfsDisable8dot3NameCreation 的注册表状态为 2，
+// 即默认设置（卷级别设置）。
 func TestEvalSymlinksCanonicalNamesWith8dot3Disabled(t *testing.T) {
 	if !*runFSModifyTests {
 		t.Skip("skipping test that modifies file system setting; enable with -run_fs_modify_tests")
@@ -315,7 +314,7 @@ func TestToNorm(t *testing.T) {
 		}
 
 		i := strings.LastIndexByte(path, filepath.Separator)
-		if i == len(path)-1 { // trailing '\' is invalid
+		if i == len(path)-1 { // 尾部的 '\' 是无效的
 			return "", fmt.Errorf("invalid path is given to base: %s", vol+path)
 		}
 		if i == -1 {
@@ -325,7 +324,7 @@ func TestToNorm(t *testing.T) {
 		return strings.ToUpper(path[i+1:]), nil
 	}
 
-	// On this test, toNorm should be same as string.ToUpper(filepath.Clean(path)) except empty string.
+	// 在此测试中，toNorm 应该与 string.ToUpper(filepath.Clean(path)) 相同，空字符串除外。
 	tests := []struct {
 		arg  string
 		want string
@@ -367,13 +366,13 @@ func TestToNorm(t *testing.T) {
 		arg  string
 		want string
 	}{
-		// test absolute paths
+		// 测试绝对路径
 		{".", `{{tmp}}\test\foo\bar`, `{{tmp}}\test\foo\bar`},
 		{".", `{{tmp}}\.\test/foo\bar`, `{{tmp}}\test\foo\bar`},
 		{".", `{{tmp}}\test\..\test\foo\bar`, `{{tmp}}\test\foo\bar`},
 		{".", `{{tmp}}\TEST\FOO\BAR`, `{{tmp}}\test\foo\bar`},
 
-		// test relative paths begin with drive letter
+		// 测试以驱动器字母开头的相对路径
 		{`{{tmp}}\test`, `{{tmpvol}}.`, `{{tmpvol}}.`},
 		{`{{tmp}}\test`, `{{tmpvol}}..`, `{{tmpvol}}..`},
 		{`{{tmp}}\test`, `{{tmpvol}}foo\bar`, `{{tmpvol}}foo\bar`},
@@ -381,13 +380,13 @@ func TestToNorm(t *testing.T) {
 		{`{{tmp}}\test`, `{{tmpvol}}foo\..\foo\bar`, `{{tmpvol}}foo\bar`},
 		{`{{tmp}}\test`, `{{tmpvol}}FOO\BAR`, `{{tmpvol}}foo\bar`},
 
-		// test relative paths begin with '\'
+		// 测试以 '\' 开头的相对路径
 		{"{{tmp}}", `{{tmpnovol}}\test\foo\bar`, `{{tmpnovol}}\test\foo\bar`},
 		{"{{tmp}}", `{{tmpnovol}}\.\test\foo\bar`, `{{tmpnovol}}\test\foo\bar`},
 		{"{{tmp}}", `{{tmpnovol}}\test\..\test\foo\bar`, `{{tmpnovol}}\test\foo\bar`},
 		{"{{tmp}}", `{{tmpnovol}}\TEST\FOO\BAR`, `{{tmpnovol}}\test\foo\bar`},
 
-		// test relative paths begin without '\'
+		// 测试不以 '\' 开头的相对路径
 		{`{{tmp}}\test`, ".", `.`},
 		{`{{tmp}}\test`, "..", `..`},
 		{`{{tmp}}\test`, `foo\bar`, `foo\bar`},
@@ -395,7 +394,7 @@ func TestToNorm(t *testing.T) {
 		{`{{tmp}}\test`, `foo\..\foo\bar`, `foo\bar`},
 		{`{{tmp}}\test`, `FOO\BAR`, `foo\bar`},
 
-		// test UNC paths
+		// 测试 UNC 路径
 		{".", `\\localhost\c$`, `\\localhost\c$`},
 	}
 
@@ -452,8 +451,8 @@ func TestToNorm(t *testing.T) {
 }
 
 func TestUNC(t *testing.T) {
-	// Test that this doesn't go into an infinite recursion.
-	// See golang.org/issue/15879.
+	// 测试这不会进入无限递归。
+	// 参见 golang.org/issue/15879。
 	defer debug.SetMaxStack(debug.SetMaxStack(1e6))
 	filepath.Glob(`\\?\c:\*`)
 }
@@ -489,12 +488,12 @@ func createMountPartition(t *testing.T, vhd string, args string) []byte {
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			if t.Skipped() {
-				// Probably failed to dismount because we never mounted it in
-				// the first place. Log the error, but ignore it.
+				// 可能是因为我们从未挂载它而导致卸载失败。
+				// 记录错误，但忽略它。
 				t.Logf("%v: %v (skipped)\n%s", cmd, err, out)
 			} else {
-				// Something went wrong, and we don't want to leave dangling VHDs.
-				// Better to fail the test than to just log the error and continue.
+				// 出了问题，我们不想留下悬空的 VHD。
+				// 宁可测试失败也不要只记录错误然后继续。
 				t.Errorf("%v: %v\n%s", cmd, err, out)
 			}
 		}
@@ -518,7 +517,7 @@ func createMountPartition(t *testing.T, vhd string, args string) []byte {
 	}
 	output, err := testenv.Command(t, "powershell", "-File", script).CombinedOutput()
 	if err != nil {
-		// This can happen if Hyper-V is not installed or enabled.
+		// 如果 Hyper-V 未安装或未启用，可能会发生这种情况。
 		t.Skip("skipping test because failed to create VHD: ", err, string(output))
 	}
 	return output
@@ -528,8 +527,8 @@ var winsymlink = godebug.New("winsymlink")
 var winreadlinkvolume = godebug.New("winreadlinkvolume")
 
 func TestEvalSymlinksJunctionToVolumeID(t *testing.T) {
-	// Test that EvalSymlinks resolves a directory junction which
-	// is mapped to volumeID (instead of drive letter). See go.dev/issue/39786.
+	// 测试 EvalSymlinks 是否能解析映射到卷 ID（而不是驱动器字母）
+	// 的目录连接点。参见 go.dev/issue/39786。
 	if winsymlink.Value() == "0" {
 		t.Skip("skipping test because winsymlink is not enabled")
 	}
@@ -560,8 +559,8 @@ func TestEvalSymlinksJunctionToVolumeID(t *testing.T) {
 }
 
 func TestEvalSymlinksMountPointRecursion(t *testing.T) {
-	// Test that EvalSymlinks doesn't follow recursive mount points.
-	// See go.dev/issue/40176.
+	// 测试 EvalSymlinks 不会跟随递归挂载点。
+	// 参见 go.dev/issue/40176。
 	if winsymlink.Value() == "0" {
 		t.Skip("skipping test because winsymlink is not enabled")
 	}
@@ -625,7 +624,7 @@ func TestNTNamespaceSymlink(t *testing.T) {
 		t.Errorf(`EvalSymlinks(%q): got %q, want %q`, dirlink, got, want)
 	}
 
-	// Make sure we have sufficient privilege to run mklink command.
+	// 确保我们有足够的权限运行 mklink 命令。
 	testenv.MustHaveSymlink(t)
 
 	file := filepath.Join(tmpdir, "file")

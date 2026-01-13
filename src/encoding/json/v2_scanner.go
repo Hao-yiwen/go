@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -19,7 +19,7 @@ import (
 // export exposes internal functionality of the "jsontext" package.
 var export = jsontext.Internal.Export(&internal.AllowInternalUse)
 
-// Valid reports whether data is a valid JSON encoding.
+// Valid 报告whether data 是一个 valid JSON encoding.
 func Valid(data []byte) bool {
 	return checkValid(data) == nil
 }
@@ -42,8 +42,8 @@ func checkValid(data []byte) error {
 	return nil
 }
 
-// A SyntaxError is a description of a JSON syntax error.
-// [Unmarshal] will return a SyntaxError if the JSON can't be parsed.
+// 一个SyntaxError 是一个 description of a JSON syntax error.
+// [Unmarshal] 将返回 a SyntaxError 如果 JSON can't be parsed.
 type SyntaxError struct {
 	msg    string // description of error
 	Offset int64  // error occurred after reading Offset bytes
@@ -60,7 +60,7 @@ func transformSyntacticError(err error) error {
 			serr.Err = errUnexpectedEnd
 		}
 		msg := serr.Err.Error()
-		if i := strings.Index(msg, " (expecting"); i >= 0 && !strings.Contains(msg, " in literal") {
+		if i := strings.Index(msg, " (expecting"); i >= 0 && !strings.包含(msg, " in literal") {
 			msg = msg[:i]
 		}
 		return &SyntaxError{Offset: serr.ByteOffset, msg: syntaxErrorReplacer.Replace(msg)}

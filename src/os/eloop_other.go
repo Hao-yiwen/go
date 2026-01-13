@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build aix || darwin || dragonfly || freebsd || linux || openbsd || solaris || wasip1
 
@@ -11,14 +11,14 @@ import (
 	"syscall"
 )
 
-// isNoFollowErr reports whether err may result from O_NOFOLLOW blocking an open operation.
+// isNoFollowErr 报告 err 是否可能由 O_NOFOLLOW 阻止打开操作所导致。
 func isNoFollowErr(err error) bool {
 	switch err {
 	case syscall.ELOOP, syscall.EMLINK:
 		return true
 	}
 	if runtime.GOOS == "dragonfly" {
-		// Dragonfly appears to return EINVAL from openat in this case.
+		// Dragonfly 似乎在这种情况下从 openat 返回 EINVAL。
 		if err == syscall.EINVAL {
 			return true
 		}

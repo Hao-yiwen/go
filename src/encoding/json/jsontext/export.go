@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -37,10 +37,10 @@ func (exporter) Export(p *internal.NotForPublicUse) export {
 // guarantees that it emits valid JSON by the structure of the code itself.
 type export struct{}
 
-// Encoder returns a pointer to the underlying encoderState.
+// Encoder 返回a pointer to the underlying encoderState.
 func (export) Encoder(e *Encoder) *encoderState { return &e.s }
 
-// Decoder returns a pointer to the underlying decoderState.
+// Decoder 返回a pointer to the underlying decoderState.
 func (export) Decoder(d *Decoder) *decoderState { return &d.s }
 
 func (export) GetBufferedEncoder(o ...Options) *Encoder {

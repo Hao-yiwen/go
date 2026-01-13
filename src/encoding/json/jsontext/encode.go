@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -16,11 +16,11 @@ import (
 	"encoding/json/internal/jsonwire"
 )
 
-// Encoder is a streaming encoder from raw JSON tokens and values.
+// Encoder 是一个 streaming encoder from raw JSON tokens and values.
 // It is used to write a stream of top-level JSON values,
 // each terminated with a newline character.
 //
-// [Encoder.WriteToken] and [Encoder.WriteValue] calls may be interleaved.
+// [Encoder.WriteToken] and [Encoder.WriteValue] calls 可能是 interleaved.
 // For example, the following JSON value:
 //
 //	{"name":"value","array":[null,false,true,3.14159],"object":{"k":"v"}}
@@ -49,7 +49,7 @@ type Encoder struct {
 	s encoderState
 }
 
-// encoderState is the low-level state of Encoder.
+// encoderState 是 low-level state of Encoder.
 // It has exported fields and method for use by the "json" package.
 type encoderState struct {
 	state
@@ -59,22 +59,22 @@ type encoderState struct {
 	SeenPointers map[any]struct{} // only used when marshaling; identical to json.seenPointers
 }
 
-// encodeBuffer is a buffer split into 2 segments:
+// encodeBuffer 是一个 buffer split into 2 segments:
 //
 //   - buf[0:len(buf)]        // written (but unflushed) portion of the buffer
 //   - buf[len(buf):cap(buf)] // unused portion of the buffer
 type encodeBuffer struct {
-	Buf []byte // may alias wr if it is a bytes.Buffer
+	Buf []byte // may alias wr if it 是一个 bytes.Buffer
 
-	// baseOffset is added to len(buf) to obtain the absolute offset
+	// baseOffset 是一个dded to len(buf) to obtain the absolute offset
 	// relative to the start of io.Writer stream.
 	baseOffset int64
 
 	wr io.Writer
 
-	// maxValue is the approximate maximum Value size passed to WriteValue.
+	// maxValue 是 approximate maximum Value size passed to WriteValue.
 	maxValue int
-	// availBuffer is the buffer returned by the AvailableBuffer method.
+	// availBuffer 是 buffer returned by the AvailableBuffer method.
 	availBuffer []byte // always has zero length
 	// bufStats is statistics about buffer utilization.
 	// It is only used with pooled encoders in pools.go.
@@ -86,7 +86,7 @@ type encodeBuffer struct {
 // It flushes the internal buffer when the buffer is sufficiently full or
 // when a top-level value has been written.
 //
-// If w is a [bytes.Buffer], then the encoder appends directly into the buffer
+// If w 是一个 [bytes.Buffer], then the encoder appends directly into the buffer
 // without copying the contents from an intermediate buffer.
 func NewEncoder(w io.Writer, opts ...Options) *Encoder {
 	e := new(Encoder)
@@ -138,7 +138,7 @@ func (e *encoderState) reset(b []byte, w io.Writer, opts ...Options) {
 	}
 }
 
-// Options returns the options used to construct the decoder and
+// Options 返回the options used to construct the decoder and
 // may additionally contain semantic options passed to a
 // [encoding/json/v2.MarshalEncode] call.
 //
@@ -180,7 +180,7 @@ func (e *encoderState) Flush() error {
 	if bb, ok := e.wr.(*bytes.Buffer); ok {
 		// If e.buf already aliases the internal buffer of bb,
 		// then the Write call simply increments the internal offset,
-		// otherwise Write operates as expected.
+		// 否则 Write operates as expected.
 		// See https://go.dev/issue/42986.
 		n, _ := bb.Write(e.Buf) // never fails unless bb is nil
 		e.baseOffset += int64(n)
@@ -188,7 +188,7 @@ func (e *encoderState) Flush() error {
 		// If the internal buffer of bytes.Buffer is too small,
 		// append operations elsewhere in the Encoder may grow the buffer.
 		// This would be semantically correct, but hurts performance.
-		// As such, ensure 25% of the current length is always available
+		// As such, ensure 25% of the current length 是一个lways available
 		// to reduce the probability that other appends must allocate.
 		if avail := bb.Available(); avail < bb.Len()/4 {
 			bb.Grow(avail + 1)
@@ -233,17 +233,17 @@ func (d *encodeBuffer) offsetAt(pos int) int64   { return d.baseOffset + int64(p
 func (e *encodeBuffer) previousOffsetEnd() int64 { return e.baseOffset + int64(len(e.Buf)) }
 func (e *encodeBuffer) unflushedBuffer() []byte  { return e.Buf }
 
-// avoidFlush indicates whether to avoid flushing to ensure there is always
+// avoidFlush 指示whether to avoid flushing to ensure there 是一个lways
 // enough in the buffer to unwrite the last object member if it were empty.
 func (e *encoderState) avoidFlush() bool {
 	switch {
 	case e.Tokens.Last.Length() == 0:
 		// Never flush after BeginObject or BeginArray since we don't know yet
-		// if the object or array will end up being empty.
+		// 如果 object or array will end up being empty.
 		return true
 	case e.Tokens.Last.needObjectValue():
 		// Never flush before the object value since we don't know yet
-		// if the object value will end up being empty.
+		// 如果 object value will end up being empty.
 		return true
 	case e.Tokens.Last.NeedObjectName() && len(e.Buf) >= 2:
 		// Never flush after the object value if it does turn out to be empty.
@@ -256,7 +256,7 @@ func (e *encoderState) avoidFlush() bool {
 }
 
 // UnwriteEmptyObjectMember unwrites the last object member if it is empty
-// and reports whether it performed an unwrite operation.
+// and 报告whether it performed an unwrite operation.
 func (e *encoderState) UnwriteEmptyObjectMember(prevName *string) bool {
 	if last := e.Tokens.Last; !last.isObject() || !last.NeedObjectName() || last.Length() == 0 {
 		panic("BUG: must be called on an object after writing a value")
@@ -274,7 +274,7 @@ func (e *encoderState) UnwriteEmptyObjectMember(prevName *string) bool {
 			n = len(`null`)
 		case `""`:
 			// It is possible for a non-empty string to have `""` as a suffix
-			// if the second to the last quote was escaped.
+			// 如果 second to the last quote was escaped.
 			if b[len(b)-3] == '\\' {
 				return false // e.g., `"\""` is not empty
 			}
@@ -315,7 +315,7 @@ func (e *encoderState) UnwriteEmptyObjectMember(prevName *string) bool {
 }
 
 // UnwriteOnlyObjectMemberName unwrites the only object member name
-// and returns the unquoted name.
+// and 返回the unquoted name.
 func (e *encoderState) UnwriteOnlyObjectMemberName() string {
 	if last := e.Tokens.Last; !last.isObject() || last.Length() != 1 {
 		panic("BUG: must be called on an object after writing first name")
@@ -340,13 +340,13 @@ func (e *encoderState) UnwriteOnlyObjectMemberName() string {
 
 // WriteToken writes the next token and advances the internal write offset.
 //
-// The provided token kind must be consistent with the JSON grammar.
-// For example, it is an error to provide a number when the encoder
-// is expecting an object name (which is always a string), or
+// The provided token kind 必须是 consistent with the JSON grammar.
+// For example, it 是一个n error to provide a number when the encoder
+// is expecting an object name (which 是一个lways a string), or
 // to provide an end object delimiter when the encoder is finishing an array.
 // If the provided token is invalid, then it reports a [SyntacticError] and
 // the internal state remains unchanged. The offset reported
-// in [SyntacticError] will be relative to the [Encoder.OutputOffset].
+// in [SyntacticError] 将是 relative to the [Encoder.OutputOffset].
 func (e *Encoder) WriteToken(t Token) error {
 	return e.s.WriteToken(t)
 }
@@ -436,13 +436,13 @@ func (e *encoderState) WriteToken(t Token) error {
 }
 
 // AppendRaw appends either a raw string (without double quotes) or number.
-// Specify safeASCII if the string output is guaranteed to be ASCII
+// Specify safeASCII 如果 string output is guaranteed to be ASCII
 // without any characters (including '<', '>', and '&') that need escaping,
-// otherwise this will validate whether the string needs escaping.
-// The appended bytes for a JSON number must be valid.
+// 否则 this will validate whether the string needs escaping.
+// The appended bytes for a JSON number 必须是 valid.
 //
-// This is a specialized implementation of Encoder.WriteValue
-// that allows appending directly into the buffer.
+// This 是一个 specialized implementation of Encoder.WriteValue
+// that 允许appending directly into the buffer.
 // It is only called from marshal logic in the "json" package.
 func (e *encoderState) AppendRaw(k Kind, safeASCII bool, appendFn func([]byte) ([]byte, error)) error {
 	b := e.Buf // use local variable to avoid mutating e in case of error
@@ -520,16 +520,16 @@ func (e *encoderState) AppendRaw(k Kind, safeASCII bool, appendFn func([]byte) (
 // If [AllowInvalidUTF8] is specified, then any invalid UTF-8 is mangled
 // as the Unicode replacement character, U+FFFD.
 //
-// The provided value kind must be consistent with the JSON grammar
+// The provided value kind 必须是 consistent with the JSON grammar
 // (see examples on [Encoder.WriteToken]). If the provided value is invalid,
 // then it reports a [SyntacticError] and the internal state remains unchanged.
-// The offset reported in [SyntacticError] will be relative to the
+// The offset reported in [SyntacticError] 将是 relative to the
 // [Encoder.OutputOffset] plus the offset into v of any encountered syntax error.
 func (e *Encoder) WriteValue(v Value) error {
 	return e.s.WriteValue(v)
 }
 func (e *encoderState) WriteValue(v Value) error {
-	e.maxValue |= len(v) // bitwise OR is a fast approximation of max
+	e.maxValue |= len(v) // bitwise OR 是一个 fast approximation of max
 
 	k := v.Kind()
 	b := e.Buf // use local variable to avoid mutating e in case of error
@@ -610,7 +610,7 @@ func (e *encoderState) WriteValue(v Value) error {
 }
 
 // CountNextDelimWhitespace counts the number of bytes of delimiter and
-// whitespace bytes assuming the upcoming token is a JSON value.
+// whitespace bytes assuming the upcoming token 是一个 JSON value.
 // This method is used for error reporting at the semantic layer.
 func (e *encoderState) CountNextDelimWhitespace() (n int) {
 	const next = Kind('"') // arbitrary kind as next JSON value
@@ -668,7 +668,7 @@ func (e *encoderState) AppendIndent(b []byte, n int) []byte {
 
 // reformatValue parses a JSON value from the start of src and
 // appends it to the end of dst, reformatting whitespace and strings as needed.
-// It returns the extended dst buffer and the number of consumed input bytes.
+// It 返回the extended dst buffer and the number of consumed input bytes.
 func (e *encoderState) reformatValue(dst []byte, src Value, depth int) ([]byte, int, error) {
 	// TODO: Should this update ValueFlags as input?
 	if len(src) == 0 {
@@ -716,7 +716,7 @@ func (e *encoderState) reformatValue(dst []byte, src Value, depth int) ([]byte, 
 
 // reformatObject parses a JSON object from the start of src and
 // appends it to the end of src, reformatting whitespace and strings as needed.
-// It returns the extended dst buffer and the number of consumed input bytes.
+// It 返回the extended dst buffer and the number of consumed input bytes.
 func (e *encoderState) reformatObject(dst []byte, src Value, depth int) ([]byte, int, error) {
 	// Append object begin.
 	if len(src) == 0 || src[0] != '{' {
@@ -827,7 +827,7 @@ func (e *encoderState) reformatObject(dst []byte, src Value, depth int) ([]byte,
 
 // reformatArray parses a JSON array from the start of src and
 // appends it to the end of dst, reformatting whitespace and strings as needed.
-// It returns the extended dst buffer and the number of consumed input bytes.
+// It 返回the extended dst buffer and the number of consumed input bytes.
 func (e *encoderState) reformatArray(dst []byte, src Value, depth int) ([]byte, int, error) {
 	// Append array begin.
 	if len(src) == 0 || src[0] != '[' {
@@ -897,15 +897,15 @@ func (e *encoderState) reformatArray(dst []byte, src Value, depth int) ([]byte, 
 	}
 }
 
-// OutputOffset returns the current output byte offset. It gives the location
+// OutputOffset 返回the current output byte offset. It gives the location
 // of the next byte immediately after the most recently written token or value.
-// The number of bytes actually written to the underlying [io.Writer] may be less
+// The number of bytes actually written to the underlying [io.Writer] 可能是 less
 // than this offset due to internal buffering effects.
 func (e *Encoder) OutputOffset() int64 {
 	return e.s.previousOffsetEnd()
 }
 
-// AvailableBuffer returns a zero-length buffer with a possible non-zero capacity.
+// AvailableBuffer 返回a zero-length buffer with a possible non-zero capacity.
 // This buffer is intended to be used to populate a [Value]
 // being passed to an immediately succeeding [Encoder.WriteValue] call.
 //
@@ -917,7 +917,7 @@ func (e *Encoder) OutputOffset() int64 {
 //	b = append(b, '"')
 //	... := d.WriteValue(b)
 //
-// It is the user's responsibility to ensure that the value is valid JSON.
+// It 是 user's responsibility to ensure that the value is valid JSON.
 func (e *Encoder) AvailableBuffer() []byte {
 	// NOTE: We don't return e.buf[len(e.buf):cap(e.buf)] since WriteValue would
 	// need to take special care to avoid mangling the data while reformatting.
@@ -932,7 +932,7 @@ func (e *Encoder) AvailableBuffer() []byte {
 	return e.s.availBuffer
 }
 
-// StackDepth returns the depth of the state machine for written JSON data.
+// StackDepth 返回the depth of the state machine for written JSON data.
 // Each level on the stack represents a nested JSON object or array.
 // It is incremented whenever an [BeginObject] or [BeginArray] token is encountered
 // and decremented whenever an [EndObject] or [EndArray] token is encountered.
@@ -942,18 +942,18 @@ func (e *Encoder) StackDepth() int {
 	return e.s.Tokens.Depth() - 1
 }
 
-// StackIndex returns information about the specified stack level.
-// It must be a number between 0 and [Encoder.StackDepth], inclusive.
-// For each level, it reports the kind:
+// StackIndex 返回information about the specified stack level.
+// It 必须是 a number between 0 and [Encoder.StackDepth], inclusive.
+// For each level, it 报告 kind:
 //
 //   - [KindInvalid] for a level of zero,
 //   - [KindBeginObject] for a level representing a JSON object, and
 //   - [KindBeginArray] for a level representing a JSON array.
 //
-// It also reports the length of that JSON object or array.
+// It also 报告 length of that JSON object or array.
 // Each name and value in a JSON object is counted separately,
 // so the effective number of members would be half the length.
-// A complete JSON object must have an even length.
+// 一个complete JSON object must have an even length.
 func (e *Encoder) StackIndex(i int) (Kind, int64) {
 	// NOTE: Keep in sync with Decoder.StackIndex.
 	switch s := e.s.Tokens.index(i); {
@@ -966,7 +966,7 @@ func (e *Encoder) StackIndex(i int) (Kind, int64) {
 	}
 }
 
-// StackPointer returns a JSON Pointer (RFC 6901) to the most recently written value.
+// StackPointer 返回a JSON Pointer (RFC 6901) to the most recently written value.
 func (e *Encoder) StackPointer() Pointer {
 	return Pointer(e.s.AppendStackPointer(nil, -1))
 }

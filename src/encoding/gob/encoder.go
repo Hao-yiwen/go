@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package gob
 
@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-// An Encoder manages the transmission of type and data information to the
+// 一个Encoder manages the transmission 类型为 and data information to the
 // other side of a connection.  It is safe for concurrent use by multiple
 // goroutines.
 type Encoder struct {
@@ -30,7 +30,7 @@ type Encoder struct {
 const maxLength = 9 // Maximum size of an encoded length.
 var spaceForLength = make([]byte, maxLength)
 
-// NewEncoder returns a new encoder that will transmit on the [io.Writer].
+// NewEncoder 返回a new encoder that will transmit on the [io.Writer].
 func NewEncoder(w io.Writer) *Encoder {
 	enc := new(Encoder)
 	enc.w = []io.Writer{w}
@@ -39,7 +39,7 @@ func NewEncoder(w io.Writer) *Encoder {
 	return enc
 }
 
-// writer returns the innermost writer the encoder is using.
+// writer 返回the innermost writer the encoder is using.
 func (enc *Encoder) writer() io.Writer {
 	return enc.w[len(enc.w)-1]
 }
@@ -63,7 +63,7 @@ func (enc *Encoder) setError(err error) {
 // writeMessage sends the data item preceded by an unsigned count of its length.
 func (enc *Encoder) writeMessage(w io.Writer, b *encBuffer) {
 	// Space has been reserved for the length at the head of the message.
-	// This is a little dirty: we grab the slice from the bytes.Buffer and massage
+	// This 是一个 little dirty: we grab the slice from the bytes.Buffer and massage
 	// it by hand.
 	message := b.Bytes()
 	messageLen := len(message) - maxLength
@@ -136,7 +136,7 @@ func (enc *Encoder) sendType(w io.Writer, state *encoderState, origt reflect.Typ
 	ut := userType(origt)
 	if ut.externalEnc != 0 {
 		// The rules are different: regardless of the underlying type's representation,
-		// we need to tell the other side that the base type is a GobEncoder.
+		// we need to tell the other side that the base type 是一个 GobEncoder.
 		return enc.sendActualType(w, state, ut, ut.base)
 	}
 
@@ -153,13 +153,13 @@ func (enc *Encoder) sendType(w io.Writer, state *encoderState, origt reflect.Typ
 		// Otherwise we do send.
 		break
 	case reflect.Array:
-		// arrays must be sent so we know their lengths and element types.
+		// arrays 必须是 sent so we know their lengths and element types.
 		break
 	case reflect.Map:
-		// maps must be sent so we know their lengths and key/value types.
+		// 映射 必须是 sent so we know their lengths and key/value types.
 		break
 	case reflect.Struct:
-		// structs must be sent so we know their fields.
+		// structs 必须是 sent so we know their fields.
 		break
 	case reflect.Chan, reflect.Func:
 		// If we get here, it's a field of a struct; ignore it.
@@ -176,8 +176,8 @@ func (enc *Encoder) Encode(e any) error {
 	return enc.EncodeValue(reflect.ValueOf(e))
 }
 
-// sendTypeDescriptor makes sure the remote side knows about this type.
-// It will send a descriptor if this is the first time the type has been
+// sendTypeDescriptor 使 sure the remote side knows about this type.
+// It will send a descriptor if this 是 first time the type has been
 // sent.
 func (enc *Encoder) sendTypeDescriptor(w io.Writer, state *encoderState, ut *userTypeInfo) {
 	// Make sure the type is known to the other side.

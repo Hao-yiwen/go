@@ -1,28 +1,25 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package color implements a basic color library.
+// color 包实现了一个基本的颜色库。
 package color
 
-// Color can convert itself to alpha-premultiplied 16-bits per channel RGBA.
-// The conversion may be lossy.
+// Color 可以将自身转换为每通道 16 位的预乘 alpha RGBA。
+// 转换可能是有损的。
 type Color interface {
-	// RGBA returns the alpha-premultiplied red, green, blue and alpha values
-	// for the color. Each value ranges within [0, 0xffff], but is represented
-	// by a uint32 so that multiplying by a blend factor up to 0xffff will not
-	// overflow.
+	// RGBA 返回颜色的预乘 alpha 红色、绿色、蓝色和 alpha 值。
+	// 每个值的范围在 [0, 0xffff] 内，但用 uint32 表示，
+	// 这样乘以高达 0xffff 的混合因子时不会溢出。
 	//
-	// An alpha-premultiplied color component c has been scaled by alpha (a),
-	// so has valid values 0 <= c <= a.
+	// 预乘 alpha 的颜色分量 c 已按 alpha (a) 缩放，
+	// 因此有效值为 0 <= c <= a。
 	RGBA() (r, g, b, a uint32)
 }
 
-// RGBA represents a traditional 32-bit alpha-premultiplied color, having 8
-// bits for each of red, green, blue and alpha.
+// RGBA 表示传统的 32 位预乘 alpha 颜色，红色、绿色、蓝色和 alpha 各占 8 位。
 //
-// An alpha-premultiplied color component C has been scaled by alpha (A), so
-// has valid values 0 <= C <= A.
+// 预乘 alpha 的颜色分量 C 已按 alpha (A) 缩放，因此有效值为 0 <= C <= A。
 type RGBA struct {
 	R, G, B, A uint8
 }
@@ -39,11 +36,9 @@ func (c RGBA) RGBA() (r, g, b, a uint32) {
 	return
 }
 
-// RGBA64 represents a 64-bit alpha-premultiplied color, having 16 bits for
-// each of red, green, blue and alpha.
+// RGBA64 表示 64 位预乘 alpha 颜色，红色、绿色、蓝色和 alpha 各占 16 位。
 //
-// An alpha-premultiplied color component C has been scaled by alpha (A), so
-// has valid values 0 <= C <= A.
+// 预乘 alpha 的颜色分量 C 已按 alpha (A) 缩放，因此有效值为 0 <= C <= A。
 type RGBA64 struct {
 	R, G, B, A uint16
 }
@@ -52,7 +47,7 @@ func (c RGBA64) RGBA() (r, g, b, a uint32) {
 	return uint32(c.R), uint32(c.G), uint32(c.B), uint32(c.A)
 }
 
-// NRGBA represents a non-alpha-premultiplied 32-bit color.
+// NRGBA 表示非预乘 alpha 的 32 位颜色。
 type NRGBA struct {
 	R, G, B, A uint8
 }
@@ -75,8 +70,8 @@ func (c NRGBA) RGBA() (r, g, b, a uint32) {
 	return
 }
 
-// NRGBA64 represents a non-alpha-premultiplied 64-bit color,
-// having 16 bits for each of red, green, blue and alpha.
+// NRGBA64 表示非预乘 alpha 的 64 位颜色，
+// 红色、绿色、蓝色和 alpha 各占 16 位。
 type NRGBA64 struct {
 	R, G, B, A uint16
 }
@@ -95,7 +90,7 @@ func (c NRGBA64) RGBA() (r, g, b, a uint32) {
 	return
 }
 
-// Alpha represents an 8-bit alpha color.
+// Alpha 表示 8 位 alpha 颜色。
 type Alpha struct {
 	A uint8
 }
@@ -106,7 +101,7 @@ func (c Alpha) RGBA() (r, g, b, a uint32) {
 	return a, a, a, a
 }
 
-// Alpha16 represents a 16-bit alpha color.
+// Alpha16 表示 16 位 alpha 颜色。
 type Alpha16 struct {
 	A uint16
 }
@@ -116,7 +111,7 @@ func (c Alpha16) RGBA() (r, g, b, a uint32) {
 	return a, a, a, a
 }
 
-// Gray represents an 8-bit grayscale color.
+// Gray 表示 8 位灰度颜色。
 type Gray struct {
 	Y uint8
 }
@@ -127,7 +122,7 @@ func (c Gray) RGBA() (r, g, b, a uint32) {
 	return y, y, y, 0xffff
 }
 
-// Gray16 represents a 16-bit grayscale color.
+// Gray16 表示 16 位灰度颜色。
 type Gray16 struct {
 	Y uint16
 }
@@ -137,19 +132,16 @@ func (c Gray16) RGBA() (r, g, b, a uint32) {
 	return y, y, y, 0xffff
 }
 
-// Model can convert any [Color] to one from its own color model. The conversion
-// may be lossy.
+// Model 可以将任何 [Color] 转换为其自身颜色模型中的一个。转换可能是有损的。
 type Model interface {
 	Convert(c Color) Color
 }
 
-// ModelFunc returns a [Model] that invokes f to implement the conversion.
+// ModelFunc 返回一个调用 f 来实现转换的 [Model]。
 func ModelFunc(f func(Color) Color) Model {
-	// Note: using *modelFunc as the implementation
-	// means that callers can still use comparisons
-	// like m == RGBAModel. This is not possible if
-	// we use the func value directly, because funcs
-	// are no longer comparable.
+	// 注意：使用 *modelFunc 作为实现意味着调用者仍然可以使用
+	// 类似 m == RGBAModel 的比较。如果我们直接使用 func 值，
+	// 这是不可能的，因为函数不再可比较。
 	return &modelFunc{f}
 }
 
@@ -161,7 +153,7 @@ func (m *modelFunc) Convert(c Color) Color {
 	return m.f(c)
 }
 
-// Models for the standard color types.
+// 标准颜色类型的模型。
 var (
 	RGBAModel    Model = ModelFunc(rgbaModel)
 	RGBA64Model  Model = ModelFunc(rgba64Model)
@@ -200,7 +192,7 @@ func nrgbaModel(c Color) Color {
 	if a == 0 {
 		return NRGBA{0, 0, 0, 0}
 	}
-	// Since Color.RGBA returns an alpha-premultiplied color, we should have r <= a && g <= a && b <= a.
+	// 由于 Color.RGBA 返回预乘 alpha 的颜色，我们应该有 r <= a && g <= a && b <= a。
 	r = (r * 0xffff) / a
 	g = (g * 0xffff) / a
 	b = (b * 0xffff) / a
@@ -218,7 +210,7 @@ func nrgba64Model(c Color) Color {
 	if a == 0 {
 		return NRGBA64{0, 0, 0, 0}
 	}
-	// Since Color.RGBA returns an alpha-premultiplied color, we should have r <= a && g <= a && b <= a.
+	// 由于 Color.RGBA 返回预乘 alpha 的颜色，我们应该有 r <= a && g <= a && b <= a。
 	r = (r * 0xffff) / a
 	g = (g * 0xffff) / a
 	b = (b * 0xffff) / a
@@ -247,14 +239,13 @@ func grayModel(c Color) Color {
 	}
 	r, g, b, _ := c.RGBA()
 
-	// These coefficients (the fractions 0.299, 0.587 and 0.114) are the same
-	// as those given by the JFIF specification and used by func RGBToYCbCr in
-	// ycbcr.go.
+	// 这些系数（分数 0.299、0.587 和 0.114）与 JFIF 规范给出的
+	// 以及 ycbcr.go 中 func RGBToYCbCr 使用的相同。
 	//
-	// Note that 19595 + 38470 + 7471 equals 65536.
+	// 注意 19595 + 38470 + 7471 等于 65536。
 	//
-	// The 24 is 16 + 8. The 16 is the same as used in RGBToYCbCr. The 8 is
-	// because the return value is 8 bit color, not 16 bit color.
+	// 24 是 16 + 8。16 与 RGBToYCbCr 中使用的相同。8 是因为
+	// 返回值是 8 位颜色，而不是 16 位颜色。
 	y := (19595*r + 38470*g + 7471*b + 1<<15) >> 24
 
 	return Gray{uint8(y)}
@@ -266,20 +257,19 @@ func gray16Model(c Color) Color {
 	}
 	r, g, b, _ := c.RGBA()
 
-	// These coefficients (the fractions 0.299, 0.587 and 0.114) are the same
-	// as those given by the JFIF specification and used by func RGBToYCbCr in
-	// ycbcr.go.
+	// 这些系数（分数 0.299、0.587 和 0.114）与 JFIF 规范给出的
+	// 以及 ycbcr.go 中 func RGBToYCbCr 使用的相同。
 	//
-	// Note that 19595 + 38470 + 7471 equals 65536.
+	// 注意 19595 + 38470 + 7471 等于 65536。
 	y := (19595*r + 38470*g + 7471*b + 1<<15) >> 16
 
 	return Gray16{uint16(y)}
 }
 
-// Palette is a palette of colors.
+// Palette 是颜色的调色板。
 type Palette []Color
 
-// Convert returns the palette color closest to c in Euclidean R,G,B space.
+// Convert 返回在欧几里得 R,G,B 空间中最接近 c 的调色板颜色。
 func (p Palette) Convert(c Color) Color {
 	if len(p) == 0 {
 		return nil
@@ -287,10 +277,9 @@ func (p Palette) Convert(c Color) Color {
 	return p[p.Index(c)]
 }
 
-// Index returns the index of the palette color closest to c in Euclidean
-// R,G,B,A space.
+// Index 返回在欧几里得 R,G,B,A 空间中最接近 c 的调色板颜色的索引。
 func (p Palette) Index(c Color) int {
-	// A batch version of this computation is in image/draw/draw.go.
+	// 此计算的批处理版本在 image/draw/draw.go 中。
 
 	cr, cg, cb, ca := c.RGBA()
 	ret, bestSum := 0, uint32(1<<32-1)
@@ -307,12 +296,12 @@ func (p Palette) Index(c Color) int {
 	return ret
 }
 
-// sqDiff returns the squared-difference of x and y, shifted by 2 so that
-// adding four of those won't overflow a uint32.
+// sqDiff 返回 x 和 y 的差的平方，右移 2 位，使得
+// 四个这样的值相加不会溢出 uint32。
 //
-// x and y are both assumed to be in the range [0, 0xffff].
+// x 和 y 都假定在 [0, 0xffff] 范围内。
 func sqDiff(x, y uint32) uint32 {
-	// The canonical code of this function looks as follows:
+	// 此函数的规范代码如下：
 	//
 	//	var d uint32
 	//	if x > y {
@@ -322,23 +311,19 @@ func sqDiff(x, y uint32) uint32 {
 	//	}
 	//	return (d * d) >> 2
 	//
-	// Language spec guarantees the following properties of unsigned integer
-	// values operations with respect to overflow/wrap around:
+	// 语言规范保证无符号整数值操作在溢出/回绕方面具有以下属性：
 	//
-	// > For unsigned integer values, the operations +, -, *, and << are
-	// > computed modulo 2n, where n is the bit width of the unsigned
-	// > integer's type. Loosely speaking, these unsigned integer operations
-	// > discard high bits upon overflow, and programs may rely on ``wrap
-	// > around''.
+	// > 对于无符号整数值，操作 +、-、* 和 << 以 2^n 为模计算，
+	// > 其中 n 是无符号整数类型的位宽。简单地说，这些无符号整数操作
+	// > 在溢出时丢弃高位，程序可以依赖"回绕"行为。
 	//
-	// Considering these properties and the fact that this function is
-	// called in the hot paths (x,y loops), it is reduced to the below code
-	// which is slightly faster. See TestSqDiff for correctness check.
+	// 考虑到这些属性以及此函数在热路径（x,y 循环）中被调用的事实，
+	// 它被简化为下面的代码，这稍微快一些。请参阅 TestSqDiff 进行正确性检查。
 	d := x - y
 	return (d * d) >> 2
 }
 
-// Standard colors.
+// 标准颜色。
 var (
 	Black       = Gray16{0}
 	White       = Gray16{0xffff}

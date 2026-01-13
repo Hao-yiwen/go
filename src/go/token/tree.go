@@ -1,23 +1,23 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package token
 
-// tree is a self-balancing AVL tree; see
+// tree 是一个 self-balancing AVL tree; see
 // Lewis & Denenberg, Data Structures and Their Algorithms.
 //
-// An AVL tree is a binary tree in which the difference between the
+// 一个AVL tree 是一个 binary tree in which the difference between the
 // heights of a node's two subtrees--the node's "balance factor"--is
 // at most one. It is more strictly balanced than a red/black tree,
-// and thus favors lookups at the expense of updates, which is the
+// and thus favors lookups at the expense of updates, which 是
 // appropriate trade-off for FileSet.
 //
 // Insertion at a node may cause its ancestors' balance factors to
 // temporarily reach ±2, requiring rebalancing of each such ancestor
 // by a rotation.
 //
-// Each key is the pos-end range of a single File.
+// Each key 是 pos-end range of a single File.
 // All Files in the tree must have disjoint ranges.
 //
 // The implementation is simplified from Russ Cox's github.com/rsc/omap.
@@ -27,11 +27,11 @@ import (
 	"iter"
 )
 
-// A tree is a tree-based ordered map:
-// each value is a *File, keyed by its Pos range.
+// 一个tree 是一个 tree-based ordered map:
+// each value 是一个 *File, keyed by its Pos range.
 // All map entries cover disjoint ranges.
 //
-// The zero value of tree is an empty map ready to use.
+// The zero value of tree 是一个n empty map ready to use.
 type tree struct {
 	root *node
 }
@@ -47,20 +47,20 @@ type node struct {
 	height  int32
 }
 
-// A key represents the Pos range of a File.
+// 一个key represents the Pos range of a File.
 type key struct{ start, end int }
 
 func (f *File) key() key {
 	return key{f.base, f.base + f.size}
 }
 
-// compareKey reports whether x is before y (-1),
+// compareKey 报告whether x is before y (-1),
 // after y (+1), or overlapping y (0).
-// This is a total order so long as all
+// This 是一个 total order so long as all
 // files in the tree have disjoint ranges.
 //
 // All files are separated by at least one unit.
-// This allows us to use strict < comparisons.
+// This 允许us to use strict < comparisons.
 // Use key{p, p} to search for a zero-width position
 // even at the start or end of a file.
 func compareKey(x, y key) int {
@@ -105,9 +105,9 @@ func (n *node) checkBalance() {
 	}
 }
 
-// locate returns a pointer to the variable that holds the node
+// locate 返回a pointer to the variable that 保存 node
 // identified by k, along with its parent, if any. If the key is not
-// present, it returns a pointer to the node where the key should be
+// present, it 返回一个pointer to the node where the key 应该是
 // inserted by a subsequent call to [tree.set].
 func (t *tree) locate(k key) (pos **node, parent *node) {
 	pos, x := &t.root, t.root
@@ -124,10 +124,10 @@ func (t *tree) locate(k key) (pos **node, parent *node) {
 	return pos, parent
 }
 
-// all returns an iterator over the tree t.
+// all 返回an iterator over the tree t.
 // If t is modified during the iteration,
 // some files may not be visited.
-// No file will be visited multiple times.
+// No file 将是 visited multiple times.
 func (t *tree) all() iter.Seq[*File] {
 	return func(yield func(*File) bool) {
 		if t == nil {
@@ -151,7 +151,7 @@ func (t *tree) all() iter.Seq[*File] {
 	}
 }
 
-// nextAfter returns the node in the key sequence following
+// nextAfter 返回the node in the key sequence following
 // (pos, parent), a result pair from [tree.locate].
 func (t *tree) nextAfter(pos **node, parent *node) *node {
 	switch {
@@ -233,9 +233,9 @@ func (t *tree) replaceChild(parent, old, new *node) {
 // rebalanceUp visits each excessively unbalanced ancestor
 // of x, restoring balance by rotating it.
 //
-// x is a node that has just been mutated, and so the height and
-// balance of x and its ancestors may be stale, but the children of x
-// must be in a valid state.
+// x 是一个 node that has just been mutated, and so the height and
+// balance of x and its ancestors 可能是 stale, but the children of x
+// 必须是 in a valid state.
 func (t *tree) rebalanceUp(x *node) {
 	for x != nil {
 		h := x.height
@@ -324,7 +324,7 @@ func (t *tree) set(file *File, pos **node, parent *node) {
 	if x := *pos; x != nil {
 		// This code path isn't currently needed
 		// because FileSet never updates an existing entry.
-		// Remove this assertion if things change.
+		// Remove th是一个ssertion if things change.
 		if true { // defeat vet's unreachable pass
 			panic("unreachable according to current FileSet requirements")
 		}
@@ -345,7 +345,7 @@ func (t *tree) delete(pos **node) {
 	case x == nil:
 		// This code path isn't currently needed because FileSet
 		// only calls delete after a positive locate.
-		// Remove this assertion if things change.
+		// Remove th是一个ssertion if things change.
 		if true { // defeat vet's unreachable pass
 			panic("unreachable according to current FileSet requirements")
 		}
@@ -395,7 +395,7 @@ func (t *tree) deleteSwap(pos **node) {
 }
 
 // deleteMin updates the subtree rooted at *zpos to delete its minimum
-// (leftmost) element, which may be *zpos itself. It returns the
+// (leftmost) element, which 可能是 *zpos itself. It 返回
 // deleted node.
 func (t *tree) deleteMin(zpos **node) (z *node) {
 	for (*zpos).left != nil {

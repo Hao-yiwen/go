@@ -6,8 +6,7 @@
 
 package runtime
 
-// crosscall_ppc64 calls into the runtime to set up the registers the
-// Go runtime expects and so the symbol it calls needs to be exported
-// for external linking to work.
+// crosscall_ppc64 调用 runtime 来设置 Go runtime 期望的寄存器，
+// 因此它调用的符号需要导出以便外部链接能够正常工作。
 //
 //go:cgo_export_static _cgo_reginit

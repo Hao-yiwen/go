@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package slog
 
@@ -19,28 +19,28 @@ var defaultLogger atomic.Pointer[Logger]
 
 var logLoggerLevel LevelVar
 
-// SetLogLoggerLevel controls the level for the bridge to the [log] package.
+// SetLogLoggerLevel 控制到 [log] 包的桥接级别。
 //
-// Before [SetDefault] is called, slog top-level logging functions call the default [log.Logger].
-// In that mode, SetLogLoggerLevel sets the minimum level for those calls.
-// By default, the minimum level is Info, so calls to [Debug]
-// (as well as top-level logging calls at lower levels)
-// will not be passed to the log.Logger. After calling
-//
-//	slog.SetLogLoggerLevel(slog.LevelDebug)
-//
-// calls to [Debug] will be passed to the log.Logger.
-//
-// After [SetDefault] is called, calls to the default [log.Logger] are passed to the
-// slog default handler. In that mode,
-// SetLogLoggerLevel sets the level at which those calls are logged.
-// That is, after calling
+// 在调用 [SetDefault] 之前，slog 顶级日志记录函数会调用默认的 [log.Logger]。
+// 在该模式下，SetLogLoggerLevel 设置这些调用的最小级别。
+// 默认情况下，最小级别是 Info，因此对 [Debug] 的调用
+// （以及较低级别的顶级日志记录调用）不会传递给 log.Logger。
+// 在调用以下语句后：
 //
 //	slog.SetLogLoggerLevel(slog.LevelDebug)
 //
-// A call to [log.Printf] will result in output at level [LevelDebug].
+// 对 [Debug] 的调用将传递给 log.Logger。
 //
-// SetLogLoggerLevel returns the previous value.
+// 在调用 [SetDefault] 之后，对默认 [log.Logger] 的调用将传递给
+// slog 默认处理程序。在该模式下，
+// SetLogLoggerLevel 设置记录这些调用的级别。
+// 也就是说，在调用以下语句后：
+//
+//	slog.SetLogLoggerLevel(slog.LevelDebug)
+//
+// 对 [log.Printf] 的调用将以 [LevelDebug] 级别输出。
+//
+// SetLogLoggerLevel 返回之前的值。
 func SetLogLoggerLevel(level Level) (oldLevel Level) {
 	oldLevel = logLoggerLevel.Level()
 	logLoggerLevel.Set(level)
@@ -51,31 +51,29 @@ func init() {
 	defaultLogger.Store(New(newDefaultHandler(loginternal.DefaultOutput)))
 }
 
-// Default returns the default [Logger].
+// Default 返回默认的 [Logger]。
 func Default() *Logger { return defaultLogger.Load() }
 
-// SetDefault makes l the default [Logger], which is used by
-// the top-level functions [Info], [Debug] and so on.
-// After this call, output from the log package's default Logger
-// (as with [log.Print], etc.) will be logged using l's Handler,
-// at a level controlled by [SetLogLoggerLevel].
+// SetDefault 将 l 设为默认 [Logger]，顶级函数 [Info]、[Debug] 等会使用它。
+// 此调用之后，来自 log 包默认 Logger 的输出
+// （如 [log.Print] 等）将使用 l 的 Handler 进行记录，
+// 级别由 [SetLogLoggerLevel] 控制。
 func SetDefault(l *Logger) {
 	defaultLogger.Store(l)
-	// If the default's handler is a defaultHandler, then don't use a handleWriter,
-	// or we'll deadlock as they both try to acquire the log default mutex.
-	// The defaultHandler will use whatever the log default writer is currently
-	// set to, which is correct.
-	// This can occur with SetDefault(Default()).
-	// See TestSetDefault.
+	// 如果默认的处理程序是 defaultHandler，则不要使用 handleWriter，
+	// 否则当它们都尝试获取 log 默认互斥锁时会死锁。
+	// defaultHandler 将使用当前设置的 log 默认写入器，这是正确的。
+	// 这可能发生在 SetDefault(Default()) 的情况下。
+	// 参见 TestSetDefault。
 	if _, ok := l.Handler().(*defaultHandler); !ok {
 		capturePC := log.Flags()&(log.Lshortfile|log.Llongfile) != 0
 		log.SetOutput(&handlerWriter{l.Handler(), &logLoggerLevel, capturePC})
-		log.SetFlags(0) // we want just the log message, no time or location
+		log.SetFlags(0) // 我们只需要日志消息，不需要时间或位置
 	}
 }
 
-// handlerWriter is an io.Writer that calls a Handler.
-// It is used to link the default log.Logger to the default slog.Logger.
+// handlerWriter 是一个调用 Handler 的 io.Writer。
+// 它用于将默认的 log.Logger 链接到默认的 slog.Logger。
 type handlerWriter struct {
 	h         Handler
 	level     Leveler
@@ -89,27 +87,25 @@ func (w *handlerWriter) Write(buf []byte) (int, error) {
 	}
 	var pc uintptr
 	if !internal.IgnorePC && w.capturePC {
-		// skip [runtime.Callers, w.Write, Logger.Output, log.Print]
+		// 跳过 [runtime.Callers, w.Write, Logger.Output, log.Print]
 		var pcs [1]uintptr
 		runtime.Callers(4, pcs[:])
 		pc = pcs[0]
 	}
 
-	// Remove final newline.
-	origLen := len(buf) // Report that the entire buf was written.
+	// 移除末尾的换行符。
+	origLen := len(buf) // 报告整个 buf 已被写入。
 	buf = bytes.TrimSuffix(buf, []byte{'\n'})
 	r := NewRecord(time.Now(), level, string(buf), pc)
 	return origLen, w.h.Handle(context.Background(), r)
 }
 
-// A Logger records structured information about each call to its
-// Log, Debug, Info, Warn, and Error methods.
-// For each call, it creates a [Record] and passes it to a [Handler].
+// Logger 记录每次调用其 Log、Debug、Info、Warn 和 Error 方法的结构化信息。
+// 对于每次调用，它创建一个 [Record] 并将其传递给 [Handler]。
 //
-// To create a new Logger, call [New] or a Logger method
-// that begins "With".
+// 要创建新的 Logger，请调用 [New] 或以 "With" 开头的 Logger 方法。
 type Logger struct {
-	handler Handler // for structured logging
+	handler Handler // 用于结构化日志记录
 }
 
 func (l *Logger) clone() *Logger {
@@ -117,12 +113,11 @@ func (l *Logger) clone() *Logger {
 	return &c
 }
 
-// Handler returns l's Handler.
+// Handler 返回 l 的 Handler。
 func (l *Logger) Handler() Handler { return l.handler }
 
-// With returns a Logger that includes the given attributes
-// in each output operation. Arguments are converted to
-// attributes as if by [Logger.Log].
+// With 返回一个在每次输出操作中包含给定属性的 Logger。
+// 参数按照 [Logger.Log] 的方式转换为属性。
 func (l *Logger) With(args ...any) *Logger {
 	if len(args) == 0 {
 		return l
@@ -132,12 +127,11 @@ func (l *Logger) With(args ...any) *Logger {
 	return c
 }
 
-// WithGroup returns a Logger that starts a group, if name is non-empty.
-// The keys of all attributes added to the Logger will be qualified by the given
-// name. (How that qualification happens depends on the [Handler.WithGroup]
-// method of the Logger's Handler.)
+// WithGroup 如果 name 非空，则返回一个开始分组的 Logger。
+// 添加到 Logger 的所有属性的键将由给定名称限定。
+// （如何进行限定取决于 Logger 的 Handler 的 [Handler.WithGroup] 方法。）
 //
-// If name is empty, WithGroup returns the receiver.
+// 如果 name 为空，WithGroup 返回接收者本身。
 func (l *Logger) WithGroup(name string) *Logger {
 	if name == "" {
 		return l
@@ -147,7 +141,7 @@ func (l *Logger) WithGroup(name string) *Logger {
 	return c
 }
 
-// New creates a new Logger with the given non-nil Handler.
+// New 使用给定的非 nil Handler 创建新的 Logger。
 func New(h Handler) *Logger {
 	if h == nil {
 		panic("nil Handler")
@@ -155,12 +149,12 @@ func New(h Handler) *Logger {
 	return &Logger{handler: h}
 }
 
-// With calls [Logger.With] on the default logger.
+// With 在默认日志记录器上调用 [Logger.With]。
 func With(args ...any) *Logger {
 	return Default().With(args...)
 }
 
-// Enabled reports whether l emits log records at the given context and level.
+// Enabled 报告 l 是否在给定的上下文和级别发出日志记录。
 func (l *Logger) Enabled(ctx context.Context, level Level) bool {
 	if ctx == nil {
 		ctx = context.Background()
@@ -168,75 +162,73 @@ func (l *Logger) Enabled(ctx context.Context, level Level) bool {
 	return l.Handler().Enabled(ctx, level)
 }
 
-// NewLogLogger returns a new [log.Logger] such that each call to its Output method
-// dispatches a Record to the specified handler. The logger acts as a bridge from
-// the older log API to newer structured logging handlers.
+// NewLogLogger 返回一个新的 [log.Logger]，使得对其 Output 方法的每次调用
+// 都会将 Record 分派给指定的处理程序。该日志记录器充当从
+// 旧版 log API 到新版结构化日志处理程序的桥梁。
 func NewLogLogger(h Handler, level Level) *log.Logger {
 	return log.New(&handlerWriter{h, level, true}, "", 0)
 }
 
-// Log emits a log record with the current time and the given level and message.
-// The Record's Attrs consist of the Logger's attributes followed by
-// the Attrs specified by args.
+// Log 使用当前时间和给定的级别与消息发出日志记录。
+// Record 的 Attrs 由 Logger 的属性加上 args 指定的 Attrs 组成。
 //
-// The attribute arguments are processed as follows:
-//   - If an argument is an Attr, it is used as is.
-//   - If an argument is a string and this is not the last argument,
-//     the following argument is treated as the value and the two are combined
-//     into an Attr.
-//   - Otherwise, the argument is treated as a value with key "!BADKEY".
+// 属性参数按如下方式处理：
+//   - 如果参数是 Attr，则按原样使用。
+//   - 如果参数是字符串且不是最后一个参数，
+//     则下一个参数被视为值，两者组合成一个 Attr。
+//   - 否则，参数被视为键为 "!BADKEY" 的值。
 func (l *Logger) Log(ctx context.Context, level Level, msg string, args ...any) {
 	l.log(ctx, level, msg, args...)
 }
 
-// LogAttrs is a more efficient version of [Logger.Log] that accepts only Attrs.
+// LogAttrs 是 [Logger.Log] 的更高效版本，只接受 Attrs。
 func (l *Logger) LogAttrs(ctx context.Context, level Level, msg string, attrs ...Attr) {
 	l.logAttrs(ctx, level, msg, attrs...)
 }
 
-// Debug logs at [LevelDebug].
+// Debug 以 [LevelDebug] 级别记录日志。
 func (l *Logger) Debug(msg string, args ...any) {
 	l.log(context.Background(), LevelDebug, msg, args...)
 }
 
-// DebugContext logs at [LevelDebug] with the given context.
+// DebugContext 使用给定的上下文以 [LevelDebug] 级别记录日志。
 func (l *Logger) DebugContext(ctx context.Context, msg string, args ...any) {
 	l.log(ctx, LevelDebug, msg, args...)
 }
 
-// Info logs at [LevelInfo].
+// Info 以 [LevelInfo] 级别记录日志。
 func (l *Logger) Info(msg string, args ...any) {
 	l.log(context.Background(), LevelInfo, msg, args...)
 }
 
-// InfoContext logs at [LevelInfo] with the given context.
+// InfoContext 使用给定的上下文以 [LevelInfo] 级别记录日志。
 func (l *Logger) InfoContext(ctx context.Context, msg string, args ...any) {
 	l.log(ctx, LevelInfo, msg, args...)
 }
 
-// Warn logs at [LevelWarn].
+// Warn 以 [LevelWarn] 级别记录日志。
 func (l *Logger) Warn(msg string, args ...any) {
 	l.log(context.Background(), LevelWarn, msg, args...)
 }
 
-// WarnContext logs at [LevelWarn] with the given context.
+// WarnContext 使用给定的上下文以 [LevelWarn] 级别记录日志。
 func (l *Logger) WarnContext(ctx context.Context, msg string, args ...any) {
 	l.log(ctx, LevelWarn, msg, args...)
 }
 
-// Error logs at [LevelError].
+// Error 以 [LevelError] 级别记录日志。
 func (l *Logger) Error(msg string, args ...any) {
 	l.log(context.Background(), LevelError, msg, args...)
 }
 
-// ErrorContext logs at [LevelError] with the given context.
+// ErrorContext 使用给定的上下文以 [LevelError] 级别记录日志。
 func (l *Logger) ErrorContext(ctx context.Context, msg string, args ...any) {
 	l.log(ctx, LevelError, msg, args...)
 }
 
-// log is the low-level logging method for methods that take ...any.
-// It must always be called directly by an exported logging method
-// or function, because it uses a fixed call depth to obtain the pc.
+// log 是接受 ...any 的方法的低级日志记录方法。
+// 它必须总是由导出的日志记录方法或函数直接调用，
+// 因为它使用固定的调用深度来获取 pc。
 func (l *Logger) log(ctx context.Context, level Level, msg string, args ...any) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -247,7 +239,7 @@ func (l *Logger) log(ctx context.Context, level Level, msg string, args ...any) 
 	var pc uintptr
 	if !internal.IgnorePC {
 		var pcs [1]uintptr
-		// skip [runtime.Callers, this function, this function's caller]
+		// 跳过 [runtime.Callers, 此函数, 此函数的调用者]
 		runtime.Callers(3, pcs[:])
 		pc = pcs[0]
 	}
@@ -256,7 +248,7 @@ func (l *Logger) log(ctx context.Context, level Level, msg string, args ...any) 
 	_ = l.Handler().Handle(ctx, r)
 }
 
-// logAttrs is like [Logger.log], but for methods that take ...Attr.
+// logAttrs 类似于 [Logger.log]，但用于接受 ...Attr 的方法。
 func (l *Logger) logAttrs(ctx context.Context, level Level, msg string, attrs ...Attr) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -267,7 +259,7 @@ func (l *Logger) logAttrs(ctx context.Context, level Level, msg string, attrs ..
 	var pc uintptr
 	if !internal.IgnorePC {
 		var pcs [1]uintptr
-		// skip [runtime.Callers, this function, this function's caller]
+		// 跳过 [runtime.Callers, 此函数, 此函数的调用者]
 		runtime.Callers(3, pcs[:])
 		pc = pcs[0]
 	}
@@ -276,52 +268,52 @@ func (l *Logger) logAttrs(ctx context.Context, level Level, msg string, attrs ..
 	_ = l.Handler().Handle(ctx, r)
 }
 
-// Debug calls [Logger.Debug] on the default logger.
+// Debug 在默认日志记录器上调用 [Logger.Debug]。
 func Debug(msg string, args ...any) {
 	Default().log(context.Background(), LevelDebug, msg, args...)
 }
 
-// DebugContext calls [Logger.DebugContext] on the default logger.
+// DebugContext 在默认日志记录器上调用 [Logger.DebugContext]。
 func DebugContext(ctx context.Context, msg string, args ...any) {
 	Default().log(ctx, LevelDebug, msg, args...)
 }
 
-// Info calls [Logger.Info] on the default logger.
+// Info 在默认日志记录器上调用 [Logger.Info]。
 func Info(msg string, args ...any) {
 	Default().log(context.Background(), LevelInfo, msg, args...)
 }
 
-// InfoContext calls [Logger.InfoContext] on the default logger.
+// InfoContext 在默认日志记录器上调用 [Logger.InfoContext]。
 func InfoContext(ctx context.Context, msg string, args ...any) {
 	Default().log(ctx, LevelInfo, msg, args...)
 }
 
-// Warn calls [Logger.Warn] on the default logger.
+// Warn 在默认日志记录器上调用 [Logger.Warn]。
 func Warn(msg string, args ...any) {
 	Default().log(context.Background(), LevelWarn, msg, args...)
 }
 
-// WarnContext calls [Logger.WarnContext] on the default logger.
+// WarnContext 在默认日志记录器上调用 [Logger.WarnContext]。
 func WarnContext(ctx context.Context, msg string, args ...any) {
 	Default().log(ctx, LevelWarn, msg, args...)
 }
 
-// Error calls [Logger.Error] on the default logger.
+// Error 在默认日志记录器上调用 [Logger.Error]。
 func Error(msg string, args ...any) {
 	Default().log(context.Background(), LevelError, msg, args...)
 }
 
-// ErrorContext calls [Logger.ErrorContext] on the default logger.
+// ErrorContext 在默认日志记录器上调用 [Logger.ErrorContext]。
 func ErrorContext(ctx context.Context, msg string, args ...any) {
 	Default().log(ctx, LevelError, msg, args...)
 }
 
-// Log calls [Logger.Log] on the default logger.
+// Log 在默认日志记录器上调用 [Logger.Log]。
 func Log(ctx context.Context, level Level, msg string, args ...any) {
 	Default().log(ctx, level, msg, args...)
 }
 
-// LogAttrs calls [Logger.LogAttrs] on the default logger.
+// LogAttrs 在默认日志记录器上调用 [Logger.LogAttrs]。
 func LogAttrs(ctx context.Context, level Level, msg string, attrs ...Attr) {
 	Default().logAttrs(ctx, level, msg, attrs...)
 }

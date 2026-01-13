@@ -14,9 +14,8 @@ const (
 	_SIG_SETMASK = 2
 )
 
-// It's hard to tease out exactly how big a Sigset is, but
-// rt_sigprocmask crashes if we get it wrong, so if binaries
-// are running, this is right.
+// 很难准确确定 Sigset 有多大，但如果我们搞错了，
+// rt_sigprocmask 会崩溃，所以如果二进制文件运行，这是对的。
 type sigset [2]uint32
 
 var sigset_all = sigset{^uint32(0), ^uint32(0)}

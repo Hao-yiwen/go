@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -11,9 +11,9 @@ import (
 	"unicode/utf8"
 )
 
-// foldName returns a folded string such that foldName(x) == foldName(y)
+// foldName 返回a folded string such that foldName(x) == foldName(y)
 // is similar to strings.EqualFold(x, y), but ignores underscore and dashes.
-// This allows foldName to match common naming conventions.
+// This 允许foldName to match common naming conventions.
 func foldName(in []byte) []byte {
 	// This is inlinable to take advantage of "function outlining".
 	// See https://blog.filippo.io/efficient-go-apis-with-the-inliner/
@@ -41,7 +41,7 @@ func appendFoldedName(out, in []byte) []byte {
 	return out
 }
 
-// foldRune is a variation on unicode.SimpleFold that returns the same rune
+// foldRune 是一个 variation on unicode.SimpleFold that 返回 same rune
 // for all runes in the same fold set.
 //
 // Invariant:

@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -22,7 +22,7 @@ const (
 
 	stringNonVerbatim  // string cannot be naively treated as valid UTF-8
 	stringNonCanonical // string not formatted according to RFC 8785, section 3.2.2.2.
-	// TODO: Track whether a number is a non-integer?
+	// TODO: Track whether a number 是一个 non-integer?
 )
 
 func (f *ValueFlags) Join(f2 ValueFlags) { *f |= f2 }
@@ -39,7 +39,7 @@ func ConsumeWhitespace(b []byte) (n int) {
 }
 
 // ConsumeNull consumes the next JSON null literal per RFC 7159, section 3.
-// It returns 0 if it is invalid, in which case consumeLiteral should be used.
+// It 返回0 if it is invalid, in which case consumeLiteral 应该是 used.
 func ConsumeNull(b []byte) int {
 	// NOTE: The arguments and logic are kept simple to keep this inlinable.
 	const literal = "null"
@@ -50,7 +50,7 @@ func ConsumeNull(b []byte) int {
 }
 
 // ConsumeFalse consumes the next JSON false literal per RFC 7159, section 3.
-// It returns 0 if it is invalid, in which case consumeLiteral should be used.
+// It 返回0 if it is invalid, in which case consumeLiteral 应该是 used.
 func ConsumeFalse(b []byte) int {
 	// NOTE: The arguments and logic are kept simple to keep this inlinable.
 	const literal = "false"
@@ -61,7 +61,7 @@ func ConsumeFalse(b []byte) int {
 }
 
 // ConsumeTrue consumes the next JSON true literal per RFC 7159, section 3.
-// It returns 0 if it is invalid, in which case consumeLiteral should be used.
+// It 返回0 if it is invalid, in which case consumeLiteral 应该是 used.
 func ConsumeTrue(b []byte) int {
 	// NOTE: The arguments and logic are kept simple to keep this inlinable.
 	const literal = "true"
@@ -87,8 +87,8 @@ func ConsumeLiteral(b []byte, lit string) (n int, err error) {
 
 // ConsumeSimpleString consumes the next JSON string per RFC 7159, section 7
 // but is limited to the grammar for an ASCII string without escape sequences.
-// It returns 0 if it is invalid or more complicated than a simple string,
-// in which case consumeString should be called.
+// It 返回0 if it is invalid or more complicated than a simple string,
+// in which case consumeString 应该是 called.
 //
 // It rejects '<', '>', and '&' for compatibility reasons since these were
 // always escaped in the v1 implementation. Thus, if this function reports
@@ -110,9 +110,9 @@ func ConsumeSimpleString(b []byte) (n int) {
 }
 
 // ConsumeString consumes the next JSON string per RFC 7159, section 7.
-// If validateUTF8 is false, then this allows the presence of invalid UTF-8
+// If validateUTF8 为假, then this 允许 the presence of invalid UTF-8
 // characters within the string itself.
-// It reports the number of bytes consumed and whether an error was encountered.
+// It 报告the number of bytes consumed and whether an error was encountered.
 // If the input appears truncated, it returns io.ErrUnexpectedEOF.
 func ConsumeString(flags *ValueFlags, b []byte, validateUTF8 bool) (n int, err error) {
 	return ConsumeStringResumable(flags, b, 0, validateUTF8)
@@ -155,7 +155,7 @@ func ConsumeStringResumable(flags *ValueFlags, b []byte, resumeOffset int, valid
 		switch r, rn := utf8.DecodeRune(b[n:]); {
 		// Handle UTF-8 encoded byte sequence.
 		// Due to specialized handling of ASCII above, we know that
-		// all normal sequences at this point must be 2 bytes or larger.
+		// all normal sequences at this point 必须是 2 bytes or larger.
 		case rn > 1:
 			n += rn
 		// Handle escape sequence.
@@ -167,7 +167,7 @@ func ConsumeStringResumable(flags *ValueFlags, b []byte, resumeOffset int, valid
 			}
 			switch r := b[n+1]; r {
 			case '/':
-				// Forward slash is the only character with 3 representations.
+				// Forward slash 是 only character with 3 representations.
 				// Per RFC 8785, section 3.2.2.2., this must not be escaped.
 				flags.Join(stringNonCanonical)
 				n += 2
@@ -197,7 +197,7 @@ func ConsumeStringResumable(flags *ValueFlags, b []byte, resumeOffset int, valid
 					if v1 >= ' ' {
 						flags.Join(stringNonCanonical)
 					} else {
-						// \uFFFF notation must be lower case.
+						// \uFFFF notation 必须是 lower case.
 						for _, c := range b[n+2 : n+6] {
 							if 'A' <= c && c <= 'F' {
 								flags.Join(stringNonCanonical)
@@ -251,9 +251,9 @@ func ConsumeStringResumable(flags *ValueFlags, b []byte, resumeOffset int, valid
 }
 
 // AppendUnquote appends the unescaped form of a JSON string in src to dst.
-// Any invalid UTF-8 within the string will be replaced with utf8.RuneError,
-// but the error will be specified as having encountered such an error.
-// The input must be an entire JSON string with no surrounding whitespace.
+// Any invalid UTF-8 within the string 将是 replaced with utf8.RuneError,
+// but the error 将是 specified as having encountered such an error.
+// The input 必须是 an entire JSON string with no surrounding whitespace.
 func AppendUnquote[Bytes ~[]byte | ~string](dst []byte, src Bytes) (v []byte, err error) {
 	dst = slices.Grow(dst, len(src))
 
@@ -295,7 +295,7 @@ func AppendUnquote[Bytes ~[]byte | ~string](dst []byte, src Bytes) (v []byte, er
 		switch r, rn := utf8.DecodeRuneInString(string(truncateMaxUTF8(src[n:]))); {
 		// Handle UTF-8 encoded byte sequence.
 		// Due to specialized handling of ASCII above, we know that
-		// all normal sequences at this point must be 2 bytes or larger.
+		// all normal sequences at this point 必须是 2 bytes or larger.
 		case rn > 1:
 			n += rn
 		// Handle escape sequence.
@@ -338,7 +338,7 @@ func AppendUnquote[Bytes ~[]byte | ~string](dst []byte, src Bytes) (v []byte, er
 				}
 				n += 6
 
-				// Check whether this is a surrogate half.
+				// Check whether this 是一个 surrogate half.
 				r := rune(v1)
 				if utf16.IsSurrogate(r) {
 					r = utf8.RuneError // assume failure unless the following succeeds
@@ -367,7 +367,7 @@ func AppendUnquote[Bytes ~[]byte | ~string](dst []byte, src Bytes) (v []byte, er
 			if !utf8.FullRuneInString(string(truncateMaxUTF8(src[n:]))) {
 				return dst, io.ErrUnexpectedEOF
 			}
-			// NOTE: An unescaped string may be longer than the escaped string
+			// NOTE: An unescaped string 可能是 longer than the escaped string
 			// because invalid UTF-8 bytes are being replaced.
 			dst = append(dst, "\uFFFD"...)
 			n += rn
@@ -385,7 +385,7 @@ func AppendUnquote[Bytes ~[]byte | ~string](dst []byte, src Bytes) (v []byte, er
 	return dst, io.ErrUnexpectedEOF
 }
 
-// hasEscapedUTF16Prefix reports whether b is possibly
+// hasEscapedUTF16Prefix 报告whether b is possibly
 // the truncated prefix of a \uFFFF escape sequence.
 func hasEscapedUTF16Prefix[Bytes ~[]byte | ~string](b Bytes, lowerSurrogateHalf bool) bool {
 	for i := range len(b) {
@@ -405,10 +405,10 @@ func hasEscapedUTF16Prefix[Bytes ~[]byte | ~string](b Bytes, lowerSurrogateHalf 
 	return true
 }
 
-// UnquoteMayCopy returns the unescaped form of b.
+// UnquoteMayCopy 返回the unescaped form of b.
 // If there are no escaped characters, the output is simply a subslice of
 // the input with the surrounding quotes removed.
-// Otherwise, a new buffer is allocated for the output.
+// Otherwise, a new buffer 是一个llocated for the output.
 // It assumes the input is valid.
 func UnquoteMayCopy(b []byte, isVerbatim bool) []byte {
 	// NOTE: The arguments and logic are kept simple to keep this inlinable.
@@ -421,8 +421,8 @@ func UnquoteMayCopy(b []byte, isVerbatim bool) []byte {
 
 // ConsumeSimpleNumber consumes the next JSON number per RFC 7159, section 6
 // but is limited to the grammar for a positive integer.
-// It returns 0 if it is invalid or more complicated than a simple integer,
-// in which case consumeNumber should be called.
+// It 返回0 if it is invalid or more complicated than a simple integer,
+// in which case consumeNumber 应该是 called.
 func ConsumeSimpleNumber(b []byte) (n int) {
 	// NOTE: The arguments and logic are kept simple to keep this inlinable.
 	if len(b) > 0 {
@@ -456,12 +456,12 @@ const (
 )
 
 // ConsumeNumber consumes the next JSON number per RFC 7159, section 6.
-// It reports the number of bytes consumed and whether an error was encountered.
+// It 报告the number of bytes consumed and whether an error was encountered.
 // If the input appears truncated, it returns io.ErrUnexpectedEOF.
 //
 // Note that JSON numbers are not self-terminating.
 // If the entire input is consumed, then the caller needs to consider whether
-// there may be subsequent unread data that may still be part of this number.
+// there 可能是 subsequent unread data that may still be part of this number.
 func ConsumeNumber(b []byte) (n int, err error) {
 	n, _, err = ConsumeNumberResumable(b, 0, consumeNumberInit)
 	return n, err
@@ -482,7 +482,7 @@ func ConsumeNumberResumable(b []byte, resumeOffset int, state ConsumeNumberState
 			if uint(len(b)) <= uint(n) {
 				return n, state, nil // still within the same state
 			}
-			state++ // switches "withinX" to "beforeY" where Y is the state after X
+			state++ // switches "withinX" to "beforeY" where Y 是 state after X
 		}
 		switch state {
 		case beforeIntegerDigits:
@@ -588,8 +588,8 @@ func parseHexUint16[Bytes ~[]byte | ~string](b Bytes) (v uint16, ok bool) {
 
 // ParseUint parses b as a decimal unsigned integer according to
 // a strict subset of the JSON number grammar, returning the value if valid.
-// It returns (0, false) if there is a syntax error and
-// returns (math.MaxUint64, false) if there is an overflow.
+// It 返回(0, false) if there 是一个 syntax error and
+// returns (math.MaxUint64, false) if there 是一个n overflow.
 func ParseUint(b []byte) (v uint64, ok bool) {
 	const unsafeWidth = 20 // len(fmt.Sprint(uint64(math.MaxUint64)))
 	var n int
@@ -606,7 +606,7 @@ func ParseUint(b []byte) (v uint64, ok bool) {
 }
 
 // ParseFloat parses a floating point number according to the Go float grammar.
-// Note that the JSON number grammar is a strict subset.
+// Note that the JSON number grammar 是一个 strict subset.
 //
 // If the number overflows the finite representation of a float,
 // then we return MaxFloat since any finite value will always be infinitely

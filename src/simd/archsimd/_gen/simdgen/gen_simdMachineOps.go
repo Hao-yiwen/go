@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package main
 
@@ -40,8 +40,7 @@ func simdAMD64Ops(v11, v21, v2k, vkv, v2kv, v2kk, v31, v3kv, vgpv, vgp, vfpv, vf
 }
 `
 
-// writeSIMDMachineOps generates the machine ops and writes it to simdAMD64ops.go
-// within the specified directory.
+// writeSIMDMachineOps 生成机器操作并将其写入指定目录中的 simdAMD64ops.go。
 func writeSIMDMachineOps(ops []Operation) *bytes.Buffer {
 	t := templateOf(simdMachineOpsTmpl, "simdAMD64Ops")
 	buffer := new(bytes.Buffer)
@@ -77,7 +76,7 @@ func writeSIMDMachineOps(ops []Operation) *bytes.Buffer {
 	opsDataMerging := make([]opData, 0)
 	opsDataImmMerging := make([]opData, 0)
 
-	// Determine the "best" version of an instruction to use
+	// 确定要使用的指令的"最佳"版本
 	best := make(map[string]Operation)
 	var mOpOrder []string
 	countOverrides := func(s []Operand) int {
@@ -98,11 +97,11 @@ func writeSIMDMachineOps(ops []Operation) *bytes.Buffer {
 			mOpOrder = append(mOpOrder, asm)
 			continue
 		}
-		if !op.Commutative && other.Commutative { // if there's a non-commutative version of the op, it wins.
+		if !op.Commutative && other.Commutative { // 如果存在非交换版本的操作，则非交换版本优先。
 			best[asm] = op
 			continue
 		}
-		// see if "op" is better than "other"
+		// 检查 "op" 是否比 "other" 更好
 		if countOverrides(op.In)+countOverrides(op.Out) < countOverrides(other.In)+countOverrides(other.Out) {
 			best[asm] = op
 		}
@@ -114,8 +113,8 @@ func writeSIMDMachineOps(ops []Operation) *bytes.Buffer {
 		op := best[asm]
 		shapeIn, shapeOut, maskType, _, gOp := op.shape()
 
-		// TODO: all our masked operations are now zeroing, we need to generate machine ops with merging masks, maybe copy
-		// one here with a name suffix "Merging". The rewrite rules will need them.
+		// TODO: 我们所有的掩码操作现在都是置零的，我们需要生成带有合并掩码的机器操作，也许可以
+		// 在这里复制一个并添加 "Merging" 后缀。重写规则将需要它们。
 		makeRegInfo := func(op Operation, mem memShape) (string, error) {
 			regInfo, err := op.regShape(mem)
 			if err != nil {
@@ -131,7 +130,7 @@ func writeSIMDMachineOps(ops []Operation) *bytes.Buffer {
 			if regInfo == "v01load" {
 				regInfo = "vload"
 			}
-			// Makes AVX512 operations use upper registers
+			// 使 AVX512 操作使用高位寄存器
 			if strings.Contains(op.CPUFeature, "AVX512") {
 				regInfo = strings.ReplaceAll(regInfo, "v", "w")
 			}
@@ -147,10 +146,10 @@ func writeSIMDMachineOps(ops []Operation) *bytes.Buffer {
 		}
 		var outType string
 		if shapeOut == OneVregOut || shapeOut == OneVregOutAtIn || gOp.Out[0].OverwriteClass != nil {
-			// If class overwrite is happening, that's not really a mask but a vreg.
+			// 如果发生类覆盖，那实际上不是掩码而是向量寄存器。
 			outType = fmt.Sprintf("Vec%d", *gOp.Out[0].Bits)
 		} else if shapeOut == OneGregOut {
-			outType = gOp.GoType() // this is a straight Go type, not a VecNNN type
+			outType = gOp.GoType() // 这是一个直接的 Go 类型，不是 VecNNN 类型
 		} else if shapeOut == OneKmaskOut {
 			outType = "Mask"
 		} else {
@@ -164,14 +163,14 @@ func writeSIMDMachineOps(ops []Operation) *bytes.Buffer {
 		regInfoMerging := regInfo
 		hasMerging := false
 		if op.MemFeatures != nil && *op.MemFeatures == "vbcst" {
-			// Right now we only have vbcst case
-			// Make a full vec memory variant.
+			// 目前我们只有 vbcst 情况
+			// 创建一个完整的向量内存变体。
 			opMem := rewriteLastVregToMem(op)
 			regInfo, err := makeRegInfo(opMem, VregMemIn)
 			if err != nil {
-				// Just skip it if it's non nill.
-				// an error could be triggered by [checkVecAsScalar].
-				// TODO: make [checkVecAsScalar] aware of mem ops.
+				// 如果不为空就跳过它。
+				// 错误可能由 [checkVecAsScalar] 触发。
+				// TODO: 使 [checkVecAsScalar] 能够识别内存操作。
 				if *Verbose {
 					log.Printf("Seen error: %e", err)
 				}
@@ -181,8 +180,8 @@ func writeSIMDMachineOps(ops []Operation) *bytes.Buffer {
 		}
 		hasMerging = gOp.hasMaskedMerging(maskType, shapeOut)
 		if hasMerging && !resultInArg0 {
-			// We have to copy the slice here becasue the sort will be visible from other
-			// aliases when no reslicing is happening.
+			// 我们必须在这里复制切片，因为当没有重新切片时，
+			// 排序操作会从其他别名中可见。
 			newIn := make([]Operand, len(op.In), len(op.In)+1)
 			copy(newIn, op.In)
 			op.In = newIn

@@ -100,7 +100,7 @@ var notletterTest = []rune{
 	0x10ffff,
 }
 
-// Contains all the special cased Latin-1 chars.
+// 包含所有特殊大小写的 Latin-1 字符。
 var spaceTest = []rune{
 	0x09,
 	0x0a,
@@ -121,11 +121,13 @@ type caseT struct {
 
 var caseTest = []caseT{
 	// errors
+	// 错误
 	{-1, '\n', 0xFFFD},
 	{UpperCase, -1, -1},
 	{UpperCase, 1 << 30, 1 << 30},
 
 	// ASCII (special-cased so test carefully)
+	// ASCII（特殊大小写，需要仔细测试）
 	{UpperCase, '\n', '\n'},
 	{UpperCase, 'a', 'A'},
 	{UpperCase, 'A', 'A'},
@@ -140,6 +142,7 @@ var caseTest = []caseT{
 	{TitleCase, '7', '7'},
 
 	// Latin-1: easy to read the tests!
+	// Latin-1：易于阅读测试！
 	{UpperCase, 0x80, 0x80},
 	{UpperCase, 'Å', 'Å'},
 	{UpperCase, 'å', 'Å'},
@@ -151,54 +154,68 @@ var caseTest = []caseT{
 	{TitleCase, 'å', 'Å'},
 
 	// 0131;LATIN SMALL LETTER DOTLESS I;Ll;0;L;;;;;N;;;0049;;0049
+	// 0131;拉丁小写无点I;Ll;0;L;;;;;N;;;0049;;0049
 	{UpperCase, 0x0131, 'I'},
 	{LowerCase, 0x0131, 0x0131},
 	{TitleCase, 0x0131, 'I'},
 
 	// 0133;LATIN SMALL LIGATURE IJ;Ll;0;L;<compat> 0069 006A;;;;N;LATIN SMALL LETTER I J;;0132;;0132
+	// 0133;拉丁小写连字IJ;Ll;0;L;<compat> 0069 006A;;;;N;LATIN SMALL LETTER I J;;0132;;0132
 	{UpperCase, 0x0133, 0x0132},
 	{LowerCase, 0x0133, 0x0133},
 	{TitleCase, 0x0133, 0x0132},
 
 	// 212A;KELVIN SIGN;Lu;0;L;004B;;;;N;DEGREES KELVIN;;;006B;
+	// 212A;开尔文符号;Lu;0;L;004B;;;;N;开尔文度;;;006B;
 	{UpperCase, 0x212A, 0x212A},
 	{LowerCase, 0x212A, 'k'},
 	{TitleCase, 0x212A, 0x212A},
 
 	// From an UpperLower sequence
+	// 来自 UpperLower 序列
 	// A640;CYRILLIC CAPITAL LETTER ZEMLYA;Lu;0;L;;;;;N;;;;A641;
+	// A640;西里尔大写字母ZEMLYA;Lu;0;L;;;;;N;;;;A641;
 	{UpperCase, 0xA640, 0xA640},
 	{LowerCase, 0xA640, 0xA641},
 	{TitleCase, 0xA640, 0xA640},
 	// A641;CYRILLIC SMALL LETTER ZEMLYA;Ll;0;L;;;;;N;;;A640;;A640
+	// A641;西里尔小写字母ZEMLYA;Ll;0;L;;;;;N;;;A640;;A640
 	{UpperCase, 0xA641, 0xA640},
 	{LowerCase, 0xA641, 0xA641},
 	{TitleCase, 0xA641, 0xA640},
 	// A64E;CYRILLIC CAPITAL LETTER NEUTRAL YER;Lu;0;L;;;;;N;;;;A64F;
+	// A64E;西里尔大写字母NEUTRAL YER;Lu;0;L;;;;;N;;;;A64F;
 	{UpperCase, 0xA64E, 0xA64E},
 	{LowerCase, 0xA64E, 0xA64F},
 	{TitleCase, 0xA64E, 0xA64E},
 	// A65F;CYRILLIC SMALL LETTER YN;Ll;0;L;;;;;N;;;A65E;;A65E
+	// A65F;西里尔小写字母YN;Ll;0;L;;;;;N;;;A65E;;A65E
 	{UpperCase, 0xA65F, 0xA65E},
 	{LowerCase, 0xA65F, 0xA65F},
 	{TitleCase, 0xA65F, 0xA65E},
 
 	// From another UpperLower sequence
+	// 来自另一个 UpperLower 序列
 	// 0139;LATIN CAPITAL LETTER L WITH ACUTE;Lu;0;L;004C 0301;;;;N;LATIN CAPITAL LETTER L ACUTE;;;013A;
+	// 0139;拉丁大写字母L WITH ACUTE;Lu;0;L;004C 0301;;;;N;LATIN CAPITAL LETTER L ACUTE;;;013A;
 	{UpperCase, 0x0139, 0x0139},
 	{LowerCase, 0x0139, 0x013A},
 	{TitleCase, 0x0139, 0x0139},
 	// 013F;LATIN CAPITAL LETTER L WITH MIDDLE DOT;Lu;0;L;<compat> 004C 00B7;;;;N;;;;0140;
+	// 013F;拉丁大写字母L WITH MIDDLE DOT;Lu;0;L;<compat> 004C 00B7;;;;N;;;;0140;
 	{UpperCase, 0x013f, 0x013f},
 	{LowerCase, 0x013f, 0x0140},
 	{TitleCase, 0x013f, 0x013f},
 	// 0148;LATIN SMALL LETTER N WITH CARON;Ll;0;L;006E 030C;;;;N;LATIN SMALL LETTER N HACEK;;0147;;0147
+	// 0148;拉丁小写字母N WITH CARON;Ll;0;L;006E 030C;;;;N;LATIN SMALL LETTER N HACEK;;0147;;0147
 	{UpperCase, 0x0148, 0x0147},
 	{LowerCase, 0x0148, 0x0148},
 	{TitleCase, 0x0148, 0x0147},
 
 	// Lowercase lower than uppercase.
+	// 小写字母小于大写字母。
 	// AB78;CHEROKEE SMALL LETTER GE;Ll;0;L;;;;;N;;;13A8;;13A8
+	// AB78;切罗基小写字母GE;Ll;0;L;;;;;N;;;13A8;;13A8
 	{UpperCase, 0xab78, 0x13a8},
 	{LowerCase, 0xab78, 0xab78},
 	{TitleCase, 0xab78, 0x13a8},
@@ -207,30 +224,38 @@ var caseTest = []caseT{
 	{TitleCase, 0x13a8, 0x13a8},
 
 	// Last block in the 5.1.0 table
+	// 5.1.0 表中的最后一个块
 	// 10400;DESERET CAPITAL LETTER LONG I;Lu;0;L;;;;;N;;;;10428;
+	// 10400;DESERET 大写字母长I;Lu;0;L;;;;;N;;;;10428;
 	{UpperCase, 0x10400, 0x10400},
 	{LowerCase, 0x10400, 0x10428},
 	{TitleCase, 0x10400, 0x10400},
 	// 10427;DESERET CAPITAL LETTER EW;Lu;0;L;;;;;N;;;;1044F;
+	// 10427;DESERET 大写字母EW;Lu;0;L;;;;;N;;;;1044F;
 	{UpperCase, 0x10427, 0x10427},
 	{LowerCase, 0x10427, 0x1044F},
 	{TitleCase, 0x10427, 0x10427},
 	// 10428;DESERET SMALL LETTER LONG I;Ll;0;L;;;;;N;;;10400;;10400
+	// 10428;DESERET 小写字母长I;Ll;0;L;;;;;N;;;10400;;10400
 	{UpperCase, 0x10428, 0x10400},
 	{LowerCase, 0x10428, 0x10428},
 	{TitleCase, 0x10428, 0x10400},
 	// 1044F;DESERET SMALL LETTER EW;Ll;0;L;;;;;N;;;10427;;10427
+	// 1044F;DESERET 小写字母EW;Ll;0;L;;;;;N;;;10427;;10427
 	{UpperCase, 0x1044F, 0x10427},
 	{LowerCase, 0x1044F, 0x1044F},
 	{TitleCase, 0x1044F, 0x10427},
 
 	// First one not in the 5.1.0 table
+	// 5.1.0 表中不存在的第一个
 	// 10450;SHAVIAN LETTER PEEP;Lo;0;L;;;;;N;;;;;
+	// 10450;肖维安字母PEEP;Lo;0;L;;;;;N;;;;;
 	{UpperCase, 0x10450, 0x10450},
 	{LowerCase, 0x10450, 0x10450},
 	{TitleCase, 0x10450, 0x10450},
 
 	// Non-letters with case.
+	// 具有大小写的非字母。
 	{LowerCase, 0x2161, 0x2171},
 	{UpperCase, 0x0345, 0x0399},
 }
@@ -342,7 +367,9 @@ func TestIsSpace(t *testing.T) {
 }
 
 // Check that the optimizations for IsLetter etc. agree with the tables.
+// 检查 IsLetter 等的优化是否与表一致。
 // We only need to check the Latin-1 range.
+// 我们只需要检查 Latin-1 范围。
 func TestLetterOptimizations(t *testing.T) {
 	for i := rune(0); i <= MaxLatin1; i++ {
 		if Is(Letter, i) != IsLetter(i) {
@@ -441,12 +468,16 @@ func TestSimpleFold(t *testing.T) {
 
 // Running 'go test -calibrate' runs the calibration to find a plausible
 // cutoff point for linear search of a range list vs. binary search.
+// 运行 'go test -calibrate' 运行校准以找到线性搜索范围列表与二进制搜索的合理截点。
 // We create a fake table and then time how long it takes to do a
 // sequence of searches within that table, for all possible inputs
 // relative to the ranges (something before all, in each, between each, after all).
+// 我们创建一个假表，然后测量对该表进行一系列搜索所需的时间，对于相对于范围的所有可能的输入（在所有之前的东西、每个中、每个之间、所有之后）。
 // This assumes that all possible runes are equally likely.
+// 这假设所有可能的符文都同样可能。
 // In practice most runes are ASCII so this is a conservative estimate
 // of an effective cutoff value. In practice we could probably set it higher
+// 在实践中，大多数符文都是 ASCII，所以这是一个有效截点值的保守估计。实际上，我们可能可以将其设置为更高的值
 // than what this function recommends.
 
 var calibrate = flag.Bool("calibrate", false, "compute crossover for linear vs. binary search")
@@ -461,9 +492,12 @@ func TestCalibrate(t *testing.T) {
 	}
 
 	// Find the point where binary search wins by more than 10%.
+	// 找到二进制搜索的优势超过 10% 的点。
 	// The 10% bias gives linear search an edge when they're close,
+	// 10% 的偏差在它们接近时给线性搜索一个边缘，
 	// because on predominantly ASCII inputs linear search is even
 	// better than our benchmarks measure.
+	// 因为在主要是 ASCII 输入的情况下，线性搜索比我们的基准测试度量更好。
 	n := sort.Search(64, func(n int) bool {
 		tab := fakeTable(n)
 		blinear := func(b *testing.B) {
@@ -515,6 +549,7 @@ func linear(ranges []Range16, r uint16) bool {
 
 func binary(ranges []Range16, r uint16) bool {
 	// binary search over ranges
+	// 对范围进行二进制搜索
 	lo := 0
 	hi := len(ranges)
 	for lo < hi {
@@ -566,27 +601,41 @@ func TestSpecialCaseNoMapping(t *testing.T) {
 
 func TestNegativeRune(t *testing.T) {
 	// Issue 43254
+	// 问题 43254
 	// These tests cover negative rune handling by testing values which,
+	// 这些测试通过测试值来覆盖负符文处理，这些值
 	// when cast to uint8 or uint16, look like a particular valid rune.
+	// 当强制转换为 uint8 或 uint16 时，看起来像一个特定的有效符文。
 	// This package has Latin-1-specific optimizations, so we test all of
+	// 这个包具有 Latin-1 特定的优化，所以我们测试所有的
 	// Latin-1 and representative non-Latin-1 values in the character
+	// Latin-1 和代表性的非 Latin-1 值在字符
 	// categories covered by IsGraphic, etc.
+	// 类别由 IsGraphic 等覆盖。
 	nonLatin1 := []uint32{
 		// Lu: LATIN CAPITAL LETTER A WITH MACRON
+		// Lu: 拉丁大写字母A WITH MACRON
 		0x0100,
 		// Ll: LATIN SMALL LETTER A WITH MACRON
+		// Ll: 拉丁小写字母A WITH MACRON
 		0x0101,
 		// Lt: LATIN CAPITAL LETTER D WITH SMALL LETTER Z WITH CARON
+		// Lt: 拉丁大写字母D WITH SMALL LETTER Z WITH CARON
 		0x01C5,
 		// M: COMBINING GRAVE ACCENT
+		// M: 结合重音符号
 		0x0300,
 		// Nd: ARABIC-INDIC DIGIT ZERO
+		// Nd: 阿拉伯数字零
 		0x0660,
 		// P: GREEK QUESTION MARK
+		// P: 希腊问号
 		0x037E,
 		// S: MODIFIER LETTER LEFT ARROWHEAD
+		// S: 修饰字母左箭头
 		0x02C2,
 		// Z: OGHAM SPACE MARK
+		// Z: OGHAM 空间标记
 		0x1680,
 	}
 	for i := 0; i < MaxLatin1+len(nonLatin1); i++ {
@@ -597,6 +646,8 @@ func TestNegativeRune(t *testing.T) {
 
 		// Note r is negative, but uint8(r) == uint8(base) and
 		// uint16(r) == uint16(base).
+		// 注意 r 是负数，但 uint8(r) == uint8(base) 和
+		// uint16(r) == uint16(base)。
 		r := rune(base - 1<<31)
 		if Is(Letter, r) {
 			t.Errorf("Is(Letter, 0x%x - 1<<31) = true, want false", base)

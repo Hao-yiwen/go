@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build js && wasm
 
@@ -12,19 +12,19 @@ import (
 	"syscall"
 )
 
-// checkPathEscapes reports whether name escapes the root.
+// checkPathEscapes 报告 name 是否逃离了根目录。
 //
-// Due to the lack of openat, checkPathEscapes is subject to TOCTOU races
-// when symlinks change during the resolution process.
+// 由于缺乏 openat，当符号链接在解析过程中改变时，
+// checkPathEscapes 容易受到 TOCTOU 竞争。
 func checkPathEscapes(r *Root, name string) error {
 	return checkPathEscapesInternal(r, name, false)
 }
 
-// checkPathEscapesLstat reports whether name escapes the root.
-// It does not resolve symlinks in the final path component.
+// checkPathEscapesLstat 报告 name 是否逃离了根目录。
+// 它不解析最后路径组件中的符号链接。
 //
-// Due to the lack of openat, checkPathEscapes is subject to TOCTOU races
-// when symlinks change during the resolution process.
+// 由于缺乏 openat，当符号链接在解析过程中改变时，
+// checkPathEscapes 容易受到 TOCTOU 竞争。
 func checkPathEscapesLstat(r *Root, name string) error {
 	return checkPathEscapesInternal(r, name, true)
 }
@@ -43,7 +43,7 @@ func checkPathEscapesInternal(r *Root, name string, lstat bool) error {
 	base := r.root.name
 	for i < len(parts) {
 		if parts[i] == ".." {
-			// Resolve one or more parent ("..") path components.
+			// 解决一个或多个父 ("..") 路径分量。
 			end := i + 1
 			for end < len(parts) && parts[end] == ".." {
 				end++
@@ -91,12 +91,11 @@ func checkPathEscapesInternal(r *Root, name string, lstat bool) error {
 				return err
 			}
 			if i == len(parts) {
-				// suffixSep contains any trailing path separator characters
-				// in the link target.
-				// If we are replacing the remainder of the path, retain these.
-				// If we're replacing some intermediate component of the path,
-				// ignore them, since intermediate components must always be
-				// directories.
+				// suffixSep 包含链接目标中的任何尾随路径分隔符。
+				// 如果我们要替换路径的其余部分，保留这些。
+				// 如果我们要替换路径的某个中间分量，
+				// 忽略它们，因为中间分量必须始终是
+				// 目录。
 				suffixSep = newSuffixSep
 			}
 			parts = newparts

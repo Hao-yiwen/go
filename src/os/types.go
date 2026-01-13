@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package os
 
@@ -9,52 +9,51 @@ import (
 	"syscall"
 )
 
-// Getpagesize returns the underlying system's memory page size.
+// Getpagesize 返回底层系统的内存页大小。
 func Getpagesize() int { return syscall.Getpagesize() }
 
-// File represents an open file descriptor.
+// File 表示一个打开的文件描述符。
 //
-// The methods of File are safe for concurrent use.
+// File 的方法可以安全地并发使用。
 type File struct {
-	*file // os specific
+	*file // 操作系统特定
 }
 
-// A FileInfo describes a file and is returned by [Stat] and [Lstat].
+// FileInfo 描述一个文件，由 [Stat] 和 [Lstat] 返回。
 type FileInfo = fs.FileInfo
 
-// A FileMode represents a file's mode and permission bits.
-// The bits have the same definition on all systems, so that
-// information about files can be moved from one system
-// to another portably. Not all bits apply to all systems.
-// The only required bit is [ModeDir] for directories.
+// FileMode 表示文件的模式和权限位。
+// 这些位在所有系统上具有相同的定义，
+// 以便可以将文件信息从一个系统可移植地移动到另一个系统。
+// 并非所有位都适用于所有系统。
+// 对于目录，唯一必需的位是 [ModeDir]。
 type FileMode = fs.FileMode
 
-// The defined file mode bits are the most significant bits of the [FileMode].
-// The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
-// The values of these bits should be considered part of the public API and
-// may be used in wire protocols or disk representations: they must not be
-// changed, although new bits might be added.
+// 定义的文件模式位是 [FileMode] 的最高有效位。
+// 九个最低有效位是标准的 Unix rwxrwxrwx 权限。
+// 这些位的值应被视为公共 API 的一部分，
+// 可用于传输协议或磁盘表示：它们不能更改，
+// 但可能会添加新位。
 const (
-	// The single letters are the abbreviations
-	// used by the String method's formatting.
-	ModeDir        = fs.ModeDir        // d: is a directory
-	ModeAppend     = fs.ModeAppend     // a: append-only
-	ModeExclusive  = fs.ModeExclusive  // l: exclusive use
-	ModeTemporary  = fs.ModeTemporary  // T: temporary file; Plan 9 only
-	ModeSymlink    = fs.ModeSymlink    // L: symbolic link
-	ModeDevice     = fs.ModeDevice     // D: device file
-	ModeNamedPipe  = fs.ModeNamedPipe  // p: named pipe (FIFO)
-	ModeSocket     = fs.ModeSocket     // S: Unix domain socket
+	// 单个字母是 String 方法格式化使用的缩写。
+	ModeDir        = fs.ModeDir        // d: 是一个目录
+	ModeAppend     = fs.ModeAppend     // a: 只能追加
+	ModeExclusive  = fs.ModeExclusive  // l: 独占使用
+	ModeTemporary  = fs.ModeTemporary  // T: 临时文件；仅限 Plan 9
+	ModeSymlink    = fs.ModeSymlink    // L: 符号链接
+	ModeDevice     = fs.ModeDevice     // D: 设备文件
+	ModeNamedPipe  = fs.ModeNamedPipe  // p: 命名管道（FIFO）
+	ModeSocket     = fs.ModeSocket     // S: Unix 域套接字
 	ModeSetuid     = fs.ModeSetuid     // u: setuid
 	ModeSetgid     = fs.ModeSetgid     // g: setgid
-	ModeCharDevice = fs.ModeCharDevice // c: Unix character device, when ModeDevice is set
-	ModeSticky     = fs.ModeSticky     // t: sticky
-	ModeIrregular  = fs.ModeIrregular  // ?: non-regular file; nothing else is known about this file
+	ModeCharDevice = fs.ModeCharDevice // c: Unix 字符设备，当设置 ModeDevice 时
+	ModeSticky     = fs.ModeSticky     // t: sticky 位
+	ModeIrregular  = fs.ModeIrregular  // ?: 非常规文件；对此文件一无所知
 
-	// Mask for the type bits. For regular files, none will be set.
+	// 类型位的掩码。对于常规文件，不会设置任何位。
 	ModeType = fs.ModeType
 
-	ModePerm = fs.ModePerm // Unix permission bits, 0o777
+	ModePerm = fs.ModePerm // Unix 权限位，0o777
 )
 
 func (fs *fileStat) Name() string { return fs.name }

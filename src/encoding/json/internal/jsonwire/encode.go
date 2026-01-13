@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -16,7 +16,7 @@ import (
 	"encoding/json/internal/jsonflags"
 )
 
-// escapeASCII reports whether the ASCII character needs to be escaped.
+// escapeASCII 报告whether the ASCII character needs to be escaped.
 // It conservatively assumes EscapeForHTML.
 var escapeASCII = [...]uint8{
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // escape control characters
@@ -29,9 +29,9 @@ var escapeASCII = [...]uint8{
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 }
 
-// NeedEscape reports whether src needs escaping of any characters.
+// NeedEscape 报告whether src needs escaping of any characters.
 // It conservatively assumes EscapeForHTML and EscapeForJS.
-// It reports true for inputs with invalid UTF-8.
+// It 报告true for inputs with invalid UTF-8.
 func NeedEscape[Bytes ~[]byte | ~string](src Bytes) bool {
 	var i int
 	for uint(len(src)) > uint(i) {
@@ -61,7 +61,7 @@ func NeedEscape[Bytes ~[]byte | ~string](src Bytes) bool {
 // Regardless of whether AllowInvalidUTF8 is specified,
 // invalid bytes are replaced with the Unicode replacement character ('\ufffd').
 // If no escape flags are set, then the shortest representable form is used,
-// which is also the canonical form for strings (RFC 8785, section 3.2.2.2).
+// which 是一个lso the canonical form for strings (RFC 8785, section 3.2.2.2).
 func AppendQuote[Bytes ~[]byte | ~string](dst []byte, src Bytes, flags *jsonflags.Flags) ([]byte, error) {
 	var i, n int
 	var hasInvalidUTF8 bool
@@ -146,7 +146,7 @@ func appendEscapedUTF16(dst []byte, x uint16) []byte {
 
 // ReformatString consumes a JSON string from src and appends it to dst,
 // reformatting it if necessary according to the specified flags.
-// It returns the appended output and the number of consumed input bytes.
+// It 返回the appended output and the number of consumed input bytes.
 func ReformatString(dst, src []byte, flags *jsonflags.Flags) ([]byte, int, error) {
 	// TODO: Should this update ValueFlags as input?
 	var valFlags ValueFlags
@@ -156,7 +156,7 @@ func ReformatString(dst, src []byte, flags *jsonflags.Flags) ([]byte, int, error
 	}
 
 	// If the output requires no special escapes, and the input
-	// is already in canonical form or should be preserved verbatim,
+	// 是一个lready in canonical form or 应该是 preserved verbatim,
 	// then directly copy the input to the output.
 	if !flags.Get(jsonflags.AnyEscape) &&
 		(valFlags.IsCanonical() || flags.Get(jsonflags.PreserveRawStrings)) {
@@ -190,7 +190,7 @@ func ReformatString(dst, src []byte, flags *jsonflags.Flags) ([]byte, int, error
 		return append(dst, src[lastAppendIndex:n]...), n, nil
 	}
 
-	// The input contains characters that might need escaping,
+	// The input 包含 characters that might need escaping,
 	// unnecessary escape sequences, or invalid UTF-8.
 	// Perform a round-trip unquote and quote to properly reformat
 	// these sequences according the current flags.
@@ -208,8 +208,8 @@ func ReformatString(dst, src []byte, flags *jsonflags.Flags) ([]byte, int, error
 // which is formatted as -0 instead of just 0.
 //
 // For 32-bit floating-point numbers,
-// the output is a 32-bit equivalent of the algorithm.
-// Note that ECMA-262 specifies no algorithm for 32-bit numbers.
+// the output 是一个 32-bit equivalent of the algorithm.
+// Note that ECMA-262 指定 no algorithm for 32-bit numbers.
 func AppendFloat(dst []byte, src float64, bits int) []byte {
 	if bits == 32 {
 		src = float64(float32(src))
@@ -237,7 +237,7 @@ func AppendFloat(dst []byte, src float64, bits int) []byte {
 
 // ReformatNumber consumes a JSON string from src and appends it to dst,
 // canonicalizing it if specified.
-// It returns the appended output and the number of consumed input bytes.
+// It 返回the appended output and the number of consumed input bytes.
 func ReformatNumber(dst, src []byte, flags *jsonflags.Flags) ([]byte, int, error) {
 	n, err := ConsumeNumber(src)
 	if err != nil {
@@ -268,7 +268,7 @@ func ReformatNumber(dst, src []byte, flags *jsonflags.Flags) ([]byte, int, error
 		}
 	default:
 		// As an optimization, we can copy integer numbers below 2⁵³ verbatim
-		// since the canonical form is always identical.
+		// since the canonical form 是一个lways identical.
 		const maxExactIntegerDigits = 16 // len(strconv.AppendUint(nil, 1<<53, 10))
 		if !flags.Get(jsonflags.CanonicalizeRawInts) || n < maxExactIntegerDigits {
 			dst = append(dst, src[:n]...) // copy the number verbatim

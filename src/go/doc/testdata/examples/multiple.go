@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package foo_test
 
@@ -58,29 +58,29 @@ func ExampleKeyValueTopDecl() {
 	// Output: a: "B", b: 2
 }
 
-// Person represents a person by name and age.
+// Person 表示a person by name and age.
 type Person struct {
 	Name string
 	Age  int
 }
 
-// String returns a string representation of the Person.
+// String 返回a string representation of the Person.
 func (p Person) String() string {
 	return fmt.Sprintf("%s: %d", p.Name, p.Age)
 }
 
-// ByAge implements sort.Interface for []Person based on
+// ByAge 实现sort.Interface for []Person based on
 // the Age field.
 type ByAge []Person
 
-// Len returns the number of elements in ByAge.
+// Len 返回the number of elements in ByAge.
 func (a ByAge) Len() int { return len(a) }
 
 // Swap swaps the elements in ByAge.
 func (a ByAge) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByAge) Less(i, j int) bool { return a[i].Age < a[j].Age }
 
-// people is the array of Person
+// people 是 array of Person
 var people = []Person{
 	{"Bob", 31},
 	{"John", 42},

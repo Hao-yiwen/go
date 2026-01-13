@@ -1,16 +1,14 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package des implements the Data Encryption Standard (DES) and the
-// Triple Data Encryption Algorithm (TDEA) as defined
-// in U.S. Federal Information Processing Standards Publication 46-3.
+// des 包实现了数据加密标准 (DES) 和三重数据加密算法 (TDEA)，
+// 如美国联邦信息处理标准出版物 46-3 中所定义。
 //
-// DES is cryptographically broken and should not be used for secure
-// applications.
+// DES 在密码学上已被破坏，不应用于安全应用。
 package des
 
-// Used to perform an initial permutation of a 64-bit input block.
+// 用于对 64 位输入块执行初始排列。
 var initialPermutation = [64]byte{
 	6, 14, 22, 30, 38, 46, 54, 62,
 	4, 12, 20, 28, 36, 44, 52, 60,
@@ -22,8 +20,8 @@ var initialPermutation = [64]byte{
 	1, 9, 17, 25, 33, 41, 49, 57,
 }
 
-// Used to perform a final permutation of a 4-bit preoutput block. This is the
-// inverse of initialPermutation
+// 用于对 4 位预输出块执行最终排列。这是
+// initialPermutation 的逆排列。
 var finalPermutation = [64]byte{
 	24, 56, 16, 48, 8, 40, 0, 32,
 	25, 57, 17, 49, 9, 41, 1, 33,
@@ -35,8 +33,7 @@ var finalPermutation = [64]byte{
 	31, 63, 23, 55, 15, 47, 7, 39,
 }
 
-// Used to expand an input block of 32 bits, producing an output block of 48
-// bits.
+// 用于展开 32 位输入块，生成 48 位输出块。
 var expansionFunction = [48]byte{
 	0, 31, 30, 29, 28, 27, 28, 27,
 	26, 25, 24, 23, 24, 23, 22, 21,
@@ -46,7 +43,7 @@ var expansionFunction = [48]byte{
 	4, 3, 4, 3, 2, 1, 0, 31,
 }
 
-// Yields a 32-bit output from a 32-bit input
+// 从 32 位输入生成 32 位输出。
 var permutationFunction = [32]byte{
 	16, 25, 12, 11, 3, 20, 4, 15,
 	31, 17, 9, 6, 27, 14, 1, 22,
@@ -54,8 +51,7 @@ var permutationFunction = [32]byte{
 	13, 19, 2, 26, 10, 21, 28, 7,
 }
 
-// Used in the key schedule to select 56 bits
-// from a 64-bit input.
+// 在密钥调度中用于从 64 位输入中选择 56 位。
 var permutedChoice1 = [56]byte{
 	7, 15, 23, 31, 39, 47, 55, 63,
 	6, 14, 22, 30, 38, 46, 54, 62,
@@ -66,8 +62,7 @@ var permutedChoice1 = [56]byte{
 	35, 43, 51, 59, 36, 44, 52, 60,
 }
 
-// Used in the key schedule to produce each subkey by selecting 48 bits from
-// the 56-bit input
+// 在密钥调度中用于通过从 56 位输入中选择 48 位来生成每个子密钥。
 var permutedChoice2 = [48]byte{
 	42, 39, 45, 32, 55, 51, 53, 28,
 	41, 50, 35, 46, 33, 37, 44, 52,
@@ -77,8 +72,8 @@ var permutedChoice2 = [48]byte{
 	22, 3, 10, 14, 6, 20, 27, 24,
 }
 
-// 8 S-boxes composed of 4 rows and 16 columns
-// Used in the DES cipher function
+// 8 个 S-box，每个由 4 行和 16 列组成。
+// 在 DES 密码函数中使用。
 var sBoxes = [8][4][16]uint8{
 	// S-box 1
 	{
@@ -138,5 +133,5 @@ var sBoxes = [8][4][16]uint8{
 	},
 }
 
-// Size of left rotation per round in each half of the key schedule
+// 密钥调度中每轮在密钥的每一半中的左旋转大小。
 var ksRotations = [16]uint8{1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1}

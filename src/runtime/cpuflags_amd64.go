@@ -11,22 +11,21 @@ import (
 var memmoveBits uint8
 
 const (
-	// avxSupported indicates that the CPU supports AVX instructions.
+	// avxSupported 表示 CPU 支持 AVX 指令。
 	avxSupported = 1 << 0
 
-	// repmovsPreferred indicates that REP MOVSx instruction is more
-	// efficient on the CPU.
+	// repmovsPreferred 表示 REP MOVSx 指令在
+	// CPU 上更有效。
 	repmovsPreferred = 1 << 1
 )
 
 func init() {
-	// Here we assume that on modern CPUs with both FSRM and ERMS features,
-	// copying data blocks of 2KB or larger using the REP MOVSB instruction
-	// will be more efficient to avoid having to keep up with CPU generations.
-	// Therefore, we may retain a BlockList mechanism to ensure that microarchitectures
-	// that do not fit this case may appear in the future.
-	// We enable it on Intel CPUs first, and we may support more platforms
-	// in the future.
+	// 这里我们假设在具有 FSRM 和 ERMS 功能的现代 CPU 上，
+	// 使用 REP MOVSB 指令复制 2KB 或更大的数据块
+	// 会更有效，以避免必须跟上 CPU 代数。
+	// 因此，我们可能保留一个 BlockList 机制以确保不符合此情况的微架构
+	// 可能在将来出现。
+	// 我们首先在 Intel CPU 上启用它，将来可能支持更多平台。
 	isERMSNiceCPU := isIntel
 	useREPMOV := isERMSNiceCPU && cpu.X86.HasERMS && cpu.X86.HasFSRM
 	if cpu.X86.HasAVX {

@@ -1,22 +1,19 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package path implements utility routines for manipulating slash-separated
-// paths.
+// path 包实现了用于操作以斜杠分隔的路径的实用工具函数。
 //
-// The path package should only be used for paths separated by forward
-// slashes, such as the paths in URLs. This package does not deal with
-// Windows paths with drive letters or backslashes; to manipulate
-// operating system paths, use the [path/filepath] package.
+// path 包只应用于以正斜杠分隔的路径，例如 URL 中的路径。
+// 本包不处理带有驱动器号或反斜杠的 Windows 路径；
+// 如需操作操作系统路径，请使用 [path/filepath] 包。
 package path
 
 import "internal/bytealg"
 
-// A lazybuf is a lazily constructed path buffer.
-// It supports append, reading previously appended bytes,
-// and retrieving the final string. It does not allocate a buffer
-// to hold the output until that output diverges from s.
+// lazybuf 是一个延迟构造的路径缓冲区。
+// 它支持追加、读取之前追加的字节以及获取最终字符串。
+// 在输出与 s 产生差异之前，它不会分配缓冲区来保存输出。
 type lazybuf struct {
 	s   string
 	buf []byte
@@ -50,24 +47,22 @@ func (b *lazybuf) string() string {
 	return string(b.buf[:b.w])
 }
 
-// Clean returns the shortest path name equivalent to path
-// by purely lexical processing. It applies the following rules
-// iteratively until no further processing can be done:
+// Clean 通过纯词法处理返回与 path 等价的最短路径名。
+// 它反复应用以下规则，直到无法再进行处理：
 //
-//  1. Replace multiple slashes with a single slash.
-//  2. Eliminate each . path name element (the current directory).
-//  3. Eliminate each inner .. path name element (the parent directory)
-//     along with the non-.. element that precedes it.
-//  4. Eliminate .. elements that begin a rooted path:
-//     that is, replace "/.." by "/" at the beginning of a path.
+//  1. 将多个斜杠替换为单个斜杠。
+//  2. 消除每个 . 路径名元素（当前目录）。
+//  3. 消除每个内部的 .. 路径名元素（父目录）
+//     以及它前面的非 .. 元素。
+//  4. 消除以根路径开头的 .. 元素：
+//     即在路径开头将 "/.." 替换为 "/"。
 //
-// The returned path ends in a slash only if it is the root "/".
+// 返回的路径仅在它是根目录 "/" 时才以斜杠结尾。
 //
-// If the result of this process is an empty string, Clean
-// returns the string ".".
+// 如果此处理过程的结果是空字符串，Clean 返回字符串 "."。
 //
-// See also Rob Pike, “Lexical File Names in Plan 9 or
-// Getting Dot-Dot Right,”
+// 另请参阅 Rob Pike 的文章 "Lexical File Names in Plan 9 or
+// Getting Dot-Dot Right"，
 // https://9p.io/sys/doc/lexnames.html
 func Clean(path string) string {
 	if path == "" {
@@ -77,11 +72,11 @@ func Clean(path string) string {
 	rooted := path[0] == '/'
 	n := len(path)
 
-	// Invariants:
-	//	reading from path; r is index of next byte to process.
-	//	writing to buf; w is index of next byte to write.
-	//	dotdot is index in buf where .. must stop, either because
-	//		it is the leading slash or it is a leading ../../.. prefix.
+	// 不变量：
+	//	从 path 读取；r 是下一个要处理的字节的索引。
+	//	写入 buf；w 是下一个要写入的字节的索引。
+	//	dotdot 是 buf 中 .. 必须停止的索引，因为
+	//		它是开头的斜杠或者是开头的 ../../.. 前缀。
 	out := lazybuf{s: path}
 	r, dotdot := 0, 0
 	if rooted {
@@ -92,23 +87,23 @@ func Clean(path string) string {
 	for r < n {
 		switch {
 		case path[r] == '/':
-			// empty path element
+			// 空路径元素
 			r++
 		case path[r] == '.' && (r+1 == n || path[r+1] == '/'):
-			// . element
+			// . 元素
 			r++
 		case path[r] == '.' && path[r+1] == '.' && (r+2 == n || path[r+2] == '/'):
-			// .. element: remove to last /
+			// .. 元素：删除到最后一个 /
 			r += 2
 			switch {
 			case out.w > dotdot:
-				// can backtrack
+				// 可以回溯
 				out.w--
 				for out.w > dotdot && out.index(out.w) != '/' {
 					out.w--
 				}
 			case !rooted:
-				// cannot backtrack, but not rooted, so append .. element.
+				// 无法回溯，但不是根路径，所以追加 .. 元素。
 				if out.w > 0 {
 					out.append('/')
 				}
@@ -117,19 +112,19 @@ func Clean(path string) string {
 				dotdot = out.w
 			}
 		default:
-			// real path element.
-			// add slash if needed
+			// 真实路径元素。
+			// 如果需要，添加斜杠
 			if rooted && out.w != 1 || !rooted && out.w != 0 {
 				out.append('/')
 			}
-			// copy element
+			// 复制元素
 			for ; r < n && path[r] != '/'; r++ {
 				out.append(path[r])
 			}
 		}
 	}
 
-	// Turn empty string into "."
+	// 将空字符串转换为 "."
 	if out.w == 0 {
 		return "."
 	}
@@ -137,21 +132,20 @@ func Clean(path string) string {
 	return out.string()
 }
 
-// Split splits path immediately following the final slash,
-// separating it into a directory and file name component.
-// If there is no slash in path, Split returns an empty dir and
-// file set to path.
-// The returned values have the property that path = dir+file.
+// Split 在最后一个斜杠之后立即分割路径，
+// 将其分为目录和文件名组件。
+// 如果路径中没有斜杠，Split 返回空的 dir，
+// file 设置为 path。
+// 返回的值具有 path = dir+file 的属性。
 func Split(path string) (dir, file string) {
 	i := bytealg.LastIndexByteString(path, '/')
 	return path[:i+1], path[i+1:]
 }
 
-// Join joins any number of path elements into a single path,
-// separating them with slashes. Empty elements are ignored.
-// The result is Cleaned. However, if the argument list is
-// empty or all its elements are empty, Join returns
-// an empty string.
+// Join 将任意数量的路径元素连接成单个路径，
+// 用斜杠分隔它们。空元素会被忽略。
+// 结果会经过 Clean 处理。但是，如果参数列表
+// 为空或其所有元素都为空，Join 返回空字符串。
 func Join(elem ...string) string {
 	size := 0
 	for _, e := range elem {
@@ -172,10 +166,10 @@ func Join(elem ...string) string {
 	return Clean(string(buf))
 }
 
-// Ext returns the file name extension used by path.
-// The extension is the suffix beginning at the final dot
-// in the final slash-separated element of path;
-// it is empty if there is no dot.
+// Ext 返回路径使用的文件扩展名。
+// 扩展名是路径中最后一个斜杠分隔元素中
+// 从最后一个点开始的后缀；
+// 如果没有点，则为空。
 func Ext(path string) string {
 	for i := len(path) - 1; i >= 0 && path[i] != '/'; i-- {
 		if path[i] == '.' {
@@ -185,41 +179,40 @@ func Ext(path string) string {
 	return ""
 }
 
-// Base returns the last element of path.
-// Trailing slashes are removed before extracting the last element.
-// If the path is empty, Base returns ".".
-// If the path consists entirely of slashes, Base returns "/".
+// Base 返回路径的最后一个元素。
+// 在提取最后一个元素之前会删除尾部斜杠。
+// 如果路径为空，Base 返回 "."。
+// 如果路径完全由斜杠组成，Base 返回 "/"。
 func Base(path string) string {
 	if path == "" {
 		return "."
 	}
-	// Strip trailing slashes.
+	// 去除尾部斜杠。
 	for len(path) > 0 && path[len(path)-1] == '/' {
 		path = path[0 : len(path)-1]
 	}
-	// Find the last element
+	// 找到最后一个元素
 	if i := bytealg.LastIndexByteString(path, '/'); i >= 0 {
 		path = path[i+1:]
 	}
-	// If empty now, it had only slashes.
+	// 如果现在为空，说明它只有斜杠。
 	if path == "" {
 		return "/"
 	}
 	return path
 }
 
-// IsAbs reports whether the path is absolute.
+// IsAbs 报告路径是否为绝对路径。
 func IsAbs(path string) bool {
 	return len(path) > 0 && path[0] == '/'
 }
 
-// Dir returns all but the last element of path, typically the path's directory.
-// After dropping the final element using [Split], the path is Cleaned and trailing
-// slashes are removed.
-// If the path is empty, Dir returns ".".
-// If the path consists entirely of slashes followed by non-slash bytes, Dir
-// returns a single slash. In any other case, the returned path does not end in a
-// slash.
+// Dir 返回路径中除最后一个元素之外的所有内容，通常是路径的目录。
+// 使用 [Split] 删除最后一个元素后，路径会经过 Clean 处理，
+// 并删除尾部斜杠。
+// 如果路径为空，Dir 返回 "."。
+// 如果路径完全由斜杠后跟非斜杠字节组成，Dir 返回单个斜杠。
+// 在任何其他情况下，返回的路径不以斜杠结尾。
 func Dir(path string) string {
 	dir, _ := Split(path)
 	return Clean(dir)

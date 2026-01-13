@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package testing_test
 
@@ -31,7 +31,7 @@ var prettyPrintTests = []struct {
 	{99.9949999, "        99.99 x"},
 	{-99.9949999, "       -99.99 x"},
 	{0.000999950001, "         0.001000 x"},
-	{0.000999949999, "         0.0009999 x"}, // smallest case
+	{0.000999949999, "         0.0009999 x"}, // 最小情况
 	{0.0000999949999, "         0.0001000 x"},
 }
 
@@ -46,7 +46,7 @@ func TestPrettyPrint(t *testing.T) {
 }
 
 func TestResultString(t *testing.T) {
-	// Test fractional ns/op handling
+	// 测试小数 ns/op 处理
 	r := testing.BenchmarkResult{
 		N: 100,
 		T: 240 * time.Nanosecond,
@@ -58,13 +58,13 @@ func TestResultString(t *testing.T) {
 		t.Errorf("String: expected %q, actual %q", want, got)
 	}
 
-	// Test sub-1 ns/op (issue #31005)
+	// 测试小于 1 ns/op 的情况（issue #31005）
 	r.T = 40 * time.Nanosecond
 	if want, got := "     100\t         0.4000 ns/op", r.String(); want != got {
 		t.Errorf("String: expected %q, actual %q", want, got)
 	}
 
-	// Test 0 ns/op
+	// 测试 0 ns/op
 	r.T = 0
 	if want, got := "     100", r.String(); want != got {
 		t.Errorf("String: expected %q, actual %q", want, got)
@@ -97,8 +97,8 @@ func TestRunParallel(t *testing.T) {
 func TestRunParallelFail(t *testing.T) {
 	testing.Benchmark(func(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
-			// The function must be able to log/abort
-			// w/o crashing/deadlocking the whole benchmark.
+			// 该函数必须能够进行日志记录/中止
+			// 而不会导致整个基准测试崩溃/死锁。
 			b.Log("log")
 			b.Error("error")
 		})
@@ -158,16 +158,16 @@ func TestBenchmarkContext(t *testing.T) {
 }
 
 func ExampleB_RunParallel() {
-	// Parallel benchmark for text/template.Template.Execute on a single object.
+	// 对单个对象的 text/template.Template.Execute 进行并行基准测试。
 	testing.Benchmark(func(b *testing.B) {
 		templ := template.Must(template.New("test").Parse("Hello, {{.}}!"))
-		// RunParallel will create GOMAXPROCS goroutines
-		// and distribute work among them.
+		// RunParallel 将创建 GOMAXPROCS 个 goroutine
+		// 并在它们之间分配工作。
 		b.RunParallel(func(pb *testing.PB) {
-			// Each goroutine has its own bytes.Buffer.
+			// 每个 goroutine 都有自己的 bytes.Buffer。
 			var buf bytes.Buffer
 			for pb.Next() {
-				// The loop body is executed b.N times total across all goroutines.
+				// 循环体在所有 goroutine 中总共执行 b.N 次。
 				buf.Reset()
 				templ.Execute(&buf, "World")
 			}
@@ -180,12 +180,12 @@ func TestReportMetric(t *testing.T) {
 		b.ReportMetric(12345, "ns/op")
 		b.ReportMetric(0.2, "frobs/op")
 	})
-	// Test built-in overriding.
+	// 测试内置覆盖。
 	if res.NsPerOp() != 12345 {
 		t.Errorf("NsPerOp: expected %v, actual %v", 12345, res.NsPerOp())
 	}
-	// Test stringing.
-	res.N = 1 // Make the output stable
+	// 测试字符串化。
+	res.N = 1 // 使输出稳定
 	want := "       1\t     12345 ns/op\t         0.2000 frobs/op"
 	if want != res.String() {
 		t.Errorf("expected %q, actual %q", want, res.String())
@@ -193,8 +193,7 @@ func TestReportMetric(t *testing.T) {
 }
 
 func ExampleB_ReportMetric() {
-	// This reports a custom benchmark metric relevant to a
-	// specific algorithm (in this case, sorting).
+	// 这报告与特定算法相关的自定义基准测试指标（在本例中是排序）。
 	testing.Benchmark(func(b *testing.B) {
 		var compares int64
 		for b.Loop() {
@@ -204,41 +203,38 @@ func ExampleB_ReportMetric() {
 				return cmp.Compare(a, b)
 			})
 		}
-		// This metric is per-operation, so divide by b.N and
-		// report it as a "/op" unit.
+		// 该指标是每次操作的，所以除以 b.N 并
+		// 以 "/op" 单位报告。
 		b.ReportMetric(float64(compares)/float64(b.N), "compares/op")
-		// This metric is per-time, so divide by b.Elapsed and
-		// report it as a "/ns" unit.
+		// 该指标是每时间的，所以除以 b.Elapsed 并
+		// 以 "/ns" 单位报告。
 		b.ReportMetric(float64(compares)/float64(b.Elapsed().Nanoseconds()), "compares/ns")
 	})
 }
 
 func ExampleB_ReportMetric_parallel() {
-	// This reports a custom benchmark metric relevant to a
-	// specific algorithm (in this case, sorting) in parallel.
+	// 这在并行情况下报告与特定算法相关的自定义基准测试指标（在本例中是排序）。
 	testing.Benchmark(func(b *testing.B) {
 		var compares atomic.Int64
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				s := []int{5, 4, 3, 2, 1}
 				slices.SortFunc(s, func(a, b int) int {
-					// Because RunParallel runs the function many
-					// times in parallel, we must increment the
-					// counter atomically to avoid racing writes.
+					// 因为 RunParallel 会多次并行运行该函数，
+					// 我们必须原子地增加计数器以避免竞争写入。
 					compares.Add(1)
 					return cmp.Compare(a, b)
 				})
 			}
 		})
 
-		// NOTE: Report each metric once, after all of the parallel
-		// calls have completed.
+		// 注意：在所有并行调用完成后，只报告每个指标一次。
 
-		// This metric is per-operation, so divide by b.N and
-		// report it as a "/op" unit.
+		// 该指标是每次操作的，所以除以 b.N 并
+		// 以 "/op" 单位报告。
 		b.ReportMetric(float64(compares.Load())/float64(b.N), "compares/op")
-		// This metric is per-time, so divide by b.Elapsed and
-		// report it as a "/ns" unit.
+		// 该指标是每时间的，所以除以 b.Elapsed 并
+		// 以 "/ns" 单位报告。
 		b.ReportMetric(float64(compares.Load())/float64(b.Elapsed().Nanoseconds()), "compares/ns")
 	})
 }

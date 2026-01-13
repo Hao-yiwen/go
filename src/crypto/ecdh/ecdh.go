@@ -1,9 +1,8 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package ecdh implements Elliptic Curve Diffie-Hellman over
-// NIST curves and Curve25519.
+// ecdh 包实现了 NIST 曲线和 Curve25519 上的椭圆曲线 Diffie-Hellman。
 package ecdh
 
 import (
@@ -16,47 +15,46 @@ import (
 )
 
 type Curve interface {
-	// GenerateKey generates a random PrivateKey.
+	// GenerateKey 生成一个随机 PrivateKey。
 	//
-	// Since Go 1.26, a secure source of random bytes is always used, and rand
-	// is ignored unless GODEBUG=cryptocustomrand=1 is set. This setting will be
-	// removed in a future Go release. Instead, use [testing/cryptotest.SetGlobalRandom].
+	// 从 Go 1.26 开始，总是使用安全的随机字节来源，rand 被忽略
+	// 除非设置了 GODEBUG=cryptocustomrand=1。此设置将
+	// 在未来的 Go 版本中移除。改为使用 [testing/cryptotest.SetGlobalRandom]。
 	GenerateKey(rand io.Reader) (*PrivateKey, error)
 
-	// NewPrivateKey checks that key is valid and returns a PrivateKey.
+	// NewPrivateKey 检查密钥是否有效并返回一个 PrivateKey。
 	//
-	// For NIST curves, this follows SEC 1, Version 2.0, Section 2.3.6, which
-	// amounts to decoding the bytes as a fixed length big endian integer and
-	// checking that the result is lower than the order of the curve. The zero
-	// private key is also rejected, as the encoding of the corresponding public
-	// key would be irregular.
+	// 对于 NIST 曲线，这遵循 SEC 1 第 2.0 版第 2.3.6 节，
+	// 其中涉及将字节解码为固定长度大端整数
+	// 并检查结果是否低于曲线的阶。零
+	// 私钥也被拒绝，因为相应公钥的编码
+	// 会不规则。
 	//
-	// For X25519, this only checks the scalar length.
+	// 对于 X25519，这仅检查标量长度。
 	NewPrivateKey(key []byte) (*PrivateKey, error)
 
-	// NewPublicKey checks that key is valid and returns a PublicKey.
+	// NewPublicKey 检查密钥是否有效并返回一个 PublicKey。
 	//
-	// For NIST curves, this decodes an uncompressed point according to SEC 1,
-	// Version 2.0, Section 2.3.4. Compressed encodings and the point at
-	// infinity are rejected.
+	// 对于 NIST 曲线，这根据 SEC 1 第 2.0 版第 2.3.4 节解码未压缩点。
+	// 压缩编码和无穷远点被拒绝。
 	//
-	// For X25519, this only checks the u-coordinate length. Adversarially
-	// selected public keys can cause ECDH to return an error.
+	// 对于 X25519，这仅检查 u 坐标长度。对抗性地选择的
+	// 公钥可能导致 ECDH 返回错误。
 	NewPublicKey(key []byte) (*PublicKey, error)
 
-	// ecdh performs an ECDH exchange and returns the shared secret. It's exposed
-	// as the PrivateKey.ECDH method.
+	// ecdh 执行 ECDH 交换并返回共享秘密。它被暴露
+	// 为 PrivateKey.ECDH 方法。
 	//
-	// The private method also allow us to expand the ECDH interface with more
-	// methods in the future without breaking backwards compatibility.
+	// 私有方法也允许我们在未来扩展 ECDH 接口
+	// 更多方法而不破坏向后兼容性。
 	ecdh(local *PrivateKey, remote *PublicKey) ([]byte, error)
 }
 
-// PublicKey is an ECDH public key, usually a peer's ECDH share sent over the wire.
+// PublicKey 是一个 ECDH 公钥，通常是通过网络发送的对等方的 ECDH 份额。
 //
-// These keys can be parsed with [crypto/x509.ParsePKIXPublicKey] and encoded
-// with [crypto/x509.MarshalPKIXPublicKey]. For NIST curves, they then need to
-// be converted with [crypto/ecdsa.PublicKey.ECDH] after parsing.
+// 这些密钥可以使用 [crypto/x509.ParsePKIXPublicKey] 解析并使用
+// [crypto/x509.MarshalPKIXPublicKey] 编码。对于 NIST 曲线，
+// 它们需要在解析后使用 [crypto/ecdsa.PublicKey.ECDH] 转换。
 type PublicKey struct {
 	curve     Curve
 	publicKey []byte
@@ -64,21 +62,20 @@ type PublicKey struct {
 	fips      *ecdh.PublicKey
 }
 
-// Bytes returns a copy of the encoding of the public key.
+// Bytes 返回公钥编码的副本。
 func (k *PublicKey) Bytes() []byte {
-	// Copy the public key to a fixed size buffer that can get allocated on the
-	// caller's stack after inlining.
+	// 将公钥复制到固定大小的缓冲区，该缓冲区在内联后
+	// 可在调用者的堆栈上分配。
 	var buf [133]byte
 	return append(buf[:0], k.publicKey...)
 }
 
-// Equal returns whether x represents the same public key as k.
+// Equal 返回 x 是否表示与 k 相同的公钥。
 //
-// Note that there can be equivalent public keys with different encodings which
-// would return false from this check but behave the same way as inputs to ECDH.
+// 注意可能存在具有不同编码的等价公钥，这些公钥
+// 将从此检查返回 false，但作为 ECDH 的输入表现相同。
 //
-// This check is performed in constant time as long as the key types and their
-// curve match.
+// 只要密钥类型及其曲线匹配，此检查在常数时间内执行。
 func (k *PublicKey) Equal(x crypto.PublicKey) bool {
 	xx, ok := x.(*PublicKey)
 	if !ok {
@@ -92,10 +89,10 @@ func (k *PublicKey) Curve() Curve {
 	return k.curve
 }
 
-// KeyExchanger is an interface for an opaque private key that can be used for
-// key exchange operations. For example, an ECDH key kept in a hardware module.
+// KeyExchanger 是用于密钥交换操作的不透明私钥的接口。
+// 例如，ECDH 密钥存储在硬件模块中。
 //
-// It is implemented by [PrivateKey].
+// 由 [PrivateKey] 实现。
 type KeyExchanger interface {
 	PublicKey() *PublicKey
 	Curve() Curve
@@ -104,11 +101,11 @@ type KeyExchanger interface {
 
 var _ KeyExchanger = (*PrivateKey)(nil)
 
-// PrivateKey is an ECDH private key, usually kept secret.
+// PrivateKey 是一个 ECDH 私钥，通常保持秘密。
 //
-// These keys can be parsed with [crypto/x509.ParsePKCS8PrivateKey] and encoded
-// with [crypto/x509.MarshalPKCS8PrivateKey]. For NIST curves, they then need to
-// be converted with [crypto/ecdsa.PrivateKey.ECDH] after parsing.
+// 这些密钥可以使用 [crypto/x509.ParsePKCS8PrivateKey] 解析并使用
+// [crypto/x509.MarshalPKCS8PrivateKey] 编码。对于 NIST 曲线，
+// 它们需要在解析后使用 [crypto/ecdsa.PrivateKey.ECDH] 转换。
 type PrivateKey struct {
 	curve      Curve
 	privateKey []byte
@@ -117,17 +114,16 @@ type PrivateKey struct {
 	fips       *ecdh.PrivateKey
 }
 
-// ECDH performs an ECDH exchange and returns the shared secret. The [PrivateKey]
-// and [PublicKey] must use the same curve.
+// ECDH 执行 ECDH 交换并返回共享秘密。[PrivateKey] 和 [PublicKey]
+// 必须使用相同的曲线。
 //
-// For NIST curves, this performs ECDH as specified in SEC 1, Version 2.0,
-// Section 3.3.1, and returns the x-coordinate encoded according to SEC 1,
-// Version 2.0, Section 2.3.5. The result is never the point at infinity.
-// This is also known as the Shared Secret Computation of the Ephemeral Unified
-// Model scheme specified in NIST SP 800-56A Rev. 3, Section 6.1.2.2.
+// 对于 NIST 曲线，这执行 SEC 1 第 2.0 版第 3.3.1 节中指定的 ECDH，
+// 并返回根据 SEC 1 第 2.0 版第 2.3.5 节编码的 x 坐标。
+// 结果永远不是无穷远点。这也称为 NIST SP 800-56A Rev. 3 第 6.1.2.2 节
+// 中指定的临时统一模型方案的共享秘密计算。
 //
-// For [X25519], this performs ECDH as specified in RFC 7748, Section 6.1. If
-// the result is the all-zero value, ECDH returns an error.
+// 对于 [X25519]，这执行 RFC 7748 第 6.1 节中指定的 ECDH。如果
+// 结果是全零值，ECDH 返回错误。
 func (k *PrivateKey) ECDH(remote *PublicKey) ([]byte, error) {
 	if k.curve != remote.curve {
 		return nil, errors.New("crypto/ecdh: private key and public key curves do not match")
@@ -135,21 +131,20 @@ func (k *PrivateKey) ECDH(remote *PublicKey) ([]byte, error) {
 	return k.curve.ecdh(k, remote)
 }
 
-// Bytes returns a copy of the encoding of the private key.
+// Bytes 返回私钥编码的副本。
 func (k *PrivateKey) Bytes() []byte {
-	// Copy the private key to a fixed size buffer that can get allocated on the
-	// caller's stack after inlining.
+	// 将私钥复制到固定大小的缓冲区，该缓冲区在内联后
+	// 可在调用者的堆栈上分配。
 	var buf [66]byte
 	return append(buf[:0], k.privateKey...)
 }
 
-// Equal returns whether x represents the same private key as k.
+// Equal 返回 x 是否表示与 k 相同的私钥。
 //
-// Note that there can be equivalent private keys with different encodings which
-// would return false from this check but behave the same way as inputs to [ECDH].
+// 注意可能存在具有不同编码的等价私钥，这些私钥
+// 将从此检查返回 false，但作为 [ECDH] 的输入表现相同。
 //
-// This check is performed in constant time as long as the key types and their
-// curve match.
+// 只要密钥类型及其曲线匹配，此检查在常数时间内执行。
 func (k *PrivateKey) Equal(x crypto.PrivateKey) bool {
 	xx, ok := x.(*PrivateKey)
 	if !ok {
@@ -167,8 +162,8 @@ func (k *PrivateKey) PublicKey() *PublicKey {
 	return k.publicKey
 }
 
-// Public implements the implicit interface of all standard library private
-// keys. See the docs of [crypto.PrivateKey].
+// Public 实现所有标准库私钥的隐式接口。
+// 参见 [crypto.PrivateKey] 的文档。
 func (k *PrivateKey) Public() crypto.PublicKey {
 	return k.PublicKey()
 }

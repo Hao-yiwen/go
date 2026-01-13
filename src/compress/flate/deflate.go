@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package flate
 
@@ -17,15 +17,13 @@ const (
 	BestCompression    = 9
 	DefaultCompression = -1
 
-	// HuffmanOnly disables Lempel-Ziv match searching and only performs Huffman
-	// entropy encoding. This mode is useful in compressing data that has
-	// already been compressed with an LZ style algorithm (e.g. Snappy or LZ4)
-	// that lacks an entropy encoder. Compression gains are achieved when
-	// certain bytes in the input stream occur more frequently than others.
+	// HuffmanOnly 禁用 Lempel-Ziv 匹配搜索，只执行 Huffman 熵编码。
+	// 此模式适用于压缩已经用 LZ 风格算法（如 Snappy 或 LZ4）压缩过但
+	// 缺少熵编码器的数据。当输入流中某些字节比其他字节出现更频繁时，
+	// 可以获得压缩增益。
 	//
-	// Note that HuffmanOnly produces a compressed output that is
-	// RFC 1951 compliant. That is, any valid DEFLATE decompressor will
-	// continue to be able to decompress this output.
+	// 注意，HuffmanOnly 产生的压缩输出符合 RFC 1951 标准。
+	// 也就是说，任何有效的 DEFLATE 解压缩器都能够继续解压缩此输出。
 	HuffmanOnly = -2
 )
 
@@ -34,23 +32,21 @@ const (
 	windowSize    = 1 << logWindowSize
 	windowMask    = windowSize - 1
 
-	// The LZ77 step produces a sequence of literal tokens and <length, offset>
-	// pair tokens. The offset is also known as distance. The underlying wire
-	// format limits the range of lengths and offsets. For example, there are
-	// 256 legitimate lengths: those in the range [3, 258]. This package's
-	// compressor uses a higher minimum match length, enabling optimizations
-	// such as finding matches via 32-bit loads and compares.
-	baseMatchLength = 3       // The smallest match length per the RFC section 3.2.5
-	minMatchLength  = 4       // The smallest match length that the compressor actually emits
-	maxMatchLength  = 258     // The largest match length
-	baseMatchOffset = 1       // The smallest match offset
-	maxMatchOffset  = 1 << 15 // The largest match offset
+	// LZ77 步骤产生一系列字面量标记和 <长度, 偏移量> 对标记。
+	// 偏移量也称为距离。底层的线格式限制了长度和偏移量的范围。
+	// 例如，有 256 个合法的长度：范围在 [3, 258] 之间。
+	// 本包的压缩器使用更高的最小匹配长度，从而实现通过 32 位加载和比较
+	// 查找匹配等优化。
+	baseMatchLength = 3       // 根据 RFC 第 3.2.5 节的最小匹配长度
+	minMatchLength  = 4       // 压缩器实际发出的最小匹配长度
+	maxMatchLength  = 258     // 最大匹配长度
+	baseMatchOffset = 1       // 最小匹配偏移量
+	maxMatchOffset  = 1 << 15 // 最大匹配偏移量
 
-	// The maximum number of tokens we put into a single flate block, just to
-	// stop things from getting too large.
+	// 我们放入单个 flate 块的最大标记数，只是为了防止事情变得太大。
 	maxFlateBlockTokens = 1 << 14
 	maxStoreBlockSize   = 65535
-	hashBits            = 17 // After 17 performance degrades
+	hashBits            = 17 // 超过 17 性能下降
 	hashSize            = 1 << hashBits
 	hashMask            = (1 << hashBits) - 1
 	maxHashOffset       = 1 << 24
@@ -63,13 +59,13 @@ type compressionLevel struct {
 }
 
 var levels = []compressionLevel{
-	{0, 0, 0, 0, 0, 0}, // NoCompression.
-	{1, 0, 0, 0, 0, 0}, // BestSpeed uses a custom algorithm; see deflatefast.go.
-	// For levels 2-3 we don't bother trying with lazy matches.
+	{0, 0, 0, 0, 0, 0}, // NoCompression。
+	{1, 0, 0, 0, 0, 0}, // BestSpeed 使用自定义算法；见 deflatefast.go。
+	// 对于级别 2-3，我们不费心尝试延迟匹配。
 	{2, 4, 0, 16, 8, 5},
 	{3, 4, 0, 32, 32, 6},
-	// Levels 4-9 use increasingly more lazy matching
-	// and increasingly stringent conditions for "good enough".
+	// 级别 4-9 使用越来越多的延迟匹配，
+	// 以及越来越严格的"足够好"条件。
 	{4, 4, 4, 16, 16, skipNever},
 	{5, 8, 16, 32, 32, skipNever},
 	{6, 8, 16, 128, 128, skipNever},
@@ -84,48 +80,47 @@ type compressor struct {
 	w          *huffmanBitWriter
 	bulkHasher func([]byte, []uint32)
 
-	// compression algorithm
-	fill      func(*compressor, []byte) int // copy data to window
-	step      func(*compressor)             // process window
-	bestSpeed *deflateFast                  // Encoder for BestSpeed
+	// 压缩算法
+	fill      func(*compressor, []byte) int // 将数据复制到窗口
+	step      func(*compressor)             // 处理窗口
+	bestSpeed *deflateFast                  // BestSpeed 的编码器
 
-	// input window: unprocessed data is window[index:windowEnd]
+	// 输入窗口：未处理的数据是 window[index:windowEnd]
 	index         int
 	window        []byte
 	windowEnd     int
-	blockStart    int  // window index where current tokens start
-	byteAvailable bool // if true, still need to process window[index-1].
+	blockStart    int  // 当前标记开始的窗口索引
+	byteAvailable bool // 如果为 true，仍需处理 window[index-1]。
 
-	sync bool // requesting flush
+	sync bool // 请求刷新
 
-	// queued output tokens
+	// 排队的输出标记
 	tokens []token
 
-	// deflate state
+	// deflate 状态
 	length         int
 	offset         int
 	maxInsertIndex int
 	err            error
 
-	// Input hash chains
-	// hashHead[hashValue] contains the largest inputIndex with the specified hash value
-	// If hashHead[hashValue] is within the current window, then
-	// hashPrev[hashHead[hashValue] & windowMask] contains the previous index
-	// with the same hash value.
-	// These are large and do not contain pointers, so put them
-	// near the end of the struct so the GC has to scan less.
+	// 输入哈希链
+	// hashHead[hashValue] 包含具有指定哈希值的最大 inputIndex
+	// 如果 hashHead[hashValue] 在当前窗口内，则
+	// hashPrev[hashHead[hashValue] & windowMask] 包含具有相同哈希值的前一个索引。
+	// 这些很大且不包含指针，所以将它们放在结构体末尾附近，
+	// 这样 GC 需要扫描的更少。
 	chainHead  int
 	hashHead   [hashSize]uint32
 	hashPrev   [windowSize]uint32
 	hashOffset int
 
-	// hashMatch must be able to contain hashes for the maximum match length.
+	// hashMatch 必须能够包含最大匹配长度的哈希值。
 	hashMatch [maxMatchLength - 1]uint32
 }
 
 func (d *compressor) fillDeflate(b []byte) int {
 	if d.index >= 2*windowSize-(minMatchLength+maxMatchLength) {
-		// shift the window by windowSize
+		// 将窗口移动 windowSize
 		copy(d.window, d.window[windowSize:2*windowSize])
 		d.index -= windowSize
 		d.windowEnd -= windowSize
@@ -140,8 +135,7 @@ func (d *compressor) fillDeflate(b []byte) int {
 			d.hashOffset -= delta
 			d.chainHead -= delta
 
-			// Iterate over slices instead of arrays to avoid copying
-			// the entire table onto the stack (Issue #18625).
+			// 迭代切片而不是数组，以避免将整个表复制到堆栈上（Issue #18625）。
 			for i, v := range d.hashPrev[:] {
 				if int(v) > delta {
 					d.hashPrev[i] = uint32(int(v) - delta)
@@ -176,12 +170,11 @@ func (d *compressor) writeBlock(tokens []token, index int) error {
 	return nil
 }
 
-// fillWindow will fill the current window with the supplied
-// dictionary and calculate all hashes.
-// This is much faster than doing a full encode.
-// Should only be used after a reset.
+// fillWindow 将用提供的字典填充当前窗口并计算所有哈希值。
+// 这比执行完整编码快得多。
+// 应该只在重置后使用。
 func (d *compressor) fillWindow(b []byte) {
-	// Do not fill window if we are in store-only mode.
+	// 如果我们处于仅存储模式，则不填充窗口。
 	if d.compressionLevel.level < 2 {
 		return
 	}
@@ -189,14 +182,14 @@ func (d *compressor) fillWindow(b []byte) {
 		panic("internal error: fillWindow called with stale data")
 	}
 
-	// If we are given too much, cut it.
+	// 如果给的太多，就裁剪它。
 	if len(b) > windowSize {
 		b = b[len(b)-windowSize:]
 	}
-	// Add all to window.
+	// 将所有内容添加到窗口。
 	n := copy(d.window, b)
 
-	// Calculate 256 hashes at the time (more L1 cache hits)
+	// 一次计算 256 个哈希值（更多 L1 缓存命中）
 	loops := (n + 256 - minMatchLength) / 256
 	for j := 0; j < loops; j++ {
 		index := j * 256
@@ -216,20 +209,20 @@ func (d *compressor) fillWindow(b []byte) {
 		for i, val := range dst {
 			di := i + index
 			hh := &d.hashHead[val&hashMask]
-			// Get previous value with the same hash.
-			// Our chain should point to the previous value.
+			// 获取具有相同哈希值的前一个值。
+			// 我们的链应该指向前一个值。
 			d.hashPrev[di&windowMask] = *hh
-			// Set the head of the hash chain to us.
+			// 将哈希链的头设置为我们。
 			*hh = uint32(di + d.hashOffset)
 		}
 	}
-	// Update window information.
+	// 更新窗口信息。
 	d.windowEnd = n
 	d.index = n
 }
 
-// Try to find a match starting at index whose length is greater than prevSize.
-// We only look at chainCount possibilities before giving up.
+// 尝试在 index 处找到长度大于 prevSize 的匹配。
+// 我们只查看 chainCount 种可能性，然后放弃。
 func (d *compressor) findMatch(pos int, prevHead int, prevLength int, lookahead int) (length, offset int, ok bool) {
 	minMatchLook := maxMatchLength
 	if lookahead < minMatchLook {
@@ -238,13 +231,13 @@ func (d *compressor) findMatch(pos int, prevHead int, prevLength int, lookahead 
 
 	win := d.window[0 : pos+minMatchLook]
 
-	// We quit when we get a match that's at least nice long
+	// 当我们得到至少 nice 长度的匹配时就退出
 	nice := len(win) - pos
 	if d.nice < nice {
 		nice = d.nice
 	}
 
-	// If we've got a match that's good enough, only look in 1/4 the chain.
+	// 如果我们已经有足够好的匹配，只查看链的 1/4。
 	tries := d.chain
 	length = prevLength
 	if length >= d.good {
@@ -264,14 +257,14 @@ func (d *compressor) findMatch(pos int, prevHead int, prevLength int, lookahead 
 				offset = pos - i
 				ok = true
 				if n >= nice {
-					// The match is good enough that we don't try to find a better one.
+					// 匹配已经足够好，我们不尝试找更好的。
 					break
 				}
 				wEnd = win[pos+n]
 			}
 		}
 		if i == minIndex {
-			// hashPrev[i & windowMask] has already been overwritten, so stop now.
+			// hashPrev[i & windowMask] 已经被覆盖，所以现在停止。
 			break
 		}
 		i = int(d.hashPrev[i&windowMask]) - d.hashOffset
@@ -292,15 +285,13 @@ func (d *compressor) writeStoredBlock(buf []byte) error {
 
 const hashmul = 0x1e35a7bd
 
-// hash4 returns a hash representation of the first 4 bytes
-// of the supplied slice.
-// The caller must ensure that len(b) >= 4.
+// hash4 返回提供的切片的前 4 个字节的哈希表示。
+// 调用者必须确保 len(b) >= 4。
 func hash4(b []byte) uint32 {
 	return ((uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24) * hashmul) >> (32 - hashBits)
 }
 
-// bulkHash4 will compute hashes using the same
-// algorithm as hash4.
+// bulkHash4 使用与 hash4 相同的算法计算哈希值。
 func bulkHash4(b []byte, dst []uint32) {
 	if len(b) < minMatchLength {
 		return
@@ -314,9 +305,8 @@ func bulkHash4(b []byte, dst []uint32) {
 	}
 }
 
-// matchLen returns the number of matching bytes in a and b
-// up to length 'max'. Both slices must be at least 'max'
-// bytes in size.
+// matchLen 返回 a 和 b 中匹配的字节数，最多 'max' 个。
+// 两个切片的大小必须至少为 'max' 字节。
 func matchLen(a, b []byte, max int) int {
 	a = a[:max]
 	b = b[:len(a)]
@@ -328,17 +318,17 @@ func matchLen(a, b []byte, max int) int {
 	return max
 }
 
-// encSpeed will compress and store the currently added data,
-// if enough has been accumulated or we at the end of the stream.
-// Any error that occurred will be in d.err
+// encSpeed 将压缩和存储当前添加的数据，
+// 如果已累积足够的数据或我们在流的末尾。
+// 发生的任何错误都将在 d.err 中。
 func (d *compressor) encSpeed() {
-	// We only compress if we have maxStoreBlockSize.
+	// 只有当我们有 maxStoreBlockSize 时才压缩。
 	if d.windowEnd < maxStoreBlockSize {
 		if !d.sync {
 			return
 		}
 
-		// Handle small sizes.
+		// 处理小尺寸。
 		if d.windowEnd < 128 {
 			switch {
 			case d.windowEnd == 0:
@@ -355,10 +345,10 @@ func (d *compressor) encSpeed() {
 		}
 
 	}
-	// Encode the block.
+	// 编码块。
 	d.tokens = d.bestSpeed.encode(d.tokens[:0], d.window[:d.windowEnd])
 
-	// If we removed less than 1/16th, Huffman compress the block.
+	// 如果我们移除的少于 1/16，则对块进行 Huffman 压缩。
 	if len(d.tokens) > d.windowEnd-(d.windowEnd>>4) {
 		d.w.writeBlockHuff(false, d.window[:d.windowEnd])
 	} else {
@@ -401,9 +391,9 @@ Loop:
 				panic("index > windowEnd")
 			}
 			if lookahead == 0 {
-				// Flush current output block if any.
+				// 刷新当前输出块（如果有）。
 				if d.byteAvailable {
-					// There is still one pending token that needs to be flushed
+					// 仍有一个待处理的标记需要刷新
 					d.tokens = append(d.tokens, literalToken(uint32(d.window[d.index-1])))
 					d.byteAvailable = false
 				}
@@ -417,7 +407,7 @@ Loop:
 			}
 		}
 		if d.index < d.maxInsertIndex {
-			// Update the hash
+			// 更新哈希
 			hash := hash4(d.window[d.index : d.index+minMatchLength])
 			hh := &d.hashHead[hash&hashMask]
 			d.chainHead = int(*hh)
@@ -443,17 +433,15 @@ Loop:
 		}
 		if d.fastSkipHashing != skipNever && d.length >= minMatchLength ||
 			d.fastSkipHashing == skipNever && prevLength >= minMatchLength && d.length <= prevLength {
-			// There was a match at the previous step, and the current match is
-			// not better. Output the previous match.
+			// 上一步有一个匹配，而当前匹配不比它更好。输出上一个匹配。
 			if d.fastSkipHashing != skipNever {
 				d.tokens = append(d.tokens, matchToken(uint32(d.length-baseMatchLength), uint32(d.offset-baseMatchOffset)))
 			} else {
 				d.tokens = append(d.tokens, matchToken(uint32(prevLength-baseMatchLength), uint32(prevOffset-baseMatchOffset)))
 			}
-			// Insert in the hash table all strings up to the end of the match.
-			// index and index-1 are already inserted. If there is not enough
-			// lookahead, the last two strings are not inserted into the hash
-			// table.
+			// 将直到匹配末尾的所有字符串插入哈希表。
+			// index 和 index-1 已经插入。如果没有足够的前瞻，
+			// 最后两个字符串不会插入哈希表。
 			if d.length <= d.fastSkipHashing {
 				var newIndex int
 				if d.fastSkipHashing != skipNever {
@@ -465,11 +453,11 @@ Loop:
 				for index++; index < newIndex; index++ {
 					if index < d.maxInsertIndex {
 						hash := hash4(d.window[index : index+minMatchLength])
-						// Get previous value with the same hash.
-						// Our chain should point to the previous value.
+						// 获取具有相同哈希值的前一个值。
+						// 我们的链应该指向前一个值。
 						hh := &d.hashHead[hash&hashMask]
 						d.hashPrev[index&windowMask] = *hh
-						// Set the head of the hash chain to us.
+						// 将哈希链的头设置为我们。
 						*hh = uint32(index + d.hashOffset)
 					}
 				}
@@ -480,12 +468,11 @@ Loop:
 					d.length = minMatchLength - 1
 				}
 			} else {
-				// For matches this long, we don't bother inserting each individual
-				// item into the table.
+				// 对于这么长的匹配，我们不费心将每个单独的项插入表中。
 				d.index += d.length
 			}
 			if len(d.tokens) == maxFlateBlockTokens {
-				// The block includes the current character
+				// 块包含当前字符
 				if d.err = d.writeBlock(d.tokens, d.index); d.err != nil {
 					return
 				}
@@ -526,9 +513,8 @@ func (d *compressor) store() {
 	}
 }
 
-// storeHuff compresses and stores the currently added data
-// when the d.window is full or we are at the end of the stream.
-// Any error that occurred will be in d.err
+// storeHuff 在 d.window 已满或我们在流末尾时压缩和存储当前添加的数据。
+// 发生的任何错误都将在 d.err 中。
 func (d *compressor) storeHuff() {
 	if d.windowEnd < len(d.window) && !d.sync || d.windowEnd == 0 {
 		return
@@ -649,18 +635,16 @@ func (d *compressor) close() error {
 	return nil
 }
 
-// NewWriter returns a new [Writer] compressing data at the given level.
-// Following zlib, levels range from 1 ([BestSpeed]) to 9 ([BestCompression]);
-// higher levels typically run slower but compress more. Level 0
-// ([NoCompression]) does not attempt any compression; it only adds the
-// necessary DEFLATE framing.
-// Level -1 ([DefaultCompression]) uses the default compression level.
-// Level -2 ([HuffmanOnly]) will use Huffman compression only, giving
-// a very fast compression for all types of input, but sacrificing considerable
-// compression efficiency.
+// NewWriter 返回一个新的 [Writer]，以给定级别压缩数据。
+// 遵循 zlib，级别范围从 1（[BestSpeed]）到 9（[BestCompression]）；
+// 更高的级别通常运行较慢但压缩更多。级别 0（[NoCompression]）不尝试任何压缩；
+// 它只添加必要的 DEFLATE 帧。
+// 级别 -1（[DefaultCompression]）使用默认压缩级别。
+// 级别 -2（[HuffmanOnly]）将只使用 Huffman 压缩，为所有类型的输入提供
+// 非常快的压缩，但牺牲了相当大的压缩效率。
 //
-// If level is in the range [-2, 9] then the error returned will be nil.
-// Otherwise the error returned will be non-nil.
+// 如果 level 在 [-2, 9] 范围内，则返回的错误将为 nil。
+// 否则返回的错误将不为 nil。
 func NewWriter(w io.Writer, level int) (*Writer, error) {
 	var dw Writer
 	if err := dw.d.init(w, level); err != nil {
@@ -669,12 +653,10 @@ func NewWriter(w io.Writer, level int) (*Writer, error) {
 	return &dw, nil
 }
 
-// NewWriterDict is like [NewWriter] but initializes the new
-// [Writer] with a preset dictionary. The returned [Writer] behaves
-// as if the dictionary had been written to it without producing
-// any compressed output. The compressed data written to w
-// can only be decompressed by a reader initialized with the
-// same dictionary (see [NewReaderDict]).
+// NewWriterDict 类似于 [NewWriter]，但使用预设字典初始化新的 [Writer]。
+// 返回的 [Writer] 行为就像字典已被写入它但没有产生任何压缩输出一样。
+// 写入 w 的压缩数据只能由使用相同字典初始化的读取器解压缩
+//（见 [NewReaderDict]）。
 func NewWriterDict(w io.Writer, level int, dict []byte) (*Writer, error) {
 	dw := &dictWriter{w}
 	zw, err := NewWriter(dw, level)
@@ -682,7 +664,7 @@ func NewWriterDict(w io.Writer, level int, dict []byte) (*Writer, error) {
 		return nil, err
 	}
 	zw.d.fillWindow(dict)
-	zw.dict = append(zw.dict, dict...) // duplicate dictionary for Reset method.
+	zw.dict = append(zw.dict, dict...) // 为 Reset 方法复制字典。
 	return zw, nil
 }
 
@@ -696,50 +678,46 @@ func (w *dictWriter) Write(b []byte) (n int, err error) {
 
 var errWriterClosed = errors.New("flate: closed writer")
 
-// A Writer takes data written to it and writes the compressed
-// form of that data to an underlying writer (see [NewWriter]).
+// Writer 接受写入它的数据，并将该数据的压缩形式写入底层写入器
+//（见 [NewWriter]）。
 type Writer struct {
 	d    compressor
 	dict []byte
 }
 
-// Write writes data to w, which will eventually write the
-// compressed form of data to its underlying writer.
+// Write 将数据写入 w，它最终会将数据的压缩形式写入其底层写入器。
 func (w *Writer) Write(data []byte) (n int, err error) {
 	return w.d.write(data)
 }
 
-// Flush flushes any pending data to the underlying writer.
-// It is useful mainly in compressed network protocols, to ensure that
-// a remote reader has enough data to reconstruct a packet.
-// Flush does not return until the data has been written.
-// Calling Flush when there is no pending data still causes the [Writer]
-// to emit a sync marker of at least 4 bytes.
-// If the underlying writer returns an error, Flush returns that error.
+// Flush 将任何待处理的数据刷新到底层写入器。
+// 它主要在压缩的网络协议中有用，以确保远程读取器有足够的数据来重建数据包。
+// Flush 在数据被写入之前不会返回。
+// 在没有待处理数据时调用 Flush 仍会导致 [Writer] 发出至少 4 字节的同步标记。
+// 如果底层写入器返回错误，Flush 返回该错误。
 //
-// In the terminology of the zlib library, Flush is equivalent to Z_SYNC_FLUSH.
+// 在 zlib 库的术语中，Flush 等同于 Z_SYNC_FLUSH。
 func (w *Writer) Flush() error {
-	// For more about flushing:
+	// 关于刷新的更多信息：
 	// https://www.bolet.org/~pornin/deflate-flush.html
 	return w.d.syncFlush()
 }
 
-// Close flushes and closes the writer.
+// Close 刷新并关闭写入器。
 func (w *Writer) Close() error {
 	return w.d.close()
 }
 
-// Reset discards the writer's state and makes it equivalent to
-// the result of [NewWriter] or [NewWriterDict] called with dst
-// and w's level and dictionary.
+// Reset 丢弃写入器的状态，使其等同于使用 dst 和 w 的级别及字典
+// 调用 [NewWriter] 或 [NewWriterDict] 的结果。
 func (w *Writer) Reset(dst io.Writer) {
 	if dw, ok := w.d.w.writer.(*dictWriter); ok {
-		// w was created with NewWriterDict
+		// w 是用 NewWriterDict 创建的
 		dw.w = dst
 		w.d.reset(dw)
 		w.d.fillWindow(w.dict)
 	} else {
-		// w was created with NewWriter
+		// w 是用 NewWriter 创建的
 		w.d.reset(dst)
 	}
 }

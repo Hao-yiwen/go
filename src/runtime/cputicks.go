@@ -6,6 +6,6 @@
 
 package runtime
 
-// careful: cputicks is not guaranteed to be monotonic! In particular, we have
-// noticed drift between cpus on certain os/arch combinations. See issue 8976.
+// 注意：cputicks 不保证单调递增！特别是，我们在某些操作系统/架构组合上
+// 注意到 CPU 之间的偏差。参见 issue 8976。
 func cputicks() int64

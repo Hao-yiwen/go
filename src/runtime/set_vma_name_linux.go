@@ -18,7 +18,7 @@ func setVMANameSupported() bool {
 	return !prSetVMAUnsupported.Load()
 }
 
-// setVMAName calls prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, start, len, name)
+// setVMAName 调用 prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, start, len, name)
 func setVMAName(start unsafe.Pointer, length uintptr, name string) {
 	if debug.decoratemappings == 0 || !setVMANameSupported() {
 		return
@@ -26,11 +26,11 @@ func setVMAName(start unsafe.Pointer, length uintptr, name string) {
 
 	var sysName [80]byte
 	n := copy(sysName[:], " Go: ")
-	copy(sysName[n:79], name) // leave final byte zero
+	copy(sysName[n:79], name) // 保留最后一个字节为零
 
 	_, _, err := linux.Syscall6(linux.SYS_PRCTL, linux.PR_SET_VMA, linux.PR_SET_VMA_ANON_NAME, uintptr(start), length, uintptr(unsafe.Pointer(&sysName[0])), 0)
 	if err == _EINVAL {
 		prSetVMAUnsupported.Store(true)
 	}
-	// ignore other errors
+	// 忽略其他错误
 }

@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.arenas
 
@@ -8,9 +8,9 @@ package reflect
 
 import "arena"
 
-// ArenaNew returns a [Value] representing a pointer to a new zero value for the
-// specified type, allocating storage for it in the provided arena. That is,
-// the returned Value's Type is [PointerTo](typ).
+// ArenaNew 返回一个 [Value]，表示指向指定类型新零值的指针，
+// 并在提供的 arena 中为其分配存储空间。也就是说，
+// 返回的 Value 的 Type 是 [PointerTo](typ)。
 func ArenaNew(a *arena.Arena, typ Type) Value {
 	return ValueOf(arena_New(a, PointerTo(typ)))
 }

@@ -1,10 +1,10 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build unix
 
-// Socket control messages
+// 套接字控制消息
 
 package syscall
 
@@ -12,14 +12,13 @@ import (
 	"unsafe"
 )
 
-// CmsgLen returns the value to store in the Len field of the [Cmsghdr]
-// structure, taking into account any necessary alignment.
+// CmsgLen 返回要存储在 [Cmsghdr] 结构的 Len 字段中的值，
+// 考虑了任何必要的对齐。
 func CmsgLen(datalen int) int {
 	return cmsgAlignOf(SizeofCmsghdr) + datalen
 }
 
-// CmsgSpace returns the number of bytes an ancillary element with
-// payload of the passed data length occupies.
+// CmsgSpace 返回具有指定数据长度载荷的辅助元素占用的字节数。
 func CmsgSpace(datalen int) int {
 	return cmsgAlignOf(SizeofCmsghdr) + cmsgAlignOf(datalen)
 }
@@ -28,14 +27,13 @@ func (h *Cmsghdr) data(offset uintptr) unsafe.Pointer {
 	return unsafe.Pointer(uintptr(unsafe.Pointer(h)) + uintptr(cmsgAlignOf(SizeofCmsghdr)) + offset)
 }
 
-// SocketControlMessage represents a socket control message.
+// SocketControlMessage 表示一个套接字控制消息。
 type SocketControlMessage struct {
 	Header Cmsghdr
 	Data   []byte
 }
 
-// ParseSocketControlMessage parses b as an array of socket control
-// messages.
+// ParseSocketControlMessage 将 b 解析为套接字控制消息数组。
 func ParseSocketControlMessage(b []byte) ([]SocketControlMessage, error) {
 	var msgs []SocketControlMessage
 	i := 0
@@ -59,8 +57,8 @@ func socketControlMessageHeaderAndData(b []byte) (*Cmsghdr, []byte, error) {
 	return h, b[cmsgAlignOf(SizeofCmsghdr):h.Len], nil
 }
 
-// UnixRights encodes a set of open file descriptors into a socket
-// control message for sending to another process.
+// UnixRights 将一组打开的文件描述符编码为套接字控制消息，
+// 用于发送给另一个进程。
 func UnixRights(fds ...int) []byte {
 	datalen := len(fds) * 4
 	b := make([]byte, CmsgSpace(datalen))
@@ -74,8 +72,8 @@ func UnixRights(fds ...int) []byte {
 	return b
 }
 
-// ParseUnixRights decodes a socket control message that contains an
-// integer array of open file descriptors from another process.
+// ParseUnixRights 解码包含来自另一个进程的打开文件描述符整数数组的
+// 套接字控制消息。
 func ParseUnixRights(m *SocketControlMessage) ([]int, error) {
 	if m.Header.Level != SOL_SOCKET {
 		return nil, EINVAL

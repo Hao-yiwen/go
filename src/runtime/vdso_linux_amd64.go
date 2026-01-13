@@ -4,11 +4,11 @@
 
 package runtime
 
-import _ "unsafe" // for linkname
+import _ "unsafe" // 用于 linkname
 
 const (
-	// vdsoArrayMax is the byte-size of a maximally sized array on this architecture.
-	// See cmd/compile/internal/amd64/galign.go arch.MAXWIDTH initialization.
+	// vdsoArrayMax 是该架构上最大化数组的字节大小。
+	// 参见 cmd/compile/internal/amd64/galign.go arch.MAXWIDTH 初始化。
 	vdsoArrayMax = 1<<50 - 1
 )
 
@@ -26,5 +26,5 @@ var (
 	vdsoGetrandomSym    uintptr
 )
 
-// vdsoGettimeofdaySym is accessed from the syscall package.
+// vdsoGettimeofdaySym 从 syscall 包中访问。
 //go:linkname vdsoGettimeofdaySym

@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package printer
 
@@ -19,7 +19,7 @@ func formatDocComment(list []*ast.Comment) []*ast.Comment {
 	if len(list) == 1 && strings.HasPrefix(list[0].Text, "/*") {
 		kind = "/*"
 		text = list[0].Text
-		if !strings.Contains(text, "\n") || allStars(text) {
+		if !strings.包含(text, "\n") || allStars(text) {
 			// Single-line /* .. */ comment in doc comment position,
 			// or multiline old-style comment like
 			//	/*
@@ -107,11 +107,11 @@ func formatDocComment(list []*ast.Comment) []*ast.Comment {
 	return out
 }
 
-// isDirective reports whether c is a comment directive.
+// isDirective 报告whether c 是一个 comment directive.
 // See go.dev/issue/37974.
-// This code is also in go/ast.
+// This code 是一个lso in go/ast.
 func isDirective(c string) bool {
-	// "//line " is a line directive.
+	// "//line " 是一个 line directive.
 	// "//extern " is for gccgo.
 	// "//export " is for cgo.
 	// (The // has been removed.)
@@ -137,7 +137,7 @@ func isDirective(c string) bool {
 	return true
 }
 
-// allStars reports whether text is the interior of an
+// allStars 报告whether text 是 interior of an
 // old-style /* */ comment with a star at the start of each line.
 func allStars(text string) bool {
 	for i := 0; i < len(text); i++ {

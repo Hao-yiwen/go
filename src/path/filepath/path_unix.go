@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build unix || (js && wasm) || wasip1
 
@@ -10,10 +10,10 @@ import (
 	"strings"
 )
 
-// HasPrefix exists for historical compatibility and should not be used.
+// HasPrefix 出于历史兼容性而存在，不应使用。
 //
-// Deprecated: HasPrefix does not respect path boundaries and
-// does not ignore case when required.
+// 已弃用：HasPrefix 不尊重路径边界，
+// 也不在需要时忽略大小写。
 func HasPrefix(p, prefix string) bool {
 	return strings.HasPrefix(p, prefix)
 }
@@ -30,7 +30,7 @@ func abs(path string) (string, error) {
 }
 
 func join(elem []string) string {
-	// If there's a bug here, fix the logic in ./path_plan9.go too.
+	// 如果这里有 bug，也要修复 ./path_plan9.go 中的逻辑。
 	for i, e := range elem {
 		if e != "" {
 			return Clean(strings.Join(elem[i:], string(Separator)))

@@ -1,18 +1,16 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package abi
 
 import "unsafe"
 
-// NoEscape hides the pointer p from escape analysis, preventing it
-// from escaping to the heap. It compiles down to nothing.
+// NoEscape 将指针 p 隐藏在逃逸分析之外，防止其逃逸到堆上。
+// 它编译后不产生任何代码。
 //
-// WARNING: This is very subtle to use correctly. The caller must
-// ensure that it's truly safe for p to not escape to the heap by
-// maintaining runtime pointer invariants (for example, that globals
-// and the heap may not generally point into a stack).
+// 警告：正确使用这个函数非常微妙。调用者必须通过维护运行时指针不变量
+// （例如，全局变量和堆通常不能指向栈）来确保 p 不逃逸到堆上是真正安全的。
 //
 //go:nosplit
 //go:nocheckptr
@@ -24,7 +22,7 @@ func NoEscape(p unsafe.Pointer) unsafe.Pointer {
 var alwaysFalse bool
 var escapeSink any
 
-// Escape forces any pointers in x to escape to the heap.
+// Escape 强制 x 中的任何指针逃逸到堆上。
 func Escape[T any](x T) T {
 	if alwaysFalse {
 		escapeSink = x
@@ -32,33 +30,29 @@ func Escape[T any](x T) T {
 	return x
 }
 
-// EscapeNonString forces v to be on the heap, if v contains a
-// non-string pointer.
+// EscapeNonString 如果 v 包含非字符串指针，则强制 v 在堆上。
 //
-// This is used in hash/maphash.Comparable. We cannot hash pointers
-// to local variables on stack, as their addresses might change on
-// stack growth. Strings are okay as the hash depends on only the
-// content, not the pointer.
+// 这用于 hash/maphash.Comparable。我们不能对栈上局部变量的指针进行哈希，
+// 因为它们的地址可能在栈增长时改变。字符串是可以的，因为哈希只依赖于
+// 内容，而不是指针。
 //
-// This is essentially
+// 这本质上是
 //
 //	if hasNonStringPointers(T) { Escape(v) }
 //
-// Implemented as a compiler intrinsic.
+// 作为编译器内置函数实现。
 func EscapeNonString[T any](v T) { panic("intrinsic") }
 
-// EscapeToResultNonString models a data flow edge from v to the result,
-// if v contains a non-string pointer. If v contains only string pointers,
-// it returns a copy of v, but is not modeled as a data flow edge
-// from the escape analysis's perspective.
+// EscapeToResultNonString 如果 v 包含非字符串指针，则建模从 v 到结果的数据流边。
+// 如果 v 只包含字符串指针，它返回 v 的副本，但从逃逸分析的角度来看
+// 不被建模为数据流边。
 //
-// This is used in unique.clone, to model the data flow edge on the
-// value with strings excluded, because strings are cloned (by
-// content).
+// 这用于 unique.clone，用于建模排除字符串后的值上的数据流边，
+// 因为字符串是（按内容）克隆的。
 //
-// TODO: probably we should define this as a intrinsic and EscapeNonString
-// could just be "heap = EscapeToResultNonString(v)". This way we can model
-// an edge to the result but not necessarily heap.
+// TODO: 可能我们应该将其定义为内置函数，EscapeNonString 可以直接是
+// "heap = EscapeToResultNonString(v)"。这样我们可以建模到结果的边，
+// 但不一定是堆。
 func EscapeToResultNonString[T any](v T) T {
 	EscapeNonString(v)
 	return *(*T)(NoEscape(unsafe.Pointer(&v)))

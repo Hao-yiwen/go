@@ -1,15 +1,14 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
-// Frexp breaks f into a normalized fraction
-// and an integral power of two.
-// It returns frac and exp satisfying f == frac × 2**exp,
-// with the absolute value of frac in the interval [½, 1).
+// Frexp 将 f 分解为规范化分数和 2 的整数幂。
+// 它返回满足 f == frac × 2**exp 的 frac 和 exp，
+// 其中 frac 的绝对值在区间 [½, 1) 内。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Frexp(±0) = ±0, 0
 //	Frexp(±Inf) = ±Inf, 0
@@ -22,10 +21,10 @@ func Frexp(f float64) (frac float64, exp int) {
 }
 
 func frexp(f float64) (frac float64, exp int) {
-	// special cases
+	// 特殊情况
 	switch {
 	case f == 0:
-		return f, 0 // correctly return -0
+		return f, 0 // 正确返回 -0
 	case IsInf(f, 0) || IsNaN(f):
 		return f, 0
 	}

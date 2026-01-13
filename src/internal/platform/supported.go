@@ -6,7 +6,7 @@
 
 package platform
 
-// An OSArch is a pair of GOOS and GOARCH values indicating a platform.
+// An OSArch 是一对 GOOS 和 GOARCH 值，表示一个平台。
 type OSArch struct {
 	GOOS, GOARCH string
 }
@@ -15,11 +15,11 @@ func (p OSArch) String() string {
 	return p.GOOS + "/" + p.GOARCH
 }
 
-// RaceDetectorSupported reports whether goos/goarch supports the race
-// detector. There is a copy of this function in cmd/dist/test.go.
-// Race detector only supports 48-bit VMA on arm64. But it will always
-// return true for arm64, because we don't have VMA size information during
-// the compile time.
+// RaceDetectorSupported 报告 goos/goarch 是否支持竞态
+// 检测器。cmd/dist/test.go 中有此函数的副本。
+// 竞态检测器仅在 arm64 上支持 48 位 VMA。但它会始终
+// 为 arm64 返回 true，因为我们在
+// 编译时没有 VMA 大小信息。
 func RaceDetectorSupported(goos, goarch string) bool {
 	switch goos {
 	case "linux":
@@ -33,8 +33,8 @@ func RaceDetectorSupported(goos, goarch string) bool {
 	}
 }
 
-// MSanSupported reports whether goos/goarch supports the memory
-// sanitizer option.
+// MSanSupported 报告 goos/goarch 是否支持内存
+// 检测器选项。
 func MSanSupported(goos, goarch string) bool {
 	switch goos {
 	case "linux":
@@ -46,8 +46,8 @@ func MSanSupported(goos, goarch string) bool {
 	}
 }
 
-// ASanSupported reports whether goos/goarch supports the address
-// sanitizer option.
+// ASanSupported 报告 goos/goarch 是否支持地址
+// 检测器选项。
 func ASanSupported(goos, goarch string) bool {
 	switch goos {
 	case "linux":
@@ -57,8 +57,8 @@ func ASanSupported(goos, goarch string) bool {
 	}
 }
 
-// FuzzSupported reports whether goos/goarch supports fuzzing
-// ('go test -fuzz=.').
+// FuzzSupported 报告 goos/goarch 是否支持模糊测试
+// ('go test -fuzz=.')。
 func FuzzSupported(goos, goarch string) bool {
 	switch goos {
 	case "darwin", "freebsd", "linux", "openbsd", "windows":
@@ -68,8 +68,8 @@ func FuzzSupported(goos, goarch string) bool {
 	}
 }
 
-// FuzzInstrumented reports whether fuzzing on goos/goarch uses coverage
-// instrumentation. (FuzzInstrumented implies FuzzSupported.)
+// FuzzInstrumented 报告 goos/goarch 上的模糊测试是否使用覆盖
+// 检测。（FuzzInstrumented 意味着 FuzzSupported。）
 func FuzzInstrumented(goos, goarch string) bool {
 	switch goarch {
 	case "amd64", "arm64", "loong64":
@@ -80,17 +80,17 @@ func FuzzInstrumented(goos, goarch string) bool {
 	}
 }
 
-// MustLinkExternal reports whether goos/goarch requires external linking
-// with or without cgo dependencies.
+// MustLinkExternal 报告 goos/goarch 是否需要外部链接
+// 有或没有 cgo 依赖关系。
 func MustLinkExternal(goos, goarch string, withCgo bool) bool {
 	if withCgo {
 		switch goarch {
 		case "mips", "mipsle", "mips64", "mips64le":
-			// Internally linking cgo is incomplete on some architectures.
+			// 内部链接 cgo 在某些体系结构上不完整。
 			// https://go.dev/issue/14449
 			return true
 		case "ppc64":
-			// Big Endian PPC64 cgo internal linking is not implemented for aix or linux.
+			// Big Endian PPC64 cgo 内部链接未针对 aix 或 linux 实现。
 			// https://go.dev/issue/8912
 			if goos == "aix" || goos == "linux" {
 				return true
@@ -101,9 +101,9 @@ func MustLinkExternal(goos, goarch string, withCgo bool) bool {
 		case "android":
 			return true
 		case "dragonfly":
-			// It seems that on Dragonfly thread local storage is
-			// set up by the dynamic linker, so internal cgo linking
-			// doesn't work. Test case is "go test runtime/cgo".
+			// 似乎在 Dragonfly 上，线程本地存储是
+			// 由动态链接器设置，所以内部 cgo 链接
+			// 不起作用。测试用例是"go test runtime/cgo"。
 			return true
 		}
 	}
@@ -121,9 +121,9 @@ func MustLinkExternal(goos, goarch string, withCgo bool) bool {
 	return false
 }
 
-// BuildModeSupported reports whether goos/goarch supports the given build mode
-// using the given compiler.
-// There is a copy of this function in cmd/dist/test.go.
+// BuildModeSupported 报告 goos/goarch 是否支持给定的构建模式
+// 使用给定的编译器。
+// cmd/dist/test.go 中有此函数的副本。
 func BuildModeSupported(compiler, buildmode, goos, goarch string) bool {
 	if compiler == "gccgo" {
 		return true
@@ -145,16 +145,16 @@ func BuildModeSupported(compiler, buildmode, goos, goarch string) bool {
 		case "linux":
 			switch goarch {
 			case "386", "amd64", "arm", "armbe", "arm64", "arm64be", "loong64", "ppc64le", "riscv64", "s390x":
-				// linux/ppc64 not supported because it does
-				// not support external linking mode yet.
+				// linux/ppc64 不受支持，因为它
+				// 还不支持外部链接模式。
 				return true
 			default:
-				// Other targets do not support -shared,
-				// per ParseFlags in
-				// cmd/compile/internal/base/flag.go.
-				// For c-archive the Go tool passes -shared,
-				// so that the result is suitable for inclusion
-				// in a PIE or shared library.
+				// 其他目标不支持 -shared，
+				// 根据 cmd/compile/internal/base/flag.go 中的
+				// ParseFlags。
+				// 对于 c-archive，Go 工具传递 -shared，
+				// 以便结果适合包含
+				// 在 PIE 或共享库中。
 				return false
 			}
 		case "freebsd":
@@ -227,17 +227,17 @@ func InternalLinkPIESupported(goos, goarch string) bool {
 	return false
 }
 
-// DefaultPIE reports whether goos/goarch produces a PIE binary when using the
-// "default" buildmode. On Windows this is affected by -race,
-// so force the caller to pass that in to centralize that choice.
+// DefaultPIE 报告使用"default"构建模式时 goos/goarch 是否生成 PIE 二进制文件。
+// 在 Windows 上，这受 -race 的影响，
+// 所以强制调用者传入该值以集中该选择。
 func DefaultPIE(goos, goarch string, isRace bool) bool {
 	switch goos {
 	case "android", "ios":
 		return true
 	case "windows":
 		if isRace {
-			// PIE is not supported with -race on windows;
-			// see https://go.dev/cl/416174.
+			// Windows 上不支持带 -race 的 PIE；
+			// 请参阅 https://go.dev/cl/416174。
 			return false
 		}
 		return true
@@ -247,8 +247,8 @@ func DefaultPIE(goos, goarch string, isRace bool) bool {
 	return false
 }
 
-// ExecutableHasDWARF reports whether the linked executable includes DWARF
-// symbols on goos/goarch.
+// ExecutableHasDWARF 报告链接的可执行文件是否包含 DWARF
+// 符号在 goos/goarch 上。
 func ExecutableHasDWARF(goos, goarch string) bool {
 	switch goos {
 	case "plan9", "ios":
@@ -257,27 +257,27 @@ func ExecutableHasDWARF(goos, goarch string) bool {
 	return true
 }
 
-// osArchInfo describes information about an OSArch extracted from cmd/dist and
-// stored in the generated distInfo map.
+// osArchInfo 描述从 cmd/dist 提取的 OSArch 信息
+// 并存储在生成的 distInfo 映射中。
 type osArchInfo struct {
 	CgoSupported bool
 	FirstClass   bool
 	Broken       bool
 }
 
-// CgoSupported reports whether goos/goarch supports cgo.
+// CgoSupported 报告 goos/goarch 是否支持 cgo。
 func CgoSupported(goos, goarch string) bool {
 	return distInfo[OSArch{goos, goarch}].CgoSupported
 }
 
-// FirstClass reports whether goos/goarch is considered a “first class” port.
-// (See https://go.dev/wiki/PortingPolicy#first-class-ports.)
+// FirstClass 报告 goos/goarch 是否被认为是"第一类"端口。
+// （请参阅 https://go.dev/wiki/PortingPolicy#first-class-ports。）
 func FirstClass(goos, goarch string) bool {
 	return distInfo[OSArch{goos, goarch}].FirstClass
 }
 
-// Broken reports whether goos/goarch is considered a broken port.
-// (See https://go.dev/wiki/PortingPolicy#broken-ports.)
+// Broken 报告 goos/goarch 是否被认为是一个损坏的端口。
+// （请参阅 https://go.dev/wiki/PortingPolicy#broken-ports。）
 func Broken(goos, goarch string) bool {
 	return distInfo[OSArch{goos, goarch}].Broken
 }

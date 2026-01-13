@@ -1,44 +1,42 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math
 
-// The original C code, the long comment, and the constants
-// below are from FreeBSD's /usr/src/lib/msun/src/e_acosh.c
-// and came with this notice. The go code is a simplified
-// version of the original C.
+// 原始 C 代码、长注释以及下面的常量
+// 来自 FreeBSD 的 /usr/src/lib/msun/src/e_acosh.c
+// 并附带以下声明。Go 代码是原始 C 代码的简化版本。
 //
 // ====================================================
-// Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+// 版权所有 (C) 1993 Sun Microsystems, Inc. 保留所有权利。
 //
-// Developed at SunPro, a Sun Microsystems, Inc. business.
-// Permission to use, copy, modify, and distribute this
-// software is freely granted, provided that this notice
-// is preserved.
+// 由 SunPro（Sun Microsystems, Inc. 的一个业务部门）开发。
+// 允许自由使用、复制、修改和分发本软件，
+// 前提是保留此声明。
 // ====================================================
 //
 //
 // __ieee754_acosh(x)
-// Method :
-//	Based on
+// 方法：
+//	基于
 //	        acosh(x) = log [ x + sqrt(x*x-1) ]
-//	we have
-//	        acosh(x) := log(x)+ln2,	if x is large; else
-//	        acosh(x) := log(2x-1/(sqrt(x*x-1)+x)) if x>2; else
-//	        acosh(x) := log1p(t+sqrt(2.0*t+t*t)); where t=x-1.
+//	我们有
+//	        acosh(x) := log(x)+ln2,	如果 x 很大；否则
+//	        acosh(x) := log(2x-1/(sqrt(x*x-1)+x)) 如果 x>2；否则
+//	        acosh(x) := log1p(t+sqrt(2.0*t+t*t)); 其中 t=x-1。
 //
-// Special cases:
-//	acosh(x) is NaN with signal if x<1.
-//	acosh(NaN) is NaN without signal.
+// 特殊情况：
+//	如果 x<1，acosh(x) 是带信号的 NaN。
+//	acosh(NaN) 是不带信号的 NaN。
 //
 
-// Acosh returns the inverse hyperbolic cosine of x.
+// Acosh 返回 x 的反双曲余弦值。
 //
-// Special cases are:
+// 特殊情况：
 //
 //	Acosh(+Inf) = +Inf
-//	Acosh(x) = NaN if x < 1
+//	Acosh(x) = NaN 如果 x < 1
 //	Acosh(NaN) = NaN
 func Acosh(x float64) float64 {
 	if haveArchAcosh {
@@ -49,7 +47,7 @@ func Acosh(x float64) float64 {
 
 func acosh(x float64) float64 {
 	const Large = 1 << 28 // 2**28
-	// first case is special case
+	// 第一个 case 是特殊情况
 	switch {
 	case x < 1 || IsNaN(x):
 		return NaN()

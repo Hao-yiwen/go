@@ -1,25 +1,20 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package atomic provides low-level atomic memory primitives
-// useful for implementing synchronization algorithms.
+// atomic 包提供了用于实现同步算法的底层原子内存原语。
 //
-// These functions require great care to be used correctly.
-// Except for special, low-level applications, synchronization is better
-// done with channels or the facilities of the [sync] package.
-// Share memory by communicating;
-// don't communicate by sharing memory.
+// 这些函数需要非常小心才能正确使用。
+// 除了特殊的底层应用外，同步最好通过 channel 或 [sync] 包的功能来完成。
+// 通过通信来共享内存；不要通过共享内存来通信。
 //
-// The swap operation, implemented by the SwapT functions, is the atomic
-// equivalent of:
+// 交换操作由 SwapT 函数实现，是以下操作的原子等价物：
 //
 //	old = *addr
 //	*addr = new
 //	return old
 //
-// The compare-and-swap operation, implemented by the CompareAndSwapT
-// functions, is the atomic equivalent of:
+// 比较并交换操作由 CompareAndSwapT 函数实现，是以下操作的原子等价物：
 //
 //	if *addr == old {
 //		*addr = new
@@ -27,25 +22,20 @@
 //	}
 //	return false
 //
-// The add operation, implemented by the AddT functions, is the atomic
-// equivalent of:
+// 加法操作由 AddT 函数实现，是以下操作的原子等价物：
 //
 //	*addr += delta
 //	return *addr
 //
-// The load and store operations, implemented by the LoadT and StoreT
-// functions, are the atomic equivalents of "return *addr" and
-// "*addr = val".
+// 加载和存储操作由 LoadT 和 StoreT 函数实现，
+// 是 "return *addr" 和 "*addr = val" 的原子等价物。
 //
-// In the terminology of [the Go memory model], if the effect of
-// an atomic operation A is observed by atomic operation B,
-// then A “synchronizes before” B.
-// Additionally, all the atomic operations executed in a program
-// behave as though executed in some sequentially consistent order.
-// This definition provides the same semantics as
-// C++'s sequentially consistent atomics and Java's volatile variables.
+// 按照 [Go 内存模型] 的术语，如果原子操作 A 的效果被原子操作 B 观察到，
+// 则 A "同步先于" B。
+// 此外，程序中执行的所有原子操作表现得好像是按某种顺序一致的顺序执行的。
+// 此定义提供了与 C++ 的顺序一致原子操作和 Java 的 volatile 变量相同的语义。
 //
-// [the Go memory model]: https://go.dev/ref/mem
+// [Go 内存模型]: https://go.dev/ref/mem
 package atomic
 
 import (

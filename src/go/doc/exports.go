@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements export filtering of an AST.
 
@@ -12,7 +12,7 @@ import (
 )
 
 // filterIdentList removes unexported names from list in place
-// and returns the resulting list.
+// and 返回the resulting list.
 func filterIdentList(list []*ast.Ident) []*ast.Ident {
 	j := 0
 	for _, x := range list {
@@ -55,7 +55,7 @@ func filterExprList(list []ast.Expr, filter Filter, export bool) []ast.Expr {
 }
 
 // updateIdentList replaces all unexported identifiers with underscore
-// and reports whether at least one exported name exists.
+// and 报告whether at least one exported name exists.
 func updateIdentList(list []*ast.Ident) (hasExported bool) {
 	for i, x := range list {
 		if token.IsExported(x.Name) {
@@ -67,7 +67,7 @@ func updateIdentList(list []*ast.Ident) (hasExported bool) {
 	return hasExported
 }
 
-// hasExportedName reports whether list contains any exported names.
+// hasExportedName 报告whether list 包含 any exported names.
 func hasExportedName(list []*ast.Ident) bool {
 	for _, x := range list {
 		if x.IsExported() {
@@ -101,7 +101,7 @@ func removeAnonymousField(name string, ityp *ast.InterfaceType) {
 }
 
 // filterFieldList removes unexported fields (field names) from the field list
-// in place and reports whether fields were removed. Anonymous fields are
+// in place and 报告是否 fields were removed. Anonymous fields are
 // recorded with the parent type. filterType is called with the types of
 // all remaining fields.
 func (r *reader) filterFieldList(parent *namedType, fields *ast.FieldList, ityp *ast.InterfaceType) (removedFields bool) {
@@ -120,13 +120,13 @@ func (r *reader) filterFieldList(parent *namedType, fields *ast.FieldList, ityp 
 					keepField = true
 				} else if ityp != nil && predeclaredTypes[fname] {
 					// possibly an embedded predeclared type; keep it for now but
-					// remember this interface so that it can be fixed if name is also
+					// remember this interface so that it can be fixed if name 是一个lso
 					// defined locally
 					keepField = true
 					r.remember(fname, ityp)
 				}
 			} else {
-				// If we're operating on an interface, assume that this is an embedded
+				// If we're operating on an interface, assume that this 是一个n embedded
 				// type or union element.
 				//
 				// TODO(rfindley): consider traversing into approximation/unions
@@ -219,7 +219,7 @@ func (r *reader) filterSpec(spec ast.Spec) bool {
 			// the sequence of expression on the RHS.
 			//
 			// Similarly, if there are no type and values, then this expression
-			// must be following an iota expression, where order matters.
+			// 必须是 following an iota expression, where order matters.
 			if updateIdentList(s.Names) {
 				r.filterType(nil, s.Type)
 				return true
@@ -247,8 +247,8 @@ func (r *reader) filterSpec(spec ast.Spec) bool {
 	return false
 }
 
-// copyConstType returns a copy of typ with position pos.
-// typ must be a valid constant type.
+// copyConstType 返回a copy of typ with position pos.
+// typ 必须是 a valid constant type.
 // In practice, only (possibly qualified) identifiers are possible.
 func copyConstType(typ ast.Expr, pos token.Pos) ast.Expr {
 	switch typ := typ.(type) {
@@ -303,7 +303,7 @@ func (r *reader) filterDecl(decl ast.Decl) bool {
 		return len(d.Specs) > 0
 	case *ast.FuncDecl:
 		// ok to filter these methods early because any
-		// conflicting method will be filtered here, too -
+		// conflicting method 将是 filtered here, too -
 		// thus, removing these methods early will not lead
 		// to the false removal of possible conflicts
 		return token.IsExported(d.Name.Name)

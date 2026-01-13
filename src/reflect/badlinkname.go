@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package reflect
 
@@ -10,20 +10,19 @@ import (
 	_ "unsafe"
 )
 
-// Widely used packages access these symbols using linkname,
-// most notably:
+// 广泛使用的包通过 linkname 访问这些符号，
+// 最著名的有：
 //  - github.com/goccy/go-json
 //  - github.com/goccy/go-reflect
 //  - github.com/sohaha/zlsgo
 //  - github.com/undefinedlabs/go-mpatch
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401
-// and go.dev/issue/67279.
+// 不要删除或更改类型签名。
+// 参见 go.dev/issue/67401
+// 和 go.dev/issue/67279。
 
-// ifaceIndir reports whether t is stored indirectly in an interface value.
-// It is no longer used by this package and is here entirely for the
-// linkname uses.
+// ifaceIndir 报告 t 是否间接存储在接口值中。
+// 本包不再使用它，这里完全是为了 linkname 的使用。
 //
 //go:linkname unusedIfaceIndir reflect.ifaceIndir
 func unusedIfaceIndir(t *abi.Type) bool {
@@ -32,9 +31,9 @@ func unusedIfaceIndir(t *abi.Type) bool {
 
 //go:linkname valueInterface
 
-// The compiler doesn't allow linknames on methods, for good reasons.
-// We use this trick to push linknames of the methods.
-// Do not call them in this package.
+// 编译器有充分的理由不允许在方法上使用 linkname。
+// 我们使用这个技巧来推送方法的 linkname。
+// 不要在本包中调用它们。
 
 //go:linkname badlinkname_rtype_Align reflect.(*rtype).Align
 func badlinkname_rtype_Align(*rtype) int

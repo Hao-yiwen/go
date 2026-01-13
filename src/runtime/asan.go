@@ -11,7 +11,7 @@ import (
 	"unsafe"
 )
 
-// Public address sanitizer API.
+// 公共地址清理器 API。
 func ASanRead(addr unsafe.Pointer, len int) {
 	sp := sys.GetCallerSP()
 	pc := sys.GetCallerPC()
@@ -24,12 +24,12 @@ func ASanWrite(addr unsafe.Pointer, len int) {
 	doasanwrite(addr, uintptr(len), sp, pc)
 }
 
-// Private interface for the runtime.
+// 运行时的私有接口。
 const asanenabled = true
 const asanenabledBit = 1
 
-// asan{read,write} are nosplit because they may be called between
-// fork and exec, when the stack must not grow. See issue #50391.
+// asan{read,write} 是 nosplit 的，因为它们可能在 fork 和 exec 之间被调用，
+// 此时栈不能增长。参见 issue #50391。
 
 //go:linkname asanread
 //go:nosplit
@@ -70,7 +70,7 @@ func lsanunregisterrootregion(addr unsafe.Pointer, n uintptr)
 
 func lsandoleakcheck()
 
-// These are called from asan_GOARCH.s
+// 这些从 asan_GOARCH.s 调用
 //
 //go:cgo_import_static __asan_read_go
 //go:cgo_import_static __asan_write_go

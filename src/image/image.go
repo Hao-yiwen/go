@@ -1,40 +1,33 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package image implements a basic 2-D image library.
+// image 包实现了一个基本的二维图像库。
 //
-// The fundamental interface is called [Image]. An [Image] contains colors, which
-// are described in the image/color package.
+// 基础接口称为 [Image]。[Image] 包含颜色，颜色在 image/color 包中描述。
 //
-// Values of the [Image] interface are created either by calling functions such
-// as [NewRGBA] and [NewPaletted], or by calling [Decode] on an [io.Reader] containing
-// image data in a format such as GIF, JPEG or PNG. Decoding any particular
-// image format requires the prior registration of a decoder function.
-// Registration is typically automatic as a side effect of initializing that
-// format's package so that, to decode a PNG image, it suffices to have
+// [Image] 接口的值可以通过调用 [NewRGBA] 和 [NewPaletted] 等函数创建，
+// 也可以通过对包含 GIF、JPEG 或 PNG 等格式图像数据的 [io.Reader] 调用 [Decode] 来创建。
+// 解码任何特定的图像格式都需要预先注册一个解码器函数。
+// 注册通常作为初始化该格式包的副作用自动完成，因此要解码 PNG 图像，
+// 只需在程序的 main 包中添加
 //
 //	import _ "image/png"
 //
-// in a program's main package. The _ means to import a package purely for its
-// initialization side effects.
+// 即可。_ 表示导入一个包纯粹是为了其初始化副作用。
 //
-// See "The Go image package" for more details:
+// 更多详情请参见 "The Go image package"：
 // https://golang.org/doc/articles/image_package.html
 //
-// # Security Considerations
+// # 安全注意事项
 //
-// The image package can be used to parse arbitrarily large images, which can
-// cause resource exhaustion on machines which do not have enough memory to
-// store them. When operating on arbitrary images, [DecodeConfig] should be called
-// before [Decode], so that the program can decide whether the image, as defined
-// in the returned header, can be safely decoded with the available resources. A
-// call to [Decode] which produces an extremely large image, as defined in the
-// header returned by [DecodeConfig], is not considered a security issue,
-// regardless of whether the image is itself malformed or not. A call to
-// [DecodeConfig] which returns a header which does not match the image returned
-// by [Decode] may be considered a security issue, and should be reported per the
-// [Go Security Policy].
+// image 包可用于解析任意大小的图像，这可能会导致内存不足的机器资源耗尽。
+// 在处理任意图像时，应在调用 [Decode] 之前先调用 [DecodeConfig]，
+// 以便程序可以判断返回的头信息中定义的图像是否可以用可用资源安全解码。
+// 调用 [Decode] 产生的超大图像（如 [DecodeConfig] 返回的头信息中所定义的），
+// 无论图像本身是否格式错误，都不被视为安全问题。
+// 如果调用 [DecodeConfig] 返回的头信息与 [Decode] 返回的图像不匹配，
+// 这可能被视为安全问题，应按照 [Go 安全策略] 报告。
 //
 // [Go Security Policy]: https://go.dev/security/policy
 package image
@@ -43,55 +36,50 @@ import (
 	"image/color"
 )
 
-// Config holds an image's color model and dimensions.
+// Config 保存图像的颜色模型和尺寸。
 type Config struct {
 	ColorModel    color.Model
 	Width, Height int
 }
 
-// Image is a finite rectangular grid of [color.Color] values taken from a color
-// model.
+// Image 是一个有限的矩形网格，包含来自颜色模型的 [color.Color] 值。
 type Image interface {
-	// ColorModel returns the Image's color model.
+	// ColorModel 返回 Image 的颜色模型。
 	ColorModel() color.Model
-	// Bounds returns the domain for which At can return non-zero color.
-	// The bounds do not necessarily contain the point (0, 0).
+	// Bounds 返回 At 方法可以返回非零颜色的区域。
+	// 边界不一定包含点 (0, 0)。
 	Bounds() Rectangle
-	// At returns the color of the pixel at (x, y).
-	// At(Bounds().Min.X, Bounds().Min.Y) returns the upper-left pixel of the grid.
-	// At(Bounds().Max.X-1, Bounds().Max.Y-1) returns the lower-right one.
+	// At 返回位于 (x, y) 处像素的颜色。
+	// At(Bounds().Min.X, Bounds().Min.Y) 返回网格的左上角像素。
+	// At(Bounds().Max.X-1, Bounds().Max.Y-1) 返回右下角像素。
 	At(x, y int) color.Color
 }
 
-// RGBA64Image is an [Image] whose pixels can be converted directly to a
-// color.RGBA64.
+// RGBA64Image 是一个 [Image]，其像素可以直接转换为 color.RGBA64。
 type RGBA64Image interface {
-	// RGBA64At returns the RGBA64 color of the pixel at (x, y). It is
-	// equivalent to calling At(x, y).RGBA() and converting the resulting
-	// 32-bit return values to a color.RGBA64, but it can avoid allocations
-	// from converting concrete color types to the color.Color interface type.
+	// RGBA64At 返回位于 (x, y) 处像素的 RGBA64 颜色。它等同于调用
+	// At(x, y).RGBA() 并将返回的 32 位值转换为 color.RGBA64，
+	// 但它可以避免将具体颜色类型转换为 color.Color 接口类型时的内存分配。
 	RGBA64At(x, y int) color.RGBA64
 	Image
 }
 
-// PalettedImage is an image whose colors may come from a limited palette.
-// If m is a PalettedImage and m.ColorModel() returns a [color.Palette] p,
-// then m.At(x, y) should be equivalent to p[m.ColorIndexAt(x, y)]. If m's
-// color model is not a color.Palette, then ColorIndexAt's behavior is
-// undefined.
+// PalettedImage 是一个颜色可能来自有限调色板的图像。
+// 如果 m 是 PalettedImage 且 m.ColorModel() 返回 [color.Palette] p，
+// 则 m.At(x, y) 应等同于 p[m.ColorIndexAt(x, y)]。如果 m 的
+// 颜色模型不是 color.Palette，则 ColorIndexAt 的行为是未定义的。
 type PalettedImage interface {
-	// ColorIndexAt returns the palette index of the pixel at (x, y).
+	// ColorIndexAt 返回位于 (x, y) 处像素的调色板索引。
 	ColorIndexAt(x, y int) uint8
 	Image
 }
 
-// pixelBufferLength returns the length of the []uint8 typed Pix slice field
-// for the NewXxx functions. Conceptually, this is just (bpp * width * height),
-// but this function panics if at least one of those is negative or if the
-// computation would overflow the int type.
+// pixelBufferLength 返回 NewXxx 函数中 []uint8 类型 Pix 切片字段的长度。
+// 概念上，这只是 (bpp * width * height)，但如果其中任何一个为负数
+// 或计算会导致 int 类型溢出，此函数会 panic。
 //
-// This panics instead of returning an error because of backwards
-// compatibility. The NewXxx functions do not return an error.
+// 由于向后兼容性原因，此函数会 panic 而不是返回错误。
+// NewXxx 函数不返回错误。
 func pixelBufferLength(bytesPerPixel int, r Rectangle, imageTypeName string) int {
 	totalLength := mul3NonNeg(bytesPerPixel, r.Dx(), r.Dy())
 	if totalLength < 0 {
@@ -100,14 +88,14 @@ func pixelBufferLength(bytesPerPixel int, r Rectangle, imageTypeName string) int
 	return totalLength
 }
 
-// RGBA is an in-memory image whose At method returns [color.RGBA] values.
+// RGBA 是一个内存中的图像，其 At 方法返回 [color.RGBA] 值。
 type RGBA struct {
-	// Pix holds the image's pixels, in R, G, B, A order. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
+	// Pix 保存图像的像素，按 R、G、B、A 顺序排列。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
 }
 
@@ -124,7 +112,7 @@ func (p *RGBA) RGBA64At(x, y int) color.RGBA64 {
 		return color.RGBA64{}
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	r := uint16(s[0])
 	g := uint16(s[1])
 	b := uint16(s[2])
@@ -142,12 +130,11 @@ func (p *RGBA) RGBAAt(x, y int) color.RGBA {
 		return color.RGBA{}
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	return color.RGBA{s[0], s[1], s[2], s[3]}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *RGBA) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*4
 }
@@ -158,7 +145,7 @@ func (p *RGBA) Set(x, y int, c color.Color) {
 	}
 	i := p.PixOffset(x, y)
 	c1 := color.RGBAModel.Convert(c).(color.RGBA)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = c1.R
 	s[1] = c1.G
 	s[2] = c1.B
@@ -170,7 +157,7 @@ func (p *RGBA) SetRGBA64(x, y int, c color.RGBA64) {
 		return
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = uint8(c.R >> 8)
 	s[1] = uint8(c.G >> 8)
 	s[2] = uint8(c.B >> 8)
@@ -182,20 +169,19 @@ func (p *RGBA) SetRGBA(x, y int, c color.RGBA) {
 		return
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = c.R
 	s[1] = c.G
 	s[2] = c.B
 	s[3] = c.A
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *RGBA) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &RGBA{}
 	}
@@ -207,7 +193,7 @@ func (p *RGBA) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *RGBA) Opaque() bool {
 	if p.Rect.Empty() {
 		return true
@@ -225,7 +211,7 @@ func (p *RGBA) Opaque() bool {
 	return true
 }
 
-// NewRGBA returns a new [RGBA] image with the given bounds.
+// NewRGBA 返回具有给定边界的新 [RGBA] 图像。
 func NewRGBA(r Rectangle) *RGBA {
 	return &RGBA{
 		Pix:    make([]uint8, pixelBufferLength(4, r, "RGBA")),
@@ -234,14 +220,14 @@ func NewRGBA(r Rectangle) *RGBA {
 	}
 }
 
-// RGBA64 is an in-memory image whose At method returns [color.RGBA64] values.
+// RGBA64 是一个内存中的图像，其 At 方法返回 [color.RGBA64] 值。
 type RGBA64 struct {
-	// Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
+	// Pix 保存图像的像素，按 R、G、B、A 顺序和大端格式排列。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
 }
 
@@ -258,7 +244,7 @@ func (p *RGBA64) RGBA64At(x, y int) color.RGBA64 {
 		return color.RGBA64{}
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+8 : i+8] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+8 : i+8] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	return color.RGBA64{
 		uint16(s[0])<<8 | uint16(s[1]),
 		uint16(s[2])<<8 | uint16(s[3]),
@@ -267,8 +253,7 @@ func (p *RGBA64) RGBA64At(x, y int) color.RGBA64 {
 	}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *RGBA64) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*8
 }
@@ -279,7 +264,7 @@ func (p *RGBA64) Set(x, y int, c color.Color) {
 	}
 	i := p.PixOffset(x, y)
 	c1 := color.RGBA64Model.Convert(c).(color.RGBA64)
-	s := p.Pix[i : i+8 : i+8] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+8 : i+8] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = uint8(c1.R >> 8)
 	s[1] = uint8(c1.R)
 	s[2] = uint8(c1.G >> 8)
@@ -295,7 +280,7 @@ func (p *RGBA64) SetRGBA64(x, y int, c color.RGBA64) {
 		return
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+8 : i+8] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+8 : i+8] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = uint8(c.R >> 8)
 	s[1] = uint8(c.R)
 	s[2] = uint8(c.G >> 8)
@@ -306,13 +291,12 @@ func (p *RGBA64) SetRGBA64(x, y int, c color.RGBA64) {
 	s[7] = uint8(c.A)
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *RGBA64) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &RGBA64{}
 	}
@@ -324,7 +308,7 @@ func (p *RGBA64) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *RGBA64) Opaque() bool {
 	if p.Rect.Empty() {
 		return true
@@ -342,7 +326,7 @@ func (p *RGBA64) Opaque() bool {
 	return true
 }
 
-// NewRGBA64 returns a new [RGBA64] image with the given bounds.
+// NewRGBA64 返回具有给定边界的新 [RGBA64] 图像。
 func NewRGBA64(r Rectangle) *RGBA64 {
 	return &RGBA64{
 		Pix:    make([]uint8, pixelBufferLength(8, r, "RGBA64")),
@@ -351,14 +335,14 @@ func NewRGBA64(r Rectangle) *RGBA64 {
 	}
 }
 
-// NRGBA is an in-memory image whose At method returns [color.NRGBA] values.
+// NRGBA 是一个内存中的图像，其 At 方法返回 [color.NRGBA] 值。
 type NRGBA struct {
-	// Pix holds the image's pixels, in R, G, B, A order. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
+	// Pix 保存图像的像素，按 R、G、B、A 顺序排列。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
 }
 
@@ -380,12 +364,11 @@ func (p *NRGBA) NRGBAAt(x, y int) color.NRGBA {
 		return color.NRGBA{}
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	return color.NRGBA{s[0], s[1], s[2], s[3]}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *NRGBA) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*4
 }
@@ -396,7 +379,7 @@ func (p *NRGBA) Set(x, y int, c color.Color) {
 	}
 	i := p.PixOffset(x, y)
 	c1 := color.NRGBAModel.Convert(c).(color.NRGBA)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = c1.R
 	s[1] = c1.G
 	s[2] = c1.B
@@ -414,7 +397,7 @@ func (p *NRGBA) SetRGBA64(x, y int, c color.RGBA64) {
 		b = (b * 0xffff) / a
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = uint8(r >> 8)
 	s[1] = uint8(g >> 8)
 	s[2] = uint8(b >> 8)
@@ -426,20 +409,19 @@ func (p *NRGBA) SetNRGBA(x, y int, c color.NRGBA) {
 		return
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = c.R
 	s[1] = c.G
 	s[2] = c.B
 	s[3] = c.A
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *NRGBA) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &NRGBA{}
 	}
@@ -451,7 +433,7 @@ func (p *NRGBA) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *NRGBA) Opaque() bool {
 	if p.Rect.Empty() {
 		return true
@@ -469,7 +451,7 @@ func (p *NRGBA) Opaque() bool {
 	return true
 }
 
-// NewNRGBA returns a new [NRGBA] image with the given bounds.
+// NewNRGBA 返回具有给定边界的新 [NRGBA] 图像。
 func NewNRGBA(r Rectangle) *NRGBA {
 	return &NRGBA{
 		Pix:    make([]uint8, pixelBufferLength(4, r, "NRGBA")),
@@ -478,14 +460,14 @@ func NewNRGBA(r Rectangle) *NRGBA {
 	}
 }
 
-// NRGBA64 is an in-memory image whose At method returns [color.NRGBA64] values.
+// NRGBA64 是一个内存中的图像，其 At 方法返回 [color.NRGBA64] 值。
 type NRGBA64 struct {
-	// Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
+	// Pix 保存图像的像素，按 R、G、B、A 顺序和大端格式排列。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
 }
 
@@ -507,7 +489,7 @@ func (p *NRGBA64) NRGBA64At(x, y int) color.NRGBA64 {
 		return color.NRGBA64{}
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+8 : i+8] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+8 : i+8] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	return color.NRGBA64{
 		uint16(s[0])<<8 | uint16(s[1]),
 		uint16(s[2])<<8 | uint16(s[3]),
@@ -516,8 +498,7 @@ func (p *NRGBA64) NRGBA64At(x, y int) color.NRGBA64 {
 	}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *NRGBA64) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*8
 }
@@ -528,7 +509,7 @@ func (p *NRGBA64) Set(x, y int, c color.Color) {
 	}
 	i := p.PixOffset(x, y)
 	c1 := color.NRGBA64Model.Convert(c).(color.NRGBA64)
-	s := p.Pix[i : i+8 : i+8] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+8 : i+8] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = uint8(c1.R >> 8)
 	s[1] = uint8(c1.R)
 	s[2] = uint8(c1.G >> 8)
@@ -550,7 +531,7 @@ func (p *NRGBA64) SetRGBA64(x, y int, c color.RGBA64) {
 		b = (b * 0xffff) / a
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+8 : i+8] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+8 : i+8] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = uint8(r >> 8)
 	s[1] = uint8(r)
 	s[2] = uint8(g >> 8)
@@ -566,7 +547,7 @@ func (p *NRGBA64) SetNRGBA64(x, y int, c color.NRGBA64) {
 		return
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+8 : i+8] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+8 : i+8] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = uint8(c.R >> 8)
 	s[1] = uint8(c.R)
 	s[2] = uint8(c.G >> 8)
@@ -577,13 +558,12 @@ func (p *NRGBA64) SetNRGBA64(x, y int, c color.NRGBA64) {
 	s[7] = uint8(c.A)
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *NRGBA64) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &NRGBA64{}
 	}
@@ -595,7 +575,7 @@ func (p *NRGBA64) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *NRGBA64) Opaque() bool {
 	if p.Rect.Empty() {
 		return true
@@ -613,7 +593,7 @@ func (p *NRGBA64) Opaque() bool {
 	return true
 }
 
-// NewNRGBA64 returns a new [NRGBA64] image with the given bounds.
+// NewNRGBA64 返回具有给定边界的新 [NRGBA64] 图像。
 func NewNRGBA64(r Rectangle) *NRGBA64 {
 	return &NRGBA64{
 		Pix:    make([]uint8, pixelBufferLength(8, r, "NRGBA64")),
@@ -622,14 +602,14 @@ func NewNRGBA64(r Rectangle) *NRGBA64 {
 	}
 }
 
-// Alpha is an in-memory image whose At method returns [color.Alpha] values.
+// Alpha 是一个内存中的图像，其 At 方法返回 [color.Alpha] 值。
 type Alpha struct {
-	// Pix holds the image's pixels, as alpha values. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
+	// Pix 保存图像的像素，作为 alpha 值。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
 }
 
@@ -655,8 +635,7 @@ func (p *Alpha) AlphaAt(x, y int) color.Alpha {
 	return color.Alpha{p.Pix[i]}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *Alpha) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*1
 }
@@ -685,13 +664,12 @@ func (p *Alpha) SetAlpha(x, y int, c color.Alpha) {
 	p.Pix[i] = c.A
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *Alpha) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &Alpha{}
 	}
@@ -703,7 +681,7 @@ func (p *Alpha) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *Alpha) Opaque() bool {
 	if p.Rect.Empty() {
 		return true
@@ -721,7 +699,7 @@ func (p *Alpha) Opaque() bool {
 	return true
 }
 
-// NewAlpha returns a new [Alpha] image with the given bounds.
+// NewAlpha 返回具有给定边界的新 [Alpha] 图像。
 func NewAlpha(r Rectangle) *Alpha {
 	return &Alpha{
 		Pix:    make([]uint8, pixelBufferLength(1, r, "Alpha")),
@@ -730,14 +708,14 @@ func NewAlpha(r Rectangle) *Alpha {
 	}
 }
 
-// Alpha16 is an in-memory image whose At method returns [color.Alpha16] values.
+// Alpha16 是一个内存中的图像，其 At 方法返回 [color.Alpha16] 值。
 type Alpha16 struct {
-	// Pix holds the image's pixels, as alpha values in big-endian format. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
+	// Pix 保存图像的像素，以大端格式存储 alpha 值。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
 }
 
@@ -762,8 +740,7 @@ func (p *Alpha16) Alpha16At(x, y int) color.Alpha16 {
 	return color.Alpha16{uint16(p.Pix[i+0])<<8 | uint16(p.Pix[i+1])}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *Alpha16) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*2
 }
@@ -796,13 +773,12 @@ func (p *Alpha16) SetAlpha16(x, y int, c color.Alpha16) {
 	p.Pix[i+1] = uint8(c.A)
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *Alpha16) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &Alpha16{}
 	}
@@ -814,7 +790,7 @@ func (p *Alpha16) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *Alpha16) Opaque() bool {
 	if p.Rect.Empty() {
 		return true
@@ -832,7 +808,7 @@ func (p *Alpha16) Opaque() bool {
 	return true
 }
 
-// NewAlpha16 returns a new [Alpha16] image with the given bounds.
+// NewAlpha16 返回具有给定边界的新 [Alpha16] 图像。
 func NewAlpha16(r Rectangle) *Alpha16 {
 	return &Alpha16{
 		Pix:    make([]uint8, pixelBufferLength(2, r, "Alpha16")),
@@ -841,14 +817,14 @@ func NewAlpha16(r Rectangle) *Alpha16 {
 	}
 }
 
-// Gray is an in-memory image whose At method returns [color.Gray] values.
+// Gray 是一个内存中的图像，其 At 方法返回 [color.Gray] 值。
 type Gray struct {
-	// Pix holds the image's pixels, as gray values. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
+	// Pix 保存图像的像素，作为灰度值。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
 }
 
@@ -874,8 +850,7 @@ func (p *Gray) GrayAt(x, y int) color.Gray {
 	return color.Gray{p.Pix[i]}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *Gray) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*1
 }
@@ -892,7 +867,7 @@ func (p *Gray) SetRGBA64(x, y int, c color.RGBA64) {
 	if !(Point{x, y}.In(p.Rect)) {
 		return
 	}
-	// This formula is the same as in color.grayModel.
+	// 此公式与 color.grayModel 中的相同。
 	gray := (19595*uint32(c.R) + 38470*uint32(c.G) + 7471*uint32(c.B) + 1<<15) >> 24
 	i := p.PixOffset(x, y)
 	p.Pix[i] = uint8(gray)
@@ -906,13 +881,12 @@ func (p *Gray) SetGray(x, y int, c color.Gray) {
 	p.Pix[i] = c.Y
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *Gray) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &Gray{}
 	}
@@ -924,12 +898,12 @@ func (p *Gray) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *Gray) Opaque() bool {
 	return true
 }
 
-// NewGray returns a new [Gray] image with the given bounds.
+// NewGray 返回具有给定边界的新 [Gray] 图像。
 func NewGray(r Rectangle) *Gray {
 	return &Gray{
 		Pix:    make([]uint8, pixelBufferLength(1, r, "Gray")),
@@ -938,14 +912,14 @@ func NewGray(r Rectangle) *Gray {
 	}
 }
 
-// Gray16 is an in-memory image whose At method returns [color.Gray16] values.
+// Gray16 是一个内存中的图像，其 At 方法返回 [color.Gray16] 值。
 type Gray16 struct {
-	// Pix holds the image's pixels, as gray values in big-endian format. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
+	// Pix 保存图像的像素，以大端格式存储灰度值。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
 }
 
@@ -970,8 +944,7 @@ func (p *Gray16) Gray16At(x, y int) color.Gray16 {
 	return color.Gray16{uint16(p.Pix[i+0])<<8 | uint16(p.Pix[i+1])}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *Gray16) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*2
 }
@@ -990,7 +963,7 @@ func (p *Gray16) SetRGBA64(x, y int, c color.RGBA64) {
 	if !(Point{x, y}.In(p.Rect)) {
 		return
 	}
-	// This formula is the same as in color.gray16Model.
+	// 此公式与 color.gray16Model 中的相同。
 	gray := (19595*uint32(c.R) + 38470*uint32(c.G) + 7471*uint32(c.B) + 1<<15) >> 16
 	i := p.PixOffset(x, y)
 	p.Pix[i+0] = uint8(gray >> 8)
@@ -1006,13 +979,12 @@ func (p *Gray16) SetGray16(x, y int, c color.Gray16) {
 	p.Pix[i+1] = uint8(c.Y)
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *Gray16) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &Gray16{}
 	}
@@ -1024,12 +996,12 @@ func (p *Gray16) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *Gray16) Opaque() bool {
 	return true
 }
 
-// NewGray16 returns a new [Gray16] image with the given bounds.
+// NewGray16 返回具有给定边界的新 [Gray16] 图像。
 func NewGray16(r Rectangle) *Gray16 {
 	return &Gray16{
 		Pix:    make([]uint8, pixelBufferLength(2, r, "Gray16")),
@@ -1038,14 +1010,14 @@ func NewGray16(r Rectangle) *Gray16 {
 	}
 }
 
-// CMYK is an in-memory image whose At method returns [color.CMYK] values.
+// CMYK 是一个内存中的图像，其 At 方法返回 [color.CMYK] 值。
 type CMYK struct {
-	// Pix holds the image's pixels, in C, M, Y, K order. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
+	// Pix 保存图像的像素，按 C、M、Y、K 顺序排列。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
 }
 
@@ -1067,12 +1039,11 @@ func (p *CMYK) CMYKAt(x, y int) color.CMYK {
 		return color.CMYK{}
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	return color.CMYK{s[0], s[1], s[2], s[3]}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *CMYK) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*4
 }
@@ -1083,7 +1054,7 @@ func (p *CMYK) Set(x, y int, c color.Color) {
 	}
 	i := p.PixOffset(x, y)
 	c1 := color.CMYKModel.Convert(c).(color.CMYK)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = c1.C
 	s[1] = c1.M
 	s[2] = c1.Y
@@ -1096,7 +1067,7 @@ func (p *CMYK) SetRGBA64(x, y int, c color.RGBA64) {
 	}
 	cc, mm, yy, kk := color.RGBToCMYK(uint8(c.R>>8), uint8(c.G>>8), uint8(c.B>>8))
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = cc
 	s[1] = mm
 	s[2] = yy
@@ -1108,20 +1079,19 @@ func (p *CMYK) SetCMYK(x, y int, c color.CMYK) {
 		return
 	}
 	i := p.PixOffset(x, y)
-	s := p.Pix[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	s := p.Pix[i : i+4 : i+4] // 小容量可提高性能，参见 https://golang.org/issue/27857
 	s[0] = c.C
 	s[1] = c.M
 	s[2] = c.Y
 	s[3] = c.K
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *CMYK) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &CMYK{}
 	}
@@ -1133,12 +1103,12 @@ func (p *CMYK) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *CMYK) Opaque() bool {
 	return true
 }
 
-// NewCMYK returns a new CMYK image with the given bounds.
+// NewCMYK 返回具有给定边界的新 CMYK 图像。
 func NewCMYK(r Rectangle) *CMYK {
 	return &CMYK{
 		Pix:    make([]uint8, pixelBufferLength(4, r, "CMYK")),
@@ -1147,16 +1117,16 @@ func NewCMYK(r Rectangle) *CMYK {
 	}
 }
 
-// Paletted is an in-memory image of uint8 indices into a given palette.
+// Paletted 是一个内存中的图像，使用 uint8 索引指向给定的调色板。
 type Paletted struct {
-	// Pix holds the image's pixels, as palette indices. The pixel at
-	// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
+	// Pix 保存图像的像素，作为调色板索引。位于
+	// (x, y) 处的像素从 Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1] 开始。
 	Pix []uint8
-	// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+	// Stride 是 Pix 中垂直相邻像素之间的步幅（以字节为单位）。
 	Stride int
-	// Rect is the image's bounds.
+	// Rect 是图像的边界。
 	Rect Rectangle
-	// Palette is the image's palette.
+	// Palette 是图像的调色板。
 	Palette color.Palette
 }
 
@@ -1195,8 +1165,7 @@ func (p *Paletted) RGBA64At(x, y int) color.RGBA64 {
 	}
 }
 
-// PixOffset returns the index of the first element of Pix that corresponds to
-// the pixel at (x, y).
+// PixOffset 返回 Pix 中对应于 (x, y) 处像素的第一个元素的索引。
 func (p *Paletted) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*1
 }
@@ -1233,13 +1202,12 @@ func (p *Paletted) SetColorIndex(x, y int, index uint8) {
 	p.Pix[i] = index
 }
 
-// SubImage returns an image representing the portion of the image p visible
-// through r. The returned value shares pixels with the original image.
+// SubImage 返回一个表示通过 r 可见的图像 p 部分的图像。
+// 返回的值与原始图像共享像素。
 func (p *Paletted) SubImage(r Rectangle) Image {
 	r = r.Intersect(p.Rect)
-	// If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
-	// either r1 or r2 if the intersection is empty. Without explicitly checking for
-	// this, the Pix[i:] expression below can panic.
+	// 如果 r1 和 r2 是 Rectangle，当交集为空时，r1.Intersect(r2) 不保证
+	// 在 r1 或 r2 内部。如果不显式检查这一点，下面的 Pix[i:] 表达式可能会 panic。
 	if r.Empty() {
 		return &Paletted{
 			Palette: p.Palette,
@@ -1254,7 +1222,7 @@ func (p *Paletted) SubImage(r Rectangle) Image {
 	}
 }
 
-// Opaque scans the entire image and reports whether it is fully opaque.
+// Opaque 扫描整个图像并报告它是否完全不透明。
 func (p *Paletted) Opaque() bool {
 	var present [256]bool
 	i0, i1 := 0, p.Rect.Dx()
@@ -1277,8 +1245,7 @@ func (p *Paletted) Opaque() bool {
 	return true
 }
 
-// NewPaletted returns a new [Paletted] image with the given width, height and
-// palette.
+// NewPaletted 返回具有给定宽度、高度和调色板的新 [Paletted] 图像。
 func NewPaletted(r Rectangle, p color.Palette) *Paletted {
 	return &Paletted{
 		Pix:     make([]uint8, pixelBufferLength(1, r, "Paletted")),

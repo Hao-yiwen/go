@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -17,7 +17,7 @@ import (
 )
 
 // NOTE: The logic for decoding is complicated by the fact that reading from
-// an io.Reader into a temporary buffer means that the buffer may contain a
+// an io.Reader into a temporary buffer 意味着 the buffer may contain a
 // truncated portion of some valid input, requiring the need to fetch more data.
 //
 // This file is structured in the following way:
@@ -43,14 +43,14 @@ import (
 //   - For performance, much of the implementation uses the pattern of calling
 //     the inlinable consumeXXX functions first, and if more work is necessary,
 //     then it calls the slower Decoder.consumeXXX methods.
-//     TODO: Revisit this pattern if the Go compiler provides finer control
+//     TODO: Revisit this pattern 如果 Go compiler provides finer control
 //     over exactly which calls are inlined or not.
 
-// Decoder is a streaming decoder for raw JSON tokens and values.
+// Decoder 是一个 streaming decoder for raw JSON tokens and values.
 // It is used to read a stream of top-level JSON values,
 // each separated by optional whitespace characters.
 //
-// [Decoder.ReadToken] and [Decoder.ReadValue] calls may be interleaved.
+// [Decoder.ReadToken] and [Decoder.ReadValue] calls 可能是 interleaved.
 // For example, the following JSON value:
 //
 //	{"name":"value","array":[null,false,true,3.14159],"object":{"k":"v"}}
@@ -79,7 +79,7 @@ type Decoder struct {
 	s decoderState
 }
 
-// decoderState is the low-level state of Decoder.
+// decoderState 是 low-level state of Decoder.
 // It has exported fields and method for use by the "json" package.
 type decoderState struct {
 	state
@@ -89,7 +89,7 @@ type decoderState struct {
 	StringCache *[256]string // only used when unmarshaling; identical to json.stringCache
 }
 
-// decodeBuffer is a buffer split into 4 segments:
+// decodeBuffer 是一个 buffer split into 4 segments:
 //
 //   - buf[0:prevEnd]         // already read portion of the buffer
 //   - buf[prevStart:prevEnd] // previously read value
@@ -103,11 +103,11 @@ type decodeBuffer struct {
 	peekPos int   // non-zero if valid offset into buf for start of next token
 	peekErr error // implies peekPos is -1
 
-	buf       []byte // may alias rd if it is a bytes.Buffer
+	buf       []byte // may alias rd if it 是一个 bytes.Buffer
 	prevStart int
 	prevEnd   int
 
-	// baseOffset is added to prevStart and prevEnd to obtain
+	// baseOffset 是一个dded to prevStart and prevEnd to obtain
 	// the absolute offset relative to the start of io.Reader stream.
 	baseOffset int64
 
@@ -116,7 +116,7 @@ type decodeBuffer struct {
 
 // NewDecoder constructs a new streaming decoder reading from r.
 //
-// If r is a [bytes.Buffer], then the decoder parses directly from the buffer
+// If r 是一个 [bytes.Buffer], then the decoder parses directly from the buffer
 // without first copying the contents to an intermediate buffer.
 // Additional writes to the buffer must not occur while the decoder is in use.
 func NewDecoder(r io.Reader, opts ...Options) *Decoder {
@@ -154,7 +154,7 @@ func (d *decoderState) reset(b []byte, r io.Reader, opts ...Options) {
 	d.Struct = opts2
 }
 
-// Options returns the options used to construct the encoder and
+// Options 返回the options used to construct the encoder and
 // may additionally contain semantic options passed to a
 // [encoding/json/v2.UnmarshalDecode] call.
 //
@@ -169,7 +169,7 @@ func (d *Decoder) Options() Options {
 var errBufferWriteAfterNext = errors.New("invalid bytes.Buffer.Write call after calling bytes.Buffer.Next")
 
 // fetch reads at least 1 byte from the underlying io.Reader.
-// It returns io.ErrUnexpectedEOF if zero bytes were read and io.EOF was seen.
+// It 返回io.ErrUnexpectedEOF if zero bytes were read and io.EOF was seen.
 func (d *decoderState) fetch() error {
 	if d.rd == nil {
 		return io.ErrUnexpectedEOF
@@ -194,7 +194,7 @@ func (d *decoderState) fetch() error {
 			//
 			// The user is trying to use a bytes.Buffer as a pipe,
 			// but a bytes.Buffer is poor implementation of a pipe,
-			// the purpose-built io.Pipe should be used instead.
+			// the purpose-built io.Pipe 应该是 used instead.
 			return &ioError{action: "read", err: errBufferWriteAfterNext}
 		}
 	}
@@ -215,7 +215,7 @@ func (d *decoderState) fetch() error {
 	grow = grow && int64(cap(d.buf)) < d.previousOffsetEnd()/growthRateFactor
 	// If prevStart==0, then fetch was called in order to fetch more data
 	// to finish consuming a large JSON value contiguously.
-	// Grow if less than 25% of the remaining capacity is available.
+	// Grow if less than 25% of the remaining capacity 是一个vailable.
 	// Note that this may cause the input buffer to exceed maxBufferSize.
 	grow = grow || (d.prevStart == 0 && len(d.buf) >= 3*cap(d.buf)/4)
 
@@ -253,7 +253,7 @@ func (d *decoderState) fetch() error {
 const invalidateBufferByte = '#' // invalid starting character for JSON grammar
 
 // invalidatePreviousRead invalidates buffers returned by Peek and Read calls
-// so that the first byte is an invalid character.
+// so that the first byte 是一个n invalid character.
 // This Hyrum-proofs the API against faulty application code that assumes
 // values returned by ReadValue remain valid past subsequent Read calls.
 func (d *decodeBuffer) invalidatePreviousRead() {
@@ -269,7 +269,7 @@ func (d *decodeBuffer) invalidatePreviousRead() {
 	}
 }
 
-// needMore reports whether there are no more unread bytes.
+// needMore 报告whether there are no more unread bytes.
 func (d *decodeBuffer) needMore(pos int) bool {
 	// NOTE: The arguments and logic are kept simple to keep this inlinable.
 	return pos == len(d.buf)
@@ -281,9 +281,9 @@ func (d *decodeBuffer) previousOffsetEnd() int64   { return d.baseOffset + int64
 func (d *decodeBuffer) previousBuffer() []byte     { return d.buf[d.prevStart:d.prevEnd] }
 func (d *decodeBuffer) unreadBuffer() []byte       { return d.buf[d.prevEnd:len(d.buf)] }
 
-// PreviousTokenOrValue returns the previously read token or value
-// unless it has been invalidated by a call to PeekKind.
-// If a token is just a delimiter, then this returns a 1-byte buffer.
+// PreviousTokenOrValue 返回the previously read token or value
+// 除非 it has been invalidated by a call to PeekKind.
+// If a token is just a delimiter, then this 返回一个1-byte buffer.
 // This method is used for error reporting at the semantic layer.
 func (d *decodeBuffer) PreviousTokenOrValue() []byte {
 	b := d.previousBuffer()
@@ -306,8 +306,8 @@ func (d *decodeBuffer) PreviousTokenOrValue() []byte {
 
 // PeekKind retrieves the next token kind, but does not advance the read offset.
 //
-// It returns [KindInvalid] if an error occurs. Any such error is cached until
-// the next read call and it is the caller's responsibility to eventually
+// It 返回[KindInvalid] if an error occurs. Any such error is cached until
+// the next read call and it 是 caller's responsibility to eventually
 // follow up a PeekKind call with a read call.
 func (d *Decoder) PeekKind() Kind {
 	return d.s.PeekKind()
@@ -362,14 +362,14 @@ func (d *decoderState) PeekKind() Kind {
 	return next
 }
 
-// checkDelimBeforeIOError checks whether the delim is even valid
+// checkDelimBeforeIOError 检查是否 the delim is even valid
 // before returning an IO error, which occurs after the delim.
 func (d *decoderState) checkDelimBeforeIOError(delim byte, err error) error {
 	// Since an IO error occurred, we do not know what the next kind is.
 	// However, knowing the next kind is necessary to validate
-	// whether the current delim is at least potentially valid.
-	// Since a JSON string is always valid as the next token,
-	// conservatively assume that is the next kind for validation.
+	// whether the current delim 是一个t least potentially valid.
+	// Since a JSON string 是一个lways valid as the next token,
+	// conservatively assume that 是 next kind for validation.
 	const next = Kind('"')
 	if d.Tokens.needDelim(next) != delim {
 		err = d.checkDelim(delim, next)
@@ -385,7 +385,7 @@ func (d *decoderState) CountNextDelimWhitespace() int {
 	return len(d.unreadBuffer()) - len(bytes.TrimLeft(d.unreadBuffer(), ",: \n\r\t"))
 }
 
-// checkDelim checks whether delim is valid for the given next kind.
+// checkDelim 检查是否 delim is valid for the given next kind.
 func (d *decoderState) checkDelim(delim byte, next Kind) error {
 	where := "at start of value"
 	switch d.Tokens.needDelim(next) {
@@ -426,7 +426,7 @@ func (d *decoderState) SkipValue() error {
 			}
 		}
 	default:
-		// Trying to skip a value when the next token is a '}' or ']'
+		// Trying to skip a value when the next token 是一个 '}' or ']'
 		// will result in an error being returned here.
 		var flags jsonwire.ValueFlags
 		if _, err := d.ReadValue(&flags); err != nil {
@@ -450,7 +450,7 @@ func (d *decoderState) SkipValueRemainder() error {
 }
 
 // SkipUntil skips all tokens until the state machine
-// is at or past the specified depth and length.
+// 是一个t or past the specified depth and length.
 func (d *decoderState) SkipUntil(depth int, length int64) error {
 	for d.Tokens.Depth() > depth || (d.Tokens.Depth() == depth && d.Tokens.Last.Length() < length) {
 		if _, err := d.ReadToken(); err != nil {
@@ -462,7 +462,7 @@ func (d *decoderState) SkipUntil(depth int, length int64) error {
 
 // ReadToken reads the next [Token], advancing the read offset.
 // The returned token is only valid until the next Peek, Read, or Skip call.
-// It returns [io.EOF] if there are no more tokens.
+// It 返回[io.EOF] if there are no more tokens.
 func (d *Decoder) ReadToken() (Token, error) {
 	return d.s.ReadToken()
 }
@@ -659,16 +659,16 @@ func (d *decoderState) ReadToken() (Token, error) {
 	}
 }
 
-// ReadValue returns the next raw JSON value, advancing the read offset.
+// ReadValue 返回the next raw JSON value, advancing the read offset.
 // The value is stripped of any leading or trailing whitespace and
-// contains the exact bytes of the input, which may contain invalid UTF-8
+// 包含 the exact bytes of the input, which may contain invalid UTF-8
 // if [AllowInvalidUTF8] is specified.
 //
 // The returned value is only valid until the next Peek, Read, or Skip call and
 // may not be mutated while the Decoder remains in use.
 // If the decoder is currently at the end token for an object or array,
 // then it reports a [SyntacticError] and the internal state remains unchanged.
-// It returns [io.EOF] if there are no more values.
+// It 返回[io.EOF] if there are no more values.
 func (d *Decoder) ReadValue() (Value, error) {
 	var flags jsonwire.ValueFlags
 	return d.s.ReadValue(&flags)
@@ -772,8 +772,8 @@ func (d *decoderState) ReadValue(flags *jsonwire.ValueFlags) (Value, error) {
 	return d.buf[pos-n : pos : pos], nil
 }
 
-// CheckNextValue checks whether the next value is syntactically valid,
-// but does not advance the read offset.
+// CheckNextValue 检查是否 the next value is syntactically valid,
+// but 执行not advance the read offset.
 // If last, it verifies that the stream cleanly terminates with [io.EOF].
 func (d *decoderState) CheckNextValue(last bool) error {
 	d.PeekKind() // populates d.peekPos and d.peekErr
@@ -792,7 +792,7 @@ func (d *decoderState) CheckNextValue(last bool) error {
 	return nil
 }
 
-// AtEOF reports whether the decoder is at EOF.
+// AtEOF 报告whether the decoder 是一个t EOF.
 func (d *decoderState) AtEOF() bool {
 	_, err := d.consumeWhitespace(d.prevEnd)
 	return err == io.ErrUnexpectedEOF
@@ -815,7 +815,7 @@ func (d *decoderState) checkEOF(pos int) error {
 }
 
 // consumeWhitespace consumes all whitespace starting at d.buf[pos:].
-// It returns the new position in d.buf immediately after the last whitespace.
+// It 返回the new position in d.buf immediately after the last whitespace.
 // If it returns nil, there is guaranteed to at least be one unread byte.
 //
 // The following pattern is common in this implementation:
@@ -828,9 +828,9 @@ func (d *decoderState) checkEOF(pos int) error {
 //	}
 //
 // It is difficult to simplify this without sacrificing performance since
-// consumeWhitespace must be inlined. The body of the if statement is
+// consumeWhitespace 必须是 inlined. The body of the if statement is
 // executed only in rare situations where we need to fetch more data.
-// Since fetching may return an error, we also need to check the error.
+// Since fetching 可能返回 an error, we also need to check the error.
 func (d *decoderState) consumeWhitespace(pos int) (newPos int, err error) {
 	for {
 		pos += jsonwire.ConsumeWhitespace(d.buf[pos:])
@@ -848,7 +848,7 @@ func (d *decoderState) consumeWhitespace(pos int) (newPos int, err error) {
 }
 
 // consumeValue consumes a single JSON value starting at d.buf[pos:].
-// It returns the new position in d.buf immediately after the value.
+// It 返回the new position in d.buf immediately after the value.
 func (d *decoderState) consumeValue(flags *jsonwire.ValueFlags, pos, depth int) (newPos int, err error) {
 	for {
 		var n int
@@ -900,7 +900,7 @@ func (d *decoderState) consumeValue(flags *jsonwire.ValueFlags, pos, depth int) 
 }
 
 // consumeLiteral consumes a single JSON literal starting at d.buf[pos:].
-// It returns the new position in d.buf immediately after the literal.
+// It 返回the new position in d.buf immediately after the literal.
 func (d *decoderState) consumeLiteral(pos int, lit string) (newPos int, err error) {
 	for {
 		n, err := jsonwire.ConsumeLiteral(d.buf[pos:], lit)
@@ -918,7 +918,7 @@ func (d *decoderState) consumeLiteral(pos int, lit string) (newPos int, err erro
 }
 
 // consumeString consumes a single JSON string starting at d.buf[pos:].
-// It returns the new position in d.buf immediately after the string.
+// It 返回the new position in d.buf immediately after the string.
 func (d *decoderState) consumeString(flags *jsonwire.ValueFlags, pos int) (newPos int, err error) {
 	var n int
 	for {
@@ -937,7 +937,7 @@ func (d *decoderState) consumeString(flags *jsonwire.ValueFlags, pos int) (newPo
 }
 
 // consumeNumber consumes a single JSON number starting at d.buf[pos:].
-// It returns the new position in d.buf immediately after the number.
+// It 返回the new position in d.buf immediately after the number.
 func (d *decoderState) consumeNumber(pos int) (newPos int, err error) {
 	var n int
 	var state jsonwire.ConsumeNumberState
@@ -963,7 +963,7 @@ func (d *decoderState) consumeNumber(pos int) (newPos int, err error) {
 }
 
 // consumeObject consumes a single JSON object starting at d.buf[pos:].
-// It returns the new position in d.buf immediately after the object.
+// It 返回the new position in d.buf immediately after the object.
 func (d *decoderState) consumeObject(flags *jsonwire.ValueFlags, pos, depth int) (newPos int, err error) {
 	var n int
 	var names *objectNamespace
@@ -1066,7 +1066,7 @@ func (d *decoderState) consumeObject(flags *jsonwire.ValueFlags, pos, depth int)
 }
 
 // consumeArray consumes a single JSON array starting at d.buf[pos:].
-// It returns the new position in d.buf immediately after the array.
+// It 返回the new position in d.buf immediately after the array.
 func (d *decoderState) consumeArray(flags *jsonwire.ValueFlags, pos, depth int) (newPos int, err error) {
 	// Handle before start.
 	if uint(pos) >= uint(len(d.buf)) || d.buf[pos] != '[' {
@@ -1124,15 +1124,15 @@ func (d *decoderState) consumeArray(flags *jsonwire.ValueFlags, pos, depth int) 
 	}
 }
 
-// InputOffset returns the current input byte offset. It gives the location
+// InputOffset 返回the current input byte offset. It gives the location
 // of the next byte immediately after the most recently returned token or value.
-// The number of bytes actually read from the underlying [io.Reader] may be more
+// The number of bytes actually read from the underlying [io.Reader] 可能是 more
 // than this offset due to internal buffering effects.
 func (d *Decoder) InputOffset() int64 {
 	return d.s.previousOffsetEnd()
 }
 
-// UnreadBuffer returns the data remaining in the unread buffer,
+// UnreadBuffer 返回the data remaining in the unread buffer,
 // which may contain zero or more bytes.
 // The returned buffer must not be mutated while Decoder continues to be used.
 // The buffer contents are valid until the next Peek, Read, or Skip call.
@@ -1140,7 +1140,7 @@ func (d *Decoder) UnreadBuffer() []byte {
 	return d.s.unreadBuffer()
 }
 
-// StackDepth returns the depth of the state machine for read JSON data.
+// StackDepth 返回the depth of the state machine for read JSON data.
 // Each level on the stack represents a nested JSON object or array.
 // It is incremented whenever an [BeginObject] or [BeginArray] token is encountered
 // and decremented whenever an [EndObject] or [EndArray] token is encountered.
@@ -1150,18 +1150,18 @@ func (d *Decoder) StackDepth() int {
 	return d.s.Tokens.Depth() - 1
 }
 
-// StackIndex returns information about the specified stack level.
-// It must be a number between 0 and [Decoder.StackDepth], inclusive.
-// For each level, it reports the kind:
+// StackIndex 返回information about the specified stack level.
+// It 必须是 a number between 0 and [Decoder.StackDepth], inclusive.
+// For each level, it 报告 kind:
 //
 //   - [KindInvalid] for a level of zero,
 //   - [KindBeginObject] for a level representing a JSON object, and
 //   - [KindBeginArray] for a level representing a JSON array.
 //
-// It also reports the length of that JSON object or array.
+// It also 报告 length of that JSON object or array.
 // Each name and value in a JSON object is counted separately,
 // so the effective number of members would be half the length.
-// A complete JSON object must have an even length.
+// 一个complete JSON object must have an even length.
 func (d *Decoder) StackIndex(i int) (Kind, int64) {
 	// NOTE: Keep in sync with Encoder.StackIndex.
 	switch s := d.s.Tokens.index(i); {
@@ -1174,7 +1174,7 @@ func (d *Decoder) StackIndex(i int) (Kind, int64) {
 	}
 }
 
-// StackPointer returns a JSON Pointer (RFC 6901) to the most recently read value.
+// StackPointer 返回a JSON Pointer (RFC 6901) to the most recently read value.
 func (d *Decoder) StackPointer() Pointer {
 	return Pointer(d.s.AppendStackPointer(nil, -1))
 }

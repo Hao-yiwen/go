@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package template_test
 
@@ -12,7 +12,7 @@ import (
 	"text/template"
 )
 
-// templateFile defines the contents of a template to be stored in a file, for testing.
+// templateFile 定义要存储在文件中的模板内容，用于测试。
 type templateFile struct {
 	name     string
 	contents string
@@ -37,72 +37,69 @@ func createTestDir(files []templateFile) string {
 	return dir
 }
 
-// Here we demonstrate loading a set of templates from a directory.
+// 这里我们演示从目录加载一组模板。
 func ExampleTemplate_glob() {
-	// Here we create a temporary directory and populate it with our sample
-	// template definition files; usually the template files would already
-	// exist in some location known to the program.
+	// 这里我们创建一个临时目录并用我们的示例模板定义文件填充它；
+	// 通常模板文件已经存在于程序已知的某个位置。
 	dir := createTestDir([]templateFile{
-		// T0.tmpl is a plain template file that just invokes T1.
+		// T0.tmpl 是一个普通的模板文件，只是调用 T1。
 		{"T0.tmpl", `T0 invokes T1: ({{template "T1"}})`},
-		// T1.tmpl defines a template, T1 that invokes T2.
+		// T1.tmpl 定义了一个模板 T1，它调用 T2。
 		{"T1.tmpl", `{{define "T1"}}T1 invokes T2: ({{template "T2"}}){{end}}`},
-		// T2.tmpl defines a template T2.
+		// T2.tmpl 定义了模板 T2。
 		{"T2.tmpl", `{{define "T2"}}This is T2{{end}}`},
 	})
-	// Clean up after the test; another quirk of running as an example.
+	// 测试后清理；作为示例运行的另一个怪癖。
 	defer os.RemoveAll(dir)
 
-	// pattern is the glob pattern used to find all the template files.
+	// pattern 是用于查找所有模板文件的 glob 模式。
 	pattern := filepath.Join(dir, "*.tmpl")
 
-	// Here starts the example proper.
-	// T0.tmpl is the first name matched, so it becomes the starting template,
-	// the value returned by ParseGlob.
+	// 这里开始实际的示例。
+	// T0.tmpl 是第一个匹配的名称，所以它成为起始模板，
+	// 即 ParseGlob 返回的值。
 	tmpl := template.Must(template.ParseGlob(pattern))
 
 	err := tmpl.Execute(os.Stdout, nil)
 	if err != nil {
 		log.Fatalf("template execution: %s", err)
 	}
-	// Output:
+	// 输出：
 	// T0 invokes T1: (T1 invokes T2: (This is T2))
 }
 
-// This example demonstrates one way to share some templates
-// and use them in different contexts. In this variant we add multiple driver
-// templates by hand to an existing bundle of templates.
+// 此示例演示了共享一些模板并在不同上下文中使用它们的一种方法。
+// 在这个变体中，我们手动将多个驱动模板添加到现有的模板集合中。
 func ExampleTemplate_helpers() {
-	// Here we create a temporary directory and populate it with our sample
-	// template definition files; usually the template files would already
-	// exist in some location known to the program.
+	// 这里我们创建一个临时目录并用我们的示例模板定义文件填充它；
+	// 通常模板文件已经存在于程序已知的某个位置。
 	dir := createTestDir([]templateFile{
-		// T1.tmpl defines a template, T1 that invokes T2.
+		// T1.tmpl 定义了一个模板 T1，它调用 T2。
 		{"T1.tmpl", `{{define "T1"}}T1 invokes T2: ({{template "T2"}}){{end}}`},
-		// T2.tmpl defines a template T2.
+		// T2.tmpl 定义了模板 T2。
 		{"T2.tmpl", `{{define "T2"}}This is T2{{end}}`},
 	})
-	// Clean up after the test; another quirk of running as an example.
+	// 测试后清理；作为示例运行的另一个怪癖。
 	defer os.RemoveAll(dir)
 
-	// pattern is the glob pattern used to find all the template files.
+	// pattern 是用于查找所有模板文件的 glob 模式。
 	pattern := filepath.Join(dir, "*.tmpl")
 
-	// Here starts the example proper.
-	// Load the helpers.
+	// 这里开始实际的示例。
+	// 加载辅助模板。
 	templates := template.Must(template.ParseGlob(pattern))
-	// Add one driver template to the bunch; we do this with an explicit template definition.
+	// 向集合中添加一个驱动模板；我们通过显式模板定义来完成。
 	_, err := templates.Parse("{{define `driver1`}}Driver 1 calls T1: ({{template `T1`}})\n{{end}}")
 	if err != nil {
 		log.Fatal("parsing driver1: ", err)
 	}
-	// Add another driver template.
+	// 添加另一个驱动模板。
 	_, err = templates.Parse("{{define `driver2`}}Driver 2 calls T2: ({{template `T2`}})\n{{end}}")
 	if err != nil {
 		log.Fatal("parsing driver2: ", err)
 	}
-	// We load all the templates before execution. This package does not require
-	// that behavior but html/template's escaping does, so it's a good habit.
+	// 我们在执行之前加载所有模板。本包不要求这种行为，
+	// 但 html/template 的转义需要，所以这是一个好习惯。
 	err = templates.ExecuteTemplate(os.Stdout, "driver1", nil)
 	if err != nil {
 		log.Fatalf("driver1 execution: %s", err)
@@ -111,7 +108,7 @@ func ExampleTemplate_helpers() {
 	if err != nil {
 		log.Fatalf("driver2 execution: %s", err)
 	}
-	// Output:
+	// 输出：
 	// Driver 1 calls T1: (T1 invokes T2: (This is T2))
 	// Driver 2 calls T2: (This is T2)
 }

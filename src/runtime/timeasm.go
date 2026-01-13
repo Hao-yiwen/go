@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Declarations for operating systems implementing time.now directly in assembly.
+// 用于在汇编中直接实现 time.now 的操作系统的声明。
 
 //go:build !faketime && (windows || (linux && amd64))
 

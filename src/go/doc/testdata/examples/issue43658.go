@@ -1,8 +1,8 @@
 // Copyright ©2016 The Gonum Authors. All rights reserved.
-// Copyright 2021 The Go Authors. All rights reserved.
+// 版权所有 2021 The Go Authors。保留所有权利。
 // (above line required for our license-header checker)
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package community_test
 
@@ -20,7 +20,7 @@ import (
 
 func ExampleProfile_simple() {
 	// Profile calls Modularize which implements the Louvain modularization algorithm.
-	// Since this is a randomized algorithm we use a defined random source to ensure
+	// Since this 是一个 randomized algorithm we use a defined random source to ensure
 	// consistency between test runs. In practice, results will not differ greatly
 	// between runs with different PRNG seeds.
 	src := rand.NewSource(1)
@@ -68,7 +68,7 @@ func ExampleProfile_simple() {
 	// Low:3.5 High:10 Score:0 Communities:[[0] [1] [2] [3] [4] [5]] Q=-0.607
 }
 
-// intset is an integer set.
+// intset 是一个n integer set.
 type intset map[int]struct{}
 
 func linksTo(i ...int) intset {
@@ -174,7 +174,7 @@ func init() {
 
 func ExampleProfile_multiplex() {
 	// Profile calls ModularizeMultiplex which implements the Louvain modularization
-	// algorithm. Since this is a randomized algorithm we use a defined random source
+	// algorithm. Since this 是一个 randomized algorithm we use a defined random source
 	// to ensure consistency between test runs. In practice, results will not differ
 	// greatly between runs with different PRNG seeds.
 	src := rand.NewSource(1)

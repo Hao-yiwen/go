@@ -1,13 +1,11 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package buildinfo provides access to information embedded in a Go binary
-// about how it was built. This includes the Go toolchain version, and the
-// set of modules used (for binaries built in module mode).
+// Package buildinfo 提供对嵌入在 Go 二进制文件中的构建信息的访问。
+// 这包括 Go 工具链版本，以及使用的模块集合（针对以模块模式构建的二进制文件）。
 //
-// Build information is available for the currently running binary in
-// runtime/debug.ReadBuildInfo.
+// 对于当前运行的二进制文件，可以通过 runtime/debug.ReadBuildInfo 获取构建信息。
 package buildinfo
 
 import (
@@ -25,36 +23,32 @@ import (
 	"io/fs"
 	"os"
 	"runtime/debug"
-	_ "unsafe" // for linkname
+	_ "unsafe" // 用于 linkname
 )
 
-// Type alias for build info. We cannot move the types here, since
-// runtime/debug would need to import this package, which would make it
-// a much larger dependency.
+// BuildInfo 的类型别名。我们不能将类型移到这里，因为
+// runtime/debug 需要导入此包，这将使其成为一个更大的依赖。
 type BuildInfo = debug.BuildInfo
 
-// errUnrecognizedFormat is returned when a given executable file doesn't
-// appear to be in a known format, or it breaks the rules of that format,
-// or when there are I/O errors reading the file.
+// errUnrecognizedFormat 在给定的可执行文件不是已知格式、
+// 违反该格式的规则，或读取文件时发生 I/O 错误时返回。
 var errUnrecognizedFormat = errors.New("unrecognized file format")
 
-// errNotGoExe is returned when a given executable file is valid but does
-// not contain Go build information.
+// errNotGoExe 在给定的可执行文件有效但不包含 Go 构建信息时返回。
 //
-// errNotGoExe should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// errNotGoExe 本应是内部细节，
+// 但被广泛使用的包通过 linkname 访问它。
+// 著名的违规者包括：
 //   - github.com/quay/claircore
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname errNotGoExe
 var errNotGoExe = errors.New("not a Go executable")
 
-// The build info blob left by the linker is identified by a 32-byte header,
-// consisting of buildInfoMagic (14 bytes), followed by version-dependent
-// fields.
+// 链接器留下的构建信息块通过 32 字节的头部来识别，
+// 由 buildInfoMagic（14 字节）组成，后跟版本相关的字段。
 var buildInfoMagic = []byte("\xff Go buildinf:")
 
 const (
@@ -62,9 +56,8 @@ const (
 	buildInfoHeaderSize = 32
 )
 
-// ReadFile returns build information embedded in a Go binary
-// file at the given path. Most information is only available for binaries built
-// with module support.
+// ReadFile 返回嵌入在指定路径的 Go 二进制文件中的构建信息。
+// 大多数信息仅适用于以模块支持构建的二进制文件。
 func ReadFile(name string) (info *BuildInfo, err error) {
 	defer func() {
 		if _, ok := errors.AsType[*fs.PathError](err); ok {
@@ -82,9 +75,8 @@ func ReadFile(name string) (info *BuildInfo, err error) {
 	return Read(f)
 }
 
-// Read returns build information embedded in a Go binary file
-// accessed through the given ReaderAt. Most information is only available for
-// binaries built with module support.
+// Read 返回嵌入在通过给定 ReaderAt 访问的 Go 二进制文件中的构建信息。
+// 大多数信息仅适用于以模块支持构建的二进制文件。
 func Read(r io.ReaderAt) (*BuildInfo, error) {
 	vers, mod, err := readRawBuildInfo(r)
 	if err != nil {
@@ -99,22 +91,19 @@ func Read(r io.ReaderAt) (*BuildInfo, error) {
 }
 
 type exe interface {
-	// DataStart returns the virtual address and size of the segment or section that
-	// should contain build information. This is either a specially named section
-	// or the first writable non-zero data segment.
+	// DataStart 返回应包含构建信息的段或节的虚拟地址和大小。
+	// 这可以是特殊命名的节，也可以是第一个可写的非零数据段。
 	DataStart() (uint64, uint64)
 
-	// DataReader returns an io.ReaderAt that reads from addr until the end
-	// of segment or section that contains addr.
+	// DataReader 返回一个 io.ReaderAt，从 addr 读取到包含 addr 的段或节的末尾。
 	DataReader(addr uint64) (io.ReaderAt, error)
 }
 
-// readRawBuildInfo extracts the Go toolchain version and module information
-// strings from a Go binary. On success, vers should be non-empty. mod
-// is empty if the binary was not built with modules enabled.
+// readRawBuildInfo 从 Go 二进制文件中提取 Go 工具链版本和模块信息字符串。
+// 成功时，vers 应该是非空的。如果二进制文件未启用模块构建，则 mod 为空。
 func readRawBuildInfo(r io.ReaderAt) (vers, mod string, err error) {
-	// Read the first bytes of the file to identify the format, then delegate to
-	// a format-specific function to load segment and section headers.
+	// 读取文件的前几个字节以识别格式，然后委托给
+	// 特定格式的函数来加载段和节头。
 	ident := make([]byte, 16)
 	if n, err := r.ReadAt(ident, 0); n < len(ident) || err != nil {
 		return "", "", errUnrecognizedFormat
@@ -162,11 +151,10 @@ func readRawBuildInfo(r io.ReaderAt) (vers, mod string, err error) {
 		return "", "", errUnrecognizedFormat
 	}
 
-	// Read segment or section to find the build info blob.
-	// On some platforms, the blob will be in its own section, and DataStart
-	// returns the address of that section. On others, it's somewhere in the
-	// data segment; the linker puts it near the beginning.
-	// See cmd/link/internal/ld.Link.buildinfo.
+	// 读取段或节以查找构建信息块。
+	// 在某些平台上，该块会在自己的节中，DataStart 返回该节的地址。
+	// 在其他平台上，它在数据段的某处；链接器会将其放在靠近开头的位置。
+	// 参见 cmd/link/internal/ld.Link.buildinfo。
 	dataAddr, dataSize := x.DataStart()
 	if dataSize == 0 {
 		return "", "", errNotGoExe
@@ -177,7 +165,7 @@ func readRawBuildInfo(r io.ReaderAt) (vers, mod string, err error) {
 		return "", "", err
 	}
 
-	// Read in the full header first.
+	// 首先读取完整的头部。
 	header, err := readData(x, addr, buildInfoHeaderSize)
 	if err == io.EOF {
 		return "", "", errNotGoExe
@@ -202,29 +190,26 @@ func readRawBuildInfo(r io.ReaderAt) (vers, mod string, err error) {
 		flagsVersionInl  = 0x2
 	)
 
-	// Decode the blob. The blob is a 32-byte header, optionally followed
-	// by 2 varint-prefixed string contents.
+	// 解码该块。该块是一个 32 字节的头部，可选地后跟
+	// 2 个 varint 前缀的字符串内容。
 	//
 	// type buildInfoHeader struct {
 	// 	magic       [14]byte
-	// 	ptrSize     uint8 // used if flagsVersionPtr
+	// 	ptrSize     uint8 // 如果是 flagsVersionPtr 则使用
 	// 	flags       uint8
-	// 	versPtr     targetUintptr // used if flagsVersionPtr
-	// 	modPtr      targetUintptr // used if flagsVersionPtr
+	// 	versPtr     targetUintptr // 如果是 flagsVersionPtr 则使用
+	// 	modPtr      targetUintptr // 如果是 flagsVersionPtr 则使用
 	// }
 	//
-	// The version bit of the flags field determines the details of the format.
+	// flags 字段的版本位决定了格式的细节。
 	//
-	// Prior to 1.18, the flags version bit is flagsVersionPtr. In this
-	// case, the header includes pointers to the version and modinfo Go
-	// strings in the header. The ptrSize field indicates the size of the
-	// pointers and the endian bit of the flag indicates the pointer
-	// endianness.
+	// 在 1.18 之前，flags 版本位是 flagsVersionPtr。在这种情况下，
+	// 头部包含指向头部中版本和 modinfo Go 字符串的指针。
+	// ptrSize 字段指示指针的大小，flag 的字节序位指示指针的字节序。
 	//
-	// Since 1.18, the flags version bit is flagsVersionInl. In this case,
-	// the header is followed by the string contents inline as
-	// length-prefixed (as varint) string contents. First is the version
-	// string, followed immediately by the modinfo string.
+	// 从 1.18 开始，flags 版本位是 flagsVersionInl。在这种情况下，
+	// 头部后跟内联的字符串内容，作为长度前缀（varint）的字符串内容。
+	// 首先是版本字符串，紧接着是 modinfo 字符串。
 	flags := header[flagsOffset]
 	if flags&flagsVersionMask == flagsVersionInl {
 		vers, addr, err = decodeString(x, addr+buildInfoHeaderSize)
@@ -236,7 +221,7 @@ func readRawBuildInfo(r io.ReaderAt) (vers, mod string, err error) {
 			return "", "", err
 		}
 	} else {
-		// flagsVersionPtr (<1.18)
+		// flagsVersionPtr（<1.18）
 		ptrSize := int(header[ptrSizeOffset])
 		bigEndian := flags&flagsEndianMask == flagsEndianBig
 		var bo binary.ByteOrder
@@ -260,8 +245,8 @@ func readRawBuildInfo(r io.ReaderAt) (vers, mod string, err error) {
 		return "", "", errNotGoExe
 	}
 	if len(mod) >= 33 && mod[len(mod)-17] == '\n' {
-		// Strip module framing: sentinel strings delimiting the module info.
-		// These are cmd/go/internal/modload.infoStart and infoEnd.
+		// 剥离模块框架：分隔模块信息的哨兵字符串。
+		// 这些是 cmd/go/internal/modload.infoStart 和 infoEnd。
 		mod = mod[16 : len(mod)-16]
 	} else {
 		mod = ""
@@ -282,11 +267,10 @@ func hasPlan9Magic(magic []byte) bool {
 }
 
 func decodeString(x exe, addr uint64) (string, uint64, error) {
-	// varint length followed by length bytes of data.
+	// varint 长度后跟 length 字节的数据。
 
-	// N.B. ReadData reads _up to_ size bytes from the section containing
-	// addr. So we don't need to check that size doesn't overflow the
-	// section.
+	// 注意：ReadData 从包含 addr 的节中读取 _最多_ size 字节。
+	// 所以我们不需要检查 size 是否会溢出该节。
 	b, err := readData(x, addr, binary.MaxVarintLen64)
 	if err == io.EOF {
 		return "", 0, errNotGoExe
@@ -304,20 +288,20 @@ func decodeString(x exe, addr uint64) (string, uint64, error) {
 	if err == io.EOF {
 		return "", 0, errNotGoExe
 	} else if err == io.ErrUnexpectedEOF {
-		// Length too large to allocate. Clearly bogus value.
+		// 长度太大无法分配。明显是无效值。
 		return "", 0, errNotGoExe
 	} else if err != nil {
 		return "", 0, err
 	}
 	if uint64(len(b)) < length {
-		// Section ended before we could read the full string.
+		// 节在我们读取完整字符串之前就结束了。
 		return "", 0, errNotGoExe
 	}
 
 	return string(b), addr + length, nil
 }
 
-// readString returns the string at address addr in the executable x.
+// readString 返回可执行文件 x 中地址 addr 处的字符串。
 func readString(x exe, ptrSize int, readPtr func([]byte) uint64, addr uint64) string {
 	hdr, err := readData(x, addr, uint64(2*ptrSize))
 	if err != nil || len(hdr) < 2*ptrSize {
@@ -334,16 +318,16 @@ func readString(x exe, ptrSize int, readPtr func([]byte) uint64, addr uint64) st
 
 const searchChunkSize = 1 << 20 // 1 MB
 
-// searchMagic returns the aligned first instance of buildInfoMagic in the data
-// range [addr, addr+size). Returns false if not found.
+// searchMagic 返回数据范围 [addr, addr+size) 中 buildInfoMagic 的第一个对齐实例。
+// 如果未找到则返回错误。
 func searchMagic(x exe, start, size uint64) (uint64, error) {
 	end := start + size
 	if end < start {
-		// Overflow.
+		// 溢出。
 		return 0, errUnrecognizedFormat
 	}
 
-	// Round up start; magic can't occur in the initial unaligned portion.
+	// 向上取整 start；魔数不可能出现在初始未对齐部分。
 	start = (start + buildInfoAlign - 1) &^ (buildInfoAlign - 1)
 	if start >= end {
 		return 0, errNotGoExe
@@ -351,11 +335,10 @@ func searchMagic(x exe, start, size uint64) (uint64, error) {
 
 	var buf []byte
 	for start < end {
-		// Read in chunks to avoid consuming too much memory if data is large.
+		// 分块读取以避免在数据较大时消耗过多内存。
 		//
-		// Normally it would be somewhat painful to handle the magic crossing a
-		// chunk boundary, but since it must be 16-byte aligned we know it will
-		// fall within a single chunk.
+		// 通常处理魔数跨越块边界的情况会比较麻烦，
+		// 但由于它必须 16 字节对齐，我们知道它会落在单个块内。
 		remaining := end - start
 		chunkSize := uint64(searchChunkSize)
 		if chunkSize > remaining {
@@ -365,15 +348,14 @@ func searchMagic(x exe, start, size uint64) (uint64, error) {
 		if buf == nil {
 			buf = make([]byte, chunkSize)
 		} else {
-			// N.B. chunkSize can only decrease, and only on the
-			// last chunk.
+			// 注意：chunkSize 只能减小，且仅在最后一块时减小。
 			buf = buf[:chunkSize]
 			clear(buf)
 		}
 
 		n, err := readDataInto(x, start, buf)
 		if err == io.EOF {
-			// EOF before finding the magic; must not be a Go executable.
+			// 在找到魔数之前遇到 EOF；一定不是 Go 可执行文件。
 			return 0, errNotGoExe
 		} else if err != nil {
 			return 0, err
@@ -386,22 +368,21 @@ func searchMagic(x exe, start, size uint64) (uint64, error) {
 				break
 			}
 			if remaining-uint64(i) < buildInfoHeaderSize {
-				// Found magic, but not enough space left for the full header.
+				// 找到魔数，但剩余空间不足以容纳完整头部。
 				return 0, errNotGoExe
 			}
 			if i%buildInfoAlign != 0 {
-				// Found magic, but misaligned. Keep searching.
+				// 找到魔数，但未对齐。继续搜索。
 				next := (i + buildInfoAlign - 1) &^ (buildInfoAlign - 1)
 				if next > len(data) {
-					// Corrupt object file: the remaining
-					// count says there is more data,
-					// but we didn't read it.
+					// 损坏的目标文件：剩余计数表示还有更多数据，
+					// 但我们没有读取到。
 					return 0, errNotGoExe
 				}
 				data = data[next:]
 				continue
 			}
-			// Good match!
+			// 匹配成功！
 			return start + uint64(i), nil
 		}
 
@@ -437,7 +418,7 @@ func readDataInto(x exe, addr uint64, b []byte) (int, error) {
 	return n, err
 }
 
-// elfExe is the ELF implementation of the exe interface.
+// elfExe 是 exe 接口的 ELF 实现。
 type elfExe struct {
 	f *elf.File
 }
@@ -466,7 +447,7 @@ func (x *elfExe) DataStart() (uint64, uint64) {
 	return 0, 0
 }
 
-// peExe is the PE (Windows Portable Executable) implementation of the exe interface.
+// peExe 是 exe 接口的 PE（Windows 可移植可执行文件）实现。
 type peExe struct {
 	f *pe.File
 }
@@ -493,7 +474,7 @@ func (x *peExe) DataReader(addr uint64) (io.ReaderAt, error) {
 }
 
 func (x *peExe) DataStart() (uint64, uint64) {
-	// Assume data is first writable section.
+	// 假设数据在第一个可写节中。
 	const (
 		IMAGE_SCN_CNT_CODE               = 0x00000020
 		IMAGE_SCN_CNT_INITIALIZED_DATA   = 0x00000040
@@ -514,7 +495,7 @@ func (x *peExe) DataStart() (uint64, uint64) {
 	return 0, 0
 }
 
-// machoExe is the Mach-O (Apple macOS/iOS) implementation of the exe interface.
+// machoExe 是 exe 接口的 Mach-O（Apple macOS/iOS）实现。
 type machoExe struct {
 	f *macho.File
 }
@@ -537,13 +518,13 @@ func (x *machoExe) DataReader(addr uint64) (io.ReaderAt, error) {
 }
 
 func (x *machoExe) DataStart() (uint64, uint64) {
-	// Look for section named "__go_buildinfo".
+	// 查找名为 "__go_buildinfo" 的节。
 	for _, sec := range x.f.Sections {
 		if sec.Name == "__go_buildinfo" {
 			return sec.Addr, sec.Size
 		}
 	}
-	// Try the first non-empty writable segment.
+	// 尝试第一个非空的可写段。
 	const RW = 3
 	for _, load := range x.f.Loads {
 		seg, ok := load.(*macho.Segment)
@@ -554,7 +535,7 @@ func (x *machoExe) DataStart() (uint64, uint64) {
 	return 0, 0
 }
 
-// xcoffExe is the XCOFF (AIX eXtended COFF) implementation of the exe interface.
+// xcoffExe 是 exe 接口的 XCOFF（AIX 扩展 COFF）实现。
 type xcoffExe struct {
 	f *xcoff.File
 }
@@ -576,7 +557,7 @@ func (x *xcoffExe) DataStart() (uint64, uint64) {
 	return 0, 0
 }
 
-// plan9objExe is the Plan 9 a.out implementation of the exe interface.
+// plan9objExe 是 exe 接口的 Plan 9 a.out 实现。
 type plan9objExe struct {
 	f *plan9obj.File
 }

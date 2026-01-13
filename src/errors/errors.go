@@ -1,71 +1,67 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package errors implements functions to manipulate errors.
+// errors 包实现操作错误的函数。
 //
-// The [New] function creates errors whose only content is a text message.
+// [New] 函数创建仅包含文本消息的错误。
 //
-// An error e wraps another error if e's type has one of the methods
+// 如果错误 e 的类型具有以下方法之一，则 e 包装另一个错误：
 //
 //	Unwrap() error
 //	Unwrap() []error
 //
-// If e.Unwrap() returns a non-nil error w or a slice containing w,
-// then we say that e wraps w. A nil error returned from e.Unwrap()
-// indicates that e does not wrap any error. It is invalid for an
-// Unwrap method to return an []error containing a nil error value.
+// 如果 e.Unwrap() 返回非 nil 错误 w 或包含 w 的切片，
+// 则我们说 e 包装了 w。从 e.Unwrap() 返回的 nil 错误
+// 表示 e 没有包装任何错误。Unwrap 方法返回包含 nil 错误值的
+// []error 是无效的。
 //
-// An easy way to create wrapped errors is to call [fmt.Errorf] and apply
-// the %w verb to the error argument:
+// 创建包装错误的简单方法是调用 [fmt.Errorf] 并将 %w 动词应用于错误参数：
 //
 //	wrapsErr := fmt.Errorf("... %w ...", ..., err, ...)
 //
-// Successive unwrapping of an error creates a tree. The [Is] and [As]
-// functions inspect an error's tree by examining first the error
-// itself followed by the tree of each of its children in turn
-// (pre-order, depth-first traversal).
+// 连续解包错误会创建一棵树。[Is] 和 [As] 函数通过首先检查错误本身，
+// 然后依次检查其每个子项的树来检查错误树
+// （前序、深度优先遍历）。
 //
-// See https://go.dev/blog/go1.13-errors for a deeper discussion of the
-// philosophy of wrapping and when to wrap.
+// 有关包装的理念以及何时包装的更深入讨论，
+// 请参阅 https://go.dev/blog/go1.13-errors。
 //
-// [Is] examines the tree of its first argument looking for an error that
-// matches the second. It reports whether it finds a match. It should be
-// used in preference to simple equality checks:
+// [Is] 检查其第一个参数的树，寻找与第二个参数匹配的错误。
+// 它报告是否找到匹配项。应优先使用它而不是简单的相等检查：
 //
 //	if errors.Is(err, fs.ErrExist)
 //
-// is preferable to
+// 优于
 //
 //	if err == fs.ErrExist
 //
-// because the former will succeed if err wraps [io/fs.ErrExist].
+// 因为如果 err 包装了 [io/fs.ErrExist]，前者将成功。
 //
-// [AsType] examines the tree of its argument looking for an error whose
-// type matches its type argument. If it succeeds, it returns the
-// corresponding value of that type and true. Otherwise, it returns the
-// zero value of that type and false. The form
+// [AsType] 检查其参数的树，寻找类型与其类型参数匹配的错误。
+// 如果成功，它返回该类型的相应值和 true。
+// 否则，它返回该类型的零值和 false。形式
 //
 //	if perr, ok := errors.AsType[*fs.PathError](err); ok {
 //		fmt.Println(perr.Path)
 //	}
 //
-// is preferable to
+// 优于
 //
 //	if perr, ok := err.(*fs.PathError); ok {
 //		fmt.Println(perr.Path)
 //	}
 //
-// because the former will succeed if err wraps an [*io/fs.PathError].
+// 因为如果 err 包装了 [*io/fs.PathError]，前者将成功。
 package errors
 
-// New returns an error that formats as the given text.
-// Each call to New returns a distinct error value even if the text is identical.
+// New 返回一个格式化为给定文本的错误。
+// 即使文本相同，每次调用 New 也会返回一个不同的错误值。
 func New(text string) error {
 	return &errorString{text}
 }
 
-// errorString is a trivial implementation of error.
+// errorString 是 error 的简单实现。
 type errorString struct {
 	s string
 }
@@ -74,17 +70,15 @@ func (e *errorString) Error() string {
 	return e.s
 }
 
-// ErrUnsupported indicates that a requested operation cannot be performed,
-// because it is unsupported. For example, a call to [os.Link] when using a
-// file system that does not support hard links.
+// ErrUnsupported 表示请求的操作无法执行，因为它不受支持。
+// 例如，在使用不支持硬链接的文件系统时调用 [os.Link]。
 //
-// Functions and methods should not return this error but should instead
-// return an error including appropriate context that satisfies
+// 函数和方法不应返回此错误，而应返回包含适当上下文的错误，
+// 该错误满足
 //
 //	errors.Is(err, errors.ErrUnsupported)
 //
-// either by directly wrapping ErrUnsupported or by implementing an [Is] method.
+// 通过直接包装 ErrUnsupported 或实现 [Is] 方法。
 //
-// Functions and methods should document the cases in which an error
-// wrapping this will be returned.
+// 函数和方法应记录将返回包装此错误的情况。
 var ErrUnsupported = New("unsupported operation")

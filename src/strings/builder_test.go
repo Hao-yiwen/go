@@ -1,6 +1,6 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package strings_test
 
@@ -58,7 +58,7 @@ func TestBuilderString(t *testing.T) {
 	check(t, &b, "alphabetagamma")
 	s3 := b.String()
 
-	// Check that subsequent operations didn't change the returned strings.
+	// 检查后续操作是否没有改变已返回的字符串。
 	if want := "alpha"; s1 != want {
 		t.Errorf("first String result is now %q; want %q", s1, want)
 	}
@@ -79,8 +79,8 @@ func TestBuilderReset(t *testing.T) {
 	b.Reset()
 	check(t, &b, "")
 
-	// Ensure that writing after Reset doesn't alter
-	// previously returned strings.
+	// 确保在 Reset 后写入不会改变
+	// 之前返回的字符串。
 	b.WriteString("bbb")
 	check(t, &b, "bbb")
 	if want := "aaa"; s != want {
@@ -97,7 +97,7 @@ func TestBuilderGrow(t *testing.T) {
 		p := bytes.Repeat([]byte{'a'}, growLen)
 		allocs := testing.AllocsPerRun(100, func() {
 			var b Builder
-			b.Grow(growLen) // should be only alloc, when growLen > 0
+			b.Grow(growLen) // 当 growLen > 0 时，这应该是唯一的内存分配
 			if b.Cap() < growLen {
 				t.Fatalf("growLen=%d: Cap() is lower than growLen", growLen)
 			}
@@ -114,7 +114,7 @@ func TestBuilderGrow(t *testing.T) {
 			t.Errorf("growLen=%d: got %d allocs during Write; want %v", growLen, g, w)
 		}
 	}
-	// when growLen < 0, should panic
+	// 当 growLen < 0 时，应该 panic
 	var a Builder
 	n := -1
 	defer func() {
@@ -196,8 +196,8 @@ func TestBuilderAllocs(t *testing.T) {
 	if asan.Enabled {
 		t.Skip("test allocates more with -asan; see #70079")
 	}
-	// Issue 23382; verify that copyCheck doesn't force the
-	// Builder to escape and be heap allocated.
+	// Issue 23382；验证 copyCheck 不会强制
+	// Builder 逃逸并在堆上分配。
 	n := testing.AllocsPerRun(10000, func() {
 		var b Builder
 		b.Grow(5)
@@ -222,7 +222,7 @@ func TestBuilderCopyPanic(t *testing.T) {
 				var a Builder
 				a.WriteByte('x')
 				b := a
-				_ = b.String() // appease vet
+				_ = b.String() // 使 vet 检查通过
 			},
 		},
 		{
@@ -320,8 +320,8 @@ func TestBuilderCopyPanic(t *testing.T) {
 }
 
 func TestBuilderWriteInvalidRune(t *testing.T) {
-	// Invalid runes, including negative ones, should be written as
-	// utf8.RuneError.
+	// 无效的 rune，包括负数，应该被写为
+	// utf8.RuneError。
 	for _, r := range []rune{-1, utf8.MaxRune + 1} {
 		var b Builder
 		b.WriteRune(r)

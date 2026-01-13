@@ -4,12 +4,12 @@
 
 package runtime
 
-import _ "unsafe" // for go:cgo_export_static and go:cgo_export_dynamic
+import _ "unsafe" // 用于 go:cgo_export_static 和 go:cgo_export_dynamic
 
-// Export the main function.
+// 导出 main 函数。
 //
-// Used by the app package to start all-Go Android apps that are
-// loaded via JNI. See golang.org/x/mobile/app.
+// 由 app 包使用，用于启动通过 JNI 加载的纯 Go Android 应用。
+// 参见 golang.org/x/mobile/app。
 
 //go:cgo_export_static main.main
 //go:cgo_export_dynamic main.main

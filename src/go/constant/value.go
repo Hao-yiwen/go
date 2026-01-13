@@ -1,13 +1,13 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package constant implements Values representing untyped
+// constant 包实现了 Values representing untyped
 // Go constants and their corresponding operations.
 //
-// A special Unknown value may be used when a value
+// 一个special Unknown value 可能是 used when a value
 // is unknown due to an error. Operations on unknown
-// values produce unknown values unless specified
+// values produce unknown values 除非 specified
 // otherwise.
 package constant
 
@@ -25,7 +25,7 @@ import (
 
 //go:generate stringer -type Kind
 
-// Kind specifies the kind of value represented by a [Value].
+// Kind 指定the kind of value represented by a [Value].
 type Kind int
 
 const (
@@ -42,18 +42,18 @@ const (
 	Complex
 )
 
-// A Value represents the value of a Go constant.
+// 一个Value represents the value of a Go constant.
 type Value interface {
-	// Kind returns the value kind.
+	// Kind 返回 value kind.
 	Kind() Kind
 
-	// String returns a short, quoted (human-readable) form of the value.
-	// For numeric values, the result may be an approximation;
-	// for String values the result may be a shortened string.
+	// String 返回一个short, quoted (human-readable) form of the value.
+	// For numeric values, the result 可能是 an approximation;
+	// for String values the result 可能是 a shortened string.
 	// Use ExactString for a string representing a value exactly.
 	String() string
 
-	// ExactString returns an exact, quoted (human-readable) form of the value.
+	// ExactString 返回一个 exact, quoted (human-readable) form of the value.
 	// If the Value is of Kind String, use StringVal to obtain the unquoted string.
 	ExactString() string
 
@@ -112,7 +112,7 @@ func (complexVal) Kind() Kind { return Complex }
 func (unknownVal) String() string { return "unknown" }
 func (x boolVal) String() string  { return strconv.FormatBool(bool(x)) }
 
-// String returns a possibly shortened quoted form of the String value.
+// String 返回a possibly shortened quoted form of the String value.
 func (x *stringVal) String() string {
 	const maxLen = 72 // a reasonable length
 	s := strconv.Quote(x.string())
@@ -130,7 +130,7 @@ func (x *stringVal) String() string {
 	return s
 }
 
-// string constructs and returns the actual string literal value.
+// string constructs and 返回 actual string literal value.
 // If x represents an addition, then it rewrites x to be a single
 // string, to speed future calls. This lazy construction avoids
 // building different string values for all subpieces of a large
@@ -158,11 +158,11 @@ func reverse(x []string) []string {
 }
 
 // appendReverse appends to list all of x's subpieces, but in reverse,
-// and returns the result. Appending the reversal allows processing
+// and 返回the result. Appending the reversal 允许 processing
 // the right side in a recursive call and the left side in a loop.
-// Because a chain like a + b + c + d + e is actually represented
+// Because a chain like a + b + c + d + e 是一个ctually represented
 // as ((((a + b) + c) + d) + e), the left-side loop avoids deep recursion.
-// x must be locked.
+// x 必须是 locked.
 func (x *stringVal) appendReverse(list []string) []string {
 	y := x
 	for y.r != nil {
@@ -188,7 +188,7 @@ func (x int64Val) String() string { return strconv.FormatInt(int64(x), 10) }
 func (x intVal) String() string   { return x.val.String() }
 func (x ratVal) String() string   { return rtof(x).String() }
 
-// String returns a decimal approximation of the Float value.
+// String 返回a decimal approximation of the Float value.
 func (x floatVal) String() string {
 	f := x.val
 
@@ -340,7 +340,7 @@ func makeFloatFromLiteral(lit string) Value {
 				return ratVal{r}
 			}
 		}
-		// otherwise use floats
+		// 否则 use floats
 		return makeFloat(f)
 	}
 	return nil
@@ -350,14 +350,14 @@ func makeFloatFromLiteral(lit string) Value {
 // before switching to using floating-point numbers.
 const maxExp = 4 << 10
 
-// smallInt reports whether x would lead to "reasonably"-sized fraction
-// if converted to a *big.Rat.
+// smallInt 报告whether x would lead to "reasonably"-sized fraction
+// if 转换为 a *big.Rat.
 func smallInt(x *big.Int) bool {
 	return x.BitLen() < maxExp
 }
 
-// smallFloat64 reports whether x would lead to "reasonably"-sized fraction
-// if converted to a *big.Rat.
+// smallFloat64 报告whether x would lead to "reasonably"-sized fraction
+// if 转换为 a *big.Rat.
 func smallFloat64(x float64) bool {
 	if math.IsInf(x, 0) {
 		return false
@@ -366,8 +366,8 @@ func smallFloat64(x float64) bool {
 	return -maxExp < e && e < maxExp
 }
 
-// smallFloat reports whether x would lead to "reasonably"-sized fraction
-// if converted to a *big.Rat.
+// smallFloat 报告whether x would lead to "reasonably"-sized fraction
+// if 转换为 a *big.Rat.
 func smallFloat(x *big.Float) bool {
 	if x.IsInf() {
 		return false
@@ -379,13 +379,13 @@ func smallFloat(x *big.Float) bool {
 // ----------------------------------------------------------------------------
 // Factories
 
-// MakeUnknown returns the [Unknown] value.
+// MakeUnknown 返回the [Unknown] value.
 func MakeUnknown() Value { return unknownVal{} }
 
-// MakeBool returns the [Bool] value for b.
+// MakeBool 返回the [Bool] value for b.
 func MakeBool(b bool) Value { return boolVal(b) }
 
-// MakeString returns the [String] value for s.
+// MakeString 返回the [String] value for s.
 func MakeString(s string) Value {
 	if s == "" {
 		return &emptyString // common case
@@ -395,10 +395,10 @@ func MakeString(s string) Value {
 
 var emptyString stringVal
 
-// MakeInt64 returns the [Int] value for x.
+// MakeInt64 返回the [Int] value for x.
 func MakeInt64(x int64) Value { return int64Val(x) }
 
-// MakeUint64 returns the [Int] value for x.
+// MakeUint64 返回the [Int] value for x.
 func MakeUint64(x uint64) Value {
 	if x < 1<<63 {
 		return int64Val(int64(x))
@@ -406,9 +406,9 @@ func MakeUint64(x uint64) Value {
 	return intVal{newInt().SetUint64(x)}
 }
 
-// MakeFloat64 returns the [Float] value for x.
+// MakeFloat64 返回the [Float] value for x.
 // If x is -0.0, the result is 0.0.
-// If x is not finite, the result is an [Unknown].
+// If x is not finite, the result 是一个n [Unknown].
 func MakeFloat64(x float64) Value {
 	if math.IsInf(x, 0) || math.IsNaN(x) {
 		return unknownVal{}
@@ -419,11 +419,11 @@ func MakeFloat64(x float64) Value {
 	return floatVal{newFloat().SetFloat64(x + 0)}
 }
 
-// MakeFromLiteral returns the corresponding integer, floating-point,
+// MakeFromLiteral 返回the corresponding integer, floating-point,
 // imaginary, character, or string value for a Go literal string. The
-// tok value must be one of [token.INT], [token.FLOAT], [token.IMAG],
-// [token.CHAR], or [token.STRING]. The final argument must be zero.
-// If the literal string syntax is invalid, the result is an [Unknown].
+// tok value 必须是 one of [token.INT], [token.FLOAT], [token.IMAG],
+// [token.CHAR], or [token.STRING]. The final argument 必须是 zero.
+// If the literal string syntax is invalid, the result 是一个n [Unknown].
 func MakeFromLiteral(lit string, tok token.Token, zero uint) Value {
 	if zero != 0 {
 		panic("MakeFromLiteral called with non-zero last argument")
@@ -472,11 +472,11 @@ func MakeFromLiteral(lit string, tok token.Token, zero uint) Value {
 // ----------------------------------------------------------------------------
 // Accessors
 //
-// For unknown arguments the result is the zero value for the respective
+// For unknown arguments the result 是 zero value for the respective
 // accessor type, except for Sign, where the result is 1.
 
-// BoolVal returns the Go boolean value of x, which must be a [Bool] or an [Unknown].
-// If x is [Unknown], the result is false.
+// BoolVal 返回the Go boolean value of x, which 必须是 a [Bool] or an [Unknown].
+// If x is [Unknown], the result 为假.
 func BoolVal(x Value) bool {
 	switch x := x.(type) {
 	case boolVal:
@@ -488,7 +488,7 @@ func BoolVal(x Value) bool {
 	}
 }
 
-// StringVal returns the Go string value of x, which must be a [String] or an [Unknown].
+// StringVal 返回the Go string value of x, which 必须是 a [String] or an [Unknown].
 // If x is [Unknown], the result is "".
 func StringVal(x Value) string {
 	switch x := x.(type) {
@@ -501,8 +501,8 @@ func StringVal(x Value) string {
 	}
 }
 
-// Int64Val returns the Go int64 value of x and whether the result is exact;
-// x must be an [Int] or an [Unknown]. If the result is not exact, its value is undefined.
+// Int64Val 返回the Go int64 value of x and whether the result is exact;
+// x 必须是 an [Int] or an [Unknown]. If the result is not exact, its value is undefined.
 // If x is [Unknown], the result is (0, false).
 func Int64Val(x Value) (int64, bool) {
 	switch x := x.(type) {
@@ -517,8 +517,8 @@ func Int64Val(x Value) (int64, bool) {
 	}
 }
 
-// Uint64Val returns the Go uint64 value of x and whether the result is exact;
-// x must be an [Int] or an [Unknown]. If the result is not exact, its value is undefined.
+// Uint64Val 返回the Go uint64 value of x and whether the result is exact;
+// x 必须是 an [Int] or an [Unknown]. If the result is not exact, its value is undefined.
 // If x is [Unknown], the result is (0, false).
 func Uint64Val(x Value) (uint64, bool) {
 	switch x := x.(type) {
@@ -554,8 +554,8 @@ func Float32Val(x Value) (float32, bool) {
 	}
 }
 
-// Float64Val returns the nearest Go float64 value of x and whether the result is exact;
-// x must be numeric or an [Unknown], but not [Complex]. For values too small (too close to 0)
+// Float64Val 返回the nearest Go float64 value of x and whether the result is exact;
+// x 必须是 numeric or an [Unknown], but not [Complex]. For values too small (too close to 0)
 // to represent as float64, [Float64Val] silently underflows to 0. The result sign always
 // matches the sign of x, even for 0.
 // If x is [Unknown], the result is (0, false).
@@ -579,7 +579,7 @@ func Float64Val(x Value) (float64, bool) {
 	}
 }
 
-// Val returns the underlying value for a given constant. Since it returns an
+// Val 返回the underlying value for a given constant. Since it 返回一个
 // interface, it is up to the caller to type assert the result to the expected
 // type. The possible dynamic return types are:
 //
@@ -609,7 +609,7 @@ func Val(x Value) any {
 	}
 }
 
-// Make returns the [Value] for x.
+// Make 返回the [Value] for x.
 //
 //	type of x        result Kind
 //	----------------------------
@@ -639,8 +639,8 @@ func Make(x any) Value {
 	}
 }
 
-// BitLen returns the number of bits required to represent
-// the absolute value x in binary representation; x must be an [Int] or an [Unknown].
+// BitLen 返回the number of bits required to represent
+// the absolute value x in binary representation; x 必须是 an [Int] or an [Unknown].
 // If x is [Unknown], the result is 0.
 func BitLen(x Value) int {
 	switch x := x.(type) {
@@ -659,9 +659,9 @@ func BitLen(x Value) int {
 	}
 }
 
-// Sign returns -1, 0, or 1 depending on whether x < 0, x == 0, or x > 0;
-// x must be numeric or [Unknown]. For complex values x, the sign is 0 if x == 0,
-// otherwise it is != 0. If x is [Unknown], the result is 1.
+// Sign 返回-1, 0, or 1 depending on whether x < 0, x == 0, or x > 0;
+// x 必须是 numeric or [Unknown]. For complex values x, the sign is 0 if x == 0,
+// 否则 it is != 0. If x is [Unknown], the result is 1.
 func Sign(x Value) int {
 	switch x := x.(type) {
 	case int64Val:
@@ -697,8 +697,8 @@ const (
 	wordSize = 1 << _log
 )
 
-// Bytes returns the bytes for the absolute value of x in little-
-// endian binary representation; x must be an [Int].
+// Bytes 返回the bytes for the absolute value of x in little-
+// endian binary representation; x 必须是 an [Int].
 func Bytes(x Value) []byte {
 	var t intVal
 	switch x := x.(type) {
@@ -729,7 +729,7 @@ func Bytes(x Value) []byte {
 	return bytes[:i]
 }
 
-// MakeFromBytes returns the [Int] value given the bytes of its little-endian
+// MakeFromBytes 返回the [Int] value given the bytes of its little-endian
 // binary representation. An empty byte slice argument represents 0.
 func MakeFromBytes(bytes []byte) Value {
 	words := make([]big.Word, (len(bytes)+(wordSize-1))/wordSize)
@@ -759,9 +759,9 @@ func MakeFromBytes(bytes []byte) Value {
 	return makeInt(newInt().SetBits(words[:i]))
 }
 
-// Num returns the numerator of x; x must be [Int], [Float], or [Unknown].
+// Num 返回the numerator of x; x 必须是 [Int], [Float], or [Unknown].
 // If x is [Unknown], or if it is too large or small to represent as a
-// fraction, the result is [Unknown]. Otherwise the result is an [Int]
+// fraction, the result is [Unknown]. Otherwise the result 是一个n [Int]
 // with the same sign as x.
 func Num(x Value) Value {
 	switch x := x.(type) {
@@ -782,9 +782,9 @@ func Num(x Value) Value {
 	return unknownVal{}
 }
 
-// Denom returns the denominator of x; x must be [Int], [Float], or [Unknown].
+// Denom 返回the denominator of x; x 必须是 [Int], [Float], or [Unknown].
 // If x is [Unknown], or if it is too large or small to represent as a
-// fraction, the result is [Unknown]. Otherwise the result is an [Int] >= 1.
+// fraction, the result is [Unknown]. Otherwise the result 是一个n [Int] >= 1.
 func Denom(x Value) Value {
 	switch x := x.(type) {
 	case int64Val, intVal:
@@ -804,8 +804,8 @@ func Denom(x Value) Value {
 	return unknownVal{}
 }
 
-// MakeImag returns the [Complex] value x*i;
-// x must be [Int], [Float], or [Unknown].
+// MakeImag 返回the [Complex] value x*i;
+// x 必须是 [Int], [Float], or [Unknown].
 // If x is [Unknown], the result is [Unknown].
 func MakeImag(x Value) Value {
 	switch x.(type) {
@@ -818,7 +818,7 @@ func MakeImag(x Value) Value {
 	}
 }
 
-// Real returns the real part of x, which must be a numeric or unknown value.
+// Real 返回the real part of x, which 必须是 a numeric or unknown value.
 // If x is [Unknown], the result is [Unknown].
 func Real(x Value) Value {
 	switch x := x.(type) {
@@ -831,7 +831,7 @@ func Real(x Value) Value {
 	}
 }
 
-// Imag returns the imaginary part of x, which must be a numeric or unknown value.
+// Imag 返回the imaginary part of x, which 必须是 a numeric or unknown value.
 // If x is [Unknown], the result is [Unknown].
 func Imag(x Value) Value {
 	switch x := x.(type) {
@@ -850,7 +850,7 @@ func Imag(x Value) Value {
 // Numeric conversions
 
 // ToInt converts x to an [Int] value if x is representable as an [Int].
-// Otherwise it returns an [Unknown].
+// Otherwise it 返回一个 [Unknown].
 func ToInt(x Value) Value {
 	switch x := x.(type) {
 	case int64Val, intVal:
@@ -904,11 +904,11 @@ func ToInt(x Value) Value {
 }
 
 // ToFloat converts x to a [Float] value if x is representable as a [Float].
-// Otherwise it returns an [Unknown].
+// Otherwise it 返回一个 [Unknown].
 func ToFloat(x Value) Value {
 	switch x := x.(type) {
 	case int64Val:
-		return i64tor(x) // x is always a small int
+		return i64tor(x) // x 是一个lways a small int
 	case intVal:
 		if smallInt(x.val) {
 			return itor(x)
@@ -925,7 +925,7 @@ func ToFloat(x Value) Value {
 }
 
 // ToComplex converts x to a [Complex] value if x is representable as a [Complex].
-// Otherwise it returns an [Unknown].
+// Otherwise it 返回一个 [Unknown].
 func ToComplex(x Value) Value {
 	switch x := x.(type) {
 	case int64Val, intVal, ratVal, floatVal:
@@ -939,21 +939,21 @@ func ToComplex(x Value) Value {
 // ----------------------------------------------------------------------------
 // Operations
 
-// is32bit reports whether x can be represented using 32 bits.
+// is32bit 报告whether x can be represented using 32 bits.
 func is32bit(x int64) bool {
 	const s = 32
 	return -1<<(s-1) <= x && x <= 1<<(s-1)-1
 }
 
-// is63bit reports whether x can be represented using 63 bits.
+// is63bit 报告whether x can be represented using 63 bits.
 func is63bit(x int64) bool {
 	const s = 63
 	return -1<<(s-1) <= x && x <= 1<<(s-1)-1
 }
 
-// UnaryOp returns the result of the unary expression op y.
-// The operation must be defined for the operand.
-// If prec > 0 it specifies the ^ (xor) result size in bits.
+// UnaryOp 返回the result of the unary expression op y.
+// The operation 必须是 defined for the operand.
+// If prec > 0 it 指定 the ^ (xor) result size in bits.
 // If y is [Unknown], the result is [Unknown].
 func UnaryOp(op token.Token, y Value, prec uint) Value {
 	switch op {
@@ -996,7 +996,7 @@ func UnaryOp(op token.Token, y Value, prec uint) Value {
 		default:
 			goto Error
 		}
-		// For unsigned types, the result will be negative and
+		// For unsigned types, the result 将是 negative and
 		// thus "too large": We must limit the result precision
 		// to the type's precision.
 		if prec > 0 {
@@ -1040,9 +1040,9 @@ func ord(x Value) int {
 	}
 }
 
-// match returns the matching representation (same type) with the
+// match 返回the matching representation (same type) with the
 // smallest complexity for two values x and y. If one of them is
-// numeric, both of them must be numeric. If one of them is Unknown
+// numeric, both of them 必须是 numeric. If one of them is Unknown
 // or invalid (say, nil) both results are that value.
 func match(x, y Value) (_, _ Value) {
 	switch ox, oy := ord(x), ord(y); {
@@ -1094,8 +1094,8 @@ func match0(x, y Value) (_, _ Value) {
 	return x, x
 }
 
-// BinaryOp returns the result of the binary expression x op y.
-// The operation must be defined for the operands. If one of the
+// BinaryOp 返回the result of the binary expression x op y.
+// The operation 必须是 defined for the operands. If one of the
 // operands is [Unknown], the result is [Unknown].
 // BinaryOp doesn't handle comparisons or shifts; use [Compare]
 // or [Shift] instead.
@@ -1279,7 +1279,7 @@ func sub(x, y Value) Value { return BinaryOp(x, token.SUB, y) }
 func mul(x, y Value) Value { return BinaryOp(x, token.MUL, y) }
 func quo(x, y Value) Value { return BinaryOp(x, token.QUO, y) }
 
-// Shift returns the result of the shift expression x op s
+// Shift 返回the result of the shift expression x op s
 // with op == [token.SHL] or [token.SHR] (<< or >>). x must be
 // an [Int] or an [Unknown]. If x is [Unknown], the result is x.
 func Shift(x Value, op token.Token, s uint) Value {
@@ -1333,8 +1333,8 @@ func cmpZero(x int, op token.Token) bool {
 	panic(fmt.Sprintf("invalid comparison %v %s 0", x, op))
 }
 
-// Compare returns the result of the comparison x op y.
-// The comparison must be defined for the operands.
+// Compare 返回the result of the comparison x op y.
+// The comparison 必须是 defined for the operands.
 // If one of the operands is [Unknown], the result is
 // false.
 func Compare(x_ Value, op token.Token, y_ Value) bool {

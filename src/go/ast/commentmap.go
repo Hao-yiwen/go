@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package ast
 
@@ -13,16 +13,15 @@ import (
 	"strings"
 )
 
-// sortComments sorts the list of comment groups in source order.
+// sortComments 按源代码顺序对注释组列表进行排序。
 func sortComments(list []*CommentGroup) {
 	slices.SortFunc(list, func(a, b *CommentGroup) int {
 		return cmp.Compare(a.Pos(), b.Pos())
 	})
 }
 
-// A CommentMap maps an AST node to a list of comment groups
-// associated with it. See [NewCommentMap] for a description of
-// the association.
+// CommentMap 将 AST 节点映射到与其关联的注释组列表。
+// 有关关联的描述，请参见 [NewCommentMap]。
 type CommentMap map[Node][]*CommentGroup
 
 func (cmap CommentMap) addComment(n Node, c *CommentGroup) {
@@ -35,11 +34,11 @@ func (cmap CommentMap) addComment(n Node, c *CommentGroup) {
 	cmap[n] = list
 }
 
-// nodeList returns the list of nodes of the AST n in source order.
+// nodeList 返回 AST n 中按源代码顺序排列的节点列表。
 func nodeList(n Node) []Node {
 	var list []Node
 	Inspect(n, func(n Node) bool {
-		// don't collect comments
+		// 不收集注释
 		switch n.(type) {
 		case nil, *CommentGroup, *Comment:
 			return false
@@ -48,10 +47,9 @@ func nodeList(n Node) []Node {
 		return true
 	})
 
-	// Note: The current implementation assumes that Inspect traverses the
-	//       AST in depth-first and thus _source_ order. If AST traversal
-	//       does not follow source order, the sorting call below will be
-	//       required.
+	// 注意：当前实现假设 Inspect 以深度优先顺序遍历 AST，
+	//       因此也是按_源代码_顺序。如果 AST 遍历不遵循源代码顺序，
+	//       则需要下面的排序调用。
 	// slices.Sort(list, func(a, b Node) int {
 	//       r := cmp.Compare(a.Pos(), b.Pos())
 	//       if r != 0 {
@@ -63,13 +61,13 @@ func nodeList(n Node) []Node {
 	return list
 }
 
-// A commentListReader helps iterating through a list of comment groups.
+// commentListReader 帮助遍历注释组列表。
 type commentListReader struct {
 	fset     *token.FileSet
 	list     []*CommentGroup
 	index    int
-	comment  *CommentGroup  // comment group at current index
-	pos, end token.Position // source interval of comment group at current index
+	comment  *CommentGroup  // 当前索引处的注释组
+	pos, end token.Position // 当前索引处注释组的源代码区间
 }
 
 func (r *commentListReader) eol() bool {
@@ -85,20 +83,20 @@ func (r *commentListReader) next() {
 	}
 }
 
-// A nodeStack keeps track of nested nodes.
-// A node lower on the stack lexically contains the nodes higher on the stack.
+// nodeStack 跟踪嵌套的节点。
+// 栈中较低的节点在词法上包含栈中较高的节点。
 type nodeStack []Node
 
-// push pops all nodes that appear lexically before n
-// and then pushes n on the stack.
+// push 弹出所有在词法上位于 n 之前的节点，
+// 然后将 n 压入栈中。
 func (s *nodeStack) push(n Node) {
 	s.pop(n.Pos())
 	*s = append((*s), n)
 }
 
-// pop pops all nodes that appear lexically before pos
-// (i.e., whose lexical extent has ended before or at pos).
-// It returns the last node popped.
+// pop 弹出所有在词法上位于 pos 之前的节点
+// （即其词法范围在 pos 之前或恰好在 pos 处结束的节点）。
+// 它返回最后弹出的节点。
 func (s *nodeStack) pop(pos token.Pos) (top Node) {
 	i := len(*s)
 	for i > 0 && (*s)[i-1].End() <= pos {
@@ -109,96 +107,92 @@ func (s *nodeStack) pop(pos token.Pos) (top Node) {
 	return top
 }
 
-// NewCommentMap creates a new comment map by associating comment groups
-// of the comments list with the nodes of the AST specified by node.
+// NewCommentMap 通过将 comments 列表中的注释组与 node 指定的 AST 节点
+// 关联来创建新的注释映射。
 //
-// A comment group g is associated with a node n if:
+// 注释组 g 与节点 n 关联的条件：
 //
-//   - g starts on the same line as n ends
-//   - g starts on the line immediately following n, and there is
-//     at least one empty line after g and before the next node
-//   - g starts before n and is not associated to the node before n
-//     via the previous rules
+//   - g 开始于 n 结束的同一行
+//   - g 开始于 n 之后的下一行，并且在 g 之后、下一个节点之前
+//     至少有一个空行
+//   - g 开始于 n 之前，且未通过上述规则与 n 之前的节点关联
 //
-// NewCommentMap tries to associate a comment group to the "largest"
-// node possible: For instance, if the comment is a line comment
-// trailing an assignment, the comment is associated with the entire
-// assignment rather than just the last operand in the assignment.
+// NewCommentMap 尝试将注释组与尽可能"大"的节点关联：
+// 例如，如果注释是赋值语句后的行注释，则注释与整个赋值语句关联，
+// 而不仅仅是赋值中的最后一个操作数。
 func NewCommentMap(fset *token.FileSet, node Node, comments []*CommentGroup) CommentMap {
 	if len(comments) == 0 {
-		return nil // no comments to map
+		return nil // 没有需要映射的注释
 	}
 
 	cmap := make(CommentMap)
 
-	// set up comment reader r
+	// 设置注释读取器 r
 	tmp := make([]*CommentGroup, len(comments))
-	copy(tmp, comments) // don't change incoming comments
+	copy(tmp, comments) // 不修改传入的注释
 	sortComments(tmp)
-	r := commentListReader{fset: fset, list: tmp} // !r.eol() because len(comments) > 0
+	r := commentListReader{fset: fset, list: tmp} // !r.eol() 因为 len(comments) > 0
 	r.next()
 
-	// create node list in lexical order
+	// 按词法顺序创建节点列表
 	nodes := nodeList(node)
-	nodes = append(nodes, nil) // append sentinel
+	nodes = append(nodes, nil) // 追加哨兵
 
-	// set up iteration variables
+	// 设置迭代变量
 	var (
-		p     Node           // previous node
-		pend  token.Position // end of p
-		pg    Node           // previous node group (enclosing nodes of "importance")
-		pgend token.Position // end of pg
-		stack nodeStack      // stack of node groups
+		p     Node           // 前一个节点
+		pend  token.Position // p 的结束位置
+		pg    Node           // 前一个节点组（"重要"的包围节点）
+		pgend token.Position // pg 的结束位置
+		stack nodeStack      // 节点组栈
 	)
 
 	for _, q := range nodes {
 		var qpos token.Position
 		if q != nil {
-			qpos = fset.Position(q.Pos()) // current node position
+			qpos = fset.Position(q.Pos()) // 当前节点位置
 		} else {
-			// set fake sentinel position to infinity so that
-			// all comments get processed before the sentinel
+			// 将假的哨兵位置设为无穷大，以便
+			// 所有注释在哨兵之前被处理
 			const infinity = 1 << 30
 			qpos.Offset = infinity
 			qpos.Line = infinity
 		}
 
-		// process comments before current node
+		// 处理当前节点之前的注释
 		for r.end.Offset <= qpos.Offset {
-			// determine recent node group
+			// 确定最近的节点组
 			if top := stack.pop(r.comment.Pos()); top != nil {
 				pg = top
 				pgend = fset.Position(pg.End())
 			}
-			// Try to associate a comment first with a node group
-			// (i.e., a node of "importance" such as a declaration);
-			// if that fails, try to associate it with the most recent
-			// node.
-			// TODO(gri) try to simplify the logic below
+			// 首先尝试将注释与节点组关联
+			// （即"重要"节点，如声明）；
+			// 如果失败，尝试将其与最近的节点关联。
+			// TODO(gri) 尝试简化下面的逻辑
 			var assoc Node
 			switch {
 			case pg != nil &&
 				(pgend.Line == r.pos.Line ||
 					pgend.Line+1 == r.pos.Line && r.end.Line+1 < qpos.Line):
-				// 1) comment starts on same line as previous node group ends, or
-				// 2) comment starts on the line immediately after the
-				//    previous node group and there is an empty line before
-				//    the current node
-				// => associate comment with previous node group
+				// 1) 注释开始于前一个节点组结束的同一行，或
+				// 2) 注释开始于前一个节点组之后的下一行，
+				//    且在当前节点之前有一个空行
+				// => 将注释与前一个节点组关联
 				assoc = pg
 			case p != nil &&
 				(pend.Line == r.pos.Line ||
 					pend.Line+1 == r.pos.Line && r.end.Line+1 < qpos.Line ||
 					q == nil):
-				// same rules apply as above for p rather than pg,
-				// but also associate with p if we are at the end (q == nil)
+				// 与上述规则相同，但适用于 p 而不是 pg，
+				// 如果到达末尾（q == nil）也与 p 关联
 				assoc = p
 			default:
-				// otherwise, associate comment with current node
+				// 否则，将注释与当前节点关联
 				if q == nil {
-					// we can only reach here if there was no p
-					// which would imply that there were no nodes
-					panic("internal error: no comments should be associated with sentinel")
+					// 只有在没有 p 的情况下才能到达这里
+					// 这意味着没有节点
+					panic("internal error: no comments 应该是 associated with sentinel")
 				}
 				assoc = q
 			}
@@ -209,11 +203,11 @@ func NewCommentMap(fset *token.FileSet, node Node, comments []*CommentGroup) Com
 			r.next()
 		}
 
-		// update previous node
+		// 更新前一个节点
 		p = q
 		pend = fset.Position(p.End())
 
-		// update previous node group if we see an "important" node
+		// 如果遇到"重要"节点，更新前一个节点组
 		switch q.(type) {
 		case *File, *Field, Decl, Spec, Stmt:
 			stack.push(q)
@@ -223,9 +217,8 @@ func NewCommentMap(fset *token.FileSet, node Node, comments []*CommentGroup) Com
 	return cmap
 }
 
-// Update replaces an old node in the comment map with the new node
-// and returns the new node. Comments that were associated with the
-// old node are associated with the new node.
+// Update 用新节点替换注释映射中的旧节点并返回新节点。
+// 与旧节点关联的注释将与新节点关联。
 func (cmap CommentMap) Update(old, new Node) Node {
 	if list := cmap[old]; len(list) > 0 {
 		delete(cmap, old)
@@ -234,9 +227,8 @@ func (cmap CommentMap) Update(old, new Node) Node {
 	return new
 }
 
-// Filter returns a new comment map consisting of only those
-// entries of cmap for which a corresponding node exists in
-// the AST specified by node.
+// Filter 返回一个新的注释映射，只包含 cmap 中那些
+// 在 node 指定的 AST 中存在对应节点的条目。
 func (cmap CommentMap) Filter(node Node) CommentMap {
 	umap := make(CommentMap)
 	Inspect(node, func(n Node) bool {
@@ -248,8 +240,8 @@ func (cmap CommentMap) Filter(node Node) CommentMap {
 	return umap
 }
 
-// Comments returns the list of comment groups in the comment map.
-// The result is sorted in source order.
+// Comments 返回注释映射中的注释组列表。
+// 结果按源代码顺序排序。
 func (cmap CommentMap) Comments() []*CommentGroup {
 	list := make([]*CommentGroup, 0, len(cmap))
 	for _, e := range cmap {
@@ -263,12 +255,12 @@ func summary(list []*CommentGroup) string {
 	const maxLen = 40
 	var buf bytes.Buffer
 
-	// collect comments text
+	// 收集注释文本
 loop:
 	for _, group := range list {
-		// Note: CommentGroup.Text() does too much work for what we
-		//       need and would only replace this innermost loop.
-		//       Just do it explicitly.
+		// 注意：CommentGroup.Text() 对于我们的需求做了太多工作，
+		//       它只会替换这个最内层循环。
+		//       直接显式处理。
 		for _, comment := range group.List {
 			if buf.Len() >= maxLen {
 				break loop
@@ -277,13 +269,13 @@ loop:
 		}
 	}
 
-	// truncate if too long
+	// 如果太长则截断
 	if buf.Len() > maxLen {
 		buf.Truncate(maxLen - 3)
 		buf.WriteString("...")
 	}
 
-	// replace any invisibles with blanks
+	// 用空格替换所有不可见字符
 	bytes := buf.Bytes()
 	for i, b := range bytes {
 		switch b {
@@ -296,7 +288,7 @@ loop:
 }
 
 func (cmap CommentMap) String() string {
-	// print map entries in sorted order
+	// 按排序顺序打印映射条目
 	var nodes []Node
 	for node := range cmap {
 		nodes = append(nodes, node)
@@ -313,7 +305,7 @@ func (cmap CommentMap) String() string {
 	fmt.Fprintln(&buf, "CommentMap {")
 	for _, node := range nodes {
 		comment := cmap[node]
-		// print name of identifiers; print node type for other nodes
+		// 打印标识符的名称；对于其他节点打印节点类型
 		var s string
 		if ident, ok := node.(*Ident); ok {
 			s = ident.Name

@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -20,13 +20,13 @@ import (
 	"encoding/json/jsontext"
 )
 
-// This file contains an optimized marshal and unmarshal implementation
+// This file 包含 an optimized marshal and unmarshal implementation
 // for the any type. This type is often used when the Go program has
-// no knowledge of the JSON schema. This is a common enough occurrence
+// no knowledge of the JSON schema. This 是一个 common enough occurrence
 // to justify the complexity of adding logic for this.
 
 // marshalValueAny marshals a Go any as a JSON value.
-// This assumes that there are no special formatting directives
+// Th是一个ssumes that there are no special formatting directives
 // for any possible nested value.
 func marshalValueAny(enc *jsontext.Encoder, val any, mo *jsonopts.Struct) error {
 	switch val := val.(type) {
@@ -57,9 +57,9 @@ func marshalValueAny(enc *jsontext.Encoder, val any, mo *jsonopts.Struct) error 
 }
 
 // unmarshalValueAny unmarshals a JSON value as a Go any.
-// This assumes that there are no special formatting directives
+// Th是一个ssumes that there are no special formatting directives
 // for any possible nested value.
-// Duplicate names must be rejected since this does not implement merging.
+// Duplicate names 必须是 rejected since this does not implement merging.
 func unmarshalValueAny(dec *jsontext.Decoder, uo *jsonopts.Struct) (any, error) {
 	switch k := dec.PeekKind(); k {
 	case '{':
@@ -114,7 +114,7 @@ func marshalObjectAny(enc *jsontext.Encoder, obj map[string]any, mo *jsonopts.St
 		defer leavePointer(&xe.SeenPointers, v)
 	}
 
-	// Handle empty maps.
+	// Handle empty 映射.
 	if len(obj) == 0 {
 		if mo.Flags.Get(jsonflags.FormatNilMapAsNull) && obj == nil {
 			return enc.WriteToken(jsontext.Null)
@@ -133,7 +133,7 @@ func marshalObjectAny(enc *jsontext.Encoder, obj map[string]any, mo *jsonopts.St
 	if err := enc.WriteToken(jsontext.BeginObject); err != nil {
 		return err
 	}
-	// A Go map guarantees that each entry has a unique key
+	// 一个Go map guarantees that each entry has a unique key
 	// The only possibility of duplicates is due to invalid UTF-8.
 	if !mo.Flags.Get(jsonflags.AllowInvalidUTF8) {
 		xe.Tokens.Last.DisableNamespace()
@@ -181,7 +181,7 @@ func unmarshalObjectAny(dec *jsontext.Decoder, uo *jsonopts.Struct) (map[string]
 		panic("BUG: invalid kind: " + tok.Kind().String())
 	}
 	obj := make(map[string]any)
-	// A Go map guarantees that each entry has a unique key
+	// 一个Go map guarantees that each entry has a unique key
 	// The only possibility of duplicates is due to invalid UTF-8.
 	if !uo.Flags.Get(jsonflags.AllowInvalidUTF8) {
 		export.Decoder(dec).Tokens.Last.DisableNamespace()

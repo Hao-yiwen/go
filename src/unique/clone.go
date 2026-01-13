@@ -1,6 +1,6 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package unique
 
@@ -10,14 +10,12 @@ import (
 	"unsafe"
 )
 
-// clone makes a copy of value, and may update string values found in value
-// with a cloned version of those strings. The purpose of explicitly cloning
-// strings is to avoid accidentally giving a large string a long lifetime.
+// clone 复制 value，并可能用这些字符串的克隆版本更新 value 中找到的字符串值。
+// 显式克隆字符串的目的是避免意外地给大字符串一个长生命周期。
 //
-// Note that this will clone strings in structs and arrays found in value,
-// and will clone value if it itself is a string. It will not, however, clone
-// strings if value is of interface or slice type (that is, found via an
-// indirection).
+// 注意，这将克隆 value 中找到的结构体和数组中的字符串，
+// 如果 value 本身是字符串，也会克隆 value。但是，如果 value 是接口或切片类型
+// （即通过间接引用找到的），则不会克隆字符串。
 func clone[T comparable](value T, seq *cloneSeq) T {
 	for _, offset := range seq.stringOffsets {
 		ps := (*string)(unsafe.Pointer(uintptr(unsafe.Pointer(&value)) + offset))
@@ -26,15 +24,15 @@ func clone[T comparable](value T, seq *cloneSeq) T {
 	return abi.EscapeToResultNonString(value)
 }
 
-// singleStringClone describes how to clone a single string.
+// singleStringClone 描述如何克隆单个字符串。
 var singleStringClone = cloneSeq{stringOffsets: []uintptr{0}}
 
-// cloneSeq describes how to clone a value of a particular type.
+// cloneSeq 描述如何克隆特定类型的值。
 type cloneSeq struct {
 	stringOffsets []uintptr
 }
 
-// makeCloneSeq creates a cloneSeq for a type.
+// makeCloneSeq 为类型创建 cloneSeq。
 func makeCloneSeq(typ *abi.Type) cloneSeq {
 	if typ == nil {
 		return cloneSeq{}
@@ -52,7 +50,7 @@ func makeCloneSeq(typ *abi.Type) cloneSeq {
 	return seq
 }
 
-// buildStructCloneSeq populates a cloneSeq for an abi.Type that has Kind abi.Struct.
+// buildStructCloneSeq 为 Kind 为 abi.Struct 的 abi.Type 填充 cloneSeq。
 func buildStructCloneSeq(typ *abi.Type, seq *cloneSeq, baseOffset uintptr) {
 	styp := typ.StructType()
 	for i := range styp.Fields {
@@ -68,7 +66,7 @@ func buildStructCloneSeq(typ *abi.Type, seq *cloneSeq, baseOffset uintptr) {
 	}
 }
 
-// buildArrayCloneSeq populates a cloneSeq for an abi.Type that has Kind abi.Array.
+// buildArrayCloneSeq 为 Kind 为 abi.Array 的 abi.Type 填充 cloneSeq。
 func buildArrayCloneSeq(typ *abi.Type, seq *cloneSeq, baseOffset uintptr) {
 	atyp := typ.ArrayType()
 	etyp := atyp.Elem

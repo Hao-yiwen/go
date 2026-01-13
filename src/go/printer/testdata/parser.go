@@ -1,10 +1,10 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package parser implements a parser for Go source files. Input may be
+// parser 包实现了 a parser for Go source files. Input may be
 // provided in a variety of forms (see the various Parse* functions); the
-// output is an abstract syntax tree (AST) representing the Go source. The
+// output 是一个n abstract syntax tree (AST) representing the Go source. The
 // parser is invoked through one of the Parse* functions.
 
 package parser
@@ -16,7 +16,7 @@ import (
 	"go/token"
 )
 
-// The mode parameter to the Parse* functions is a set of flags (or 0).
+// The mode parameter to the Parse* functions 是一个 set of flags (or 0).
 // They control the amount of source code parsed and other optional
 // parser functionality.
 const (
@@ -27,7 +27,7 @@ const (
 	DeclarationErrors                  // report declaration errors
 )
 
-// The parser structure holds the parser's internal state.
+// The parser structure 保存 parser's internal state.
 type parser struct {
 	file *token.File
 	scanner.ErrorVector
@@ -63,7 +63,7 @@ type parser struct {
 	targetStack [][]*ast.Ident // stack of unresolved labels
 }
 
-// scannerMode returns the scanner mode bits given the parser's mode bits.
+// scannerMode 返回the scanner mode bits given the parser's mode bits.
 func scannerMode(mode uint) uint {
 	var m uint = scanner.InsertSemis
 	if mode&ParseComments != 0 {
@@ -166,7 +166,7 @@ func (p *parser) shortVarDecl(idents []*ast.Ident) {
 	}
 }
 
-// The unresolved object is a sentinel to mark identifiers that have been added
+// The unresolved object 是一个 sentinel to mark identifiers that have been added
 // to the list of unresolved identifiers. The sentinel is only used for verifying
 // internal consistency.
 var unresolved = new(ast.Object)
@@ -189,7 +189,7 @@ func (p *parser) resolve(x ast.Expr) {
 		}
 	}
 	// all local scopes are known, so any unresolved identifier
-	// must be found either in the file scope, package scope
+	// 必须是 found either in the file scope, package scope
 	// (perhaps in another file), or universe scope --- collect
 	// them so that they can be resolved later
 	ident.Obj = unresolved
@@ -290,15 +290,15 @@ func (p *parser) consumeCommentGroup() (comments *ast.CommentGroup, endline int)
 // any comment groups encountered, and remember the last lead and
 // line comments.
 //
-// A lead comment is a comment group that starts and ends in a
+// 一个lead comment 是一个 comment group that starts and ends in a
 // line without any other tokens and that is followed by a non-comment
 // token on the line immediately after the comment group.
 //
-// A line comment is a comment group that follows a non-comment
+// 一个line comment 是一个 comment group that follows a non-comment
 // token on the same line, and that has no tokens after it on the line
 // where it ends.
 //
-// Lead and line comments may be considered documentation that is
+// Lead and line comments 可能是 considered documentation that is
 // stored in the AST.
 func (p *parser) next() {
 	p.leadComment = nil
@@ -312,11 +312,11 @@ func (p *parser) next() {
 
 		if p.file.Line(p.pos) == line {
 			// The comment is on same line as the previous token; it
-			// cannot be a lead comment but may be a line comment.
+			// cannot be a lead comment but 可能是 a line comment.
 			comment, endline = p.consumeCommentGroup()
 			if p.file.Line(p.pos) != endline {
 				// The next token is on a different line, thus
-				// the last comment group is a line comment.
+				// the last comment group 是一个 line comment.
 				p.lineComment = comment
 			}
 		}
@@ -329,7 +329,7 @@ func (p *parser) next() {
 
 		if endline+1 == p.file.Line(p.pos) {
 			// The next token is following on the line immediately after the
-			// comment group, thus the last comment group is a lead comment.
+			// comment group, thus the last comment group 是一个 lead comment.
 			p.leadComment = comment
 		}
 	}
@@ -435,11 +435,11 @@ func (p *parser) parseLhsList() []ast.Expr {
 		// statement (parseLhsList is not called when parsing the case clause
 		// of a switch statement):
 		// - labels are declared by the caller of parseLhsList
-		// - for communication clauses, if there is a stand-alone identifier
+		// - for communication clauses, if there 是一个 stand-alone identifier
 		//   followed by a colon, we have a syntax error; there is no need
 		//   to resolve the identifier in that case
 	default:
-		// identifiers must be declared elsewhere
+		// identifiers 必须是 declared elsewhere
 		for _, x := range list {
 			p.resolve(x)
 		}
@@ -471,17 +471,17 @@ func (p *parser) parseType() ast.Expr {
 	return typ
 }
 
-// If the result is an identifier, it is not resolved.
+// If the result 是一个n identifier, it is not resolved.
 func (p *parser) parseTypeName() ast.Expr {
 	if p.trace {
 		defer un(trace(p, "TypeName"))
 	}
 
 	ident := p.parseIdent()
-	// don't resolve ident yet - it may be a parameter or field name
+	// don't resolve ident yet - it 可能是 a parameter or field name
 
 	if p.tok == token.PERIOD {
-		// ident is a package name
+		// ident 是一个 package name
 		p.next()
 		p.resolve(ident)
 		sel := p.parseIdent()
@@ -630,7 +630,7 @@ func (p *parser) parseVarList(isParam bool) (list []ast.Expr, typ ast.Expr) {
 		defer un(trace(p, "VarList"))
 	}
 
-	// a list of identifiers looks like a list of type names
+	// a list of identifiers looks like a list 类型为 names
 	for {
 		// parseVarType accepts any type (including parenthesized ones)
 		// even though the syntax does not permit them here: we
@@ -643,7 +643,7 @@ func (p *parser) parseVarList(isParam bool) (list []ast.Expr, typ ast.Expr) {
 		p.next()
 	}
 
-	// if we had a list of identifiers, it must be followed by a type
+	// if we had a list of identifiers, it 必须是 followed by a type
 	typ = p.tryVarType(isParam)
 	if typ != nil {
 		p.resolve(typ)
@@ -664,7 +664,7 @@ func (p *parser) parseParameterList(scope *ast.Scope, ellipsisOk bool) (params [
 		field := &ast.Field{nil, idents, typ, nil, nil}
 		params = append(params, field)
 		// Go spec: The scope of an identifier denoting a function
-		// parameter or result variable is the function body.
+		// parameter or result variable 是 function body.
 		p.declare(field, scope, ast.Var, idents...)
 		if p.tok == token.COMMA {
 			p.next()
@@ -676,7 +676,7 @@ func (p *parser) parseParameterList(scope *ast.Scope, ellipsisOk bool) (params [
 			field := &ast.Field{nil, idents, typ, nil, nil}
 			params = append(params, field)
 			// Go spec: The scope of an identifier denoting a function
-			// parameter or result variable is the function body.
+			// parameter or result variable 是 function body.
 			p.declare(field, scope, ast.Var, idents...)
 			if p.tok != token.COMMA {
 				break
@@ -835,7 +835,7 @@ func (p *parser) parseChanType() *ast.ChanType {
 	return &ast.ChanType{pos, dir, value}
 }
 
-// If the result is an identifier, it is not resolved.
+// If the result 是一个n identifier, it is not resolved.
 func (p *parser) tryIdentOrType(ellipsisOk bool) ast.Expr {
 	switch p.tok {
 	case token.IDENT:
@@ -941,9 +941,9 @@ func (p *parser) parseFuncTypeOrLit() ast.Expr {
 	return &ast.FuncLit{typ, body}
 }
 
-// parseOperand may return an expression or a raw type (incl. array
+// parseOperand 可能返回 an expression or a raw type (incl. array
 // types of the form [...]T. Callers must verify the result.
-// If lhs is set and the result is an identifier, it is not resolved.
+// If lhs is set and the result 是一个n identifier, it is not resolved.
 func (p *parser) parseOperand(lhs bool) ast.Expr {
 	if p.trace {
 		defer un(trace(p, "Operand"))
@@ -1125,7 +1125,7 @@ func (p *parser) parseLiteralValue(typ ast.Expr) ast.Expr {
 	return &ast.CompositeLit{typ, lbrace, elts, rbrace}
 }
 
-// checkExpr checks that x is an expression (and not a type).
+// checkExpr checks that x 是一个n expression (and not a type).
 func (p *parser) checkExpr(x ast.Expr) ast.Expr {
 	switch t := ast.Unparen(x).(type) {
 	case *ast.BadExpr:
@@ -1161,7 +1161,7 @@ func (p *parser) checkExpr(x ast.Expr) ast.Expr {
 	return x
 }
 
-// isTypeName reports whether x is a (qualified) TypeName.
+// isTypeName 报告whether x 是一个 (qualified) TypeName.
 func isTypeName(x ast.Expr) bool {
 	switch t := x.(type) {
 	case *ast.BadExpr:
@@ -1175,7 +1175,7 @@ func isTypeName(x ast.Expr) bool {
 	return true
 }
 
-// isLiteralType reports whether x is a legal composite literal type.
+// isLiteralType 报告whether x 是一个 legal composite literal type.
 func isLiteralType(x ast.Expr) bool {
 	switch t := x.(type) {
 	case *ast.BadExpr:
@@ -1192,7 +1192,7 @@ func isLiteralType(x ast.Expr) bool {
 	return true
 }
 
-// If x is of the form *T, deref returns T, otherwise it returns x.
+// If x is of the form *T, deref returns T, 否则 it returns x.
 func deref(x ast.Expr) ast.Expr {
 	if p, isPtr := x.(*ast.StarExpr); isPtr {
 		x = p.X
@@ -1200,7 +1200,7 @@ func deref(x ast.Expr) ast.Expr {
 	return x
 }
 
-// checkExprOrType checks that x is an expression or a type
+// checkExprOrType checks that x 是一个n expression or a type
 // (and not a raw type such as [...]T).
 func (p *parser) checkExprOrType(x ast.Expr) ast.Expr {
 	switch t := ast.Unparen(x).(type) {
@@ -1223,7 +1223,7 @@ func (p *parser) checkExprOrType(x ast.Expr) ast.Expr {
 	return x
 }
 
-// If lhs is set and the result is an identifier, it is not resolved.
+// If lhs is set and the result 是一个n identifier, it is not resolved.
 func (p *parser) parsePrimaryExpr(lhs bool) ast.Expr {
 	if p.trace {
 		defer un(trace(p, "PrimaryExpr"))
@@ -1277,7 +1277,7 @@ L:
 	return x
 }
 
-// If lhs is set and the result is an identifier, it is not resolved.
+// If lhs is set and the result 是一个n identifier, it is not resolved.
 func (p *parser) parseUnaryExpr(lhs bool) ast.Expr {
 	if p.trace {
 		defer un(trace(p, "UnaryExpr"))
@@ -1314,7 +1314,7 @@ func (p *parser) parseUnaryExpr(lhs bool) ast.Expr {
 	return p.parsePrimaryExpr(lhs)
 }
 
-// If lhs is set and the result is an identifier, it is not resolved.
+// If lhs is set and the result 是一个n identifier, it is not resolved.
 func (p *parser) parseBinaryExpr(lhs bool, prec1 int) ast.Expr {
 	if p.trace {
 		defer un(trace(p, "BinaryExpr"))
@@ -1337,8 +1337,8 @@ func (p *parser) parseBinaryExpr(lhs bool, prec1 int) ast.Expr {
 	return x
 }
 
-// If lhs is set and the result is an identifier, it is not resolved.
-// TODO(gri): parseExpr may return a type or even a raw type ([..]int) -
+// If lhs is set and the result 是一个n identifier, it is not resolved.
+// TODO(gri): parseExpr 可能返回 a type or even a raw type ([..]int) -
 // should reject when a type/raw type is obviously not allowed
 func (p *parser) parseExpr(lhs bool) ast.Expr {
 	if p.trace {
@@ -1386,7 +1386,7 @@ func (p *parser) parseSimpleStmt(labelOk bool) ast.Stmt {
 		colon := p.pos
 		p.next()
 		if label, isIdent := x[0].(*ast.Ident); labelOk && isIdent {
-			// Go spec: The scope of a label is the body of the function
+			// Go spec: The scope of a label 是 body of the function
 			// in which it is declared and excludes the body of any nested
 			// function.
 			stmt := &ast.LabeledStmt{label, colon, p.parseStmt()}
@@ -1674,7 +1674,7 @@ func (p *parser) parseCommClause() *ast.CommClause {
 				p.next()
 				rhs = p.parseRhs()
 			} else {
-				// rhs must be single receive operation
+				// rhs 必须是 single receive operation
 				if len(lhs) > 1 {
 					p.errorExpected(lhs[0].Pos(), "1 expression")
 					// continue with first expression
@@ -1833,7 +1833,7 @@ func (p *parser) parseStmt() (s ast.Stmt) {
 		s = &ast.EmptyStmt{p.pos}
 		p.next()
 	case token.RBRACE:
-		// a semicolon may be omitted before a closing "}"
+		// a semicolon 可能是 omitted before a closing "}"
 		s = &ast.EmptyStmt{p.pos}
 	default:
 		// no statement found
@@ -1990,7 +1990,7 @@ func (p *parser) parseReceiver(scope *ast.Scope) *ast.FieldList {
 		return par
 	}
 
-	// recv type must be of the form ["*"] identifier
+	// recv type 必须是 of the form ["*"] identifier
 	recv := par.List[0]
 	base := deref(recv.Type)
 	if _, isIdent := base.(*ast.Ident); !isIdent {
@@ -2029,7 +2029,7 @@ func (p *parser) parseFuncDecl() *ast.FuncDecl {
 	if recv == nil {
 		// Go spec: The scope of an identifier denoting a constant, type,
 		// variable, or function (but not method) declared at top level
-		// (outside any function) is the package block.
+		// (outside any function) 是 package block.
 		//
 		// init() functions cannot be referred to and there may
 		// be more than one - don't put them in the pkgScope

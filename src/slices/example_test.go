@@ -112,6 +112,7 @@ func ExampleDeleteFunc() {
 	seq := []int{0, 1, 1, 2, 3, 5, 8}
 	seq = slices.DeleteFunc(seq, func(n int) bool {
 		return n%2 != 0 // delete the odd numbers
+		// 删除奇数
 	})
 	fmt.Println(seq)
 	// Output:

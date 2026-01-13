@@ -1,84 +1,79 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// simdgen is an experiment in generating Go <-> asm SIMD mappings.
+// simdgen 是一个生成 Go <-> asm SIMD 映射的实验性工具。
 //
-// Usage: simdgen [-xedPath=path] [-q=query] input.yaml...
+// 用法：simdgen [-xedPath=path] [-q=query] input.yaml...
 //
-// If -xedPath is provided, one of the inputs is a sum of op-code definitions
-// generated from the Intel XED data at path.
+// 如果提供了 -xedPath，则其中一个输入是从指定路径的 Intel XED 数据
+// 生成的操作码定义的总和。
 //
-// If input YAML files are provided, each file is read as an input value. See
-// [unify.Closure.UnmarshalYAML] or "go doc unify.Closure.UnmarshalYAML" for the
-// format of these files.
+// 如果提供了输入 YAML 文件，每个文件都作为输入值读取。请参阅
+// [unify.Closure.UnmarshalYAML] 或 "go doc unify.Closure.UnmarshalYAML"
+// 了解这些文件的格式。
 //
-// TODO: Example definitions and values.
+// TODO: 示例定义和值。
 //
-// The command unifies across all of the inputs and prints all possible results
-// of this unification.
+// 该命令对所有输入进行统一，并打印此统一的所有可能结果。
 //
-// If the -q flag is provided, its string value is parsed as a value and treated
-// as another input to unification. This is intended as a way to "query" the
-// result, typically by narrowing it down to a small subset of results.
+// 如果提供了 -q 标志，其字符串值将被解析为一个值，并作为统一的另一个输入。
+// 这旨在作为"查询"结果的一种方式，通常是将其缩小到结果的一小部分。
 //
-// Typical usage:
+// 典型用法：
 //
 //	go run . -xedPath $XEDPATH *.yaml
 //
-// To see just the definitions generated from XED, run:
+// 要仅查看从 XED 生成的定义，运行：
 //
 //	go run . -xedPath $XEDPATH
 //
-// (This works because if there's only one input, there's nothing to unify it
-// with, so the result is simply itself.)
+// （这是因为如果只有一个输入，就没有东西可以与之统一，
+// 所以结果就是它本身。）
 //
-// To see just the definitions for VPADDQ:
+// 要仅查看 VPADDQ 的定义：
 //
 //	go run . -xedPath $XEDPATH -q '{asm: VPADDQ}'
 //
-// simdgen can also generate Go definitions of SIMD mappings:
-// To generate go files to the go root, run:
+// simdgen 还可以生成 SIMD 映射的 Go 定义：
+// 要将 go 文件生成到 go root，运行：
 //
 //	go run . -xedPath $XEDPATH -o godefs -goroot $PATH/TO/go go.yaml categories.yaml types.yaml
 //
-// types.yaml is already written, it specifies the shapes of vectors.
-// categories.yaml and go.yaml contains definitions that unifies with types.yaml and XED
-// data, you can find an example in ops/AddSub/.
+// types.yaml 已经编写好了，它指定了向量的形状。
+// categories.yaml 和 go.yaml 包含与 types.yaml 和 XED
+// 数据统一的定义，你可以在 ops/AddSub/ 中找到示例。
 //
-// When generating Go definitions, simdgen do 3 "magic"s:
-// - It splits masked operations(with op's [Masked] field set) to const and non const:
-//   - One is a normal masked operation, the original
-//   - The other has its mask operand's [Const] fields set to "K0".
-//   - This way the user does not need to provide a separate "K0"-masked operation def.
+// 生成 Go 定义时，simdgen 做了 3 个"魔法"：
+// - 它将掩码操作（设置了 op 的 [Masked] 字段）拆分为常量和非常量：
+//   - 一个是正常的掩码操作，即原始操作
+//   - 另一个将其掩码操作数的 [Const] 字段设置为 "K0"。
+//   - 这样用户就不需要提供单独的 "K0" 掩码操作定义。
 //
-// - It deduplicates intrinsic names that have duplicates:
-//   - If there are two operations that shares the same signature, one is AVX512 the other
-//     is before AVX512, the other will be selected.
-//   - This happens often when some operations are defined both before AVX512 and after.
-//     This way the user does not need to provide a separate "K0" operation for the
-//     AVX512 counterpart.
+// - 它对具有重复项的内置函数名称进行去重：
+//   - 如果有两个共享相同签名的操作，一个是 AVX512，另一个
+//     是 AVX512 之前的，则会选择另一个。
+//   - 当某些操作在 AVX512 之前和之后都有定义时，这种情况经常发生。
+//     这样用户就不需要为 AVX512 对应物提供单独的 "K0" 操作。
 //
-// - It copies the op's [ConstImm] field to its immediate operand's [Const] field.
-//   - This way the user does not need to provide verbose op definition while only
-//     the const immediate field is different. This is useful to reduce verbosity of
-//     compares with imm control predicates.
+// - 它将 op 的 [ConstImm] 字段复制到其立即数操作数的 [Const] 字段。
+//   - 这样用户就不需要提供冗长的 op 定义，而只需要
+//     常量立即数字段不同。这对于减少带有立即数控制谓词的
+//     比较的冗长性很有用。
 //
-// These 3 magics could be disabled by enabling -nosplitmask, -nodedup or
-// -noconstimmporting flags.
+// 这 3 个魔法可以通过启用 -nosplitmask、-nodedup 或
+// -noconstimmporting 标志来禁用。
 //
-// simdgen right now only supports amd64, -arch=$OTHERARCH will trigger a fatal error.
+// simdgen 目前仅支持 amd64，-arch=$OTHERARCH 将触发致命错误。
 package main
 
-// Big TODOs:
+// 重要 TODO：
 //
-// - This can produce duplicates, which can also lead to less efficient
-// environment merging. Add hashing and use it for deduplication. Be careful
-// about how this shows up in debug traces, since it could make things
-// confusing if we don't show it happening.
+// - 这可能产生重复项，这也可能导致环境合并效率降低。
+// 添加哈希并使用它进行去重。注意这在调试跟踪中的显示方式，
+// 因为如果我们不显示它的发生可能会使事情变得混乱。
 //
-// - Do I need Closure, Value, and Domain? It feels like I should only need two
-// types.
+// - 我需要 Closure、Value 和 Domain 吗？感觉我应该只需要两种类型。
 
 import (
 	"cmp"
@@ -148,13 +143,13 @@ func main() {
 		log.Fatalf("simdgen only supports amd64")
 	}
 
-	// Load XED into a defs set.
+	// 将 XED 加载到定义集中。
 	if *xedPath != "" {
 		xedDefs := loadXED(*xedPath)
 		inputs = append(inputs, unify.NewSum(xedDefs...))
 	}
 
-	// Load query.
+	// 加载查询。
 	if *flagQ != "" {
 		r := strings.NewReader(*flagQ)
 		def, err := unify.Read(r, "<query>", unify.ReadOpts{})
@@ -164,7 +159,7 @@ func main() {
 		inputs = append(inputs, def)
 	}
 
-	// Load defs files.
+	// 加载定义文件。
 	must := make(map[*unify.Value]struct{})
 	for _, path := range flag.Args() {
 		defs, err := unify.ReadFile(path, unify.ReadOpts{})
@@ -174,14 +169,14 @@ func main() {
 		inputs = append(inputs, defs)
 
 		if filepath.Base(path) == "go.yaml" {
-			// These must all be used in the final result
+			// 这些必须全部在最终结果中使用
 			for def := range defs.Summands() {
 				must[def] = struct{}{}
 			}
 		}
 	}
 
-	// Prepare for unification
+	// 准备统一
 	if *flagDebugUnify {
 		unify.Debug.UnifyLog = os.Stderr
 	}
@@ -194,31 +189,30 @@ func main() {
 		defer f.Close()
 	}
 
-	// Unify!
+	// 统一！
 	unified, err := unify.Unify(inputs...)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Validate results.
+	// 验证结果。
 	//
-	// Don't validate if this is a command-line query because that tends to
-	// eliminate lots of required defs and is used in cases where maybe defs
-	// aren't enumerable anyway.
+	// 如果这是命令行查询，则不验证，因为这往往会消除许多必需的定义，
+	// 并且用于定义可能无法枚举的情况。
 	if *flagQ == "" && len(must) > 0 {
 		validate(unified, must)
 	}
 
-	// Print results.
+	// 打印结果。
 	switch *flagO {
 	case "yaml":
-		// Produce a result that looks like encoding a slice, but stream it.
+		// 生成一个看起来像编码切片的结果，但是流式输出。
 		fmt.Println("!sum")
 		var val1 [1]*unify.Value
 		for val := range unified.All() {
 			val1[0] = val
-			// We have to make a new encoder each time or it'll print a document
-			// separator between each object.
+			// 我们每次都必须创建一个新的编码器，否则它会在每个对象之间
+			// 打印文档分隔符。
 			enc := yaml.NewEncoder(os.Stdout)
 			if err := enc.Encode(val1); err != nil {
 				log.Fatal(err)
@@ -241,9 +235,9 @@ func main() {
 }
 
 func validate(cl unify.Closure, required map[*unify.Value]struct{}) {
-	// Validate that:
-	// 1. All final defs are exact
-	// 2. All required defs are used
+	// 验证：
+	// 1. 所有最终定义都是精确的
+	// 2. 所有必需的定义都被使用
 	for def := range cl.All() {
 		if _, ok := def.Domain.(unify.Def); !ok {
 			fmt.Fprintf(os.Stderr, "%s: expected Def, got %T\n", def.PosString(), def.Domain)
@@ -259,7 +253,7 @@ func validate(cl unify.Closure, required map[*unify.Value]struct{}) {
 			delete(required, root)
 		}
 	}
-	// Report unused defs
+	// 报告未使用的定义
 	unused := slices.SortedFunc(maps.Keys(required),
 		func(a, b *unify.Value) int {
 			return cmp.Or(

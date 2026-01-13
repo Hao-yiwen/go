@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package cmp_test
 
@@ -93,8 +93,7 @@ func TestCompare(t *testing.T) {
 }
 
 func TestSort(t *testing.T) {
-	// Test that our comparison function is consistent with
-	// sort.Float64s.
+	// 测试我们的比较函数与 sort.Float64s 是否一致。
 	input := []float64{1.0, 0.0, negzero, math.Inf(1), math.Inf(-1), math.NaN()}
 	sort.Float64s(input)
 	for i := 0; i < len(input)-1; i++ {
@@ -128,8 +127,8 @@ func TestOr(t *testing.T) {
 }
 
 func ExampleOr() {
-	// Suppose we have some user input
-	// that may or may not be an empty string
+	// 假设我们有一些用户输入，
+	// 可能是空字符串，也可能不是
 	userInput1 := ""
 	userInput2 := "some text"
 
@@ -156,7 +155,7 @@ func ExampleOr_sort() {
 		{"bar", "carol", 1.00},
 		{"foo", "bob", 4.00},
 	}
-	// Sort by customer first, product second, and last by higher price
+	// 先按客户排序，其次按产品排序，最后按价格从高到低排序
 	slices.SortFunc(orders, func(a, b Order) int {
 		return cmp.Or(
 			strings.Compare(a.Customer, b.Customer),

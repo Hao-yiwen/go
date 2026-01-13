@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package os
 
@@ -33,11 +33,11 @@ func (file *File) readdir(n int, mode readdirMode) (names []string, dirents []Di
 		n = -1
 	}
 	for n != 0 {
-		// Refill the buffer if necessary.
+		// 如果必要，重新填充缓冲区。
 		if d.bufp >= d.nbuf {
 			nb, err := file.Read(d.buf[:])
 
-			// Update the buffer state before checking for errors.
+			// 在检查错误之前更新缓冲区状态。
 			d.bufp, d.nbuf = 0, nb
 
 			if err != nil {

@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package template_test
 
@@ -12,7 +12,7 @@ import (
 )
 
 func ExampleTemplate() {
-	// Define a template.
+	// 定义一个模板。
 	const letter = `
 Dear {{.Name}},
 {{if .Attended}}
@@ -27,7 +27,7 @@ Best wishes,
 Josie
 `
 
-	// Prepare some data to insert into the template.
+	// 准备一些要插入模板的数据。
 	type Recipient struct {
 		Name, Gift string
 		Attended   bool
@@ -38,10 +38,10 @@ Josie
 		{"Cousin Rodney", "", false},
 	}
 
-	// Create a new template and parse the letter into it.
+	// 创建一个新模板并将信件解析到其中。
 	t := template.Must(template.New("letter").Parse(letter))
 
-	// Execute the template for each recipient.
+	// 为每个收件人执行模板。
 	for _, r := range recipients {
 		err := t.Execute(os.Stdout, r)
 		if err != nil {
@@ -49,7 +49,7 @@ Josie
 		}
 	}
 
-	// Output:
+	// 输出：
 	// Dear Aunt Mildred,
 	//
 	// It was a pleasure to see you at the wedding.
@@ -74,7 +74,7 @@ Josie
 	// Josie
 }
 
-// The following example is duplicated in html/template; keep them in sync.
+// 以下示例在 html/template 中有重复；请保持它们同步。
 
 func ExampleTemplate_block() {
 	const (

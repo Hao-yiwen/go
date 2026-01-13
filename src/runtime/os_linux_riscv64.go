@@ -14,22 +14,21 @@ type riscvHWProbePairs = struct {
 	value uint64
 }
 
-// TODO: Consider whether to use the VDSO entry for riscv_hwprobe.
-// There is a VDSO entry for riscv_hwprobe that should allow us to avoid the syscall
-// entirely as it can handle the case where the caller only requests extensions that are
-// supported on all cores, which is what we're doing here. However, as we're only calling
-// this syscall once, it may not be worth the added effort to implement the VDSO call.
+// TODO: 考虑是否使用 riscv_hwprobe 的 VDSO 条目。
+// 存在一个 riscv_hwprobe 的 VDSO 条目，应该允许我们完全避免 syscall，
+// 因为它可以处理调用者仅请求所有核心都支持的扩展的情况，这正是我们在这里所做的。
+// 但是，由于我们只调用这个 syscall 一次，实现 VDSO 调用可能不值得付出额外的努力。
 
 //go:linkname internal_cpu_riscvHWProbe internal/cpu.riscvHWProbe
 func internal_cpu_riscvHWProbe(pairs []riscvHWProbePairs, flags uint) bool {
-	// sys_RISCV_HWPROBE is copied from golang.org/x/sys/unix/zsysnum_linux_riscv64.go.
+	// sys_RISCV_HWPROBE 从 golang.org/x/sys/unix/zsysnum_linux_riscv64.go 复制。
 	const sys_RISCV_HWPROBE uintptr = 258
 
 	if len(pairs) == 0 {
 		return false
 	}
-	// Passing in a cpuCount of 0 and a cpu of nil ensures that only extensions supported by all the
-	// cores are returned, which is the behaviour we want in internal/cpu.
+	// 传入 cpuCount 为 0 和 cpu 为 nil 确保仅返回所有核心都支持的扩展，
+	// 这是我们在 internal/cpu 中想要的行为。
 	_, _, e1 := linux.Syscall6(sys_RISCV_HWPROBE, uintptr(unsafe.Pointer(&pairs[0])), uintptr(len(pairs)), uintptr(0), uintptr(unsafe.Pointer(nil)), uintptr(flags), 0)
 	return e1 == 0
 }

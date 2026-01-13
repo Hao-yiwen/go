@@ -10,6 +10,6 @@ func checkgoarm() {
 
 //go:nosplit
 func cputicks() int64 {
-	// runtime·nanotime() is a poor approximation of CPU ticks that is enough for the profiler.
+	// runtime·nanotime() 是 CPU 计时的粗略近似，但对分析器来说是足够的。
 	return nanotime()
 }

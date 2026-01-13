@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package comment
 
@@ -10,25 +10,25 @@ import (
 	"strings"
 )
 
-// A Printer is a doc comment printer.
+// 一个Printer 是一个 doc comment printer.
 // The fields in the struct can be filled in before calling
 // any of the printing methods
 // in order to customize the details of the printing process.
 type Printer struct {
-	// HeadingLevel is the nesting level used for
+	// HeadingLevel 是 nesting level used for
 	// HTML and Markdown headings.
 	// If HeadingLevel is zero, it defaults to level 3,
 	// meaning to use <h3> and ###.
 	HeadingLevel int
 
-	// HeadingID is a function that computes the heading ID
+	// HeadingID 是一个 function that computes the heading ID
 	// (anchor tag) to use for the heading h when generating
-	// HTML and Markdown. If HeadingID returns an empty string,
+	// HTML and Markdown. If HeadingID 返回一个 empty string,
 	// then the heading ID is omitted.
 	// If HeadingID is nil, h.DefaultID is used.
 	HeadingID func(h *Heading) string
 
-	// DocLinkURL is a function that computes the URL for the given DocLink.
+	// DocLinkURL 是一个 function that computes the URL for the given DocLink.
 	// If DocLinkURL is nil, then link.DefaultURL(p.DocLinkBaseURL) is used.
 	DocLinkURL func(link *DocLink) string
 
@@ -37,17 +37,17 @@ type Printer struct {
 	// See that method's documentation for details.
 	DocLinkBaseURL string
 
-	// TextPrefix is a prefix to print at the start of every line
+	// TextPrefix 是一个 prefix to print at the start of every line
 	// when generating text output using the Text method.
 	TextPrefix string
 
-	// TextCodePrefix is the prefix to print at the start of each
+	// TextCodePrefix 是 prefix to print at the start of each
 	// preformatted (code block) line when generating text output,
 	// instead of (not in addition to) TextPrefix.
-	// If TextCodePrefix is the empty string, it defaults to TextPrefix+"\t".
+	// If TextCodePrefix 是 empty string, it defaults to TextPrefix+"\t".
 	TextCodePrefix string
 
-	// TextWidth is the maximum width text line to generate,
+	// TextWidth 是 maximum width text line to generate,
 	// measured in Unicode code points,
 	// excluding TextPrefix and the newline character.
 	// If TextWidth is zero, it defaults to 80 minus the number of code points in TextPrefix.
@@ -76,7 +76,7 @@ func (p *Printer) docLinkURL(link *DocLink) string {
 	return link.DefaultURL(p.DocLinkBaseURL)
 }
 
-// DefaultURL constructs and returns the documentation URL for l,
+// DefaultURL constructs and 返回 documentation URL for l,
 // using baseURL as a prefix for links to other packages.
 //
 // The possible forms returned by DefaultURL are:
@@ -117,12 +117,12 @@ func (l *DocLink) DefaultURL(baseURL string) string {
 	return "#" + l.Name
 }
 
-// DefaultID returns the default anchor ID for the heading h.
+// DefaultID 返回the default anchor ID for the heading h.
 //
 // The default anchor ID is constructed by converting every
 // rune that is not alphanumeric ASCII to an underscore
 // and then adding the prefix “hdr-”.
-// For example, if the heading text is “Go Doc Comments”,
+// For example, 如果 heading text is “Go Doc Comments”,
 // the default ID is “hdr-Go_Doc_Comments”.
 func (h *Heading) DefaultID() string {
 	// Note: The “hdr-” prefix is important to avoid DOM clobbering attacks.
@@ -150,7 +150,7 @@ type commentPrinter struct {
 	*Printer
 }
 
-// Comment returns the standard Go formatting of the [Doc],
+// Comment 返回the standard Go formatting of the [Doc],
 // without any comment markers.
 func (p *Printer) Comment(d *Doc) []byte {
 	cp := &commentPrinter{Printer: p}
@@ -164,7 +164,7 @@ func (p *Printer) Comment(d *Doc) []byte {
 
 	// Print one block containing all the link definitions that were used,
 	// and then a second block containing all the unused ones.
-	// This makes it easy to clean up the unused ones: gofmt and
+	// This 使 it easy to clean up the unused ones: gofmt and
 	// delete the final block. And it's a nice visual signal without
 	// affecting the way the comment formats for users.
 	for i := 0; i < 2; i++ {
@@ -188,7 +188,7 @@ func (p *Printer) Comment(d *Doc) []byte {
 	return out.Bytes()
 }
 
-// blankBefore reports whether the block x requires a blank line before it.
+// blankBefore 报告whether the block x requires a blank line before it.
 // All blocks do, except for Lists that return false from x.BlankBefore().
 func blankBefore(x Block) bool {
 	if x, ok := x.(*List); ok {

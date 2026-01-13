@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// This file implements scopes and the objects they contain.
+// 本文件实现作用域及其包含的对象。
 
 package ast
 
@@ -12,33 +12,30 @@ import (
 	"strings"
 )
 
-// A Scope maintains the set of named language entities declared
-// in the scope and a link to the immediately surrounding (outer)
-// scope.
+// Scope 维护在作用域中声明的命名语言实体集合，
+// 以及指向直接包围（外层）作用域的链接。
 //
-// Deprecated: use the type checker [go/types] instead; see [Object].
+// 已弃用：改用类型检查器 [go/types]；参见 [Object]。
 type Scope struct {
 	Outer   *Scope
 	Objects map[string]*Object
 }
 
-// NewScope creates a new scope nested in the outer scope.
+// NewScope 创建一个嵌套在外层作用域中的新作用域。
 func NewScope(outer *Scope) *Scope {
-	const n = 4 // initial scope capacity
+	const n = 4 // 初始作用域容量
 	return &Scope{outer, make(map[string]*Object, n)}
 }
 
-// Lookup returns the object with the given name if it is
-// found in scope s, otherwise it returns nil. Outer scopes
-// are ignored.
+// Lookup 如果在作用域 s 中找到给定名称的对象则返回它，
+// 否则返回 nil。外层作用域被忽略。
 func (s *Scope) Lookup(name string) *Object {
 	return s.Objects[name]
 }
 
-// Insert attempts to insert a named object obj into the scope s.
-// If the scope already contains an object alt with the same name,
-// Insert leaves the scope unchanged and returns alt. Otherwise
-// it inserts obj and returns nil.
+// Insert 尝试将命名对象 obj 插入作用域 s。
+// 如果作用域已包含同名的对象 alt，Insert 保持作用域不变并返回 alt。
+// 否则插入 obj 并返回 nil。
 func (s *Scope) Insert(obj *Object) (alt *Object) {
 	if alt = s.Objects[obj.Name]; alt == nil {
 		s.Objects[obj.Name] = obj
@@ -46,7 +43,7 @@ func (s *Scope) Insert(obj *Object) (alt *Object) {
 	return
 }
 
-// Debugging support
+// 调试支持
 func (s *Scope) String() string {
 	var buf strings.Builder
 	fmt.Fprintf(&buf, "scope %p {", s)
@@ -61,45 +58,42 @@ func (s *Scope) String() string {
 }
 
 // ----------------------------------------------------------------------------
-// Objects
+// 对象
 
-// An Object describes a named language entity such as a package,
-// constant, type, variable, function (incl. methods), or label.
+// Object 描述命名语言实体，如包、常量、类型、变量、
+// 函数（包括方法）或标签。
 //
-// The Data fields contains object-specific data:
+// Data 字段包含特定于对象的数据：
 //
-//	Kind    Data type         Data value
-//	Pkg     *Scope            package scope
-//	Con     int               iota for the respective declaration
+//	Kind    Data 类型         Data 值
+//	Pkg     *Scope            包作用域
+//	Con     int               相应声明的 iota
 //
-// Deprecated: The relationship between Idents and Objects cannot be
-// correctly computed without type information. For example, the
-// expression T{K: 0} may denote a struct, map, slice, or array
-// literal, depending on the type of T. If T is a struct, then K
-// refers to a field of T, whereas for the other types it refers to a
-// value in the environment.
+// 已弃用：没有类型信息就无法正确计算 Ident 和 Object 之间的关系。
+// 例如，表达式 T{K: 0} 可能表示结构体、映射、切片或数组字面量，
+// 具体取决于 T 的类型。如果 T 是结构体，那么 K 引用 T 的字段，
+// 而对于其他类型，它引用环境中的值。
 //
-// New programs should set the [parser.SkipObjectResolution] parser
-// flag to disable syntactic object resolution (which also saves CPU
-// and memory), and instead use the type checker [go/types] if object
-// resolution is desired. See the Defs, Uses, and Implicits fields of
-// the [types.Info] struct for details.
+// 新程序应设置 [parser.SkipObjectResolution] 解析器标志以禁用
+// 语法对象解析（这也节省 CPU 和内存），如果需要对象解析，
+// 则改用类型检查器 [go/types]。详情参见 [types.Info] 结构体的
+// Defs、Uses 和 Implicits 字段。
 type Object struct {
 	Kind ObjKind
-	Name string // declared name
-	Decl any    // corresponding Field, XxxSpec, FuncDecl, LabeledStmt, AssignStmt, Scope; or nil
-	Data any    // object-specific data; or nil
-	Type any    // placeholder for type information; may be nil
+	Name string // 声明的名称
+	Decl any    // 对应的 Field、XxxSpec、FuncDecl、LabeledStmt、AssignStmt、Scope；或 nil
+	Data any    // 特定于对象的数据；或 nil
+	Type any    // 类型信息的占位符；可以为 nil
 }
 
-// NewObj creates a new object of a given kind and name.
+// NewObj 创建给定类型和名称的新对象。
 func NewObj(kind ObjKind, name string) *Object {
 	return &Object{Kind: kind, Name: name}
 }
 
-// Pos computes the source position of the declaration of an object name.
-// The result may be an invalid position if it cannot be computed
-// (obj.Decl may be nil or not correct).
+// Pos 计算对象名称声明的源代码位置。
+// 如果无法计算（obj.Decl 可能为 nil 或不正确），
+// 结果可能是无效位置。
 func (obj *Object) Pos() token.Pos {
 	name := obj.Name
 	switch d := obj.Decl.(type) {
@@ -139,23 +133,23 @@ func (obj *Object) Pos() token.Pos {
 			}
 		}
 	case *Scope:
-		// predeclared object - nothing to do for now
+		// 预声明对象 - 目前无需处理
 	}
 	return token.NoPos
 }
 
-// ObjKind describes what an [Object] represents.
+// ObjKind 描述 [Object] 表示什么。
 type ObjKind int
 
-// The list of possible [Object] kinds.
+// 可能的 [Object] 类型列表。
 const (
-	Bad ObjKind = iota // for error handling
-	Pkg                // package
-	Con                // constant
-	Typ                // type
-	Var                // variable
-	Fun                // function or method
-	Lbl                // label
+	Bad ObjKind = iota // 用于错误处理
+	Pkg                // 包
+	Con                // 常量
+	Typ                // 类型
+	Var                // 变量
+	Fun                // 函数或方法
+	Lbl                // 标签
 )
 
 var objKindStrings = [...]string{

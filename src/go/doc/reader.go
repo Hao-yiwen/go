@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package doc
 
@@ -23,11 +23,11 @@ import (
 //
 // Internally, we treat functions like methods and collect them in method sets.
 
-// A methodSet describes a set of methods. Entries where Decl == nil are conflict
+// 一个methodSet 描述 a set of methods. Entries where Decl == nil are conflict
 // entries (more than one method with the same name at the same embedding level).
 type methodSet map[string]*Func
 
-// recvString returns a string representation of recv of the form "T", "*T",
+// recvString 返回a string representation of recv of the form "T", "*T",
 // "T[A, ...]", "*T[A, ...]" or "BADRECV" (if not a proper receiver type).
 func recvString(recv ast.Expr) string {
 	switch t := recv.(type) {
@@ -63,14 +63,14 @@ func recvParam(p ast.Expr) string {
 	return "BADPARAM"
 }
 
-// set creates the corresponding Func for f and adds it to mset.
+// set 创建 the corresponding Func for f and adds it to mset.
 // If there are multiple f's with the same name, set keeps the first
 // one with documentation; conflicts are ignored. The boolean
-// specifies whether to leave the AST untouched.
+// 指定 whether to leave the AST untouched.
 func (mset methodSet) set(f *ast.FuncDecl, preserveAST bool) {
 	name := f.Name.Name
 	if g := mset[name]; g != nil && g.Doc != "" {
-		// A function with the same name has already been registered;
+		// 一个function with the same name has already been registered;
 		// since it has documentation, assume f is simply another
 		// implementation and ignore it. This does not happen if the
 		// caller is using go/build.ScanDir to determine the list of
@@ -99,8 +99,8 @@ func (mset methodSet) set(f *ast.FuncDecl, preserveAST bool) {
 	}
 }
 
-// add adds method m to the method set; m is ignored if the method set
-// already contains a method with the same name at the same or a higher
+// add adds method m to the method set; m is ignored 如果 method set
+// already 包含a method with the same name at the same or a higher
 // level than m.
 func (mset methodSet) add(m *Func) {
 	old := mset[m.Name]
@@ -120,7 +120,7 @@ func (mset methodSet) add(m *Func) {
 // ----------------------------------------------------------------------------
 // Named types
 
-// baseTypeName returns the name of the base type of x (or "")
+// baseTypeName 返回the name of the base type of x (or "")
 // and whether the type is imported or not.
 func baseTypeName(x ast.Expr) (name string, imported bool) {
 	switch t := x.(type) {
@@ -144,11 +144,11 @@ func baseTypeName(x ast.Expr) (name string, imported bool) {
 	return "", false
 }
 
-// An embeddedSet describes a set of embedded types.
+// 一个embeddedSet 描述 a set of embedded types.
 type embeddedSet map[*namedType]bool
 
-// A namedType represents a named unqualified (package local, or possibly
-// predeclared) type. The namedType for a type name is always found via
+// 一个namedType represents a named unqualified (package local, or possibly
+// predeclared) type. The namedType for a type name 是一个lways found via
 // reader.lookupType.
 type namedType struct {
 	doc  string       // doc comment for type
@@ -156,8 +156,8 @@ type namedType struct {
 	decl *ast.GenDecl // nil if declaration hasn't been seen yet
 
 	isEmbedded bool        // true if this type is embedded
-	isStruct   bool        // true if this type is a struct
-	embedded   embeddedSet // true if the embedded type is a pointer
+	isStruct   bool        // true if this type 是一个 struct
+	embedded   embeddedSet // true if the embedded type 是一个 pointer
 
 	// associated declarations
 	values  []*Value // consts and vars
@@ -184,7 +184,7 @@ type reader struct {
 
 	// imports
 	imports      map[string]int
-	hasDotImp    bool // if set, package contains a dot import
+	hasDotImp    bool // if set, package 包含 a dot import
 	importByName map[string]string
 
 	// declarations
@@ -202,10 +202,10 @@ func (r *reader) isVisible(name string) bool {
 	return r.mode&AllDecls != 0 || token.IsExported(name)
 }
 
-// lookupType returns the base type with the given name.
+// lookupType 返回the base type with the given name.
 // If the base type has not been encountered yet, a new
 // type with the given name but no associated declaration
-// is added to the type map.
+// 是一个dded to the type map.
 func (r *reader) lookupType(name string) *namedType {
 	if name == "" || name == "_" {
 		return nil // no type docs for anonymous types
@@ -227,7 +227,7 @@ func (r *reader) lookupType(name string) *namedType {
 // recordAnonymousField registers fieldType as the type of an
 // anonymous field in the parent type. If the field is imported
 // (qualified name) or the parent is nil, the field is ignored.
-// The function returns the field name.
+// The function 返回 field name.
 func (r *reader) recordAnonymousField(parent *namedType, fieldType ast.Expr) (fname string) {
 	fname, imp := baseTypeName(fieldType)
 	if parent == nil || imp {
@@ -242,7 +242,7 @@ func (r *reader) recordAnonymousField(parent *namedType, fieldType ast.Expr) (fn
 }
 
 func (r *reader) readDoc(comment *ast.CommentGroup) {
-	// By convention there should be only one package comment
+	// By convention there 应该是 only one package comment
 	// but collect all of them if there are more than one.
 	text := comment.Text()
 	if r.doc == "" {
@@ -272,7 +272,7 @@ func specNames(specs []ast.Spec) []string {
 
 // readValue processes a const or var declaration.
 func (r *reader) readValue(decl *ast.GenDecl) {
-	// determine if decl should be associated with a type
+	// determine if decl 应该是 associated with a type
 	// Heuristic: For each typed entry, determine the type name, if any.
 	//            If there is exactly one type name that is sufficiently
 	//            frequent, associate the decl with the respective type.
@@ -343,7 +343,7 @@ func (r *reader) readValue(decl *ast.GenDecl) {
 	r.order++
 }
 
-// fields returns a struct's fields or an interface's methods.
+// fields 返回a struct's fields or an interface's methods.
 func fields(typ ast.Expr) (list []*ast.Field, isStruct bool) {
 	var fields *ast.FieldList
 	switch t := typ.(type) {
@@ -366,8 +366,8 @@ func (r *reader) readType(decl *ast.GenDecl, spec *ast.TypeSpec) {
 		return // no name or blank name - ignore the type
 	}
 
-	// A type should be added at most once, so typ.decl
-	// should be nil - if it is not, simply overwrite it.
+	// 一个type 应该是 added at most once, so typ.decl
+	// 应该是 nil - if it is not, simply overwrite it.
 	typ.decl = decl
 
 	// compute documentation
@@ -394,7 +394,7 @@ func (r *reader) readType(decl *ast.GenDecl, spec *ast.TypeSpec) {
 	}
 }
 
-// isPredeclared reports whether n denotes a predeclared type.
+// isPredeclared 报告whether n denotes a predeclared type.
 func (r *reader) isPredeclared(n string) bool {
 	return predeclaredTypes[n] && r.types[n] == nil
 }
@@ -423,10 +423,10 @@ func (r *reader) readFunc(fun *ast.FuncDecl) {
 		if typ := r.lookupType(recvTypeName); typ != nil {
 			typ.methods.set(fun, r.mode&PreserveAST != 0)
 		}
-		// otherwise ignore the method
-		// TODO(gri): There may be exported methods of non-exported types
+		// 否则 ignore the method
+		// TODO(gri): There 可能是 exported methods of non-exported types
 		// that can be called because of exported values (consts, vars, or
-		// function results) of that type. Could determine if that is the
+		// function results) of that type. Could determine if that 是
 		// case and then show those methods in an appropriate section.
 		return
 	}
@@ -446,7 +446,7 @@ func (r *reader) readFunc(fun *ast.FuncDecl) {
 			if n, imp := baseTypeName(factoryType); !imp && r.isVisible(n) && !r.isPredeclared(n) {
 				if lookupTypeParam(n, fun.Type.TypeParams) != nil {
 					// Issue #49477: don't associate fun with its type parameter result.
-					// A type parameter is not a defined type.
+					// 一个type parameter is not a defined type.
 					continue
 				}
 				if t := r.lookupType(n); t != nil {
@@ -536,7 +536,7 @@ func (r *reader) readNote(list []*ast.Comment) {
 }
 
 // readNotes extracts notes from comments.
-// A note must start at the beginning of a comment with "MARKER(uid):"
+// 一个note must start at the beginning of a comment with "MARKER(uid):"
 // and is followed by the note body (e.g., "// BUG(gri): fix this").
 // The note ends at the end of the comment group or at the start of
 // another note in the same comment group, whichever comes first.
@@ -619,7 +619,7 @@ func (r *reader) readFile(src *ast.File) {
 				for _, spec := range d.Specs {
 					if s, ok := spec.(*ast.TypeSpec); ok {
 						// use an individual (possibly fake) declaration
-						// for each type; this also ensures that each type
+						// for each type; th是一个lso ensures that each type
 						// gets to (re-)use the declaration documentation
 						// if there's none associated with the spec itself
 						fake := &ast.GenDecl{
@@ -627,7 +627,7 @@ func (r *reader) readFile(src *ast.File) {
 							// don't use the existing TokPos because it
 							// will lead to the wrong selection range for
 							// the fake declaration if there are more
-							// than one type in the group (this affects
+							// than one type in the group (th是一个ffects
 							// src/cmd/godoc/godoc.go's posLink_urlFunc)
 							TokPos: s.Pos(),
 							Tok:    token.TYPE,
@@ -784,7 +784,7 @@ func (r *reader) cleanupTypes() {
 		predeclared := predeclaredTypes[t.name]
 
 		if t.decl == nil && (predeclared || visible && (t.isEmbedded || r.hasDotImp)) {
-			// t.name is a predeclared type (and was not redeclared in this package),
+			// t.name 是一个 predeclared type (and was not redeclared in this package),
 			// or it was embedded somewhere but its declaration is missing (because
 			// the AST is incomplete), or we have a dot-import (and all bets are off):
 			// move any associated values, funcs, and methods back to the top-level so
@@ -828,7 +828,7 @@ func sortedKeys(m map[string]int) []string {
 	return list
 }
 
-// sortingName returns the name to use when sorting d into place.
+// sortingName 返回the name to use when sorting d into place.
 func sortingName(d *ast.GenDecl) string {
 	if len(d.Specs) == 1 {
 		if s, ok := d.Specs[0].(*ast.ValueSpec); ok {
@@ -912,7 +912,7 @@ func sortedFuncs(m methodSet, allMethods bool) []*Func {
 	return list
 }
 
-// noteBodies returns a list of note body strings given a list of notes.
+// noteBodies 返回a list of note body strings given a list of notes.
 // This is only used to populate the deprecated Package.Bugs field.
 func noteBodies(notes []*Note) []string {
 	var list []string
@@ -925,7 +925,7 @@ func noteBodies(notes []*Note) []string {
 // ----------------------------------------------------------------------------
 // Predeclared identifiers
 
-// IsPredeclared reports whether s is a predeclared identifier.
+// IsPredeclared 报告whether s 是一个 predeclared identifier.
 func IsPredeclared(s string) bool {
 	return predeclaredTypes[s] || predeclaredFuncs[s] || predeclaredConstants[s]
 }
@@ -983,8 +983,8 @@ var predeclaredConstants = map[string]bool{
 	"true":  true,
 }
 
-// assumedPackageName returns the assumed package name
-// for a given import path. This is a copy of
+// assumedPackageName 返回the assumed package name
+// for a given import path. This 是一个 copy of
 // golang.org/x/tools/internal/imports.ImportPathToAssumedName.
 func assumedPackageName(importPath string) string {
 	notIdentifier := func(ch rune) bool {

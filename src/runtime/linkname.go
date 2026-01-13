@@ -6,10 +6,10 @@ package runtime
 
 import _ "unsafe"
 
-// used in internal/godebug and syscall
+// 用于 internal/godebug 和 syscall
 //go:linkname write
 
-// used by cgo
+// 由 cgo 使用
 //go:linkname _cgo_panic_internal
 //go:linkname cgoAlwaysFalse
 //go:linkname cgoUse
@@ -20,14 +20,14 @@ import _ "unsafe"
 //go:linkname gobytes
 //go:linkname gostringn
 
-// used in plugin
+// 用于插件
 //go:linkname doInit
 
-// used in math/bits
+// 用于 math/bits
 //go:linkname overflowError
 //go:linkname divideError
 
-// used in tests
+// 用于测试
 //go:linkname extraMInUse
 //go:linkname blockevent
 //go:linkname haveHighResSleep

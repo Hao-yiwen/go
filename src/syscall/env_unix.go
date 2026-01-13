@@ -1,10 +1,10 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build unix || (js && wasm) || plan9 || wasip1
 
-// Unix environment variables.
+// Unix 环境变量。
 
 package syscall
 
@@ -14,19 +14,18 @@ import (
 )
 
 var (
-	// envLock guards env and envs.
+	// envLock 保护 env 和 envs。
 	envLock sync.RWMutex
 
-	// env maps from an environment variable to its first occurrence in envs.
+	// env 将环境变量映射到其在 envs 中的首次出现位置。
 	env map[string]int
 
-	// envs is provided by the runtime. elements are expected to
-	// be of the form "key=value". An empty string means deleted
-	// (or a duplicate to be ignored).
+	// envs 由运行时提供。元素应为 "key=value" 形式。
+	// 空字符串表示已删除（或要忽略的重复项）。
 	envs []string = runtime_envs()
 )
 
-func runtime_envs() []string // in package runtime
+func runtime_envs() []string // 在 runtime 包中
 
 var copyenv = sync.OnceFunc(func() {
 	env = make(map[string]int)
@@ -35,12 +34,11 @@ var copyenv = sync.OnceFunc(func() {
 			if s[j] == '=' {
 				key := s[:j]
 				if _, ok := env[key]; !ok {
-					env[key] = i // first mention of key
+					env[key] = i // 首次出现的键
 				} else {
-					// Clear duplicate keys. This permits Unsetenv to
-					// safely delete only the first item without
-					// worrying about unshadowing a later one,
-					// which might be a security problem.
+					// 清除重复的键。这允许 Unsetenv 安全地只删除
+					// 第一个项目，而不必担心取消隐藏后面的项目，
+					// 这可能会带来安全问题。
 					envs[i] = ""
 				}
 				break
@@ -95,7 +93,7 @@ func Setenv(key, value string) error {
 			return EINVAL
 		}
 	}
-	// On Plan 9, null is used as a separator, eg in $path.
+	// 在 Plan 9 上，null 被用作分隔符，例如在 $path 中。
 	if runtime.GOOS != "plan9" {
 		for i := 0; i < len(value); i++ {
 			if value[i] == 0 {

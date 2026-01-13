@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements error reporting.
 
@@ -19,7 +19,7 @@ func assert(p bool) {
 	if !p {
 		msg := "assertion failed"
 		// Include information about the assertion location. Due to panic recovery,
-		// this location is otherwise buried in the middle of the panicking stack.
+		// this location is 否则 buried in the middle of the panicking stack.
 		if _, file, line, ok := runtime.Caller(1); ok {
 			msg = fmt.Sprintf("%s:%d: %s", file, line, msg)
 		}
@@ -27,14 +27,14 @@ func assert(p bool) {
 	}
 }
 
-// An errorDesc describes part of a type-checking error.
+// 一个errorDesc 描述 part of a type-checking error.
 type errorDesc struct {
 	posn positioner
 	msg  string
 }
 
-// An error_ represents a type-checking error.
-// A new error_ is created with Checker.newError.
+// 一个error_ represents a type-checking error.
+// 一个new error_ is created with Checker.newError.
 // To report an error_, call error_.report.
 type error_ struct {
 	check *Checker
@@ -43,7 +43,7 @@ type error_ struct {
 	soft  bool // TODO(gri) eventually determine this from an error code
 }
 
-// newError returns a new error_ with the given error code.
+// newError 返回a new error_ with the given error code.
 func (check *Checker) newError(code Code) *error_ {
 	if code == 0 {
 		panic("error code must not be 0")
@@ -52,7 +52,7 @@ func (check *Checker) newError(code Code) *error_ {
 }
 
 // addf adds formatted error information to err.
-// It may be called multiple times to provide additional information.
+// It 可能是 called multiple times to provide additional information.
 // The position of the first call to addf determines the position of the reported Error.
 // Subsequent calls to addf provide additional information in the form of additional lines
 // in the error message (types2) or continuation errors identified by a tab-indented error
@@ -61,7 +61,7 @@ func (err *error_) addf(at positioner, format string, args ...any) {
 	err.desc = append(err.desc, errorDesc{at, err.check.sprintf(format, args...)})
 }
 
-// addAltDecl is a specialized form of addf reporting another declaration of obj.
+// addAltDecl 是一个 specialized form of addf reporting another declaration of obj.
 func (err *error_) addAltDecl(obj Object) {
 	if pos := obj.Pos(); pos.IsValid() {
 		// We use "other" rather than "previous" here because
@@ -82,7 +82,7 @@ func (err *error_) posn() positioner {
 	return err.desc[0].posn
 }
 
-// msg returns the formatted error message without the primary error position pos().
+// msg 返回the formatted error message without the primary error position pos().
 func (err *error_) msg() string {
 	if err.empty() {
 		return "no error"
@@ -102,7 +102,7 @@ func (err *error_) msg() string {
 	return buf.String()
 }
 
-// report reports the error err, setting check.firstError if necessary.
+// report 报告the error err, setting check.firstError if necessary.
 func (err *error_) report() {
 	if err.empty() {
 		panic("no error")
@@ -126,7 +126,7 @@ func (err *error_) report() {
 		check.trace(err.posn().Pos(), "ERROR: %s (code = %d)", err.desc[0].msg, err.code)
 	}
 
-	// In go/types, if there is a sub-error with a valid position,
+	// In go/types, if there 是一个 sub-error with a valid position,
 	// call the typechecker error handler for each sub-error.
 	// Otherwise, call it once, with a single combined message.
 	multiError := false
@@ -158,7 +158,7 @@ func (check *Checker) handleError(index int, posn positioner, code Code, msg str
 
 	if index == 0 {
 		// If we are encountering an error while evaluating an inherited
-		// constant initialization expression, pos is the position of
+		// constant initialization expression, pos 是 position of
 		// the original expression, and not of the currently declared
 		// constant identifier. Use the provided errpos instead.
 		// TODO(gri) We may also want to augment the error message and
@@ -264,7 +264,7 @@ func (s atPos) Pos() token.Pos {
 	return token.Pos(s)
 }
 
-// posSpan holds a position range along with a highlighted position within that
+// posSpan 保存a position range along with a highlighted position within that
 // range. This is used for positioning errors, with pos by convention being the
 // first position in the source where the error is known to exist, and start
 // and end defining the full span of syntax being considered when the error was
@@ -277,8 +277,8 @@ func (e posSpan) Pos() token.Pos {
 	return e.pos
 }
 
-// inNode creates a posSpan for the given node.
-// Invariant: node.Pos() <= pos < node.End() (node.End() is the position of the
+// inNode 创建 a posSpan for the given node.
+// Invariant: node.Pos() <= pos < node.End() (node.End() 是 position of the
 // first byte after node within the source).
 func inNode(node ast.Node, pos token.Pos) posSpan {
 	start, end := node.Pos(), node.End()

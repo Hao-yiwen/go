@@ -1,6 +1,6 @@
-// Copyright 2019 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2019 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package maphash
 
@@ -308,7 +308,7 @@ func stackGrow(dep int) {
 		return
 	}
 	var local [1024]byte
-	// make sure local is allocated on the stack.
+	// 确保 local 分配在栈上。
 	local[randUint64()%1024] = byte(randUint64())
 	use = local[randUint64()%1024]
 	stackGrow(dep - 1)
@@ -457,7 +457,7 @@ func TestComparableAllocations(t *testing.T) {
 	}
 }
 
-// Make sure a Hash implements the hash.Hash and hash.Hash64 interfaces.
+// 确保 Hash 实现了 hash.Hash 和 hash.Hash64 接口。
 var _ hash.Hash = &Hash{}
 var _ hash.Hash64 = &Hash{}
 

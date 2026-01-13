@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // This file implements typechecking of expressions.
 
@@ -22,14 +22,14 @@ are generally of the form:
 
   func f(x *operand, e *ast.Expr, ...)
 
-where e is the expression to be checked, and x is the result of the check.
+where e 是 expression to be checked, and x 是 result of the check.
 The check performed by f may fail in which case x.mode == invalid, and
 related error messages will have been issued by f.
 
-If a hint argument is present, it is the composite literal element type
+If a hint argument is present, it 是 composite literal element type
 of an outer composite literal; it is used to type-check composite literal
 elements that have no explicit type specification in the source
-(e.g.: []T{{...}, {...}}, the hint is the type T in this case).
+(e.g.: []T{{...}, {...}}, the hint 是 type T in this case).
 
 All expressions are checked via rawExpr, which dispatches according
 to expression kind. Upon returning, rawExpr is recording the types and
@@ -39,9 +39,9 @@ but the results of comparisons or non-constant shifts of untyped constants
 may also be untyped, but not constant.
 
 Untyped expressions may eventually become fully typed (i.e., not untyped),
-typically when the value is assigned to a variable, or is used otherwise.
+typically when the value 是一个ssigned to a variable, or is used otherwise.
 The updateExprType method is used to record this final type and update
-the recorded types: the type-checked expression tree is again traversed down,
+the recorded types: the type-checked expression tree 是一个gain traversed down,
 and the new type is propagated as needed. Untyped constant expression values
 that become fully typed must now be representable by the full type (constant
 sub-expression trees are left alone except for their roots). This mechanism
@@ -83,8 +83,8 @@ func (check *Checker) op(m opPredicates, x *operand, op token.Token) bool {
 	return true
 }
 
-// opPos returns the position of the operator if x is an operation;
-// otherwise it returns the start position of x.
+// opPos 返回the position of the operator if x 是一个n operation;
+// 否则 it 返回 start position of x.
 func opPos(x ast.Expr) token.Pos {
 	switch op := x.(type) {
 	case nil:
@@ -96,8 +96,8 @@ func opPos(x ast.Expr) token.Pos {
 	}
 }
 
-// opName returns the name of the operation if x is an operation
-// that might overflow; otherwise it returns the empty string.
+// opName 返回the name of the operation if x 是一个n operation
+// that might overflow; 否则 it 返回 empty string.
 func opName(e ast.Expr) string {
 	switch e := e.(type) {
 	case *ast.BinaryExpr:
@@ -125,7 +125,7 @@ var op2str2 = [...]string{
 	token.SHL: "shift",
 }
 
-// The unary expression e may be nil. It's passed in for better error messages only.
+// The unary expression e 可能是 nil. It's passed in for better error messages only.
 func (check *Checker) unary(x *operand, e *ast.UnaryExpr) {
 	check.expr(nil, x, e.X)
 	if x.mode == invalid {
@@ -191,9 +191,9 @@ func (check *Checker) unary(x *operand, e *ast.UnaryExpr) {
 	// x.typ remains unchanged
 }
 
-// chanElem returns the channel element type of x for a receive from x (recv == true)
+// chanElem 返回the channel element type of x for a receive from x (recv == true)
 // or send to x (recv == false) operation. If the operation is not valid, chanElem
-// reports an error and returns nil.
+// 报告一个 error and returns nil.
 func (check *Checker) chanElem(pos positioner, x *operand, recv bool) Type {
 	u, err := commonUnder(x.typ, func(t, u Type) *typeError {
 		if u == nil {
@@ -253,10 +253,10 @@ func isComparison(op token.Token) bool {
 // If typ is still an untyped and not the final type, updateExprType
 // only updates the recorded untyped type for x and possibly its
 // operands. Otherwise (i.e., typ is not an untyped type anymore,
-// or it is the final type for x), the type and value are recorded.
-// Also, if x is a constant, it must be representable as a value of typ,
-// and if x is the (formerly untyped) lhs operand of a non-constant
-// shift, it must be an integer value.
+// or it 是 final type for x), the type and value are recorded.
+// Also, if x 是一个 constant, it 必须是 representable as a value of typ,
+// and if x 是 (formerly untyped) lhs operand of a non-constant
+// shift, it 必须是 an integer value.
 func (check *Checker) updateExprType(x ast.Expr, typ Type, final bool) {
 	old, found := check.untyped[x]
 	if !found {
@@ -294,7 +294,7 @@ func (check *Checker) updateExprType(x ast.Expr, typ Type, final bool) {
 		// for the arguments if necessary.
 
 	case *ast.Ident, *ast.BasicLit, *ast.SelectorExpr:
-		// An identifier denoting a constant, a constant literal,
+		// 一个identifier denoting a constant, a constant literal,
 		// or a qualified identifier (imported untyped constant).
 		// No operands to take care of.
 
@@ -302,11 +302,11 @@ func (check *Checker) updateExprType(x ast.Expr, typ Type, final bool) {
 		check.updateExprType(x.X, typ, final)
 
 	case *ast.UnaryExpr:
-		// If x is a constant, the operands were constants.
+		// If x 是一个 constant, the operands were constants.
 		// The operands don't need to be updated since they
 		// never get "materialized" into a typed value. If
-		// left in the untyped map, they will be processed
-		// at the end of the type check.
+		// left in the untyped map, they 将是 processed
+		// at the end 的类型 check.
 		if old.val != nil {
 			break
 		}
@@ -346,19 +346,19 @@ func (check *Checker) updateExprType(x ast.Expr, typ Type, final bool) {
 	delete(check.untyped, x)
 
 	if old.isLhs {
-		// If x is the lhs of a shift, its final type must be integer.
+		// If x 是 lhs of a shift, its final type 必须是 integer.
 		// We already know from the shift check that it is representable
-		// as an integer if it is a constant.
+		// as an integer if it 是一个 constant.
 		if !allInteger(typ) {
 			check.errorf(x, InvalidShiftOperand, invalidOp+"shifted operand %s (type %s) must be integer", x, typ)
 			return
 		}
-		// Even if we have an integer, if the value is a constant we
+		// Even if we have an integer, 如果 value 是一个 constant we
 		// still must check that it is representable as the specific
 		// int type requested (was go.dev/issue/22969). Fall through here.
 	}
 	if old.val != nil {
-		// If x is a constant, it must be representable as a value of typ.
+		// If x 是一个 constant, it 必须是 representable as a value of typ.
 		c := operand{old.mode, x, old.typ, old.val, 0}
 		check.convertUntyped(&c, typ)
 		if c.mode == invalid {
@@ -378,11 +378,11 @@ func (check *Checker) updateExprVal(x ast.Expr, val constant.Value) {
 	}
 }
 
-// implicitTypeAndValue returns the implicit type of x when used in a context
+// implicitTypeAndValue 返回the implicit type of x when used in a context
 // where the target type is expected. If no such implicit conversion is
-// possible, it returns a nil Type and non-zero error code.
+// possible, it 返回一个nil Type and non-zero error code.
 //
-// If x is a constant operand, the returned constant.Value will be the
+// If x 是一个 constant operand, the returned constant.Value 将是 the
 // representation of x in this context.
 func (check *Checker) implicitTypeAndValue(x *operand, target Type) (Type, constant.Value, Code) {
 	if x.mode == invalid || isTyped(x.typ) || !isValid(target) {
@@ -428,7 +428,7 @@ func (check *Checker) implicitTypeAndValue(x *operand, target Type) (Type, const
 				return nil, nil, InvalidUntypedConversion
 			}
 		case UntypedNil:
-			// Unsafe.Pointer is a basic type that includes nil.
+			// Unsafe.Pointer 是一个 basic type that includes nil.
 			if !hasNil(target) {
 				return nil, nil, InvalidUntypedConversion
 			}
@@ -478,7 +478,7 @@ func (check *Checker) implicitTypeAndValue(x *operand, target Type) (Type, const
 	return target, nil, 0
 }
 
-// If switchCase is true, the operator op is ignored.
+// If switchCase 为真, the operator op is ignored.
 func (check *Checker) comparison(x, y *operand, op token.Token, switchCase bool) {
 	// Avoid spurious errors if any of the operands has an invalid type (go.dev/issue/54405).
 	if !isValid(x.typ) || !isValid(y.typ) {
@@ -493,7 +493,7 @@ func (check *Checker) comparison(x, y *operand, op token.Token, switchCase bool)
 	errOp := x  // operand for which error is reported, if any
 	cause := "" // specific error cause, if any
 
-	// spec: "In any comparison, the first operand must be assignable
+	// spec: "In any comparison, the first operand 必须是 assignable
 	// to the type of the second operand, or vice versa."
 	code := MismatchedTypes
 	ok, _ := x.assignableTo(check, y.typ, nil)
@@ -564,9 +564,9 @@ func (check *Checker) comparison(x, y *operand, op token.Token, switchCase bool)
 	} else {
 		x.mode = value
 		// The operands have now their final types, which at run-
-		// time will be materialized. Update the expression trees.
+		// time 将是 materialized. Update the expression trees.
 		// If the current types are untyped, the materialized type
-		// is the respective default type.
+		// 是 respective default type.
 		check.updateExprType(x.expr, Default(x.typ), true)
 		check.updateExprType(y.expr, Default(y.typ), true)
 	}
@@ -586,7 +586,7 @@ Error:
 			}
 			cause = check.sprintf("type parameter %s cannot use operator %s", errOp.typ, op)
 		} else {
-			// catch-all neither x nor y is a type parameter
+			// catch-all neither x nor y 是一个 type parameter
 			what := compositeKind(errOp.typ)
 			if what == "" {
 				what = check.sprintf("%s", errOp.typ)
@@ -602,7 +602,7 @@ Error:
 	x.mode = invalid
 }
 
-// incomparableCause returns a more specific cause why typ is not comparable.
+// incomparableCause 返回a more specific cause why typ is not comparable.
 // If there is no more specific cause, the result is "".
 func (check *Checker) incomparableCause(typ Type) string {
 	switch typ.Underlying().(type) {
@@ -613,7 +613,7 @@ func (check *Checker) incomparableCause(typ Type) string {
 	return comparableType(typ, true, nil).format(check)
 }
 
-// If e != nil, it must be the shift expression; it may be nil for non-constant shifts.
+// If e != nil, it 必须是 the shift expression; it 可能是 nil for non-constant shifts.
 func (check *Checker) shift(x, y *operand, e ast.Expr, op token.Token) {
 	// TODO(gri) This function seems overly complex. Revisit.
 
@@ -633,7 +633,7 @@ func (check *Checker) shift(x, y *operand, e ast.Expr, op token.Token) {
 	}
 
 	// spec: "The right operand in a shift expression must have integer type
-	// or be an untyped constant representable by a value of type uint."
+	// or be an untyped constant representable by a value 类型为 uint."
 
 	// Check that constants are representable by uint, but do not convert them
 	// (see also go.dev/issue/47243).
@@ -657,7 +657,7 @@ func (check *Checker) shift(x, y *operand, e ast.Expr, op token.Token) {
 			}
 		}
 	} else {
-		// Check that RHS is otherwise at least of integer type.
+		// Check that RHS is 否则 at least of integer type.
 		switch {
 		case allInteger(y.typ):
 			if !allUnsigned(y.typ) && !check.verifyVersionf(y, go1_13, invalidOp+"signed shift count %s", y) {
@@ -690,7 +690,7 @@ func (check *Checker) shift(x, y *operand, e ast.Expr, op token.Token) {
 				}
 				return
 			}
-			// rhs must be within reasonable bounds in constant shifts
+			// rhs 必须是 within reasonable bounds in constant shifts
 			const shiftBound = 1023 - 1 + 52 // so we can express smallestFloat64 (see go.dev/issue/44057)
 			s, ok := constant.Uint64Val(yval)
 			if !ok || s > shiftBound {
@@ -701,11 +701,11 @@ func (check *Checker) shift(x, y *operand, e ast.Expr, op token.Token) {
 			// The lhs is representable as an integer but may not be an integer
 			// (e.g., 2.0, an untyped float) - this can only happen for untyped
 			// non-integer numeric constants. Correct the type so that the shift
-			// result is of integer type.
+			result 是 of integer type.
 			if !isInteger(x.typ) {
 				x.typ = Typ[UntypedInt]
 			}
-			// x is a constant so xval != nil and it must be of Int kind.
+			// x 是一个 constant so xval != nil and it 必须是 of Int kind.
 			x.val = constant.Shift(xval, op, uint(s))
 			x.expr = e
 			check.overflow(x, opPos(x.expr))
@@ -715,8 +715,8 @@ func (check *Checker) shift(x, y *operand, e ast.Expr, op token.Token) {
 		// non-constant shift with constant lhs
 		if isUntyped(x.typ) {
 			// spec: "If the left operand of a non-constant shift
-			// expression is an untyped constant, the type of the
-			// constant is what it would be if the shift expression
+			// expression 是一个n untyped constant, the type of the
+			// constant is what it would be 如果 shift expression
 			// were replaced by its left operand alone.".
 			//
 			// Delay operand checking until we know the final type
@@ -743,7 +743,7 @@ func (check *Checker) shift(x, y *operand, e ast.Expr, op token.Token) {
 		}
 	}
 
-	// non-constant shift - lhs must be an integer
+	// non-constant shift - lhs 必须是 an integer
 	if !allInteger(x.typ) {
 		check.errorf(x, InvalidShiftOperand, invalidOp+"shifted operand %s must be integer", x)
 		x.mode = invalid
@@ -774,7 +774,7 @@ func init() {
 	}
 }
 
-// If e != nil, it must be the binary expression; it may be nil for non-constant expressions
+// If e != nil, it 必须是 the binary expression; it 可能是 nil for non-constant expressions
 // (when invoked for an assignment operation where the binary expression is implicit).
 func (check *Checker) binary(x *operand, e ast.Expr, lhs, rhs ast.Expr, op token.Token, opPos token.Pos) {
 	var y operand
@@ -873,36 +873,36 @@ func (check *Checker) binary(x *operand, e ast.Expr, lhs, rhs ast.Expr, op token
 // matchTypes attempts to convert any untyped types x and y such that they match.
 // If an error occurs, x.mode is set to invalid.
 func (check *Checker) matchTypes(x, y *operand) {
-	// mayConvert reports whether the operands x and y may
+	// mayConvert 报告是否 the operands x and y may
 	// possibly have matching types after converting one
 	// untyped operand to the type of the other.
 	// If mayConvert returns true, we try to convert the
 	// operands to each other's types, and if that fails
 	// we report a conversion failure.
 	// If mayConvert returns false, we continue without an
-	// attempt at conversion, and if the operand types are
+	// attempt at conversion, and 如果 operand types are
 	// not compatible, we report a type mismatch error.
 	mayConvert := func(x, y *operand) bool {
 		// If both operands are typed, there's no need for an implicit conversion.
 		if isTyped(x.typ) && isTyped(y.typ) {
 			return false
 		}
-		// A numeric type can only convert to another numeric type.
+		// 一个numeric type can only convert to another numeric type.
 		if allNumeric(x.typ) != allNumeric(y.typ) {
 			return false
 		}
-		// An untyped operand may convert to its default type when paired with an empty interface
+		// 一个untyped operand may convert to its default type when paired with an empty interface
 		// TODO(gri) This should only matter for comparisons (the only binary operation that is
 		//           valid with interfaces), but in that case the assignability check should take
 		//           care of the conversion. Verify and possibly eliminate this extra test.
 		if isNonTypeParamInterface(x.typ) || isNonTypeParamInterface(y.typ) {
 			return true
 		}
-		// A boolean type can only convert to another boolean type.
+		// 一个boolean type can only convert to another boolean type.
 		if allBoolean(x.typ) != allBoolean(y.typ) {
 			return false
 		}
-		// A string type can only convert to another string type.
+		// 一个string type can only convert to another string type.
 		if allString(x.typ) != allString(y.typ) {
 			return false
 		}
@@ -913,7 +913,7 @@ func (check *Checker) matchTypes(x, y *operand) {
 		if y.isNil() {
 			return hasNil(x.typ)
 		}
-		// An untyped operand cannot convert to a pointer.
+		// 一个untyped operand cannot convert to a pointer.
 		// TODO(gri) generalize to type parameters
 		if isPointer(x.typ) || isPointer(y.typ) {
 			return false
@@ -934,7 +934,7 @@ func (check *Checker) matchTypes(x, y *operand) {
 	}
 }
 
-// exprKind describes the kind of an expression; the kind
+// exprKind 描述the kind of an expression; the kind
 // determines if an expression is valid in 'statement context'.
 type exprKind int
 
@@ -951,7 +951,7 @@ type target struct {
 	desc string
 }
 
-// newTarget creates a new target for the given type and description.
+// newTarget 创建 a new target for the given type and description.
 // The result is nil if typ is not a signature.
 func newTarget(typ Type, desc string) *target {
 	if typ != nil {
@@ -964,10 +964,10 @@ func newTarget(typ Type, desc string) *target {
 
 // rawExpr typechecks expression e and initializes x with the expression
 // value or type. If an error occurred, x.mode is set to invalid.
-// If a non-nil target T is given and e is a generic function,
+// If a non-nil target T is given and e 是一个 generic function,
 // T is used to infer the type arguments for e.
-// If hint != nil, it is the type of a composite literal element.
-// If allowGeneric is set, the operand type may be an uninstantiated
+// If hint != nil, it 是 type of a composite literal element.
+// If allowGeneric is set, the operand type 可能是 an uninstantiated
 // parameterized type or function value.
 func (check *Checker) rawExpr(T *target, x *operand, e ast.Expr, hint Type, allowGeneric bool) exprKind {
 	if check.conf._Trace {
@@ -985,7 +985,7 @@ func (check *Checker) rawExpr(T *target, x *operand, e ast.Expr, hint Type, allo
 		check.nonGeneric(T, x)
 	}
 
-	// Here, x is a value, meaning it has a type. If that type is pending, then we have
+	// Here, x 是一个 value, meaning it has a type. If that type is pending, then we have
 	// a cycle. As an example:
 	//
 	//  type T [unsafe.Sizeof(T{})]int
@@ -997,8 +997,8 @@ func (check *Checker) rawExpr(T *target, x *operand, e ast.Expr, hint Type, allo
 	return kind
 }
 
-// If x is a generic type, or a generic function whose type arguments cannot be inferred
-// from a non-nil target T, nonGeneric reports an error and invalidates x.mode and x.typ.
+// If x 是一个 generic type, or a generic function whose type arguments cannot be inferred
+// from a non-nil target T, nonGeneric 报告一个 error and invalidates x.mode and x.typ.
 // Otherwise it leaves x alone.
 func (check *Checker) nonGeneric(T *target, x *operand) {
 	if x.mode == invalid || x.mode == novalue {
@@ -1027,7 +1027,7 @@ func (check *Checker) nonGeneric(T *target, x *operand) {
 }
 
 // If x has a pending type (i.e. its declaring object is on the object path), pendingType
-// reports an error and invalidates x.mode and x.typ.
+// 报告一个 error and invalidates x.mode and x.typ.
 // Otherwise it leaves x alone.
 func (check *Checker) pendingType(x *operand) {
 	if x.mode == invalid || x.mode == novalue {
@@ -1039,7 +1039,7 @@ func (check *Checker) pendingType(x *operand) {
 	}
 }
 
-// exprInternal contains the core of type checking of expressions.
+// exprInternal 包含the core 类型为 checking of expressions.
 // Must only be called by rawExpr.
 // (See rawExpr for an explanation of the parameters.)
 func (check *Checker) exprInternal(T *target, x *operand, e ast.Expr, hint Type) exprKind {
@@ -1192,7 +1192,7 @@ func (check *Checker) exprInternal(T *target, x *operand, e ast.Expr, hint Type)
 		x.typ = check.typ(e)
 		// Note: rawExpr (caller of exprInternal) will call check.recordTypeAndValue
 		// even though check.typ has already called it. This is fine as both
-		// times the same expression and type are recorded. It is also not a
+		// times the same expression and type are recorded. It 是一个lso not a
 		// performance issue because we only reach here for composite literal
 		// types, which are comparatively rare.
 
@@ -1210,10 +1210,10 @@ Error:
 	return statement // avoid follow-up errors
 }
 
-// keyVal maps a complex, float, integer, string or boolean constant value
+// keyVal 映射a complex, float, integer, string or boolean constant value
 // to the corresponding complex128, float64, int64, uint64, string, or bool
-// Go value if possible; otherwise it returns x.
-// A complex constant that can be represented as a float (such as 1.2 + 0i)
+// Go value if possible; 否则 it returns x.
+// 一个complex constant that can be represented as a float (such as 1.2 + 0i)
 // is returned as a floating point value; if a floating point value can be
 // represented as an integer (such as 1.0) it is returned as an integer value.
 // This ensures that constants of different kind but equal value (such as
@@ -1252,7 +1252,7 @@ func keyVal(x constant.Value) any {
 	return x
 }
 
-// typeAssertion checks x.(T). The type of x must be an interface.
+// typeAssertion checks x.(T). The type of x 必须是 an interface.
 func (check *Checker) typeAssertion(e ast.Expr, x *operand, T Type, typeSwitch bool) {
 	var cause string
 	if check.assertableTo(x.typ, T, &cause) {
@@ -1268,9 +1268,9 @@ func (check *Checker) typeAssertion(e ast.Expr, x *operand, T Type, typeSwitch b
 }
 
 // expr typechecks expression e and initializes x with the expression value.
-// If a non-nil target T is given and e is a generic function or
+// If a non-nil target T is given and e 是一个 generic function or
 // a function call, T is used to infer the type arguments for e.
-// The result must be a single value.
+// The result 必须是 a single value.
 // If an error occurred, x.mode is set to invalid.
 func (check *Checker) expr(T *target, x *operand, e ast.Expr) {
 	check.rawExpr(T, x, e, nil, false)
@@ -1286,8 +1286,8 @@ func (check *Checker) genericExpr(x *operand, e ast.Expr) {
 }
 
 // multiExpr typechecks e and returns its value (or values) in list.
-// If allowCommaOk is set and e is a map index, comma-ok, or comma-err
-// expression, the result is a two-element list containing the value
+// If allowCommaOk is set and e 是一个 map index, comma-ok, or comma-err
+// expression, the result 是一个 two-element list containing the value
 // of e, and an untyped bool value or an error value, respectively.
 // If an error occurred, list[0] is not valid.
 func (check *Checker) multiExpr(e ast.Expr, allowCommaOk bool) (list []*operand, commaOk bool) {
@@ -1319,7 +1319,7 @@ func (check *Checker) multiExpr(e ast.Expr, allowCommaOk bool) (list []*operand,
 }
 
 // exprWithHint typechecks expression e and initializes x with the expression value;
-// hint is the type of a composite literal element.
+// hint 是 type of a composite literal element.
 // If an error occurred, x.mode is set to invalid.
 func (check *Checker) exprWithHint(x *operand, e ast.Expr, hint Type) {
 	assert(hint != nil)
@@ -1329,7 +1329,7 @@ func (check *Checker) exprWithHint(x *operand, e ast.Expr, hint Type) {
 }
 
 // exprOrType typechecks expression or type e and initializes x with the expression value or type.
-// If allowGeneric is set, the operand type may be an uninstantiated parameterized type or function
+// If allowGeneric is set, the operand type 可能是 an uninstantiated parameterized type or function
 // value.
 // If an error occurred, x.mode is set to invalid.
 func (check *Checker) exprOrType(x *operand, e ast.Expr, allowGeneric bool) {
@@ -1338,7 +1338,7 @@ func (check *Checker) exprOrType(x *operand, e ast.Expr, allowGeneric bool) {
 	check.singleValue(x)
 }
 
-// exclude reports an error if x.mode is in modeset and sets x.mode to invalid.
+// exclude 报告an error if x.mode is in modeset and sets x.mode to invalid.
 // The modeset may contain any of 1<<novalue, 1<<builtin, 1<<typexpr.
 func (check *Checker) exclude(x *operand, modeset uint) {
 	if modeset&(1<<x.mode) != 0 {
@@ -1366,7 +1366,7 @@ func (check *Checker) exclude(x *operand, modeset uint) {
 	}
 }
 
-// singleValue reports an error if x describes a tuple and sets x.mode to invalid.
+// singleValue 报告an error if x 描述 a tuple and sets x.mode to invalid.
 func (check *Checker) singleValue(x *operand) {
 	if x.mode == value {
 		// tuple types are never named - no need for underlying type below

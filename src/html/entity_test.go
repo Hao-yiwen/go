@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package html
 
@@ -16,9 +16,8 @@ func TestEntityLength(t *testing.T) {
 		t.Fatal("maps not loaded")
 	}
 
-	// We verify that the length of UTF-8 encoding of each value is <= 1 + len(key).
-	// The +1 comes from the leading "&". This property implies that the length of
-	// unescaped text is <= the length of escaped text.
+	// 我们验证每个值的 UTF-8 编码长度 <= 1 + len(key)。
+	// +1 来自前导的 "&"。此属性意味着反转义文本的长度 <= 转义文本的长度。
 	for k, v := range entity {
 		if 1+len(k) < utf8.RuneLen(v) {
 			t.Error("escaped entity &" + k + " is shorter than its UTF-8 encoding " + string(v))

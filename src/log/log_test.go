@@ -1,10 +1,10 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package log
 
-// These tests are too simple.
+// 这些测试太简单了。
 
 import (
 	"bufio"
@@ -27,7 +27,7 @@ const (
 	Rdate         = `[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]`
 	Rtime         = `[0-9][0-9]:[0-9][0-9]:[0-9][0-9]`
 	Rmicroseconds = `\.[0-9][0-9][0-9][0-9][0-9][0-9]`
-	Rline         = `(67|69):` // must update if the calls to l.Printf / l.Print below move
+	Rline         = `(67|69):` // 如果下面对 l.Printf / l.Print 的调用移动了位置，必须更新此值
 	Rlongfile     = `.*/[A-Za-z0-9_\-]+\.go:` + Rline
 	Rshortfile    = `[A-Za-z0-9_\-]+\.go:` + Rline
 )
@@ -35,29 +35,29 @@ const (
 type tester struct {
 	flag    int
 	prefix  string
-	pattern string // regexp that log output must match; we add ^ and expected_text$ always
+	pattern string // 日志输出必须匹配的正则表达式；我们总是添加 ^ 和 expected_text$
 }
 
 var tests = []tester{
-	// individual pieces:
+	// 单独的部分：
 	{0, "", ""},
 	{0, "XXX", "XXX"},
 	{Ldate, "", Rdate + " "},
 	{Ltime, "", Rtime + " "},
 	{Ltime | Lmsgprefix, "XXX", Rtime + " XXX"},
 	{Ltime | Lmicroseconds, "", Rtime + Rmicroseconds + " "},
-	{Lmicroseconds, "", Rtime + Rmicroseconds + " "}, // microsec implies time
+	{Lmicroseconds, "", Rtime + Rmicroseconds + " "}, // 微秒隐含时间
 	{Llongfile, "", Rlongfile + " "},
 	{Lshortfile, "", Rshortfile + " "},
-	{Llongfile | Lshortfile, "", Rshortfile + " "}, // shortfile overrides longfile
-	// everything at once:
+	{Llongfile | Lshortfile, "", Rshortfile + " "}, // shortfile 覆盖 longfile
+	// 全部一起：
 	{Ldate | Ltime | Lmicroseconds | Llongfile, "XXX", "XXX" + Rdate + " " + Rtime + Rmicroseconds + " " + Rlongfile + " "},
 	{Ldate | Ltime | Lmicroseconds | Lshortfile, "XXX", "XXX" + Rdate + " " + Rtime + Rmicroseconds + " " + Rshortfile + " "},
 	{Ldate | Ltime | Lmicroseconds | Llongfile | Lmsgprefix, "XXX", Rdate + " " + Rtime + Rmicroseconds + " " + Rlongfile + " XXX"},
 	{Ldate | Ltime | Lmicroseconds | Lshortfile | Lmsgprefix, "XXX", Rdate + " " + Rtime + Rmicroseconds + " " + Rshortfile + " XXX"},
 }
 
-// Test using Println("hello", 23, "world") or using Printf("hello %d world", 23)
+// 使用 Println("hello", 23, "world") 或使用 Printf("hello %d world", 23) 进行测试
 func testPrint(t *testing.T, flag int, prefix string, pattern string, useFormat bool) {
 	buf := new(strings.Builder)
 	SetOutput(buf)
@@ -106,7 +106,7 @@ func TestOutput(t *testing.T) {
 
 func TestNonNewLogger(t *testing.T) {
 	var l Logger
-	l.SetOutput(new(bytes.Buffer)) // minimal work to initialize a Logger
+	l.SetOutput(new(bytes.Buffer)) // 初始化 Logger 所需的最小工作量
 	l.Print("hello")
 }
 
@@ -146,7 +146,7 @@ func TestFlagAndPrefixSetting(t *testing.T) {
 	if p != "Reality:" {
 		t.Errorf(`Prefix: expected "Reality:" got %q`, p)
 	}
-	// Verify a log message looks right, with our prefix and microseconds present.
+	// 验证日志消息看起来正确，包含我们的前缀和微秒。
 	l.Print("hello")
 	pattern := "^Reality:" + Rdate + " " + Rtime + Rmicroseconds + " hello\n"
 	matched, err := regexp.Match(pattern, b.Bytes())
@@ -157,7 +157,7 @@ func TestFlagAndPrefixSetting(t *testing.T) {
 		t.Error("message did not match pattern")
 	}
 
-	// Ensure that a newline is added only if the buffer lacks a newline suffix.
+	// 确保只有当缓冲区缺少换行符后缀时才添加换行符。
 	b.Reset()
 	l.SetFlags(0)
 	l.SetPrefix("\n")
@@ -171,7 +171,7 @@ func TestUTCFlag(t *testing.T) {
 	var b strings.Builder
 	l := New(&b, "Test:", LstdFlags)
 	l.SetFlags(Ldate | Ltime | LUTC)
-	// Verify a log message looks right in the right time zone. Quantize to the second only.
+	// 验证日志消息在正确的时区中看起来正确。仅精确到秒。
 	now := time.Now().UTC()
 	l.Print("hello")
 	want := fmt.Sprintf("Test:%d/%.2d/%.2d %.2d:%.2d:%.2d hello\n",
@@ -180,8 +180,8 @@ func TestUTCFlag(t *testing.T) {
 	if got == want {
 		return
 	}
-	// It's possible we crossed a second boundary between getting now and logging,
-	// so add a second and try again. This should very nearly always work.
+	// 在获取 now 和记录日志之间，我们可能跨越了一秒的边界，
+	// 所以加一秒然后重试。这几乎总是能成功。
 	now = now.Add(time.Second)
 	want = fmt.Sprintf("Test:%d/%.2d/%.2d %.2d:%.2d:%.2d hello\n",
 		now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
@@ -209,8 +209,8 @@ func TestDiscard(t *testing.T) {
 	l := New(io.Discard, "", 0)
 	s := strings.Repeat("a", 102400)
 	c := testing.AllocsPerRun(100, func() { l.Printf("%s", s) })
-	// One allocation for slice passed to Printf,
-	// but none for formatting of long string.
+	// 传递给 Printf 的切片有一次分配，
+	// 但格式化长字符串没有分配。
 	if c > 1 {
 		t.Errorf("got %v allocs, want at most 1", c)
 	}
@@ -247,7 +247,7 @@ func TestCallDepth(t *testing.T) {
 		{"Default.Panicln", func() { Default().Panicf("Default.Panicln") }},
 	}
 
-	// calculate the line offset until the first test case
+	// 计算到第一个测试用例的行偏移量
 	_, _, line, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatalf("runtime.Caller failed")
@@ -256,7 +256,7 @@ func TestCallDepth(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// some of these calls uses os.Exit() to spawn a command and capture output
+			// 其中一些调用使用 os.Exit() 来生成命令并捕获输出
 			const envVar = "LOGTEST_CALL_DEPTH"
 			if os.Getenv(envVar) == "1" {
 				SetFlags(Lshortfile)
@@ -264,7 +264,7 @@ func TestCallDepth(t *testing.T) {
 				os.Exit(1)
 			}
 
-			// spawn test executable
+			// 生成测试可执行文件
 			cmd := testenv.Command(t, ep,
 				"-test.run=^"+regexp.QuoteMeta(t.Name())+"$",
 				"-test.count=1",
@@ -332,8 +332,8 @@ func BenchmarkPrintlnNoFlags(b *testing.B) {
 	}
 }
 
-// discard is identical to io.Discard,
-// but copied here to avoid the io.Discard optimization in Logger.
+// discard 与 io.Discard 相同，
+// 但复制到这里是为了避免 Logger 中的 io.Discard 优化。
 type discard struct{}
 
 func (discard) Write(p []byte) (int, error) {

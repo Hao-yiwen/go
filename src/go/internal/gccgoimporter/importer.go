@@ -1,8 +1,8 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package gccgoimporter implements Import for gccgo-generated object files.
+// gccgoimporter 包实现了 Import for gccgo-generated object files.
 package gccgoimporter // import "go/internal/gccgoimporter"
 
 import (
@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-// A PackageInit describes an imported package that needs initialization.
+// 一个PackageInit 描述 an imported package that needs initialization.
 type PackageInit struct {
 	Name     string // short package name
 	InitFunc string // name of init function
@@ -32,7 +32,7 @@ type InitData struct {
 	Priority int
 
 	// The list of packages which this package depends on to be initialized,
-	// including itself if needed. This is the subset of the transitive closure of
+	// including itself if needed. This 是 subset of the transitive closure of
 	// the package's dependencies that need initialization.
 	Inits []PackageInit
 }
@@ -70,9 +70,9 @@ const (
 	aixbigafMagic   = "<big"
 )
 
-// Opens the export data file at the given path. If this is an ELF file,
-// searches for and opens the .go_export section. If this is an archive,
-// reads the export data from the first member, which is assumed to be an ELF file.
+// Opens the export data file at the given path. If this 是一个n ELF file,
+// searches for and opens the .go_export section. If this 是一个n archive,
+// reads the export data from the first member, which 是一个ssumed to be an ELF file.
 // This is intended to replicate the logic in gofrontend.
 func openExportFile(fpath string) (reader io.ReadSeeker, closer io.Closer, err error) {
 	f, err := os.Open(fpath)
@@ -133,10 +133,10 @@ func openExportFile(fpath string) (reader io.ReadSeeker, closer io.Closer, err e
 	return
 }
 
-// An Importer resolves import paths to Packages. The imports map records
+// 一个Importer resolves import paths to Packages. The imports map records
 // packages already known, indexed by package path.
-// An importer must determine the canonical package path and check imports
-// to see if it is already present in the map. If so, the Importer can return
+// 一个importer must determine the canonical package path and check imports
+// to see if it 是一个lready present in the map. If so, the Importer can return
 // the map entry. Otherwise, the importer must load the package data for the
 // given path into a new *Package, record it in imports map, and return the
 // package.
@@ -248,7 +248,7 @@ func GetImporter(searchpaths []string, initmap map[*types.Package]InitData) Impo
 }
 
 // readMagic reads the four bytes at the start of a ReadSeeker and
-// returns them as a string.
+// 返回m as a string.
 func readMagic(reader io.ReadSeeker) (string, error) {
 	var magic [4]byte
 	if _, err := reader.Read(magic[:]); err != nil {

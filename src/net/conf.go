@@ -1,6 +1,6 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2015 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package net
 
@@ -15,52 +15,49 @@ import (
 	"sync"
 )
 
-// The net package's name resolution is rather complicated.
-// There are two main approaches, go and cgo.
-// The cgo resolver uses C functions like getaddrinfo.
-// The go resolver reads system files directly and
-// sends DNS packets directly to servers.
+// net 包的名称解析相当复杂。
+// 有两种主要方法：go 和 cgo。
+// cgo 解析器使用像 getaddrinfo 这样的 C 函数。
+// go 解析器直接读取系统文件并直接向服务器发送 DNS 数据包。
 //
-// The netgo build tag prefers the go resolver.
-// The netcgo build tag prefers the cgo resolver.
+// netgo 构建标签优先使用 go 解析器。
+// netcgo 构建标签优先使用 cgo 解析器。
 //
-// The netgo build tag also prohibits the use of the cgo tool.
-// However, on Darwin, Plan 9, and Windows the cgo resolver is still available.
-// On those systems the cgo resolver does not require the cgo tool.
-// (The term "cgo resolver" was locked in by GODEBUG settings
-// at a time when the cgo resolver did require the cgo tool.)
+// netgo 构建标签也禁止使用 cgo 工具。
+// 然而，在 Darwin、Plan 9 和 Windows 上，cgo 解析器仍然可用。
+// 在这些系统上，cgo 解析器不需要 cgo 工具。
+// （术语 "cgo 解析器" 是在 cgo 解析器确实需要 cgo 工具时
+// 通过 GODEBUG 设置锁定的。）
 //
-// Adding netdns=go to GODEBUG will prefer the go resolver.
-// Adding netdns=cgo to GODEBUG will prefer the cgo resolver.
+// 在 GODEBUG 中添加 netdns=go 将优先使用 go 解析器。
+// 在 GODEBUG 中添加 netdns=cgo 将优先使用 cgo 解析器。
 //
-// The Resolver struct has a PreferGo field that user code
-// may set to prefer the go resolver. It is documented as being
-// equivalent to adding netdns=go to GODEBUG.
+// Resolver 结构体有一个 PreferGo 字段，用户代码可以设置它
+// 来优先使用 go 解析器。它被记录为等同于在 GODEBUG 中添加 netdns=go。
 //
-// When deciding which resolver to use, we first check the PreferGo field.
-// If that is not set, we check the GODEBUG setting.
-// If that is not set, we check the netgo or netcgo build tag.
-// If none of those are set, we normally prefer the go resolver by default.
-// However, if the cgo resolver is available,
-// there is a complex set of conditions for which we prefer the cgo resolver.
+// 在决定使用哪个解析器时，我们首先检查 PreferGo 字段。
+// 如果未设置，我们检查 GODEBUG 设置。
+// 如果未设置，我们检查 netgo 或 netcgo 构建标签。
+// 如果这些都未设置，我们通常默认优先使用 go 解析器。
+// 然而，如果 cgo 解析器可用，
+// 有一组复杂的条件使我们优先使用 cgo 解析器。
 //
-// Other files define the netGoBuildTag, netCgoBuildTag, and cgoAvailable
-// constants.
+// 其他文件定义了 netGoBuildTag、netCgoBuildTag 和 cgoAvailable 常量。
 
-// conf is used to determine name resolution configuration.
+// conf 用于确定名称解析配置。
 type conf struct {
-	netGo  bool // prefer go approach, based on build tag and GODEBUG
-	netCgo bool // prefer cgo approach, based on build tag and GODEBUG
+	netGo  bool // 优先使用 go 方式，基于构建标签和 GODEBUG
+	netCgo bool // 优先使用 cgo 方式，基于构建标签和 GODEBUG
 
-	dnsDebugLevel int // from GODEBUG
+	dnsDebugLevel int // 来自 GODEBUG
 
-	preferCgo bool // if no explicit preference, use cgo
+	preferCgo bool // 如果没有明确偏好，使用 cgo
 
-	goos     string   // copy of runtime.GOOS, used for testing
-	mdnsTest mdnsTest // assume /etc/mdns.allow exists, for testing
+	goos     string   // runtime.GOOS 的副本，用于测试
+	mdnsTest mdnsTest // 假设 /etc/mdns.allow 存在，用于测试
 }
 
-// mdnsTest is for testing only.
+// mdnsTest 仅用于测试。
 type mdnsTest int
 
 const (
@@ -70,18 +67,18 @@ const (
 )
 
 var (
-	confOnce sync.Once // guards init of confVal via initConfVal
+	confOnce sync.Once // 通过 initConfVal 保护 confVal 的初始化
 	confVal  = &conf{goos: runtime.GOOS}
 )
 
-// systemConf returns the machine's network configuration.
+// systemConf 返回机器的网络配置。
 func systemConf() *conf {
 	confOnce.Do(initConfVal)
 	return confVal
 }
 
-// initConfVal initializes confVal based on the environment
-// that will not change during program execution.
+// initConfVal 基于在程序执行期间不会改变的环境
+// 初始化 confVal。
 func initConfVal() {
 	dnsMode, debugLevel := goDebugNetDNS()
 	confVal.netGo = netGoBuildTag || dnsMode == "go"
@@ -121,67 +118,64 @@ func initConfVal() {
 		}()
 	}
 
-	// The remainder of this function sets preferCgo based on
-	// conditions that will not change during program execution.
+	// 此函数的其余部分基于在程序执行期间不会改变的
+	// 条件设置 preferCgo。
 
-	// By default, prefer the go resolver.
+	// 默认情况下，优先使用 go 解析器。
 	confVal.preferCgo = false
 
-	// If the cgo resolver is not available, we can't prefer it.
+	// 如果 cgo 解析器不可用，我们就不能优先使用它。
 	if !cgoAvailable {
 		return
 	}
 
-	// Some operating systems always prefer the cgo resolver.
+	// 某些操作系统始终优先使用 cgo 解析器。
 	if goosPrefersCgo() {
 		confVal.preferCgo = true
 		return
 	}
 
-	// The remaining checks are specific to Unix systems.
+	// 其余检查特定于 Unix 系统。
 	switch runtime.GOOS {
 	case "plan9", "windows", "js", "wasip1":
 		return
 	}
 
-	// If any environment-specified resolver options are specified,
-	// prefer the cgo resolver.
-	// Note that LOCALDOMAIN can change behavior merely by being
-	// specified with the empty string.
+	// 如果指定了任何环境指定的解析器选项，
+	// 则优先使用 cgo 解析器。
+	// 注意 LOCALDOMAIN 仅通过用空字符串指定就可以改变行为。
 	_, localDomainDefined := os.LookupEnv("LOCALDOMAIN")
 	if localDomainDefined || os.Getenv("RES_OPTIONS") != "" || os.Getenv("HOSTALIASES") != "" {
 		confVal.preferCgo = true
 		return
 	}
 
-	// OpenBSD apparently lets you override the location of resolv.conf
-	// with ASR_CONFIG. If we notice that, defer to libc.
+	// OpenBSD 显然允许你用 ASR_CONFIG 覆盖 resolv.conf 的位置。
+	// 如果我们注意到这一点，就交给 libc 处理。
 	if runtime.GOOS == "openbsd" && os.Getenv("ASR_CONFIG") != "" {
 		confVal.preferCgo = true
 		return
 	}
 }
 
-// goosPrefersCgo reports whether the GOOS value passed in prefers
-// the cgo resolver.
+// goosPrefersCgo 报告传入的 GOOS 值是否优先使用 cgo 解析器。
 func goosPrefersCgo() bool {
 	switch runtime.GOOS {
-	// Historically on Windows and Plan 9 we prefer the
-	// cgo resolver (which doesn't use the cgo tool) rather than
-	// the go resolver. This is because originally these
-	// systems did not support the go resolver.
-	// Keep it this way for better compatibility.
-	// Perhaps we can revisit this some day.
+	// 历史上在 Windows 和 Plan 9 上，我们优先使用
+	// cgo 解析器（它不使用 cgo 工具）而不是 go 解析器。
+	// 这是因为最初这些系统不支持 go 解析器。
+	// 为了更好的兼容性保持这种方式。
+	// 也许将来某天我们可以重新审视这个问题。
 	case "windows", "plan9":
 		return true
 
-	// Darwin pops up annoying dialog boxes if programs try to
-	// do their own DNS requests, so prefer cgo.
+	// 如果程序尝试自己进行 DNS 请求，Darwin 会弹出烦人的对话框，
+	// 所以优先使用 cgo。
 	case "darwin", "ios":
 		return true
 
-	// DNS requests don't work on Android, so prefer the cgo resolver.
-	// Issue #10714.
+	// DNS 请求在 Android 上不起作用，所以优先使用 cgo 解析器。
+	// Issue #10714。
 	case "android":
 		return true
 
@@ -190,22 +184,21 @@ func goosPrefersCgo() bool {
 	}
 }
 
-// mustUseGoResolver reports whether a DNS lookup of any sort is
-// required to use the go resolver. The provided Resolver is optional.
-// This will report true if the cgo resolver is not available.
+// mustUseGoResolver 报告任何类型的 DNS 查找是否需要使用 go 解析器。
+// 提供的 Resolver 是可选的。
+// 如果 cgo 解析器不可用，这将返回 true。
 func (c *conf) mustUseGoResolver(r *Resolver) bool {
 	if !cgoAvailable {
 		return true
 	}
 
 	if runtime.GOOS == "plan9" {
-		// TODO(bradfitz): for now we only permit use of the PreferGo
-		// implementation when there's a non-nil Resolver with a
-		// non-nil Dialer. This is a sign that the code is trying
-		// to use their DNS-speaking net.Conn (such as an in-memory
-		// DNS cache) and they don't want to actually hit the network.
-		// Once we add support for looking the default DNS servers
-		// from plan9, though, then we can relax this.
+		// TODO(bradfitz): 目前我们只允许在有非 nil Resolver 和
+		// 非 nil Dialer 时使用 PreferGo 实现。这表明代码正在尝试
+		// 使用它们自己的 DNS 通信 net.Conn（例如内存中的 DNS 缓存），
+		// 并且它们不想实际访问网络。
+		// 但是，一旦我们添加了从 plan9 查找默认 DNS 服务器的支持，
+		// 我们就可以放宽这个限制。
 		if r == nil || r.Dial == nil {
 			return false
 		}
@@ -214,9 +207,9 @@ func (c *conf) mustUseGoResolver(r *Resolver) bool {
 	return c.netGo || r.preferGo()
 }
 
-// addrLookupOrder determines which strategy to use to resolve addresses.
-// The provided Resolver is optional. nil means to not consider its options.
-// It also returns dnsConfig when it was used to determine the lookup order.
+// addrLookupOrder 确定使用哪种策略来解析地址。
+// 提供的 Resolver 是可选的。nil 表示不考虑其选项。
+// 当用于确定查找顺序时，它还返回 dnsConfig。
 func (c *conf) addrLookupOrder(r *Resolver, addr string) (ret hostLookupOrder, dnsConf *dnsConfig) {
 	if c.dnsDebugLevel > 1 {
 		defer func() {
@@ -226,9 +219,9 @@ func (c *conf) addrLookupOrder(r *Resolver, addr string) (ret hostLookupOrder, d
 	return c.lookupOrder(r, "")
 }
 
-// hostLookupOrder determines which strategy to use to resolve hostname.
-// The provided Resolver is optional. nil means to not consider its options.
-// It also returns dnsConfig when it was used to determine the lookup order.
+// hostLookupOrder 确定使用哪种策略来解析主机名。
+// 提供的 Resolver 是可选的。nil 表示不考虑其选项。
+// 当用于确定查找顺序时，它还返回 dnsConfig。
 func (c *conf) hostLookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, dnsConf *dnsConfig) {
 	if c.dnsDebugLevel > 1 {
 		defer func() {
@@ -239,68 +232,68 @@ func (c *conf) hostLookupOrder(r *Resolver, hostname string) (ret hostLookupOrde
 }
 
 func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, dnsConf *dnsConfig) {
-	// fallbackOrder is the order we return if we can't figure it out.
+	// fallbackOrder 是当我们无法确定时返回的顺序。
 	var fallbackOrder hostLookupOrder
 
 	var canUseCgo bool
 	if c.mustUseGoResolver(r) {
-		// Go resolver was explicitly requested
-		// or cgo resolver is not available.
-		// Figure out the order below.
+		// Go 解析器被明确请求
+		// 或 cgo 解析器不可用。
+		// 在下面确定顺序。
 		fallbackOrder = hostLookupFilesDNS
 		canUseCgo = false
 	} else if c.netCgo {
-		// Cgo resolver was explicitly requested.
+		// Cgo 解析器被明确请求。
 		return hostLookupCgo, nil
 	} else if c.preferCgo {
-		// Given a choice, we prefer the cgo resolver.
+		// 有选择时，我们优先使用 cgo 解析器。
 		return hostLookupCgo, nil
 	} else {
-		// Neither resolver was explicitly requested
-		// and we have no preference.
+		// 两个解析器都没有被明确请求，
+		// 我们也没有偏好。
 
 		if bytealg.IndexByteString(hostname, '\\') != -1 || bytealg.IndexByteString(hostname, '%') != -1 {
-			// Don't deal with special form hostnames
-			// with backslashes or '%'.
+			// 不处理带有反斜杠或 '%' 的
+			// 特殊形式主机名。
 			return hostLookupCgo, nil
 		}
 
-		// If something is unrecognized, use cgo.
+		// 如果有什么不认识的，使用 cgo。
 		fallbackOrder = hostLookupCgo
 		canUseCgo = true
 	}
 
-	// On systems that don't use /etc/resolv.conf or /etc/nsswitch.conf, we are done.
+	// 在不使用 /etc/resolv.conf 或 /etc/nsswitch.conf 的系统上，我们已完成。
 	switch c.goos {
 	case "windows", "plan9", "android", "ios":
 		return fallbackOrder, nil
 	}
 
-	// Try to figure out the order to use for searches.
-	// If we don't recognize something, use fallbackOrder.
-	// That will use cgo unless the Go resolver was explicitly requested.
-	// If we do figure out the order, return something other
-	// than fallbackOrder to use the Go resolver with that order.
+	// 尝试确定搜索使用的顺序。
+	// 如果我们不认识某些内容，使用 fallbackOrder。
+	// 除非明确请求 Go 解析器，否则将使用 cgo。
+	// 如果我们确定了顺序，返回 fallbackOrder 以外的值
+	// 以使用带有该顺序的 Go 解析器。
 
 	dnsConf = getSystemDNSConfig()
 
 	if canUseCgo && dnsConf.err != nil && !errors.Is(dnsConf.err, fs.ErrNotExist) && !errors.Is(dnsConf.err, fs.ErrPermission) {
-		// We can't read the resolv.conf file, so use cgo if we can.
+		// 我们无法读取 resolv.conf 文件，所以如果可以就使用 cgo。
 		return hostLookupCgo, dnsConf
 	}
 
 	if canUseCgo && dnsConf.unknownOpt {
-		// We didn't recognize something in resolv.conf,
-		// so use cgo if we can.
+		// 我们不认识 resolv.conf 中的某些内容，
+		// 所以如果可以就使用 cgo。
 		return hostLookupCgo, dnsConf
 	}
 
-	// OpenBSD is unique and doesn't use nsswitch.conf.
-	// It also doesn't support mDNS.
+	// OpenBSD 是独特的，不使用 nsswitch.conf。
+	// 它也不支持 mDNS。
 	if c.goos == "openbsd" {
-		// OpenBSD's resolv.conf manpage says that a
-		// non-existent resolv.conf means "lookup" defaults
-		// to only "files", without DNS lookups.
+		// OpenBSD 的 resolv.conf 手册页说，
+		// 不存在的 resolv.conf 意味着 "lookup" 默认
+		// 仅为 "files"，不进行 DNS 查找。
 		if errors.Is(dnsConf.err, fs.ErrNotExist) {
 			return hostLookupFiles, dnsConf
 		}
@@ -308,13 +301,12 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 		lookup := dnsConf.lookup
 		if len(lookup) == 0 {
 			// https://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man5/resolv.conf.5
-			// "If the lookup keyword is not used in the
-			// system's resolv.conf file then the assumed
-			// order is 'bind file'"
+			// "如果系统的 resolv.conf 文件中没有使用 lookup 关键字，
+			// 则假定顺序为 'bind file'"
 			return hostLookupDNSFiles, dnsConf
 		}
 		if len(lookup) < 1 || len(lookup) > 2 {
-			// We don't recognize this format.
+			// 我们不认识这种格式。
 			return fallbackOrder, dnsConf
 		}
 		switch lookup[0] {
@@ -323,7 +315,7 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 				if lookup[1] == "file" {
 					return hostLookupDNSFiles, dnsConf
 				}
-				// Unrecognized.
+				// 不认识。
 				return fallbackOrder, dnsConf
 			}
 			return hostLookupDNS, dnsConf
@@ -332,39 +324,39 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 				if lookup[1] == "bind" {
 					return hostLookupFilesDNS, dnsConf
 				}
-				// Unrecognized.
+				// 不认识。
 				return fallbackOrder, dnsConf
 			}
 			return hostLookupFiles, dnsConf
 		default:
-			// Unrecognized.
+			// 不认识。
 			return fallbackOrder, dnsConf
 		}
 
-		// We always return before this point.
-		// The code below is for non-OpenBSD.
+		// 我们总是在此之前返回。
+		// 下面的代码是为非 OpenBSD 系统准备的。
 	}
 
-	// Canonicalize the hostname by removing any trailing dot.
+	// 通过移除尾部的点来规范化主机名。
 	hostname = stringslite.TrimSuffix(hostname, ".")
 
 	nss := getSystemNSS()
 	srcs := nss.sources["hosts"]
-	// If /etc/nsswitch.conf doesn't exist or doesn't specify any
-	// sources for "hosts", assume Go's DNS will work fine.
+	// 如果 /etc/nsswitch.conf 不存在或没有为 "hosts" 指定任何源，
+	// 假设 Go 的 DNS 会正常工作。
 	if errors.Is(nss.err, fs.ErrNotExist) || (nss.err == nil && len(srcs) == 0) {
 		if canUseCgo && c.goos == "solaris" {
-			// illumos defaults to
-			// "nis [NOTFOUND=return] files",
-			// which the go resolver doesn't support.
+			// illumos 默认为
+			// "nis [NOTFOUND=return] files"，
+			// go 解析器不支持这个。
 			return hostLookupCgo, dnsConf
 		}
 
 		return hostLookupFilesDNS, dnsConf
 	}
 	if nss.err != nil {
-		// We failed to parse or open nsswitch.conf, so
-		// we have nothing to base an order on.
+		// 我们无法解析或打开 nsswitch.conf，所以
+		// 我们没有确定顺序的依据。
 		return fallbackOrder, dnsConf
 	}
 
@@ -376,7 +368,7 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 	for i, src := range srcs {
 		if src.source == "files" || src.source == "dns" {
 			if canUseCgo && !src.standardCriteria() {
-				// non-standard; let libc deal with it.
+				// 非标准；让 libc 处理它。
 				return hostLookupCgo, dnsConf
 			}
 			if src.source == "files" {
@@ -395,8 +387,8 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 		if canUseCgo {
 			switch {
 			case hostname != "" && src.source == "myhostname":
-				// Let the cgo resolver handle myhostname
-				// if we are looking up the local hostname.
+				// 如果我们正在查找本地主机名，
+				// 让 cgo 解析器处理 myhostname。
 				if isLocalhost(hostname) || isGateway(hostname) || isOutbound(hostname) {
 					return hostLookupCgo, dnsConf
 				}
@@ -407,22 +399,22 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 				continue
 			case hostname != "" && stringslite.HasPrefix(src.source, "mdns"):
 				if stringsHasSuffixFold(hostname, ".local") {
-					// Per RFC 6762, the ".local" TLD is special. And
-					// because Go's native resolver doesn't do mDNS or
-					// similar local resolution mechanisms, assume that
-					// libc might (via Avahi, etc) and use cgo.
+					// 根据 RFC 6762，".local" TLD 是特殊的。
+					// 因为 Go 的原生解析器不支持 mDNS 或
+					// 类似的本地解析机制，假设
+					// libc 可能支持（通过 Avahi 等）并使用 cgo。
 					return hostLookupCgo, dnsConf
 				}
 
-				// We don't parse mdns.allow files. They're rare. If one
-				// exists, it might list other TLDs (besides .local) or even
-				// '*', so just let libc deal with it.
+				// 我们不解析 mdns.allow 文件。它们很少见。如果存在，
+				// 它可能列出其他 TLD（除了 .local）甚至 '*'，
+				// 所以直接让 libc 处理它。
 				var haveMDNSAllow bool
 				switch c.mdnsTest {
 				case mdnsFromSystem:
 					_, err := os.Stat("/etc/mdns.allow")
 					if err != nil && !errors.Is(err, fs.ErrNotExist) {
-						// Let libc figure out what is going on.
+						// 让 libc 弄清楚发生了什么。
 						return hostLookupCgo, dnsConf
 					}
 					haveMDNSAllow = err == nil
@@ -436,7 +428,7 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 				}
 				continue
 			default:
-				// Some source we don't know how to deal with.
+				// 某个我们不知道如何处理的源。
 				return hostLookupCgo, dnsConf
 			}
 		}
@@ -451,9 +443,9 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 			}
 		}
 
-		// If we saw a source we don't recognize, which can only
-		// happen if we can't use the cgo resolver, treat it as DNS,
-		// but only when there is no dns in all other sources.
+		// 如果我们看到一个不认识的源，这只能发生在我们无法使用
+		// cgo 解析器时，将其视为 DNS，
+		// 但仅当所有其他源中没有 dns 时。
 		if !hasDNSSource {
 			dnsSource = true
 			if first == "" {
@@ -462,8 +454,8 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 		}
 	}
 
-	// Cases where Go can handle it without cgo and C thread overhead,
-	// or where the Go resolver has been forced.
+	// Go 可以处理的情况，无需 cgo 和 C 线程开销，
+	// 或者 Go 解析器被强制使用的情况。
 	switch {
 	case filesSource && dnsSource:
 		if first == "files" {
@@ -477,24 +469,24 @@ func (c *conf) lookupOrder(r *Resolver, hostname string) (ret hostLookupOrder, d
 		return hostLookupDNS, dnsConf
 	}
 
-	// Something weird. Fallback to the default.
+	// 一些奇怪的情况。回退到默认值。
 	return fallbackOrder, dnsConf
 }
 
 var netdns = godebug.New("netdns")
 
-// goDebugNetDNS parses the value of the GODEBUG "netdns" value.
-// The netdns value can be of the form:
+// goDebugNetDNS 解析 GODEBUG "netdns" 值。
+// netdns 值可以是以下形式：
 //
-//	1       // debug level 1
-//	2       // debug level 2
-//	cgo     // use cgo for DNS lookups
-//	go      // use go for DNS lookups
-//	cgo+1   // use cgo for DNS lookups + debug level 1
-//	1+cgo   // same
-//	cgo+2   // same, but debug level 2
+//	1       // 调试级别 1
+//	2       // 调试级别 2
+//	cgo     // 使用 cgo 进行 DNS 查找
+//	go      // 使用 go 进行 DNS 查找
+//	cgo+1   // 使用 cgo 进行 DNS 查找 + 调试级别 1
+//	1+cgo   // 同上
+//	cgo+2   // 同上，但调试级别 2
 //
-// etc.
+// 等等。
 func goDebugNetDNS() (dnsMode string, debugLevel int) {
 	goDebug := netdns.Value()
 	parsePart := func(s string) {
@@ -516,20 +508,17 @@ func goDebugNetDNS() (dnsMode string, debugLevel int) {
 	return
 }
 
-// isLocalhost reports whether h should be considered a "localhost"
-// name for the myhostname NSS module.
+// isLocalhost 报告 h 是否应被视为 myhostname NSS 模块的 "localhost" 名称。
 func isLocalhost(h string) bool {
 	return stringsEqualFold(h, "localhost") || stringsEqualFold(h, "localhost.localdomain") || stringsHasSuffixFold(h, ".localhost") || stringsHasSuffixFold(h, ".localhost.localdomain")
 }
 
-// isGateway reports whether h should be considered a "gateway"
-// name for the myhostname NSS module.
+// isGateway 报告 h 是否应被视为 myhostname NSS 模块的 "gateway" 名称。
 func isGateway(h string) bool {
 	return stringsEqualFold(h, "_gateway")
 }
 
-// isOutbound reports whether h should be considered an "outbound"
-// name for the myhostname NSS module.
+// isOutbound 报告 h 是否应被视为 myhostname NSS 模块的 "outbound" 名称。
 func isOutbound(h string) bool {
 	return stringsEqualFold(h, "_outbound")
 }

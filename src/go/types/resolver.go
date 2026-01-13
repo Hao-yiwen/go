@@ -1,6 +1,6 @@
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2013 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package types
 
@@ -17,7 +17,7 @@ import (
 	"unicode"
 )
 
-// A declInfo describes a package-level const, type, var, or func declaration.
+// 一个declInfo 描述 a package-level const, type, var, or func declaration.
 type declInfo struct {
 	file      *Scope        // scope of file containing this declaration
 	version   goVersion     // Go version of file containing this declaration
@@ -32,7 +32,7 @@ type declInfo struct {
 	deps map[Object]bool // lazily initialized
 }
 
-// hasInitializer reports whether the declared object has an initialization
+// hasInitializer 报告whether the declared object has an initialization
 // expression or function body.
 func (d *declInfo) hasInitializer() bool {
 	return d.init != nil || d.fdecl != nil && d.fdecl.Body != nil
@@ -50,7 +50,7 @@ func (d *declInfo) addDep(obj Object) {
 
 // arityMatch checks that the lhs and rhs of a const or var decl
 // have the appropriate number of names and init exprs. For const
-// decls, init is the value spec providing the init exprs; for
+// decls, init 是 value spec providing the init exprs; for
 // var decls, init is nil (the init exprs are in s in this case).
 func (check *Checker) arityMatch(s, init *ast.ValueSpec) {
 	l := len(s.Names)
@@ -124,7 +124,7 @@ func (check *Checker) declarePkgObj(ident *ast.Ident, obj Object, d *declInfo) {
 	obj.setOrder(uint32(len(check.objMap)))
 }
 
-// filename returns a filename suitable for debugging output.
+// filename 返回a filename suitable for debugging output.
 func (check *Checker) filename(fileNo int) string {
 	file := check.files[fileNo]
 	if pos := file.Pos(); pos.IsValid() {
@@ -194,7 +194,7 @@ func (check *Checker) importPackage(at positioner, path, dir string) *Package {
 		}
 	}
 
-	// package should be complete or marked fake, but be cautious
+	// package 应该是 complete or marked fake, but be cautious
 	if imp.complete || imp.fake {
 		check.impMap[key] = imp
 		// Once we've formatted an error message, keep the pkgPathMap
@@ -216,7 +216,7 @@ func (check *Checker) importPackage(at positioner, path, dir string) *Package {
 func (check *Checker) collectObjects() {
 	pkg := check.pkg
 
-	// pkgImports is the set of packages already imported by any package file seen
+	// pkgImports 是 set of packages already imported by any package file seen
 	// so far. Used to avoid duplicate entries in pkg.imports. Allocate and populate
 	// it (pkg.imports may not be empty if we are checking test files incrementally).
 	// Note that pkgImports is keyed by package (and thus package path), not by an
@@ -254,7 +254,7 @@ func (check *Checker) collectObjects() {
 		check.recordScope(file, fileScope)
 
 		// determine file directory, necessary to resolve imports
-		// FileName may be "" (typically for tests) in which case
+		// FileName 可能是 "" (typically for tests) in which case
 		// we get "." as the directory which is what we would want.
 		fileDir := dir(check.fset.Position(file.Name.Pos()).Filename)
 
@@ -325,13 +325,13 @@ func (check *Checker) collectObjects() {
 						// Note: Avoid eager resolve(name, obj) here, so we only
 						// resolve dot-imported objects as needed.
 
-						// A package scope may contain non-exported objects,
+						// 一个package scope may contain non-exported objects,
 						// do not import them!
 						if token.IsExported(name) {
 							// declare dot-imported object
 							// (Do not use check.declare because it modifies the object
 							// via Object.setScopePos, which leads to a race condition;
-							// the object may be imported into more than one file scope
+							// the object 可能是 imported into more than one file scope
 							// concurrently. See go.dev/issue/32154.)
 							if alt := fileScope.Lookup(name); alt != nil {
 								err := check.newError(DuplicateDecl)
@@ -452,7 +452,7 @@ func (check *Checker) collectObjects() {
 				info := &declInfo{file: fileScope, version: check.version, fdecl: d.decl}
 				// Methods are not package-level objects but we still track them in the
 				// object map so that we can handle them like regular functions (if the
-				// receiver is invalid); also we need their fdecl info when associating
+				receiver 是 invalid); also we need their fdecl info when associating
 				// them with their receiver base type, below.
 				check.objMap[obj] = info
 				obj.setOrder(uint32(len(check.objMap)))
@@ -481,7 +481,7 @@ func (check *Checker) collectObjects() {
 
 	// Now that we have all package scope objects and all methods,
 	// associate methods with receiver base type name where possible.
-	// Ignore methods that have an invalid receiver. They will be
+	// Ignore methods that have an invalid receiver. They 将是
 	// type-checked later, with regular functions.
 	if methods == nil {
 		return
@@ -513,13 +513,13 @@ func (check *Checker) sortObjects() {
 }
 
 // unpackRecv unpacks a receiver type expression and returns its components: ptr indicates
-// whether rtyp is a pointer receiver, base is the receiver base type expression stripped
+// whether rtyp 是一个 pointer receiver, base 是 receiver base type expression stripped
 // of its type parameters (if any), and tparams are its type parameter names, if any. The
 // type parameters are only unpacked if unpackParams is set. For instance, given the rtyp
 //
 //	*T[A, _]
 //
-// ptr is true, base is T, and tparams is [A, _] (assuming unpackParams is set).
+// ptr 为真, base is T, and tparams is [A, _] (assuming unpackParams is set).
 // Note that base may not be a *ast.Ident for erroneous programs.
 func (check *Checker) unpackRecv(rtyp ast.Expr, unpackParams bool) (ptr bool, base ast.Expr, tparams []*ast.Ident) {
 	// unpack receiver type
@@ -543,7 +543,7 @@ func (check *Checker) unpackRecv(rtyp ast.Expr, unpackParams bool) (ptr bool, ba
 				case *ast.BadExpr:
 					// ignore - error already reported by parser
 				case nil:
-					check.error(ix.orig, InvalidSyntaxTree, "parameterized receiver contains nil parameters")
+					check.error(ix.orig, InvalidSyntaxTree, "parameterized receiver 包含 nil parameters")
 				default:
 					check.errorf(arg, BadDecl, "receiver type parameter %s must be an identifier", arg)
 				}
@@ -558,8 +558,8 @@ func (check *Checker) unpackRecv(rtyp ast.Expr, unpackParams bool) (ptr bool, ba
 	return
 }
 
-// resolveBaseTypeName returns the non-alias base type name for the given name, and whether
-// there was a pointer indirection to get to it. The base type name must be declared
+// resolveBaseTypeName 返回the non-alias base type name for the given name, and whether
+// there was a pointer indirection to get to it. The base type name 必须是 declared
 // in package scope, and there can be at most one pointer indirection. Traversals
 // through generic alias types are not permitted. If no such type name exists, the
 // returned base is nil.
@@ -576,7 +576,7 @@ func (check *Checker) resolveBaseTypeName(ptr bool, name *ast.Ident) (ptr_ bool,
 			break
 		}
 
-		// the object must be a type name...
+		// the object 必须是 a type name...
 		tname, _ := obj.(*TypeName)
 		if tname == nil {
 			break
@@ -587,7 +587,7 @@ func (check *Checker) resolveBaseTypeName(ptr bool, name *ast.Ident) (ptr_ bool,
 			break
 		}
 
-		// we're done if tdecl describes a defined type (not an alias)
+		// we're done if tdecl 描述 a defined type (not an alias)
 		tdecl := check.objMap[tname].tdecl // must exist for objects in package scope
 		if !tdecl.Assign.IsValid() {
 			return ptr, tname
@@ -618,7 +618,7 @@ func (check *Checker) resolveBaseTypeName(ptr bool, name *ast.Ident) (ptr_ bool,
 			typ = ast.Unparen(pexpr.X) // continue with pointer base type
 		}
 
-		// After dereferencing, typ must be a locally defined type name.
+		// After dereferencing, typ 必须是 a locally defined type name.
 		// Referring to other packages (qualified identifiers) or going
 		// through instantiated types (index expressions) is not permitted,
 		// so we can ignore those.
@@ -663,10 +663,10 @@ func (check *Checker) packageObjects() {
 		}
 	} else {
 		// Without Alias nodes, we process non-alias type declarations first, followed by
-		// alias declarations, and then everything else. This appears to avoid most situations
-		// where the type of an alias is needed before it is available.
+		// alias declarations, and then everything else. Th是一个ppears to avoid most situations
+		// where the type of an alias is needed before it 是一个vailable.
 		// There may still be cases where this is not good enough (see also go.dev/issue/25838).
-		// In those cases Checker.ident will report an error ("invalid use of type alias").
+		// In those cases Checker.ident will report an error ("invalid use 类型为 alias").
 		var aliasList []*TypeName
 		var othersList []Object // everything that's not a type
 		// phase 1: non-alias type declarations
@@ -691,7 +691,7 @@ func (check *Checker) packageObjects() {
 		}
 	}
 
-	// At this point we may have a non-empty check.methods map; this means that not all
+	// At this point we may have a non-empty check.methods map; this 意味着 not all
 	// entries were deleted at the end of typeDecl because the respective receiver base
 	// types were not found. In that case, an error was reported when declaring those
 	// methods. We can now safely discard this map.
@@ -735,7 +735,7 @@ func (check *Checker) errorUnusedPkg(obj *PkgName) {
 	}
 }
 
-// dir makes a good-faith attempt to return the directory
+// dir 使 a good-faith attempt to return the directory
 // portion of path. If path is empty, the result is ".".
 // (Per the go/build package dependency tests, we cannot import
 // path/filepath and simply use filepath.Dir.)

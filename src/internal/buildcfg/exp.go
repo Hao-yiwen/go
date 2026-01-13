@@ -12,22 +12,21 @@ import (
 	"internal/goexperiment"
 )
 
-// ExperimentFlags represents a set of GOEXPERIMENT flags relative to a baseline
-// (platform-default) experiment configuration.
+// ExperimentFlags 表示相对于基线
+// （平台默认）实验配置的一组 GOEXPERIMENT 标志。
 type ExperimentFlags struct {
 	goexperiment.Flags
 	baseline goexperiment.Flags
 }
 
-// Experiment contains the toolchain experiments enabled for the
-// current build.
+// Experiment 包含为当前构建启用的工具链实验。
 //
-// (This is not necessarily the set of experiments the compiler itself
-// was built with.)
+// （这不一定是编译器本身
+// 构建时使用的实验集合。）
 //
-// Experiment.baseline specifies the experiment flags that are enabled by
-// default in the current toolchain. This is, in effect, the "control"
-// configuration and any variation from this is an experiment.
+// Experiment.baseline 指定在当前工具链中默认启用的实验标志。
+// 这实际上是"对照"
+// 配置，任何与此的偏差都是一个实验。
 var Experiment ExperimentFlags = func() ExperimentFlags {
 	flags, err := ParseGOEXPERIMENT(GOOS, GOARCH, envOr("GOEXPERIMENT", defaultGOEXPERIMENT))
 	if err != nil {
@@ -37,29 +36,29 @@ var Experiment ExperimentFlags = func() ExperimentFlags {
 	return *flags
 }()
 
-// DefaultGOEXPERIMENT is the embedded default GOEXPERIMENT string.
-// It is not guaranteed to be canonical.
+// DefaultGOEXPERIMENT 是嵌入的默认 GOEXPERIMENT 字符串。
+// 不保证它是规范的。
 const DefaultGOEXPERIMENT = defaultGOEXPERIMENT
 
-// FramePointerEnabled enables the use of platform conventions for
-// saving frame pointers.
+// FramePointerEnabled 启用平台约定的使用以
+// 保存帧指针。
 //
-// This used to be an experiment, but now it's always enabled on
-// platforms that support it.
+// 这曾经是一个实验，但现在它始终在
+// 支持它的平台上启用。
 //
-// Note: must agree with runtime.framepointer_enabled.
+// 注意：必须与 runtime.framepointer_enabled 一致。
 var FramePointerEnabled = GOARCH == "amd64" || GOARCH == "arm64"
 
-// ParseGOEXPERIMENT parses a (GOOS, GOARCH, GOEXPERIMENT)
-// configuration tuple and returns the enabled and baseline experiment
-// flag sets.
+// ParseGOEXPERIMENT 解析 (GOOS, GOARCH, GOEXPERIMENT)
+// 配置元组并返回启用的和基线实验
+// 标志集。
 //
-// TODO(mdempsky): Move to [internal/goexperiment].
+// TODO(mdempsky): 移到 [internal/goexperiment]。
 func ParseGOEXPERIMENT(goos, goarch, goexp string) (*ExperimentFlags, error) {
-	// regabiSupported is set to true on platforms where register ABI is
-	// supported and enabled by default.
-	// regabiAlwaysOn is set to true on platforms where register ABI is
-	// always on.
+	// regabiSupported 在支持寄存器 ABI 的平台上设置为 true
+	// 并默认启用。
+	// regabiAlwaysOn 在寄存器 ABI 始终
+	// 启用的平台上设置为 true。
 	var regabiSupported, regabiAlwaysOn bool
 	switch goarch {
 	case "amd64", "arm64", "loong64", "ppc64le", "ppc64", "riscv64":
@@ -69,15 +68,15 @@ func ParseGOEXPERIMENT(goos, goarch, goexp string) (*ExperimentFlags, error) {
 		regabiSupported = true
 	}
 
-	// Older versions (anything before V16) of dsymutil don't handle
-	// the .debug_rnglists section in DWARF5. See
+	// dsymutil 的较旧版本（V16 之前的任何版本）不处理
+	// DWARF5 中的 .debug_rnglists 部分。请参阅
 	// https://github.com/golang/go/issues/26379#issuecomment-2677068742
-	// for more context. This disables all DWARF5 on mac, which is not
-	// ideal (would be better to disable just for cases where we know
-	// the build will use external linking). In the GOOS=aix case, the
-	// XCOFF format (as far as can be determined) doesn't seem to
-	// support the necessary section subtypes for DWARF-specific
-	// things like .debug_addr (needed for DWARF 5).
+	// 了解更多背景。这在 mac 上禁用了所有 DWARF5，这不是
+	// 理想的（仅在我们知道的情况下禁用会更好
+	// 构建将使用外部链接）。在 GOOS=aix 的情况下，
+	// XCOFF 格式（据所知）似乎不
+	// 支持 DWARF 特定的必要部分子类型
+	// 如 .debug_addr（DWARF 5 所需）。
 	dwarf5Supported := (goos != "darwin" && goos != "ios" && goos != "aix")
 
 	baseline := goexperiment.Flags{
@@ -93,11 +92,11 @@ func ParseGOEXPERIMENT(goos, goarch, goexp string) (*ExperimentFlags, error) {
 		baseline: baseline,
 	}
 
-	// Pick up any changes to the baseline configuration from the
-	// GOEXPERIMENT environment. This can be set at make.bash time
-	// and overridden at build time.
+	// 从 GOEXPERIMENT 环境中获取对基线配置的任何更改。
+	// 这可以在 make.bash 时设置
+	// 并在构建时被覆盖。
 	if goexp != "" {
-		// Create a map of known experiment names.
+		// 创建已知实验名称的映射。
 		names := make(map[string]func(bool))
 		rv := reflect.ValueOf(&flags.Flags).Elem()
 		rt := rv.Type()
@@ -106,24 +105,24 @@ func ParseGOEXPERIMENT(goos, goarch, goexp string) (*ExperimentFlags, error) {
 			names[strings.ToLower(rt.Field(i).Name)] = field.SetBool
 		}
 
-		// "regabi" is an alias for all working regabi
-		// subexperiments, and not an experiment itself. Doing
-		// this as an alias make both "regabi" and "noregabi"
-		// do the right thing.
+		// "regabi" 是所有工作 regabi 的别名
+		// 子实验，而不是实验本身。这样做
+		// 作为别名使 "regabi" 和 "noregabi"
+		// 都做正确的事。
 		names["regabi"] = func(v bool) {
 			flags.RegabiWrappers = v
 			flags.RegabiArgs = v
 		}
 
-		// Parse names.
+		// 解析名称。
 		for f := range strings.SplitSeq(goexp, ",") {
 			if f == "" {
 				continue
 			}
 			if f == "none" {
-				// GOEXPERIMENT=none disables all experiment flags.
-				// This is used by cmd/dist, which doesn't know how
-				// to build with any experiment flags.
+				// GOEXPERIMENT=none 禁用所有实验标志。
+				// 这由 cmd/dist 使用，它不知道如何
+				// 使用任何实验标志进行构建。
 				flags.Flags = goexperiment.Flags{}
 				continue
 			}
@@ -143,28 +142,28 @@ func ParseGOEXPERIMENT(goos, goarch, goexp string) (*ExperimentFlags, error) {
 		flags.RegabiWrappers = true
 		flags.RegabiArgs = true
 	}
-	// regabi is only supported on amd64, arm64, loong64, riscv64, s390x, ppc64 and ppc64le.
+	// regabi 仅在 amd64、arm64、loong64、riscv64、s390x、ppc64 和 ppc64le 上受支持。
 	if !regabiSupported {
 		flags.RegabiWrappers = false
 		flags.RegabiArgs = false
 	}
-	// Check regabi dependencies.
+	// 检查 regabi 依赖关系。
 	if flags.RegabiArgs && !flags.RegabiWrappers {
 		return nil, fmt.Errorf("GOEXPERIMENT regabiargs requires regabiwrappers")
 	}
 	return flags, nil
 }
 
-// String returns the canonical GOEXPERIMENT string to enable this experiment
-// configuration. (Experiments in the same state as in the baseline are elided.)
+// String 返回规范的 GOEXPERIMENT 字符串以启用此实验
+// 配置。（与基线中相同状态的实验被省略。）
 func (exp *ExperimentFlags) String() string {
 	return strings.Join(expList(&exp.Flags, &exp.baseline, false), ",")
 }
 
-// expList returns the list of lower-cased experiment names for
-// experiments that differ from base. base may be nil to indicate no
-// experiments. If all is true, then include all experiment flags,
-// regardless of base.
+// expList 返回与基线不同的实验的小写实验名称列表。
+// base 可以为 nil 以表示没有
+// 实验。如果 all 为 true，则包括所有实验标志，
+// 无论基线如何。
 func expList(exp, base *goexperiment.Flags, all bool) []string {
 	var list []string
 	rv := reflect.ValueOf(exp).Elem()
@@ -191,14 +190,14 @@ func expList(exp, base *goexperiment.Flags, all bool) []string {
 	return list
 }
 
-// Enabled returns a list of enabled experiments, as
-// lower-cased experiment names.
+// Enabled 返回启用的实验列表，作为
+// 小写的实验名称。
 func (exp *ExperimentFlags) Enabled() []string {
 	return expList(&exp.Flags, nil, false)
 }
 
-// All returns a list of all experiment settings.
-// Disabled experiments appear in the list prefixed by "no".
+// All 返回所有实验设置的列表。
+// 禁用的实验在列表中以 "no" 为前缀。
 func (exp *ExperimentFlags) All() []string {
 	return expList(&exp.Flags, nil, true)
 }

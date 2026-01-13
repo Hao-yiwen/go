@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package unique
 
@@ -14,9 +14,8 @@ import (
 	"weak"
 )
 
-// canonMap is a map of T -> *T. The map controls the creation
-// of a canonical *T, and elements of the map are automatically
-// deleted when the canonical *T is no longer referenced.
+// canonMap 是 T -> *T 的映射。该映射控制规范 *T 的创建，
+// 当规范 *T 不再被引用时，映射中的元素会自动删除。
 type canonMap[T comparable] struct {
 	root atomic.Pointer[indirect[T]]
 	hash func(unsafe.Pointer, uintptr) uintptr
@@ -52,7 +51,7 @@ func (m *canonMap[T]) Load(key T) *T {
 		}
 		i = n.indirect()
 	}
-	panic("unique.canonMap: ran out of hash bits while iterating")
+	panic("unique.canonMap: 迭代时哈希位用尽")
 }
 
 func (m *canonMap[T]) LoadOrStore(key T) *T {
@@ -63,7 +62,7 @@ func (m *canonMap[T]) LoadOrStore(key T) *T {
 	var slot *atomic.Pointer[node[T]]
 	var n *node[T]
 	for {
-		// Find the key or a candidate location for insertion.
+		// 查找键或候选插入位置。
 		i = m.root.Load()
 		hashShift = 8 * goarch.PtrSize
 		haveInsertPoint := false
@@ -73,14 +72,13 @@ func (m *canonMap[T]) LoadOrStore(key T) *T {
 			slot = &i.children[(hash>>hashShift)&nChildrenMask]
 			n = slot.Load()
 			if n == nil {
-				// We found a nil slot which is a candidate for insertion.
+				// 我们找到了一个 nil 槽位，它是插入的候选位置。
 				haveInsertPoint = true
 				break
 			}
 			if n.isEntry {
-				// We found an existing entry, which is as far as we can go.
-				// If it stays this way, we'll have to replace it with an
-				// indirect node.
+				// 我们找到了一个现有条目，这是我们能走的最远处。
+				// 如果保持这样，我们将不得不用间接节点替换它。
 				if v, _ := n.entry().lookup(key); v != nil {
 					return v
 				}
@@ -90,47 +88,45 @@ func (m *canonMap[T]) LoadOrStore(key T) *T {
 			i = n.indirect()
 		}
 		if !haveInsertPoint {
-			panic("unique.canonMap: ran out of hash bits while iterating")
+			panic("unique.canonMap: 迭代时哈希位用尽")
 		}
 
-		// Grab the lock and double-check what we saw.
+		// 获取锁并再次检查我们看到的内容。
 		i.mu.Lock()
 		n = slot.Load()
 		if (n == nil || n.isEntry) && !i.dead.Load() {
-			// What we saw is still true, so we can continue with the insert.
+			// 我们看到的仍然是真的，所以我们可以继续插入。
 			break
 		}
-		// We have to start over.
+		// 我们必须重新开始。
 		i.mu.Unlock()
 	}
-	// N.B. This lock is held from when we broke out of the outer loop above.
-	// We specifically break this out so that we can use defer here safely.
-	// One option is to break this out into a new function instead, but
-	// there's so much local iteration state used below that this turns out
-	// to be cleaner.
+	// 注意：此锁是从我们跳出上面外层循环时持有的。
+	// 我们特意将此分离出来，以便可以在这里安全地使用 defer。
+	// 一个选择是将其分离到一个新函数中，
+	// 但下面使用了太多局部迭代状态，所以这样更简洁。
 	defer i.mu.Unlock()
 
 	var oldEntry *entry[T]
 	if n != nil {
 		oldEntry = n.entry()
 		if v, _ := oldEntry.lookup(key); v != nil {
-			// Easy case: by loading again, it turns out exactly what we wanted is here!
+			// 简单情况：通过再次加载，结果正好是我们想要的！
 			return v
 		}
 	}
 	newEntry, canon, wp := newEntryNode(key, hash)
-	// Prune dead pointers. This is to avoid O(n) lookups when we store the exact same
-	// value in the set but the cleanup hasn't run yet because it got delayed for some
-	// reason.
+	// 修剪死指针。这是为了避免当我们在集合中存储完全相同的值
+	// 但由于某种原因清理尚未运行而导致的 O(n) 查找。
 	oldEntry = oldEntry.prune()
 	if oldEntry == nil {
-		// Easy case: create a new entry and store it.
+		// 简单情况：创建一个新条目并存储它。
 		slot.Store(&newEntry.node)
 	} else {
-		// We possibly need to expand the entry already there into one or more new nodes.
+		// 我们可能需要将已有的条目扩展为一个或多个新节点。
 		//
-		// Publish the node last, which will make both oldEntry and newEntry visible. We
-		// don't want readers to be able to observe that oldEntry isn't in the tree.
+		// 最后发布节点，这将使 oldEntry 和 newEntry 都可见。
+		// 我们不希望读者能够观察到 oldEntry 不在树中。
 		slot.Store(m.expand(oldEntry, newEntry, hash, hashShift, i))
 	}
 	runtime.AddCleanup(canon, func(_ struct{}) {
@@ -139,26 +135,24 @@ func (m *canonMap[T]) LoadOrStore(key T) *T {
 	return canon
 }
 
-// expand takes oldEntry and newEntry whose hashes conflict from bit 64 down to hashShift and
-// produces a subtree of indirect nodes to hold the two new entries. newHash is the hash of
-// the value in the new entry.
+// expand 接收 oldEntry 和 newEntry，它们的哈希从第 64 位到 hashShift 位冲突，
+// 并生成一个间接节点子树来保存两个新条目。newHash 是新条目中值的哈希。
 func (m *canonMap[T]) expand(oldEntry, newEntry *entry[T], newHash uintptr, hashShift uint, parent *indirect[T]) *node[T] {
-	// Check for a hash collision.
+	// 检查哈希碰撞。
 	oldHash := oldEntry.hash
 	if oldHash == newHash {
-		// Store the old entry in the new entry's overflow list, then store
-		// the new entry.
+		// 将旧条目存储在新条目的溢出列表中，然后存储新条目。
 		newEntry.overflow.Store(oldEntry)
 		return &newEntry.node
 	}
-	// We have to add an indirect node. Worse still, we may need to add more than one.
+	// 我们必须添加一个间接节点。更糟的是，我们可能需要添加多个。
 	newIndirect := newIndirectNode(parent)
 	top := newIndirect
 	for {
 		if hashShift == 0 {
-			panic("unique.canonMap: ran out of hash bits while inserting")
+			panic("unique.canonMap: 插入时哈希位用尽")
 		}
-		hashShift -= nChildrenLog2 // hashShift is for the level parent is at. We need to go deeper.
+		hashShift -= nChildrenLog2 // hashShift 是 parent 所在层级的。我们需要更深入。
 		oi := (oldHash >> hashShift) & nChildrenMask
 		ni := (newHash >> hashShift) & nChildrenMask
 		if oi != ni {
@@ -173,17 +167,16 @@ func (m *canonMap[T]) expand(oldEntry, newEntry *entry[T], newHash uintptr, hash
 	return &top.node
 }
 
-// cleanup deletes the entry corresponding to wp in the canon map, if it's
-// still in the map. wp must have a Value method that returns nil by the
-// time this function is called. hash must be the hash of the value that
-// wp once pointed to (that is, the hash of *wp.Value()).
+// cleanup 删除 canon map 中与 wp 对应的条目（如果它仍在映射中）。
+// 在调用此函数时，wp 的 Value 方法必须返回 nil。
+// hash 必须是 wp 曾经指向的值的哈希（即 *wp.Value() 的哈希）。
 func (m *canonMap[T]) cleanup(hash uintptr, wp weak.Pointer[T]) {
 	var i *indirect[T]
 	var hashShift uint
 	var slot *atomic.Pointer[node[T]]
 	var n *node[T]
 	for {
-		// Find wp in the map by following hash.
+		// 通过跟随 hash 在映射中查找 wp。
 		i = m.root.Load()
 		hashShift = 8 * goarch.PtrSize
 		haveEntry := false
@@ -193,12 +186,12 @@ func (m *canonMap[T]) cleanup(hash uintptr, wp weak.Pointer[T]) {
 			slot = &i.children[(hash>>hashShift)&nChildrenMask]
 			n = slot.Load()
 			if n == nil {
-				// We found a nil slot, already deleted.
+				// 我们找到了一个 nil 槽位，已被删除。
 				return
 			}
 			if n.isEntry {
 				if !n.entry().hasWeakPointer(wp) {
-					// The weak pointer was already pruned.
+					// 弱指针已被修剪。
 					return
 				}
 				haveEntry = true
@@ -207,17 +200,16 @@ func (m *canonMap[T]) cleanup(hash uintptr, wp weak.Pointer[T]) {
 			i = n.indirect()
 		}
 		if !haveEntry {
-			panic("unique.canonMap: ran out of hash bits while iterating")
+			panic("unique.canonMap: 迭代时哈希位用尽")
 		}
 
-		// Grab the lock and double-check what we saw.
+		// 获取锁并再次检查我们看到的内容。
 		i.mu.Lock()
 		n = slot.Load()
 		if n != nil && n.isEntry {
-			// Prune the entry node without thinking too hard. If we do
-			// somebody else's work, such as someone trying to insert an
-			// entry with the same hash (probably the same value) then
-			// great, they'll back out without taking the lock.
+			// 不假思索地修剪条目节点。如果我们做了别人的工作，
+			// 比如有人试图插入具有相同哈希的条目（可能是相同的值），
+			// 那很好，他们会在不获取锁的情况下退出。
 			newEntry := n.entry().prune()
 			if newEntry == nil {
 				slot.Store(nil)
@@ -225,21 +217,21 @@ func (m *canonMap[T]) cleanup(hash uintptr, wp weak.Pointer[T]) {
 				slot.Store(&newEntry.node)
 			}
 
-			// Delete interior nodes that are empty, up the tree.
+			// 删除空的内部节点，沿树向上。
 			//
-			// We'll hand-over-hand lock our way up the tree as we do this,
-			// since we need to delete each empty node's link in its parent,
-			// which requires the parents' lock.
+			// 我们将在执行此操作时沿树向上进行交接锁定，
+			// 因为我们需要删除父节点中每个空节点的链接，
+			// 这需要父节点的锁。
 			for i.parent != nil && i.empty() {
 				if hashShift == 8*goarch.PtrSize {
-					panic("unique.canonMap: ran out of hash bits while iterating")
+					panic("unique.canonMap: 迭代时哈希位用尽")
 				}
 				hashShift += nChildrenLog2
 
-				// Delete the current node in the parent.
+				// 删除父节点中的当前节点。
 				parent := i.parent
 				parent.mu.Lock()
-				i.dead.Store(true) // Could be done outside of parent's lock.
+				i.dead.Store(true) // 可以在父节点的锁之外完成。
 				parent.children[(hash>>hashShift)&nChildrenMask].Store(nil)
 				i.mu.Unlock()
 				i = parent
@@ -247,47 +239,46 @@ func (m *canonMap[T]) cleanup(hash uintptr, wp weak.Pointer[T]) {
 			i.mu.Unlock()
 			return
 		}
-		// We have to start over.
+		// 我们必须重新开始。
 		i.mu.Unlock()
 	}
 }
 
-// node is the header for a node. It's polymorphic and
-// is actually either an entry or an indirect.
+// node 是节点的头部。它是多态的，
+// 实际上要么是 entry，要么是 indirect。
 type node[T comparable] struct {
 	isEntry bool
 }
 
 func (n *node[T]) entry() *entry[T] {
 	if !n.isEntry {
-		panic("called entry on non-entry node")
+		panic("在非条目节点上调用了 entry")
 	}
 	return (*entry[T])(unsafe.Pointer(n))
 }
 
 func (n *node[T]) indirect() *indirect[T] {
 	if n.isEntry {
-		panic("called indirect on entry node")
+		panic("在条目节点上调用了 indirect")
 	}
 	return (*indirect[T])(unsafe.Pointer(n))
 }
 
 const (
-	// 16 children. This seems to be the sweet spot for
-	// load performance: any smaller and we lose out on
-	// 50% or more in CPU performance. Any larger and the
-	// returns are minuscule (~1% improvement for 32 children).
+	// 16 个子节点。这似乎是加载性能的最佳点：
+	// 更小的话我们会在 CPU 性能上损失 50% 或更多。
+	// 更大的话收益微乎其微（32 个子节点约 1% 的改进）。
 	nChildrenLog2 = 4
 	nChildren     = 1 << nChildrenLog2
 	nChildrenMask = nChildren - 1
 )
 
-// indirect is an internal node in the hash-trie.
+// indirect 是哈希字典树中的内部节点。
 type indirect[T comparable] struct {
 	node[T]
 	dead     atomic.Bool
 	parent   *indirect[T]
-	mu       sync.Mutex // Protects mutation to children and any children that are entry nodes.
+	mu       sync.Mutex // 保护对 children 和任何是条目节点的子节点的修改。
 	children [nChildren]atomic.Pointer[node[T]]
 }
 
@@ -304,10 +295,10 @@ func (i *indirect[T]) empty() bool {
 	return true
 }
 
-// entry is a leaf node in the hash-trie.
+// entry 是哈希字典树中的叶子节点。
 type entry[T comparable] struct {
 	node[T]
-	overflow atomic.Pointer[entry[T]] // Overflow for hash collisions.
+	overflow atomic.Pointer[entry[T]] // 哈希碰撞的溢出。
 	key      weak.Pointer[T]
 	hash     uintptr
 }
@@ -323,9 +314,9 @@ func newEntryNode[T comparable](key T, hash uintptr) (*entry[T], *T, weak.Pointe
 	}, k, wp
 }
 
-// lookup finds the entry in the overflow chain that has the provided key.
+// lookup 在溢出链中查找具有提供的键的条目。
 //
-// Returns the key's canonical pointer and the weak pointer for that canonical pointer.
+// 返回键的规范指针和该规范指针的弱指针。
 func (e *entry[T]) lookup(key T) (*T, weak.Pointer[T]) {
 	for e != nil {
 		s := e.key.Value()
@@ -337,7 +328,7 @@ func (e *entry[T]) lookup(key T) (*T, weak.Pointer[T]) {
 	return nil, weak.Pointer[T]{}
 }
 
-// hasWeakPointer returns true if the provided weak pointer can be found in the overflow chain.
+// hasWeakPointer 如果提供的弱指针可以在溢出链中找到则返回 true。
 func (e *entry[T]) hasWeakPointer(wp weak.Pointer[T]) bool {
 	for e != nil {
 		if e.key == wp {
@@ -348,11 +339,11 @@ func (e *entry[T]) hasWeakPointer(wp weak.Pointer[T]) bool {
 	return false
 }
 
-// prune removes all entries in the overflow chain whose keys are nil.
+// prune 删除溢出链中所有键为 nil 的条目。
 //
-// The caller must hold the lock on e's parent node.
+// 调用者必须持有 e 的父节点的锁。
 func (e *entry[T]) prune() *entry[T] {
-	// Prune the head of the list.
+	// 修剪列表的头部。
 	for e != nil {
 		if e.key.Value() != nil {
 			break
@@ -363,7 +354,7 @@ func (e *entry[T]) prune() *entry[T] {
 		return nil
 	}
 
-	// Prune individual nodes in the list.
+	// 修剪列表中的各个节点。
 	newHead := e
 	i := &e.overflow
 	e = i.Load()
@@ -378,8 +369,7 @@ func (e *entry[T]) prune() *entry[T] {
 	return newHead
 }
 
-// Pull in runtime.rand so that we don't need to take a dependency
-// on math/rand/v2.
+// 引入 runtime.rand，这样我们就不需要依赖 math/rand/v2。
 //
 //go:linkname runtime_rand runtime.rand
 func runtime_rand() uint64

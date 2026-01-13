@@ -1,8 +1,8 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package scannerhooks defines nonexported channels between parser and scanner.
+// scannerhooks 包定义 nonexported channels between parser and scanner.
 // Ideally this package could be eliminated by adding API to scanner.
 package scannerhooks
 

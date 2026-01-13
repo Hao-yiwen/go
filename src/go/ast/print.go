@@ -1,8 +1,8 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// This file contains printing support for ASTs.
+// 本文件包含 AST 的打印支持。
 
 package ast
 
@@ -14,11 +14,11 @@ import (
 	"reflect"
 )
 
-// A FieldFilter may be provided to [Fprint] to control the output.
+// FieldFilter 可以提供给 [Fprint] 来控制输出。
 type FieldFilter func(name string, value reflect.Value) bool
 
-// NotNilFilter is a [FieldFilter] that returns true for field values
-// that are not nil; it returns false otherwise.
+// NotNilFilter 是一个 [FieldFilter]，对于非 nil 的字段值返回 true；
+// 否则返回 false。
 func NotNilFilter(_ string, v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
@@ -27,37 +27,35 @@ func NotNilFilter(_ string, v reflect.Value) bool {
 	return true
 }
 
-// Fprint prints the (sub-)tree starting at AST node x to w.
-// If fset != nil, position information is interpreted relative
-// to that file set. Otherwise positions are printed as integer
-// values (file set specific offsets).
+// Fprint 将从 AST 节点 x 开始的（子）树打印到 w。
+// 如果 fset != nil，位置信息相对于该文件集解释。
+// 否则位置将作为整数值（文件集特定的偏移量）打印。
 //
-// A non-nil [FieldFilter] f may be provided to control the output:
-// struct fields for which f(fieldname, fieldvalue) is true are
-// printed; all others are filtered from the output. Unexported
-// struct fields are never printed.
+// 可以提供非 nil 的 [FieldFilter] f 来控制输出：
+// f(fieldname, fieldvalue) 为 true 的结构体字段会被打印；
+// 所有其他字段都从输出中过滤掉。未导出的结构体字段永远不会被打印。
 func Fprint(w io.Writer, fset *token.FileSet, x any, f FieldFilter) error {
 	return fprint(w, fset, x, f)
 }
 
 func fprint(w io.Writer, fset *token.FileSet, x any, f FieldFilter) (err error) {
-	// setup printer
+	// 设置打印器
 	p := printer{
 		output: w,
 		fset:   fset,
 		filter: f,
 		ptrmap: make(map[any]int),
-		last:   '\n', // force printing of line number on first line
+		last:   '\n', // 强制在第一行打印行号
 	}
 
-	// install error handler
+	// 安装错误处理器
 	defer func() {
 		if e := recover(); e != nil {
-			err = e.(localError).err // re-panics if it's not a localError
+			err = e.(localError).err // 如果不是 localError 则重新 panic
 		}
 	}()
 
-	// print x
+	// 打印 x
 	if x == nil {
 		p.printf("nil\n")
 		return
@@ -68,8 +66,8 @@ func fprint(w io.Writer, fset *token.FileSet, x any, f FieldFilter) (err error) 
 	return
 }
 
-// Print prints x to standard output, skipping nil fields.
-// Print(fset, x) is the same as Fprint(os.Stdout, fset, x, NotNilFilter).
+// Print 将 x 打印到标准输出，跳过 nil 字段。
+// Print(fset, x) 等同于 Fprint(os.Stdout, fset, x, NotNilFilter)。
 func Print(fset *token.FileSet, x any) error {
 	return Fprint(os.Stdout, fset, x, NotNilFilter)
 }
@@ -78,10 +76,10 @@ type printer struct {
 	output io.Writer
 	fset   *token.FileSet
 	filter FieldFilter
-	ptrmap map[any]int // *T -> line number
-	indent int         // current indentation level
-	last   byte        // the last byte processed by Write
-	line   int         // current line number
+	ptrmap map[any]int // *T -> 行号
+	indent int         // 当前缩进级别
+	last   byte        // Write 处理的最后一个字节
+	line   int         // 当前行号
 }
 
 var indent = []byte(".  ")
@@ -89,7 +87,7 @@ var indent = []byte(".  ")
 func (p *printer) Write(data []byte) (n int, err error) {
 	var m int
 	for i, b := range data {
-		// invariant: data[0:n] has been written
+		// 不变式：data[0:n] 已被写入
 		if b == '\n' {
 			m, err = p.output.Write(data[n : i+1])
 			n += m
@@ -118,27 +116,25 @@ func (p *printer) Write(data []byte) (n int, err error) {
 	return
 }
 
-// localError wraps locally caught errors so we can distinguish
-// them from genuine panics which we don't want to return as errors.
+// localError 包装本地捕获的错误，以便我们可以将它们
+// 与我们不想作为错误返回的真正 panic 区分开来。
 type localError struct {
 	err error
 }
 
-// printf is a convenience wrapper that takes care of print errors.
+// printf 是一个便利包装器，处理打印错误。
 func (p *printer) printf(format string, args ...any) {
 	if _, err := fmt.Fprintf(p, format, args...); err != nil {
 		panic(localError{err})
 	}
 }
 
-// Implementation note: Print is written for AST nodes but could be
-// used to print arbitrary data structures; such a version should
-// probably be in a different package.
+// 实现说明：Print 是为 AST 节点编写的，但可以用于打印任意数据结构；
+// 这样的版本可能应该放在不同的包中。
 //
-// Note: This code detects (some) cycles created via pointers but
-// not cycles that are created via slices or maps containing the
-// same slice or map. Code for general data structures probably
-// should catch those as well.
+// 注意：此代码检测通过指针创建的（某些）循环，但不检测通过包含
+// 相同切片或映射的切片或映射创建的循环。用于通用数据结构的代码
+// 可能也应该捕获这些情况。
 
 func (p *printer) print(x reflect.Value) {
 	if !NotNilFilter("", x) {
@@ -167,9 +163,8 @@ func (p *printer) print(x reflect.Value) {
 
 	case reflect.Pointer:
 		p.printf("*")
-		// type-checked ASTs may contain cycles - use ptrmap
-		// to keep track of objects that have been printed
-		// already and print the respective line number instead
+		// 类型检查的 AST 可能包含循环 - 使用 ptrmap
+		// 跟踪已经打印的对象，并打印相应的行号
 		ptr := x.Interface()
 		if line, exists := p.ptrmap[ptr]; exists {
 			p.printf("(obj @ %d)", line)
@@ -216,8 +211,7 @@ func (p *printer) print(x reflect.Value) {
 		p.indent++
 		first := true
 		for i, n := 0, t.NumField(); i < n; i++ {
-			// exclude non-exported fields because their
-			// values cannot be accessed via reflection
+			// 排除未导出的字段，因为无法通过反射访问它们的值
 			if name := t.Field(i).Name; IsExported(name) {
 				value := x.Field(i)
 				if p.filter == nil || p.filter(name, value) {
@@ -238,17 +232,17 @@ func (p *printer) print(x reflect.Value) {
 		v := x.Interface()
 		switch v := v.(type) {
 		case string:
-			// print strings in quotes
+			// 在引号中打印字符串
 			p.printf("%q", v)
 			return
 		case token.Pos:
-			// position values can be printed nicely if we have a file set
+			// 如果有文件集，位置值可以很好地打印
 			if p.fset != nil {
 				p.printf("%s", p.fset.Position(v))
 				return
 			}
 		}
-		// default
+		// 默认
 		p.printf("%v", v)
 	}
 }

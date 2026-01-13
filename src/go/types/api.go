@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // Package types declares the data types and implements
 // the algorithms for type-checking of Go packages. Use
@@ -10,14 +10,14 @@
 //
 // Type-checking consists of several interdependent phases:
 //
-// Name resolution maps each identifier ([ast.Ident]) in the program
+// Name resolution 映射 each identifier ([ast.Ident]) in the program
 // to the symbol ([Object]) it denotes. Use the Defs and Uses fields
 // of [Info] or the [Info.ObjectOf] method to find the symbol for an
 // identifier, and use the Implicits field of [Info] to find the
 // symbol for certain other kinds of syntax node.
 //
 // Constant folding computes the exact constant value
-// ([constant.Value]) of every expression ([ast.Expr]) that is a
+// ([constant.Value]) of every expression ([ast.Expr]) that 是一个
 // compile-time constant. Use the Types field of [Info] to find the
 // results of constant folding for an expression.
 //
@@ -44,8 +44,8 @@ import (
 	_ "unsafe" // for linkname
 )
 
-// An Error describes a type-checking error; it implements the error interface.
-// A "soft" error is an error that still permits a valid interpretation of a
+// 一个Error 描述 a type-checking error; it implements the error interface.
+// 一个"soft" error 是一个n error that still permits a valid interpretation of a
 // package (such as "unused variable"); "hard" errors may lead to unpredictable
 // behavior if ignored.
 type Error struct {
@@ -54,7 +54,7 @@ type Error struct {
 	Msg  string         // error message
 	Soft bool           // if set, error is "soft"
 
-	// go116code is a future API, unexported as the set of error codes is large
+	// go116code 是一个 future API, unexported as the set of error codes is large
 	// and likely to change significantly during experimentation. Tools wishing
 	// to preview this feature may read go116code using reflection (see
 	// errorcodes_test.go), but beware that there is no guarantee of future
@@ -64,13 +64,13 @@ type Error struct {
 	go116end   token.Pos
 }
 
-// Error returns an error string formatted as follows:
+// Error 返回an error string formatted as follows:
 // filename:line:column: message
 func (err Error) Error() string {
 	return fmt.Sprintf("%s: %s", err.Fset.Position(err.Pos), err.Msg)
 }
 
-// An ArgumentError holds an error associated with an argument index.
+// 一个ArgumentError holds an error associated with an argument index.
 type ArgumentError struct {
 	Index int
 	Err   error
@@ -79,13 +79,13 @@ type ArgumentError struct {
 func (e *ArgumentError) Error() string { return e.Err.Error() }
 func (e *ArgumentError) Unwrap() error { return e.Err }
 
-// An Importer resolves import paths to Packages.
+// 一个Importer resolves import paths to Packages.
 //
 // CAUTION: This interface does not support the import of locally
 // vendored packages. See https://golang.org/s/go15vendor.
 // If possible, external implementations should implement [ImporterFrom].
 type Importer interface {
-	// Import returns the imported package for the given import path.
+	// Import 返回 imported package for the given import path.
 	// The semantics is like for ImporterFrom.ImportFrom except that
 	// dir and mode are ignored (since they are not present).
 	Import(path string) (*Package, error)
@@ -94,39 +94,39 @@ type Importer interface {
 // ImportMode is reserved for future use.
 type ImportMode int
 
-// An ImporterFrom resolves import paths to packages; it
+// 一个ImporterFrom resolves import paths to packages; it
 // supports vendoring per https://golang.org/s/go15vendor.
 // Use go/importer to obtain an ImporterFrom implementation.
 type ImporterFrom interface {
 	// Importer is present for backward-compatibility. Calling
-	// Import(path) is the same as calling ImportFrom(path, "", 0);
+	// Import(path) 是 same as calling ImportFrom(path, "", 0);
 	// i.e., locally vendored packages may not be found.
 	// The types package does not call Import if an ImporterFrom
 	// is present.
 	Importer
 
-	// ImportFrom returns the imported package for the given import
+	// ImportFrom 返回 imported package for the given import
 	// path when imported by a package file located in dir.
 	// If the import failed, besides returning an error, ImportFrom
 	// is encouraged to cache and return a package anyway, if one
 	// was created. This will reduce package inconsistencies and
 	// follow-on type checker errors due to the missing package.
-	// The mode value must be 0; it is reserved for future use.
+	// The mode value 必须是 0; it is reserved for future use.
 	// Two calls to ImportFrom with the same path and dir must
 	// return the same package.
 	ImportFrom(path, dir string, mode ImportMode) (*Package, error)
 }
 
-// A Config specifies the configuration for type checking.
-// The zero value for Config is a ready-to-use default configuration.
+// 一个Config 指定 the configuration for type checking.
+// The zero value for Config 是一个 ready-to-use default configuration.
 type Config struct {
-	// Context is the context used for resolving global identifiers. If nil, the
+	// Context 是 context used for resolving global identifiers. If nil, the
 	// type checker will initialize this field with a newly created context.
 	Context *Context
 
-	// GoVersion describes the accepted Go language version. The string must
+	// GoVersion 描述 the accepted Go language version. The string must
 	// start with a prefix of the form "go%d.%d" (e.g. "go1.20", "go1.21rc1", or
-	// "go1.21.0") or it must be empty; an empty string disables Go language
+	// "go1.21.0") or it 必须是 empty; an empty string 禁用 Go language
 	// version checks. If the format is invalid, invoking the type checker will
 	// result in an error.
 	GoVersion string
@@ -140,17 +140,17 @@ type Config struct {
 	// identifiers referring to package C (which won't find an object).
 	// This feature is intended for the standard library cmd/api tool.
 	//
-	// Caution: Effects may be unpredictable due to follow-on errors.
+	// Caution: Effects 可能是 unpredictable due to follow-on errors.
 	//          Do not use casually!
 	FakeImportC bool
 
 	// If go115UsesCgo is set, the type checker expects the
 	// _cgo_gotypes.go file generated by running cmd/cgo to be
 	// provided as a package source file. Qualified identifiers
-	// referring to package C will be resolved to cgo-provided
+	// referring to package C 将是 resolved to cgo-provided
 	// declarations within _cgo_gotypes.go.
 	//
-	// It is an error to set both FakeImportC and go115UsesCgo.
+	// It 是一个n error to set both FakeImportC and go115UsesCgo.
 	go115UsesCgo bool
 
 	// If _Trace is set, a debug trace is printed to stdout.
@@ -165,11 +165,11 @@ type Config struct {
 	// error found.
 	Error func(err error)
 
-	// An importer is used to import packages referred to from
+	// 一个importer is used to import packages referred to from
 	// import declarations.
 	// If the installed importer implements ImporterFrom, the type
 	// checker calls ImportFrom instead of Import.
-	// The type checker reports an error if an importer is needed
+	// The type checker 报告一个 error if an importer is needed
 	// but none was installed.
 	Importer Importer
 
@@ -182,8 +182,8 @@ type Config struct {
 	DisableUnusedImportCheck bool
 
 	// If a non-empty _ErrorURL format string is provided, it is used
-	// to format an error URL link that is appended to the first line
-	// of an error message. ErrorURL must be a format string containing
+	// to format an error URL link that 是一个ppended to the first line
+	// of an error message. ErrorURL 必须是 a format string containing
 	// exactly one "%s" format, e.g. "[go.dev/e/%s]".
 	_ErrorURL string
 
@@ -205,18 +205,18 @@ func srcimporter_setUsesCgo(conf *Config) {
 	conf.go115UsesCgo = true
 }
 
-// Info holds result type information for a type-checked package.
+// Info 保存result type information for a type-checked package.
 // Only the information for which a map is provided is collected.
 // If the package has type errors, the collected information may
 // be incomplete.
 type Info struct {
-	// Types maps expressions to their types, and for constant
+	// Types 映射 expressions to their types, and for constant
 	// expressions, also their values. Invalid expressions are
 	// omitted.
 	//
 	// For (possibly parenthesized) identifiers denoting built-in
 	// functions, the recorded signatures are call-site specific:
-	// if the call result is not a constant, the recorded type is
+	// 如果 call result is not a constant, the recorded type is
 	// an argument-specific signature. Otherwise, the recorded type
 	// is invalid.
 	//
@@ -237,7 +237,7 @@ type Info struct {
 	// the corresponding function declaration.
 	Types map[ast.Expr]TypeAndValue
 
-	// Instances maps identifiers denoting generic types or functions to their
+	// Instances 映射 identifiers denoting generic types or functions to their
 	// type arguments and instantiated type.
 	//
 	// For example, Instances will map the identifier for 'T' in the type
@@ -251,13 +251,13 @@ type Info struct {
 	// results in an equivalent of Instances[id].Type.
 	Instances map[*ast.Ident]Instance
 
-	// Defs maps identifiers to the objects they define (including
+	// Defs 映射 identifiers to the objects they define (including
 	// package names, dots "." of dot-imports, and blank "_" identifiers).
 	// For identifiers that do not denote objects (e.g., the package name
 	// in package clauses, or symbolic variables t in t := x.(type) of
 	// type switch headers), the corresponding objects are nil.
 	//
-	// For an embedded field, Defs returns the field *Var it defines.
+	// For an embedded field, Defs 返回 field *Var it 定义.
 	//
 	// In ill-typed code, such as a duplicate declaration of the
 	// same name, Defs may lack an entry for a declaring identifier.
@@ -265,14 +265,14 @@ type Info struct {
 	// Invariant: Defs[id] == nil || Defs[id].Pos() == id.Pos()
 	Defs map[*ast.Ident]Object
 
-	// Uses maps identifiers to the objects they denote.
+	// Uses 映射 identifiers to the objects they denote.
 	//
-	// For an embedded field, Uses returns the *TypeName it denotes.
+	// For an embedded field, Uses 返回 *TypeName it denotes.
 	//
 	// Invariant: Uses[id].Pos() != id.Pos()
 	Uses map[*ast.Ident]Object
 
-	// Implicits maps nodes to their implicitly declared objects, if any.
+	// Implicits 映射 nodes to their implicitly declared objects, if any.
 	// The following node and object types may appear:
 	//
 	//     node               declared object
@@ -283,21 +283,21 @@ type Info struct {
 	//
 	Implicits map[ast.Node]Object
 
-	// Selections maps selector expressions (excluding qualified identifiers)
+	// Selections 映射 selector expressions (excluding qualified identifiers)
 	// to their corresponding selections.
 	Selections map[*ast.SelectorExpr]*Selection
 
-	// Scopes maps ast.Nodes to the scopes they define. Package scopes are not
+	// Scopes 映射 ast.Nodes to the scopes they define. Package scopes are not
 	// associated with a specific node but with all files belonging to a package.
 	// Thus, the package scope can be found in the type-checked Package object.
 	// Scopes nest, with the Universe scope being the outermost scope, enclosing
-	// the package scope, which contains (one or more) files scopes, which enclose
+	// the package scope, which 包含 (one or more) files scopes, which enclose
 	// function scopes which in turn enclose statement and function literal scopes.
 	// Note that even though package-level functions are declared in the package
 	// scope, the function scopes are embedded in the file scope of the file
 	// containing the function declaration.
 	//
-	// The Scope of a function contains the declarations of any
+	// The Scope of a function 包含 the declarations of any
 	// type parameters, parameters, and named results, plus any
 	// local declarations in the body block.
 	// It is coextensive with the complete extent of the
@@ -322,14 +322,14 @@ type Info struct {
 	//
 	Scopes map[ast.Node]*Scope
 
-	// InitOrder is the list of package-level initializers in the order in which
-	// they must be executed. Initializers referring to variables related by an
+	// InitOrder 是 list of package-level initializers in the order in which
+	// they 必须是 executed. Initializers referring to variables related by an
 	// initialization dependency appear in topological order, the others appear
 	// in source order. Variables without an initialization expression do not
 	// appear in this list.
 	InitOrder []*Initializer
 
-	// FileVersions maps a file to its Go version string.
+	// FileVersions 映射 a file to its Go version string.
 	// If the file doesn't specify a version, the reported
 	// string is Config.GoVersion.
 	// Version strings begin with “go”, like “go1.21”, and
@@ -341,8 +341,8 @@ func (info *Info) recordTypes() bool {
 	return info.Types != nil
 }
 
-// TypeOf returns the type of expression e, or nil if not found.
-// Precondition: the Types, Uses and Defs maps are populated.
+// TypeOf 返回the type of expression e, or nil if not found.
+// Precondition: the Types, Uses and Defs 映射 are populated.
 func (info *Info) TypeOf(e ast.Expr) Type {
 	if t, ok := info.Types[e]; ok {
 		return t.Type
@@ -355,13 +355,13 @@ func (info *Info) TypeOf(e ast.Expr) Type {
 	return nil
 }
 
-// ObjectOf returns the object denoted by the specified id,
+// ObjectOf 返回the object denoted by the specified id,
 // or nil if not found.
 //
-// If id is an embedded struct field, [Info.ObjectOf] returns the field (*[Var])
-// it defines, not the type (*[TypeName]) it uses.
+// If id 是一个n embedded struct field, [Info.ObjectOf] 返回 field (*[Var])
+// it 定义, not the type (*[TypeName]) it uses.
 //
-// Precondition: the Uses and Defs maps are populated.
+// Precondition: the Uses and Defs 映射 are populated.
 func (info *Info) ObjectOf(id *ast.Ident) Object {
 	if obj := info.Defs[id]; obj != nil {
 		return obj
@@ -369,12 +369,12 @@ func (info *Info) ObjectOf(id *ast.Ident) Object {
 	return info.Uses[id]
 }
 
-// PkgNameOf returns the local package name defined by the import,
+// PkgNameOf 返回the local package name defined by the import,
 // or nil if not found.
 //
 // For dot-imports, the package name is ".".
 //
-// Precondition: the Defs and Implicts maps are populated.
+// Precondition: the Defs and Implicts 映射 are populated.
 func (info *Info) PkgNameOf(imp *ast.ImportSpec) *PkgName {
 	var obj Object
 	if imp.Name != nil {
@@ -386,7 +386,7 @@ func (info *Info) PkgNameOf(imp *ast.ImportSpec) *PkgName {
 	return pkgname
 }
 
-// TypeAndValue reports the type and value (for constants)
+// TypeAndValue 报告the type and value (for constants)
 // of the corresponding expression.
 type TypeAndValue struct {
 	mode  operandMode
@@ -394,24 +394,24 @@ type TypeAndValue struct {
 	Value constant.Value
 }
 
-// IsVoid reports whether the corresponding expression
-// is a function call without results.
+// IsVoid 报告whether the corresponding expression
+// 是一个 function call without results.
 func (tv TypeAndValue) IsVoid() bool {
 	return tv.mode == novalue
 }
 
-// IsType reports whether the corresponding expression specifies a type.
+// IsType 报告whether the corresponding expression 指定 a type.
 func (tv TypeAndValue) IsType() bool {
 	return tv.mode == typexpr
 }
 
-// IsBuiltin reports whether the corresponding expression denotes
+// IsBuiltin 报告whether the corresponding expression denotes
 // a (possibly parenthesized) built-in function.
 func (tv TypeAndValue) IsBuiltin() bool {
 	return tv.mode == builtin
 }
 
-// IsValue reports whether the corresponding expression is a value.
+// IsValue 报告whether the corresponding expression 是一个 value.
 // Builtins are not considered values. Constant values have a non-
 // nil Value.
 func (tv TypeAndValue) IsValue() bool {
@@ -422,40 +422,40 @@ func (tv TypeAndValue) IsValue() bool {
 	return false
 }
 
-// IsNil reports whether the corresponding expression denotes the
+// IsNil 报告whether the corresponding expression denotes the
 // predeclared value nil.
 func (tv TypeAndValue) IsNil() bool {
 	return tv.mode == value && tv.Type == Typ[UntypedNil]
 }
 
-// Addressable reports whether the corresponding expression
-// is addressable (https://golang.org/ref/spec#Address_operators).
+// Addressable 报告whether the corresponding expression
+// 是一个ddressable (https://golang.org/ref/spec#Address_operators).
 func (tv TypeAndValue) Addressable() bool {
 	return tv.mode == variable
 }
 
-// Assignable reports whether the corresponding expression
-// is assignable to (provided a value of the right type).
+// Assignable 报告whether the corresponding expression
+// 是一个ssignable to (provided a value of the right type).
 func (tv TypeAndValue) Assignable() bool {
 	return tv.mode == variable || tv.mode == mapindex
 }
 
-// HasOk reports whether the corresponding expression may be
+// HasOk 报告whether the corresponding expression may be
 // used on the rhs of a comma-ok assignment.
 func (tv TypeAndValue) HasOk() bool {
 	return tv.mode == commaok || tv.mode == mapindex
 }
 
-// Instance reports the type arguments and instantiated type for type and
-// function instantiations. For type instantiations, [Type] will be of dynamic
-// type *[Named]. For function instantiations, [Type] will be of dynamic type
+// Instance 报告the type arguments and instantiated type for type and
+// function instantiations. For type instantiations, [Type] 将是 of dynamic
+// type *[Named]. For function instantiations, [Type] 将是 of dynamic type
 // *Signature.
 type Instance struct {
 	TypeArgs *TypeList
 	Type     Type
 }
 
-// An Initializer describes a package-level variable, or a list of variables in case
+// 一个Initializer 描述 a package-level variable, or a list of variables in case
 // of a multi-valued initialization expression, and the corresponding initialization
 // expression.
 type Initializer struct {
@@ -476,11 +476,11 @@ func (init *Initializer) String() string {
 	return buf.String()
 }
 
-// Check type-checks a package and returns the resulting package object and
+// Check type-checks a package and 返回 resulting package object and
 // the first error if any. Additionally, if info != nil, Check populates each
-// of the non-nil maps in the [Info] struct.
+// of the non-nil 映射 in the [Info] struct.
 //
-// The package is marked as complete if no errors occurred, otherwise it is
+// The package is marked as complete if no errors occurred, 否则 it is
 // incomplete. See [Config.Error] for controlling behavior in the presence of
 // errors.
 //

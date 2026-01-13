@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package des
 
@@ -13,7 +13,7 @@ import (
 	"strconv"
 )
 
-// The DES block size in bytes.
+// DES 块大小（以字节为单位）。
 const BlockSize = 8
 
 type KeySizeError int
@@ -22,12 +22,12 @@ func (k KeySizeError) Error() string {
 	return "crypto/des: invalid key size " + strconv.Itoa(int(k))
 }
 
-// desCipher is an instance of DES encryption.
+// desCipher 是 DES 加密的实例。
 type desCipher struct {
 	subkeys [16]uint64
 }
 
-// NewCipher creates and returns a new [cipher.Block].
+// NewCipher 创建并返回一个新的 [cipher.Block]。
 func NewCipher(key []byte) (cipher.Block, error) {
 	if fips140only.Enforced() {
 		return nil, errors.New("crypto/des: use of DES is not allowed in FIPS 140-only mode")
@@ -70,12 +70,12 @@ func (c *desCipher) Decrypt(dst, src []byte) {
 	cryptBlock(c.subkeys[:], dst, src, true)
 }
 
-// A tripleDESCipher is an instance of TripleDES encryption.
+// tripleDESCipher 是 TripleDES 加密的实例。
 type tripleDESCipher struct {
 	cipher1, cipher2, cipher3 desCipher
 }
 
-// NewTripleDESCipher creates and returns a new [cipher.Block].
+// NewTripleDESCipher 创建并返回一个新的 [cipher.Block]。
 func NewTripleDESCipher(key []byte) (cipher.Block, error) {
 	if fips140only.Enforced() {
 		return nil, errors.New("crypto/des: use of TripleDES is not allowed in FIPS 140-only mode")

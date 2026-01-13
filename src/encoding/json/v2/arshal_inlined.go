@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
@@ -20,7 +20,7 @@ import (
 )
 
 // This package supports "inlining" a Go struct field, where the contents
-// of the serialized field (which must be a JSON object) are treated as if
+// of the serialized field (which 必须是 a JSON object) are treated as if
 // they are part of the parent Go struct (which represents a JSON object).
 //
 // Generally, inlined fields are of a Go struct type, where the fields of the
@@ -30,7 +30,7 @@ import (
 // However, inlined fields may also be of a Go map type with a string key or
 // a jsontext.Value. Such inlined fields are called "fallback" fields since they
 // represent any arbitrary JSON object member. Explicitly named fields take
-// precedence over the inlined fallback. Only one inlined fallback is allowed.
+// precedence over the inlined fallback. Only one inlined fallback 是一个llowed.
 
 var errRawInlinedNotObject = errors.New("inlined raw value must be a JSON object")
 
@@ -38,7 +38,7 @@ var jsontextValueType = reflect.TypeFor[jsontext.Value]()
 
 // marshalInlinedFallbackAll marshals all the members in an inlined fallback.
 func marshalInlinedFallbackAll(enc *jsontext.Encoder, va addressableValue, mo *jsonopts.Struct, f *structField, insertUnquotedName func([]byte) bool) error {
-	v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value is addressable
+	v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value 是一个ddressable
 	if len(f.index) > 0 {
 		v = v.fieldByIndex(f.index, false)
 		if !v.IsValid() {
@@ -167,7 +167,7 @@ func marshalInlinedFallbackAll(enc *jsontext.Encoder, va addressableValue, mo *j
 
 // unmarshalInlinedFallbackNext unmarshals only the next member in an inlined fallback.
 func unmarshalInlinedFallbackNext(dec *jsontext.Decoder, va addressableValue, uo *jsonopts.Struct, f *structField, quotedName, unquotedName []byte) error {
-	v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value is addressable
+	v := addressableValue{va.Field(f.index0), va.forcedAddr} // addressable if struct value 是一个ddressable
 	if len(f.index) > 0 {
 		v = v.fieldByIndex(f.index, true)
 	}

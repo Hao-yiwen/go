@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Buffered reading and decoding of DWARF data streams.
+// DWARF 数据流的缓冲读取和解码。
 
 package dwarf
 
@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-// Data buffer being decoded.
+// 正在解码的数据缓冲区。
 type buf struct {
 	dwarf  *Data
 	order  binary.ByteOrder
@@ -23,20 +23,19 @@ type buf struct {
 	err    error
 }
 
-// Data format, other than byte order. This affects the handling of
-// certain field formats.
+// 数据格式，除了字节序之外。这会影响某些字段格式的处理。
 type dataFormat interface {
-	// DWARF version number. Zero means unknown.
+	// DWARF 版本号。零表示未知。
 	version() int
 
-	// 64-bit DWARF format?
+	// 是否为 64 位 DWARF 格式？
 	dwarf64() (dwarf64 bool, isKnown bool)
 
-	// Size of an address, in bytes. Zero means unknown.
+	// 地址的大小，以字节为单位。零表示未知。
 	addrsize() int
 }
 
-// Some parts of DWARF have no data format, e.g., abbrevs.
+// DWARF 的某些部分没有数据格式，例如缩写表。
 type unknownFormat struct{}
 
 func (u unknownFormat) version() int {
@@ -128,8 +127,8 @@ func (b *buf) uint64() uint64 {
 	return b.order.Uint64(a)
 }
 
-// Read a varint, which is 7 bits per byte, little endian.
-// the 0x80 bit means read another byte.
+// 读取一个 varint，每字节 7 位，小端序。
+// 0x80 位表示需要读取另一个字节。
 func (b *buf) varint() (c uint64, bits uint) {
 	for i := 0; i < len(b.data); i++ {
 		byte := b.data[i]
@@ -144,13 +143,13 @@ func (b *buf) varint() (c uint64, bits uint) {
 	return 0, 0
 }
 
-// Unsigned int is just a varint.
+// 无符号整数就是一个 varint。
 func (b *buf) uint() uint64 {
 	x, _ := b.varint()
 	return x
 }
 
-// Signed int is a sign-extended varint.
+// 有符号整数是一个符号扩展的 varint。
 func (b *buf) int() int64 {
 	ux, bits := b.varint()
 	x := int64(ux)
@@ -160,7 +159,7 @@ func (b *buf) int() int64 {
 	return x
 }
 
-// Address-sized uint.
+// 地址大小的无符号整数。
 func (b *buf) addr() uint64 {
 	switch b.format.addrsize() {
 	case 1:

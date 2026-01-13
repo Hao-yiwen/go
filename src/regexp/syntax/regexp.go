@@ -1,11 +1,11 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package syntax
 
-// Note to implementers:
-// In this package, re is always a *Regexp and r is always a rune.
+// 实现者注意：
+// 在这个包中，re 始终是 *Regexp，r 始终是 rune。
 
 import (
 	"slices"
@@ -14,53 +14,53 @@ import (
 	"unicode"
 )
 
-// A Regexp is a node in a regular expression syntax tree.
+// Regexp 是正则表达式语法树中的一个节点。
 type Regexp struct {
-	Op       Op // operator
+	Op       Op // 操作符
 	Flags    Flags
-	Sub      []*Regexp  // subexpressions, if any
-	Sub0     [1]*Regexp // storage for short Sub
-	Rune     []rune     // matched runes, for OpLiteral, OpCharClass
-	Rune0    [2]rune    // storage for short Rune
-	Min, Max int        // min, max for OpRepeat
-	Cap      int        // capturing index, for OpCapture
-	Name     string     // capturing name, for OpCapture
+	Sub      []*Regexp  // 子表达式（如果有）
+	Sub0     [1]*Regexp // 短 Sub 的存储
+	Rune     []rune     // 匹配的 rune，用于 OpLiteral、OpCharClass
+	Rune0    [2]rune    // 短 Rune 的存储
+	Min, Max int        // 用于 OpRepeat 的最小值和最大值
+	Cap      int        // 捕获索引，用于 OpCapture
+	Name     string     // 捕获名称，用于 OpCapture
 }
 
 //go:generate stringer -type Op -trimprefix Op
 
-// An Op is a single regular expression operator.
+// Op 是单个正则表达式操作符。
 type Op uint8
 
-// Operators are listed in precedence order, tightest binding to weakest.
-// Character class operators are listed simplest to most complex
-// (OpLiteral, OpCharClass, OpAnyCharNotNL, OpAnyChar).
+// 操作符按优先级顺序列出，从最紧密绑定到最松散绑定。
+// 字符类操作符按从简单到复杂的顺序列出
+// （OpLiteral、OpCharClass、OpAnyCharNotNL、OpAnyChar）。
 
 const (
-	OpNoMatch        Op = 1 + iota // matches no strings
-	OpEmptyMatch                   // matches empty string
-	OpLiteral                      // matches Runes sequence
-	OpCharClass                    // matches Runes interpreted as range pair list
-	OpAnyCharNotNL                 // matches any character except newline
-	OpAnyChar                      // matches any character
-	OpBeginLine                    // matches empty string at beginning of line
-	OpEndLine                      // matches empty string at end of line
-	OpBeginText                    // matches empty string at beginning of text
-	OpEndText                      // matches empty string at end of text
-	OpWordBoundary                 // matches word boundary `\b`
-	OpNoWordBoundary               // matches word non-boundary `\B`
-	OpCapture                      // capturing subexpression with index Cap, optional name Name
-	OpStar                         // matches Sub[0] zero or more times
-	OpPlus                         // matches Sub[0] one or more times
-	OpQuest                        // matches Sub[0] zero or one times
-	OpRepeat                       // matches Sub[0] at least Min times, at most Max (Max == -1 is no limit)
-	OpConcat                       // matches concatenation of Subs
-	OpAlternate                    // matches alternation of Subs
+	OpNoMatch        Op = 1 + iota // 不匹配任何字符串
+	OpEmptyMatch                   // 匹配空字符串
+	OpLiteral                      // 匹配 Runes 序列
+	OpCharClass                    // 匹配解释为范围对列表的 Runes
+	OpAnyCharNotNL                 // 匹配除换行符外的任意字符
+	OpAnyChar                      // 匹配任意字符
+	OpBeginLine                    // 匹配行首的空字符串
+	OpEndLine                      // 匹配行尾的空字符串
+	OpBeginText                    // 匹配文本开头的空字符串
+	OpEndText                      // 匹配文本结尾的空字符串
+	OpWordBoundary                 // 匹配单词边界 `\b`
+	OpNoWordBoundary               // 匹配非单词边界 `\B`
+	OpCapture                      // 带索引 Cap 的捕获子表达式，可选名称 Name
+	OpStar                         // 匹配 Sub[0] 零次或多次
+	OpPlus                         // 匹配 Sub[0] 一次或多次
+	OpQuest                        // 匹配 Sub[0] 零次或一次
+	OpRepeat                       // 匹配 Sub[0] 至少 Min 次，最多 Max 次（Max == -1 表示无限制）
+	OpConcat                       // 匹配 Subs 的连接
+	OpAlternate                    // 匹配 Subs 的交替
 )
 
-const opPseudo Op = 128 // where pseudo-ops start
+const opPseudo Op = 128 // 伪操作符的起始位置
 
-// Equal reports whether x and y have identical structure.
+// Equal 报告 x 和 y 是否具有相同的结构。
 func (x *Regexp) Equal(y *Regexp) bool {
 	if x == nil || y == nil {
 		return x == y
@@ -70,7 +70,7 @@ func (x *Regexp) Equal(y *Regexp) bool {
 	}
 	switch x.Op {
 	case OpEndText:
-		// The parse flags remember whether this is \z or \Z.
+		// 解析标志记住这是 \z 还是 \Z。
 		if x.Flags&WasDollar != y.Flags&WasDollar {
 			return false
 		}
@@ -99,7 +99,7 @@ func (x *Regexp) Equal(y *Regexp) bool {
 	return true
 }
 
-// printFlags is a bit set indicating which flags (including non-capturing parens) to print around a regexp.
+// printFlags 是一个位集，指示在正则表达式周围打印哪些标志（包括非捕获括号）。
 type printFlags uint8
 
 const (
@@ -108,33 +108,33 @@ const (
 	flagS                           // (?s:
 	flagOff                         // )
 	flagPrec                        // (?: )
-	negShift = 5                    // flagI<<negShift is (?-i:
+	negShift = 5                    // flagI<<negShift 是 (?-i:
 )
 
-// addSpan enables the flags f around start..last,
-// by setting flags[start] = f and flags[last] = flagOff.
+// addSpan 通过设置 flags[start] = f 和 flags[last] = flagOff，
+// 在 start..last 范围内启用标志 f。
 func addSpan(start, last *Regexp, f printFlags, flags *map[*Regexp]printFlags) {
 	if *flags == nil {
 		*flags = make(map[*Regexp]printFlags)
 	}
 	(*flags)[start] = f
-	(*flags)[last] |= flagOff // maybe start==last
+	(*flags)[last] |= flagOff // 可能 start==last
 }
 
-// calcFlags calculates the flags to print around each subexpression in re,
-// storing that information in (*flags)[sub] for each affected subexpression.
-// The first time an entry needs to be written to *flags, calcFlags allocates the map.
-// calcFlags also calculates the flags that must be active or can't be active
-// around re and returns those flags.
+// calcFlags 计算要在 re 中每个子表达式周围打印的标志，
+// 将该信息存储在 (*flags)[sub] 中，用于每个受影响的子表达式。
+// 第一次需要向 *flags 写入条目时，calcFlags 分配映射。
+// calcFlags 还计算必须在 re 周围激活或不能激活的标志，
+// 并返回这些标志。
 func calcFlags(re *Regexp, flags *map[*Regexp]printFlags) (must, cant printFlags) {
 	switch re.Op {
 	default:
 		return 0, 0
 
 	case OpLiteral:
-		// If literal is fold-sensitive, return (flagI, 0) or (0, flagI)
-		// according to whether (?i) is active.
-		// If literal is not fold-sensitive, return 0, 0.
+		// 如果字面量对大小写折叠敏感，根据 (?i) 是否激活，
+		// 返回 (flagI, 0) 或 (0, flagI)。
+		// 如果字面量对大小写折叠不敏感，返回 0, 0。
 		for _, r := range re.Rune {
 			if minFold <= r && r <= maxFold && unicode.SimpleFold(r) != r {
 				if re.Flags&FoldCase != 0 {
@@ -147,8 +147,8 @@ func calcFlags(re *Regexp, flags *map[*Regexp]printFlags) (must, cant printFlags
 		return 0, 0
 
 	case OpCharClass:
-		// If literal is fold-sensitive, return 0, flagI - (?i) has been compiled out.
-		// If literal is not fold-sensitive, return 0, 0.
+		// 如果字面量对大小写折叠敏感，返回 0, flagI - (?i) 已被编译掉。
+		// 如果字面量对大小写折叠不敏感，返回 0, 0。
 		for i := 0; i < len(re.Rune); i += 2 {
 			lo := max(minFold, re.Rune[i])
 			hi := min(maxFold, re.Rune[i+1])
@@ -181,9 +181,8 @@ func calcFlags(re *Regexp, flags *map[*Regexp]printFlags) (must, cant printFlags
 		return calcFlags(re.Sub[0], flags)
 
 	case OpConcat, OpAlternate:
-		// Gather the must and cant for each subexpression.
-		// When we find a conflicting subexpression, insert the necessary
-		// flags around the previously identified span and start over.
+		// 收集每个子表达式的 must 和 cant。
+		// 当发现冲突的子表达式时，在先前识别的范围周围插入必要的标志并重新开始。
 		var must, cant, allCant printFlags
 		start := 0
 		last := 0
@@ -210,22 +209,22 @@ func calcFlags(re *Regexp, flags *map[*Regexp]printFlags) (must, cant printFlags
 			}
 		}
 		if !did {
-			// No conflicts: pass the accumulated must and cant upward.
+			// 无冲突：向上传递累积的 must 和 cant。
 			return must, cant
 		}
 		if must != 0 {
-			// Conflicts found; need to finish final span.
+			// 发现冲突；需要完成最后的范围。
 			addSpan(re.Sub[start], re.Sub[last], must, flags)
 		}
 		return 0, allCant
 	}
 }
 
-// writeRegexp writes the Perl syntax for the regular expression re to b.
+// writeRegexp 将正则表达式 re 的 Perl 语法写入 b。
 func writeRegexp(b *strings.Builder, re *Regexp, f printFlags, flags map[*Regexp]printFlags) {
 	f |= flags[re]
 	if f&flagPrec != 0 && f&^(flagOff|flagPrec) != 0 && f&flagOff != 0 {
-		// flagPrec is redundant with other flags being added and terminated
+		// flagPrec 与其他被添加和终止的标志冗余
 		f &^= flagPrec
 	}
 	if f&^(flagOff|flagPrec) != 0 {
@@ -278,8 +277,8 @@ func writeRegexp(b *strings.Builder, re *Regexp, f printFlags, flags map[*Regexp
 		if len(re.Rune) == 0 {
 			b.WriteString(`^\x00-\x{10FFFF}`)
 		} else if re.Rune[0] == 0 && re.Rune[len(re.Rune)-1] == unicode.MaxRune && len(re.Rune) > 2 {
-			// Contains 0 and MaxRune. Probably a negated class.
-			// Print the gaps.
+			// 包含 0 和 MaxRune。可能是一个否定类。
+			// 打印间隙。
 			b.WriteRune('^')
 			for i := 1; i < len(re.Rune)-1; i += 2 {
 				lo, hi := re.Rune[i]+1, re.Rune[i+1]-1
@@ -433,7 +432,7 @@ func escape(b *strings.Builder, r rune, force bool) {
 	}
 }
 
-// MaxCap walks the regexp to find the maximum capture index.
+// MaxCap 遍历正则表达式以找到最大捕获索引。
 func (re *Regexp) MaxCap() int {
 	m := 0
 	if re.Op == OpCapture {
@@ -447,7 +446,7 @@ func (re *Regexp) MaxCap() int {
 	return m
 }
 
-// CapNames walks the regexp to find the names of capturing groups.
+// CapNames 遍历正则表达式以找到捕获组的名称。
 func (re *Regexp) CapNames() []string {
 	names := make([]string, re.MaxCap()+1)
 	re.capNames(names)

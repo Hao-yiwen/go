@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Pprof interprets and displays profiles of Go programs.
+// Pprof 解释和显示 Go 程序的配置文件。
 //
-// Basic usage:
+// 基本用法：
 //
 //	go tool pprof binary profile
 //
-// For detailed usage information:
+// 有关详细的使用信息：
 //
 //	go tool pprof -h
 //
-// For an example, see https://go.dev/blog/pprof.
+// 有关示例，请参阅 https://go.dev/blog/pprof。
 package main

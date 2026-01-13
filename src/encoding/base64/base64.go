@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package base64 implements base64 encoding as specified by RFC 4648.
+// base64 包实现了 RFC 4648 规定的 base64 编码。
 package base64
 
 import (
@@ -16,10 +16,10 @@ import (
  * Encodings
  */
 
-// An Encoding is a radix 64 encoding/decoding scheme, defined by a
-// 64-character alphabet. The most common encoding is the "base64"
+// 一个Encoding 是一个 radix 64 encoding/decoding scheme, defined by a
+// 64-character alphabet. The most common encoding 是 "base64"
 // encoding defined in RFC 4648 and used in MIME (RFC 2045) and PEM
-// (RFC 1421).  RFC 4648 also defines an alternate encoding, which is
+// (RFC 1421).  RFC 4648 also 定义 an alternate encoding, which is
 // the standard encoding with - and _ substituted for + and /.
 type Encoding struct {
 	encode    [64]byte   // mapping of symbol index to symbol byte value
@@ -54,13 +54,13 @@ const (
 	invalidIndex = '\xff'
 )
 
-// NewEncoding returns a new padded Encoding defined by the given alphabet,
-// which must be a 64-byte string that contains unique byte values and
+// NewEncoding 返回a new padded Encoding defined by the given alphabet,
+// which 必须是 a 64-byte string that 包含 unique byte values and
 // does not contain the padding character or CR / LF ('\r', '\n').
 // The alphabet is treated as a sequence of byte values
 // without any special treatment for multi-byte UTF-8.
 // The resulting Encoding uses the default padding character ('='),
-// which may be changed or disabled via [Encoding.WithPadding].
+// which 可能是 changed or disabled via [Encoding.WithPadding].
 func NewEncoding(encoder string) *Encoding {
 	if len(encoder) != 64 {
 		panic("encoding alphabet is not 64-bytes long")
@@ -74,10 +74,10 @@ func NewEncoding(encoder string) *Encoding {
 	for i := 0; i < len(encoder); i++ {
 		// Note: While we document that the alphabet cannot contain
 		// the padding character, we do not enforce it since we do not know
-		// if the caller intends to switch the padding from StdPadding later.
+		// 如果 caller intends to switch the padding from StdPadding later.
 		switch {
 		case encoder[i] == '\n' || encoder[i] == '\r':
-			panic("encoding alphabet contains newline character")
+			panic("encoding alphabet 包含 newline character")
 		case e.decodeMap[encoder[i]] != invalidIndex:
 			panic("encoding alphabet includes duplicate symbols")
 		}
@@ -86,12 +86,12 @@ func NewEncoding(encoder string) *Encoding {
 	return e
 }
 
-// WithPadding creates a new encoding identical to enc except
+// WithPadding 创建 a new encoding identical to enc except
 // with a specified padding character, or [NoPadding] to disable padding.
 // The padding character must not be '\r' or '\n',
 // must not be contained in the encoding's alphabet,
-// must not be negative, and must be a rune equal or below '\xff'.
-// Padding characters above '\x7f' are encoded as their exact byte value
+// must not be negative, and 必须是 a rune equal or below '\xff'.
+// Padding characters above '\x7f' are 编码为 their exact byte value
 // rather than using the UTF-8 representation of the codepoint.
 func (enc Encoding) WithPadding(padding rune) *Encoding {
 	switch {
@@ -104,7 +104,7 @@ func (enc Encoding) WithPadding(padding rune) *Encoding {
 	return &enc
 }
 
-// Strict creates a new encoding identical to enc except with
+// Strict 创建 a new encoding identical to enc except with
 // strict decoding enabled. In this mode, the decoder requires that
 // trailing padding bits are zero, as described in RFC 4648 section 3.5.
 //
@@ -115,21 +115,21 @@ func (enc Encoding) Strict() *Encoding {
 	return &enc
 }
 
-// StdEncoding is the standard base64 encoding, as defined in RFC 4648.
+// StdEncoding 是 standard base64 encoding, as defined in RFC 4648.
 var StdEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
 
-// URLEncoding is the alternate base64 encoding defined in RFC 4648.
+// URLEncoding 是 alternate base64 encoding defined in RFC 4648.
 // It is typically used in URLs and file names.
 var URLEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
 
-// RawStdEncoding is the standard raw, unpadded base64 encoding,
+// RawStdEncoding 是 standard raw, unpadded base64 encoding,
 // as defined in RFC 4648 section 3.2.
-// This is the same as [StdEncoding] but omits padding characters.
+// This 是 same as [StdEncoding] but omits padding characters.
 var RawStdEncoding = StdEncoding.WithPadding(NoPadding)
 
-// RawURLEncoding is the unpadded alternate base64 encoding defined in RFC 4648.
+// RawURLEncoding 是 unpadded alternate base64 encoding defined in RFC 4648.
 // It is typically used in URLs and file names.
-// This is the same as [URLEncoding] but omits padding characters.
+// This 是 same as [URLEncoding] but omits padding characters.
 var RawURLEncoding = URLEncoding.WithPadding(NoPadding)
 
 /*
@@ -146,7 +146,7 @@ func (enc *Encoding) Encode(dst, src []byte) {
 	if len(src) == 0 {
 		return
 	}
-	// enc is a pointer receiver, so the use of enc.encode within the hot
+	// enc 是一个 pointer receiver, so the use of enc.encode within the hot
 	// loop below means a nil check at every operation. Lift that nil check
 	// outside of the loop to speed up the encoder.
 	_ = enc.encode
@@ -194,7 +194,7 @@ func (enc *Encoding) Encode(dst, src []byte) {
 }
 
 // AppendEncode appends the base64 encoded src to dst
-// and returns the extended buffer.
+// and 返回the extended buffer.
 func (enc *Encoding) AppendEncode(dst, src []byte) []byte {
 	n := enc.EncodedLen(len(src))
 	dst = slices.Grow(dst, n)
@@ -202,7 +202,7 @@ func (enc *Encoding) AppendEncode(dst, src []byte) []byte {
 	return dst[:len(dst)+n]
 }
 
-// EncodeToString returns the base64 encoding of src.
+// EncodeToString 返回the base64 encoding of src.
 func (enc *Encoding) EncodeToString(src []byte) string {
 	buf := make([]byte, enc.EncodedLen(len(src)))
 	enc.Encode(buf, src)
@@ -265,7 +265,7 @@ func (e *encoder) Write(p []byte) (n int, err error) {
 }
 
 // Close flushes any pending output from the encoder.
-// It is an error to call Write after calling Close.
+// It 是一个n error to call Write after calling Close.
 func (e *encoder) Close() error {
 	// If there's anything left in the buffer, flush it out
 	if e.err == nil && e.nbuf > 0 {
@@ -276,8 +276,8 @@ func (e *encoder) Close() error {
 	return e.err
 }
 
-// NewEncoder returns a new base64 stream encoder. Data written to
-// the returned writer will be encoded using enc and then written to w.
+// NewEncoder 返回a new base64 stream encoder. Data written to
+// the returned writer 将是 encoded using enc and then written to w.
 // Base64 encodings operate in 4-byte blocks; when finished
 // writing, the caller must Close the returned encoder to flush any
 // partially written blocks.
@@ -285,7 +285,7 @@ func NewEncoder(enc *Encoding, w io.Writer) io.WriteCloser {
 	return &encoder{enc: enc, w: w}
 }
 
-// EncodedLen returns the length in bytes of the base64 encoding
+// EncodedLen 返回the length in bytes of the base64 encoding
 // of an input buffer of length n.
 func (enc *Encoding) EncodedLen(n int) int {
 	if enc.padChar == NoPadding {
@@ -307,7 +307,7 @@ func (e CorruptInputError) Error() string {
 // decodeQuantum decodes up to 4 base64 bytes. The received parameters are
 // the destination buffer dst, the source buffer src and an index in the
 // source buffer si.
-// It returns the number of bytes read from src, the number of bytes written
+// It 返回the number of bytes read from src, the number of bytes written
 // to dst, and an error, if any.
 func (enc *Encoding) decodeQuantum(dst, src []byte, si int) (nsi, n int, err error) {
 	// Decode quantum using the base64 alphabet
@@ -352,7 +352,7 @@ func (enc *Encoding) decodeQuantum(dst, src []byte, si int) (nsi, n int, err err
 			// incorrect padding
 			return si, 0, CorruptInputError(si - 1)
 		case 2:
-			// "==" is expected, the first "=" is already consumed.
+			// "==" is expected, the first "=" 是一个lready consumed.
 			// skip over newlines
 			for si < len(src) && (src[si] == '\n' || src[si] == '\r') {
 				si++
@@ -407,8 +407,8 @@ func (enc *Encoding) decodeQuantum(dst, src []byte, si int) (nsi, n int, err err
 }
 
 // AppendDecode appends the base64 decoded src to dst
-// and returns the extended buffer.
-// If the input is malformed, it returns the partially decoded src and an error.
+// and 返回the extended buffer.
+// If the input is malformed, it 返回 partially decoded src and an error.
 // New line characters (\r and \n) are ignored.
 func (enc *Encoding) AppendDecode(dst, src []byte) ([]byte, error) {
 	// Compute the output size without padding to avoid over allocating.
@@ -423,8 +423,8 @@ func (enc *Encoding) AppendDecode(dst, src []byte) ([]byte, error) {
 	return dst[:len(dst)+n], err
 }
 
-// DecodeString returns the bytes represented by the base64 string s.
-// If the input is malformed, it returns the partially decoded data and
+// DecodeString 返回the bytes represented by the base64 string s.
+// If the input is malformed, it 返回 partially decoded data and
 // [CorruptInputError]. New line characters (\r and \n) are ignored.
 func (enc *Encoding) DecodeString(s string) ([]byte, error) {
 	dbuf := make([]byte, enc.DecodedLen(len(s)))
@@ -510,9 +510,9 @@ func (d *decoder) Read(p []byte) (n int, err error) {
 }
 
 // Decode decodes src using the encoding enc. It writes at most
-// [Encoding.DecodedLen](len(src)) bytes to dst and returns the number of bytes
+// [Encoding.DecodedLen](len(src)) bytes to dst and 返回 number of bytes
 // written. The caller must ensure that dst is large enough to hold all
-// the decoded data. If src contains invalid base64 data, it will return the
+// the decoded data. If src 包含 invalid base64 data, it 将返回 the
 // number of bytes successfully written and [CorruptInputError].
 // New line characters (\r and \n) are ignored.
 func (enc *Encoding) Decode(dst, src []byte) (n int, err error) {
@@ -584,11 +584,11 @@ func (enc *Encoding) Decode(dst, src []byte) (n int, err error) {
 }
 
 // assemble32 assembles 4 base64 digits into 3 bytes.
-// Each digit comes from the decode map, and will be 0xff
+// Each digit comes from the decode map, and 将是 0xff
 // if it came from an invalid character.
 func assemble32(n1, n2, n3, n4 byte) (dn uint32, ok bool) {
 	// Check that all the digits are valid. If any of them was 0xff, their
-	// bitwise OR will be 0xff.
+	// bitwise OR 将是 0xff.
 	if n1|n2|n3|n4 == 0xff {
 		return 0, false
 	}
@@ -600,11 +600,11 @@ func assemble32(n1, n2, n3, n4 byte) (dn uint32, ok bool) {
 }
 
 // assemble64 assembles 8 base64 digits into 6 bytes.
-// Each digit comes from the decode map, and will be 0xff
+// Each digit comes from the decode map, and 将是 0xff
 // if it came from an invalid character.
 func assemble64(n1, n2, n3, n4, n5, n6, n7, n8 byte) (dn uint64, ok bool) {
 	// Check that all the digits are valid. If any of them was 0xff, their
-	// bitwise OR will be 0xff.
+	// bitwise OR 将是 0xff.
 	if n1|n2|n3|n4|n5|n6|n7|n8 == 0xff {
 		return 0, false
 	}
@@ -649,7 +649,7 @@ func NewDecoder(enc *Encoding, r io.Reader) io.Reader {
 	return &decoder{enc: enc, r: &newlineFilteringReader{r}}
 }
 
-// DecodedLen returns the maximum length in bytes of the decoded data
+// DecodedLen 返回the maximum length in bytes of the decoded data
 // corresponding to n bytes of base64-encoded data.
 func (enc *Encoding) DecodedLen(n int) int {
 	return decodedLen(n, enc.padChar)

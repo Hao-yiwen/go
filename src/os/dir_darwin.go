@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package os
 
@@ -11,9 +11,9 @@ import (
 	"unsafe"
 )
 
-// Auxiliary information if the File describes a directory
+// 如果 File 描述目录的辅助信息
 type dirInfo struct {
-	dir uintptr // Pointer to DIR structure from dirent.h
+	dir uintptr // 指向 dirent.h 中 DIR 结构的指针
 }
 
 func (d *dirInfo) close() {
@@ -25,7 +25,7 @@ func (d *dirInfo) close() {
 }
 
 func (f *File) readdir(n int, mode readdirMode) (names []string, dirents []DirEntry, infos []FileInfo, err error) {
-	// If this file has no dirinfo, create one.
+	// 如果此文件没有 dirinfo，创建一个。
 	var d *dirInfo
 	for {
 		d = f.dirinfo.Load()
@@ -40,7 +40,7 @@ func (f *File) readdir(n int, mode readdirMode) (names []string, dirents []DirEn
 		if f.dirinfo.CompareAndSwap(nil, d) {
 			break
 		}
-		// We lost the race: try again.
+		// 我们在竞争中失败了：再试一次。
 		d.close()
 	}
 
@@ -62,14 +62,11 @@ func (f *File) readdir(n int, mode readdirMode) (names []string, dirents []DirEn
 		if entptr == nil { // EOF
 			break
 		}
-		// Darwin may return a zero inode when a directory entry has been
-		// deleted but not yet removed from the directory. The man page for
-		// getdirentries(2) states that programs are responsible for skipping
-		// those entries:
+		// Darwin 在目录条目已被删除但尚未从目录中移除时可能返回零 inode。
+		// getdirentries(2) 的手册页面指出程序负责跳过这些条目：
 		//
-		//   Users of getdirentries() should skip entries with d_fileno = 0,
-		//   as such entries represent files which have been deleted but not
-		//   yet removed from the directory entry.
+		//   getdirentries() 的用户应该跳过 d_fileno = 0 的条目，
+		//   因为这些条目表示已被删除但尚未从目录条目中删除的文件。
 		//
 		if dirent.Ino == 0 {
 			continue

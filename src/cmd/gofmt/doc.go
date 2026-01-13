@@ -3,104 +3,103 @@
 // license that can be found in the LICENSE file.
 
 /*
-Gofmt formats Go programs.
-It uses tabs for indentation and blanks for alignment.
-Alignment assumes that an editor is using a fixed-width font.
+Gofmt 格式化 Go 程序。
+它使用制表符进行缩进，使用空格进行对齐。
+对齐假设编辑器使用固定宽度字体。
 
-Without an explicit path, it processes the standard input.  Given a file,
-it operates on that file; given a directory, it operates on all .go files in
-that directory, recursively.  (Files starting with a period are ignored.)
-By default, gofmt prints the reformatted sources to standard output.
+没有显式路径，它处理标准输入。给定一个文件，
+它操作该文件；给定一个目录，它递归地操作
+该目录中的所有 .go 文件。（以句号开头的文件被忽略。）
+默认情况下，gofmt 将重新格式化的源代码打印到标准输出。
 
-Usage:
+用法：
 
 	gofmt [flags] [path ...]
 
-The flags are:
+标志是：
 
 	-d
-		Do not print reformatted sources to standard output.
-		If a file's formatting is different than gofmt's, print diffs
-		to standard output.
+		不将重新格式化的源代码打印到标准输出。
+		如果文件的格式与 gofmt 的不同，打印差异
+		到标准输出。
 	-e
-		Print all (including spurious) errors.
+		打印所有（包括虚假的）错误。
 	-l
-		Do not print reformatted sources to standard output.
-		If a file's formatting is different from gofmt's, print its name
-		to standard output.
+		不将重新格式化的源代码打印到标准输出。
+		如果文件的格式与 gofmt 的不同，打印其名称
+		到标准输出。
 	-r rule
-		Apply the rewrite rule to the source before reformatting.
+		在重新格式化前应用重写规则到源代码。
 	-s
-		Try to simplify code (after applying the rewrite rule, if any).
+		尝试简化代码（在应用重写规则后，如果有的话）。
 	-w
-		Do not print reformatted sources to standard output.
-		If a file's formatting is different from gofmt's, overwrite it
-		with gofmt's version. If an error occurred during overwriting,
-		the original file is restored from an automatic backup.
+		不将重新格式化的源代码打印到标准输出。
+		如果文件的格式与 gofmt 的不同，用 gofmt 的版本覆盖它。
+		如果在覆盖期间发生错误，原始文件将从自动备份中恢复。
 
-Debugging support:
+调试支持：
 
 	-cpuprofile filename
-		Write cpu profile to the specified file.
+		将 cpu 配置文件写入指定文件。
 
-The rewrite rule specified with the -r flag must be a string of the form:
+使用 -r 标志指定的重写规则必须是以下形式的字符串：
 
 	pattern -> replacement
 
-Both pattern and replacement must be valid Go expressions.
-In the pattern, single-character lowercase identifiers serve as
-wildcards matching arbitrary sub-expressions; those expressions
-will be substituted for the same identifiers in the replacement.
+pattern 和 replacement 都必须是有效的 Go 表达式。
+在模式中，单字符小写标识符作为
+通配符匹配任意子表达式；这些表达式
+将被替换为替换中的相同标识符。
 
-When gofmt reads from standard input, it accepts either a full Go program
-or a program fragment.  A program fragment must be a syntactically
-valid declaration list, statement list, or expression.  When formatting
-such a fragment, gofmt preserves leading indentation as well as leading
-and trailing spaces, so that individual sections of a Go program can be
-formatted by piping them through gofmt.
+当 gofmt 从标准输入读取时，它接受完整的 Go 程序
+或程序片段。程序片段必须是语法上
+有效的声明列表、语句列表或表达式。在格式化
+此类片段时，gofmt 保留前导缩进以及前导
+和尾随空格，以便 Go 程序的各个部分可以
+通过管道传送到 gofmt 来格式化。
 
-# Examples
+# 示例
 
-To check files for unnecessary parentheses:
+要检查文件中的不必要括号：
 
 	gofmt -r '(a) -> a' -l *.go
 
-To remove the parentheses:
+要删除括号：
 
 	gofmt -r '(a) -> a' -w *.go
 
-To convert the package tree from explicit slice upper bounds to implicit ones:
+要将包树从显式切片上界转换为隐式上界：
 
 	gofmt -r 'α[β:len(α)] -> α[β:]' -w $GOROOT/src
 
-# The simplify command
+# simplify 命令
 
-When invoked with -s gofmt will make the following source transformations where possible.
+使用 -s 调用时，gofmt 将在可能的地方进行以下源代码转换。
 
-	An array, slice, or map composite literal of the form:
+	数组、切片或映射复合字面量的形式：
 		[]T{T{}, T{}}
-	will be simplified to:
+	将被简化为：
 		[]T{{}, {}}
 
-	A slice expression of the form:
+	切片表达式的形式：
 		s[a:len(s)]
-	will be simplified to:
+	将被简化为：
 		s[a:]
 
-	A range of the form:
+	范围的形式：
 		for x, _ = range v {...}
-	will be simplified to:
+	将被简化为：
 		for x = range v {...}
 
-	A range of the form:
+	范围的形式：
 		for _ = range v {...}
-	will be simplified to:
+	将被简化为：
 		for range v {...}
 
-This may result in changes that are incompatible with earlier versions of Go.
+这可能导致与早期 Go 版本不兼容的更改。
 */
 package main
 
-// BUG(rsc): The implementation of -r is a bit slow.
-// BUG(gri): If -w fails, the restored original file may not have some of the
-// original file attributes.
+// BUG(rsc): -r 的实现有点慢。
+// BUG(gri): 如果 -w 失败，恢复的原始文件可能没有某些
+// 原始文件属性。

@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package bzip2
 
@@ -160,9 +160,9 @@ func TestReader(t *testing.T) {
 
 func TestBitReader(t *testing.T) {
 	var vectors = []struct {
-		nbits uint // Number of bits to read
-		value int  // Expected output value (0 for error)
-		fail  bool // Expected operation failure?
+		nbits uint // 要读取的位数
+		value int  // 期望的输出值（错误时为 0）
+		fail  bool // 期望操作失败？
 	}{
 		{nbits: 1, value: 1},
 		{nbits: 1, value: 0},
@@ -194,8 +194,8 @@ func TestBitReader(t *testing.T) {
 
 func TestMTF(t *testing.T) {
 	var vectors = []struct {
-		idx int   // Input index
-		sym uint8 // Expected output symbol
+		idx int   // 输入索引
+		sym uint8 // 期望的输出符号
 	}{
 		{idx: 1, sym: 1}, // [1 0 2 3 4]
 		{idx: 0, sym: 1}, // [1 0 2 3 4]
@@ -229,7 +229,7 @@ var (
 )
 
 func benchmarkDecode(b *testing.B, compressed []byte) {
-	// Determine the uncompressed size of testfile.
+	// 确定测试文件的未压缩大小。
 	uncompressedSize, err := io.Copy(io.Discard, NewReader(bytes.NewReader(compressed)))
 	if err != nil {
 		b.Fatal(err)

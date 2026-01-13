@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package printer
 
@@ -47,8 +47,8 @@ func (p *printer) fixGoBuildLines() {
 		}
 	}
 
-	// If there is a //go:build comment before the place we identified,
-	// use that point instead. (Earlier in the file is always fine.)
+	// If there 是一个 //go:build comment before the place we identified,
+	// use that point instead. (Earlier in the file 是一个lways fine.)
 	if len(p.goBuild) > 0 && p.goBuild[0] < insert {
 		insert = p.goBuild[0]
 	} else if len(p.plusBuild) > 0 && p.plusBuild[0] < insert {

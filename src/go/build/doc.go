@@ -1,19 +1,19 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 // Package build gathers information about Go packages.
 //
 // # Build Constraints
 //
-// A build constraint, also known as a build tag, is a condition under which a
-// file should be included in the package. Build constraints are given by a
+// 一个build constraint, also known as a build tag, 是一个 condition under which a
+// file 应该是 included in the package. Build constraints are given by a
 // line comment that begins
 //
 //	//go:build
 //
 // Build constraints may also be part of a file's name
-// (for example, source_windows.go will only be included if the target
+// (for example, source_windows.go will only be included 如果 target
 // operating system is windows).
 //
 // See 'go help buildconstraint'
@@ -21,11 +21,11 @@
 //
 // # Go Path
 //
-// The Go path is a list of directory trees containing Go source code.
+// The Go path 是一个 list of directory trees containing Go source code.
 // It is consulted to resolve imports that cannot be found in the standard
-// Go tree. The default path is the value of the GOPATH environment
+// Go tree. The default path 是 value of the GOPATH environment
 // variable, interpreted as a path list appropriate to the operating system
-// (on Unix, the variable is a colon-separated string;
+// (on Unix, the variable 是一个 colon-separated string;
 // on Windows, a semicolon-separated string;
 // on Plan 9, a list).
 //
@@ -39,7 +39,7 @@
 // architecture pair has its own subdirectory of pkg
 // (pkg/GOOS_GOARCH).
 //
-// If DIR is a directory listed in the Go path, a package with
+// If DIR 是一个 directory listed in the Go path, a package with
 // source in DIR/src/foo/bar can be imported as "foo/bar" and
 // has its compiled form installed to "DIR/pkg/GOOS_GOARCH/foo/bar.a"
 // (or, for gccgo, "DIR/pkg/gccgo/foo/libbar.a").

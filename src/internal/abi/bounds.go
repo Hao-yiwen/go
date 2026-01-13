@@ -1,23 +1,22 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package abi
 
-// This type and constants are for encoding different
-// kinds of bounds check failures.
+// 此类型和常量用于编码不同类型的边界检查失败。
 type BoundsErrorCode uint8
 
 const (
-	BoundsIndex      BoundsErrorCode = iota // s[x], 0 <= x < len(s) failed
-	BoundsSliceAlen                         // s[?:x], 0 <= x <= len(s) failed
-	BoundsSliceAcap                         // s[?:x], 0 <= x <= cap(s) failed
-	BoundsSliceB                            // s[x:y], 0 <= x <= y failed (but boundsSliceA didn't happen)
-	BoundsSlice3Alen                        // s[?:?:x], 0 <= x <= len(s) failed
-	BoundsSlice3Acap                        // s[?:?:x], 0 <= x <= cap(s) failed
-	BoundsSlice3B                           // s[?:x:y], 0 <= x <= y failed (but boundsSlice3A didn't happen)
-	BoundsSlice3C                           // s[x:y:?], 0 <= x <= y failed (but boundsSlice3A/B didn't happen)
-	BoundsConvert                           // (*[x]T)(s), 0 <= x <= len(s) failed
+	BoundsIndex      BoundsErrorCode = iota // s[x], 0 <= x < len(s) 检查失败
+	BoundsSliceAlen                         // s[?:x], 0 <= x <= len(s) 检查失败
+	BoundsSliceAcap                         // s[?:x], 0 <= x <= cap(s) 检查失败
+	BoundsSliceB                            // s[x:y], 0 <= x <= y 检查失败（但 boundsSliceA 未发生）
+	BoundsSlice3Alen                        // s[?:?:x], 0 <= x <= len(s) 检查失败
+	BoundsSlice3Acap                        // s[?:?:x], 0 <= x <= cap(s) 检查失败
+	BoundsSlice3B                           // s[?:x:y], 0 <= x <= y 检查失败（但 boundsSlice3A 未发生）
+	BoundsSlice3C                           // s[x:y:?], 0 <= x <= y 检查失败（但 boundsSlice3A/B 未发生）
+	BoundsConvert                           // (*[x]T)(s), 0 <= x <= len(s) 检查失败
 	numBoundsCodes
 )
 
@@ -26,32 +25,32 @@ const (
 	BoundsMaxConst = 31
 )
 
-// Here's how we encode PCDATA_PanicBounds entries:
+// 以下是我们如何编码 PCDATA_PanicBounds 条目：
 
-// We allow 16 registers (0-15) and 32 constants (0-31).
-// Encode the following constant c:
-//     bits    use
+// 我们允许 16 个寄存器（0-15）和 32 个常量（0-31）。
+// 编码以下常量 c：
+//     位      用途
 // -----------------------------
-//       0     x is in a register
-//       1     y is in a register
+//       0     x 在寄存器中
+//       1     y 在寄存器中
 //
-// if x is in a register
-//       2     x is signed
-//     [3:6]   x's register number
-// else
-//     [2:6]   x's constant value
+// 如果 x 在寄存器中
+//       2     x 是有符号的
+//     [3:6]   x 的寄存器编号
+// 否则
+//     [2:6]   x 的常量值
 //
-// if y is in a register
-//     [7:10]  y's register number
-// else
-//     [7:11]  y's constant value
+// 如果 y 在寄存器中
+//     [7:10]  y 的寄存器编号
+// 否则
+//     [7:11]  y 的常量值
 //
-// The final integer is c * numBoundsCode + code
+// 最终整数为 c * numBoundsCode + code
 
-// TODO: 32-bit
+// TODO: 32 位
 
-// Encode bounds failure information into an integer for PCDATA_PanicBounds.
-// Register numbers must be in 0-15. Constants must be in 0-31.
+// BoundsEncode 将边界检查失败信息编码为 PCDATA_PanicBounds 的整数。
+// 寄存器编号必须在 0-15 之间。常量必须在 0-31 之间。
 func BoundsEncode(code BoundsErrorCode, signed, xIsReg, yIsReg bool, xVal, yVal int) int {
 	c := int(0)
 	if xIsReg {

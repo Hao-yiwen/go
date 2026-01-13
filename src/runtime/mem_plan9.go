@@ -7,7 +7,7 @@ package runtime
 import "unsafe"
 
 func sbrk(n uintptr) unsafe.Pointer {
-	// Plan 9 sbrk from /sys/src/libc/9sys/sbrk.c
+	// 来自 /sys/src/libc/9sys/sbrk.c 的 Plan 9 sbrk
 	bl := bloc
 	n = memRound(n)
 	if bl+n > blocMax {

@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package math_test
 
@@ -24,11 +24,10 @@ var vf = []float64{
 	-8.6859247685756013e+00,
 }
 
-// The expected results below were computed by the high precision calculators
-// at https://keisan.casio.com/.  More exact input values (array vf[], above)
-// were obtained by printing them with "%.26f".  The answers were calculated
-// to 26 digits (by using the "Digit number" drop-down control of each
-// calculator).
+// 以下期望结果由高精度计算器计算得出，
+// 网址为 https://keisan.casio.com/。更精确的输入值（上面的 vf[] 数组）
+// 通过使用 "%.26f" 格式打印获得。答案计算到 26 位数字
+// （通过使用每个计算器的"位数"下拉控件）。
 var acos = []float64{
 	1.0496193546107222142571536e+00,
 	6.8584012813664425171660692e-01,
@@ -162,7 +161,7 @@ var cos = []float64{
 	-7.39241351595676573201918e-01,
 }
 
-// Results for 100000 * Pi + vf[i]
+// 100000 * Pi + vf[i] 的结果
 var cosLarge = []float64{
 	2.634752141185559426744e-01,
 	1.14855126055543100712e-01,
@@ -567,7 +566,7 @@ var sin = []float64{
 	-6.734405869050344734943028e-01,
 }
 
-// Results for 100000 * Pi + vf[i]
+// 100000 * Pi + vf[i] 的结果
 var sinLarge = []float64{
 	-9.646661658548936063912e-01,
 	9.933822527198506903752e-01,
@@ -617,7 +616,7 @@ var tan = []float64{
 	9.10988793377685105753416e-01,
 }
 
-// Results for 100000 * Pi + vf[i]
+// 100000 * Pi + vf[i] 的结果
 var tanLarge = []float64{
 	-3.66131656475596512705e+00,
 	8.6490023287202547927e+00,
@@ -703,7 +702,7 @@ var yM3 = []float64{
 	0.1461869756579956803341844,
 }
 
-// arguments and expected results for special cases
+// 特殊情况的参数和期望结果
 var vfacosSC = []float64{
 	-Pi,
 	1,
@@ -900,10 +899,10 @@ var vfceilSC = []float64{
 	Inf(1),
 	NaN(),
 	1<<52 - 1,
-	1<<52 - 0.5, // largest fractional float64
+	1<<52 - 0.5, // 最大的小数 float64
 	1 << 52,
 	-1 << 52,
-	-1<<52 + 0.5, // smallest fractional float64
+	-1<<52 + 0.5, // 最小的小数 float64
 	-1<<52 + 1,
 	1 << 53,
 	-1 << 53,
@@ -1061,15 +1060,15 @@ var vfexpSC = []float64{
 	2000,
 	Inf(1),
 	NaN(),
-	// smallest float64 that overflows Exp(x)
+	// 使 Exp(x) 溢出的最小 float64
 	7.097827128933841e+02,
-	// Issue 18912
+	// 问题 18912
 	1.48852223e+09,
 	1.4885222e+09,
 	1,
-	// near zero
+	// 接近零
 	3.725290298461915e-09,
-	// denormal
+	// 非规格化数
 	-740,
 }
 var expSC = []float64{
@@ -1092,11 +1091,11 @@ var vfexp2SC = []float64{
 	2000,
 	Inf(1),
 	NaN(),
-	// smallest float64 that overflows Exp2(x)
+	// 使 Exp2(x) 溢出的最小 float64
 	1024,
-	// near underflow
+	// 接近下溢
 	-1.07399999999999e+03,
-	// near zero
+	// 接近零
 	3.725290298461915e-09,
 }
 var exp2SC = []float64{
@@ -1161,7 +1160,7 @@ var vffdimSC = [][2]float64{
 	{NaN(), Inf(1)},
 	{NaN(), NaN()},
 }
-var nan = Float64frombits(0xFFF8000000000000) // SSE2 DIVSD 0/0
+var nan = Float64frombits(0xFFF8000000000000) // SSE2 DIVSD 0/0 运算结果
 var vffdim2SC = [][2]float64{
 	{Inf(-1), Inf(-1)},
 	{Inf(-1), Inf(1)},
@@ -1332,15 +1331,15 @@ var vfgamma = [][2]float64{
 	{-1e300, NaN()},
 	{1.7e308, Inf(1)},
 
-	// Test inputs inspired by Python test suite.
-	// Outputs computed at high precision by PARI/GP.
-	// If recomputing table entries, be careful to use
-	// high-precision (%.1000g) formatting of the float64 inputs.
-	// For example, -2.0000000000000004 is the float64 with exact value
-	// -2.00000000000000044408920985626161695, and
-	// gamma(-2.0000000000000004) = -1249999999999999.5386078562728167651513, while
-	// gamma(-2.00000000000000044408920985626161695) = -1125899906826907.2044875028130093136826.
-	// Thus the table lists -1.1258999068426235e+15 as the answer.
+	// 测试输入受 Python 测试套件启发。
+	// 输出由 PARI/GP 高精度计算得出。
+	// 如果重新计算表格条目，请小心使用
+	// 高精度 (%.1000g) 格式化 float64 输入。
+	// 例如，-2.0000000000000004 是精确值为
+	// -2.00000000000000044408920985626161695 的 float64，且
+	// gamma(-2.0000000000000004) = -1249999999999999.5386078562728167651513，而
+	// gamma(-2.00000000000000044408920985626161695) = -1125899906826907.2044875028130093136826。
+	// 因此表格列出 -1.1258999068426235e+15 作为答案。
 	{0.5, 1.772453850905516},
 	{1.5, 0.886226925452758},
 	{2.5, 1.329340388179137},
@@ -1574,7 +1573,7 @@ var vflog1pSC = []float64{
 	0,
 	Inf(1),
 	NaN(),
-	4503599627370496.5, // Issue #29488
+	4503599627370496.5, // 问题 #29488
 }
 var log1pSC = []float64{
 	NaN(),
@@ -1584,7 +1583,7 @@ var log1pSC = []float64{
 	0,
 	Inf(1),
 	NaN(),
-	36.04365338911715, // Issue #29488
+	36.04365338911715, // 问题 #29488
 }
 
 var vfmodfSC = []float64{
@@ -1719,7 +1718,7 @@ var vfpowSC = [][2]float64{
 	{NaN(), Pi},
 	{NaN(), NaN()},
 
-	// Issue #7394 overflow checks
+	// 问题 #7394 溢出检查
 	{2, float64(1 << 32)},
 	{2, -float64(1 << 32)},
 	{-2, float64(1<<32 + 1)},
@@ -1730,7 +1729,7 @@ var vfpowSC = [][2]float64{
 	{Nextafter(-1, 2), float64(1 << 63)},
 	{Nextafter(-1, -2), float64(1 << 63)},
 
-	// Issue #57465
+	// 问题 #57465
 	{Copysign(0, -1), 1e19},
 	{Copysign(0, -1), -1e19},
 	{Copysign(0, -1), 1<<53 - 1},
@@ -1800,7 +1799,7 @@ var powSC = []float64{
 	NaN(),           // pow(NaN, +Pi)
 	NaN(),           // pow(NaN, NaN)
 
-	// Issue #7394 overflow checks
+	// 问题 #7394 溢出检查
 	Inf(1),  // pow(2, float64(1 << 32))
 	0,       // pow(2, -float64(1 << 32))
 	Inf(-1), // pow(-2, float64(1<<32 + 1))
@@ -1811,7 +1810,7 @@ var powSC = []float64{
 	0,       // pow(Nextafter(-1, 2), float64(1 << 63))
 	Inf(1),  // pow(Nextafter(-1, -2), float64(1 << 63))
 
-	// Issue #57465
+	// 问题 #57465
 	0,               // pow(-0, 1e19)
 	Inf(1),          // pow(-0, -1e19)
 	Copysign(0, -1), // pow(-0, 1<<53 -1)
@@ -1856,7 +1855,7 @@ var pow10SC = []float64{
 
 var vfroundSC = [][2]float64{
 	{0, 0},
-	{1.390671161567e-309, 0}, // denormal
+	{1.390671161567e-309, 0}, // 非规格化数
 	{0.49999999999999994, 0}, // 0.5-epsilon
 	{0.5, 1},
 	{0.5000000000000001, 1}, // 0.5+epsilon
@@ -1864,14 +1863,14 @@ var vfroundSC = [][2]float64{
 	{-2.5, -3},
 	{NaN(), NaN()},
 	{Inf(1), Inf(1)},
-	{2251799813685249.5, 2251799813685250}, // 1 bit fraction
+	{2251799813685249.5, 2251799813685250}, // 1 位小数
 	{2251799813685250.5, 2251799813685251},
-	{4503599627370495.5, 4503599627370496}, // 1 bit fraction, rounding to 0 bit fraction
-	{4503599627370497, 4503599627370497},   // large integer
+	{4503599627370495.5, 4503599627370496}, // 1 位小数，舍入到 0 位小数
+	{4503599627370497, 4503599627370497},   // 大整数
 }
 var vfroundEvenSC = [][2]float64{
 	{0, 0},
-	{1.390671161567e-309, 0}, // denormal
+	{1.390671161567e-309, 0}, // 非规格化数
 	{0.49999999999999994, 0}, // 0.5-epsilon
 	{0.5, 0},
 	{0.5000000000000001, 1}, // 0.5+epsilon
@@ -1879,10 +1878,10 @@ var vfroundEvenSC = [][2]float64{
 	{-2.5, -2},
 	{NaN(), NaN()},
 	{Inf(1), Inf(1)},
-	{2251799813685249.5, 2251799813685250}, // 1 bit fraction
+	{2251799813685249.5, 2251799813685250}, // 1 位小数
 	{2251799813685250.5, 2251799813685250},
-	{4503599627370495.5, 4503599627370496}, // 1 bit fraction, rounding to 0 bit fraction
-	{4503599627370497, 4503599627370497},   // large integer
+	{4503599627370495.5, 4503599627370496}, // 1 位小数，舍入到 0 位小数
+	{4503599627370497, 4503599627370497},   // 大整数
 }
 
 var vfsignbitSC = []float64{
@@ -1937,7 +1936,7 @@ var vfsqrtSC = []float64{
 	0,
 	Inf(1),
 	NaN(),
-	Float64frombits(2), // subnormal; see https://golang.org/issue/13013
+	Float64frombits(2), // 次正规数；见 https://golang.org/issue/13013
 }
 var sqrtSC = []float64{
 	NaN(),
@@ -2000,7 +1999,7 @@ var yM3SC = []float64{
 	NaN(),
 }
 
-// arguments and expected results for boundary cases
+// 边界情况的参数和期望结果
 const (
 	SmallestNormalFloat64   = 2.2250738585072014e-308 // 2**-1022
 	LargestSubnormalFloat64 = SmallestNormalFloat64 - SmallestNonzeroFloat64
@@ -2063,16 +2062,16 @@ var logbBC = []float64{
 	1023,
 }
 
-// Test cases were generated with Berkeley TestFloat-3e/testfloat_gen.
-// http://www.jhauser.us/arithmetic/TestFloat.html.
-// The default rounding mode is selected (nearest/even), and exception flags are ignored.
+// 测试用例由 Berkeley TestFloat-3e/testfloat_gen 生成。
+// http://www.jhauser.us/arithmetic/TestFloat.html。
+// 选择默认舍入模式（最近/偶数），忽略异常标志。
 var fmaC = []struct{ x, y, z, want float64 }{
-	// Large exponent spread
+	// 大指数范围
 	{-3.999999999999087, -1.1123914289620494e-16, -7.999877929687506, -7.999877929687505},
 	{-262112.0000004768, -0.06251525855623184, 1.1102230248837136e-16, 16385.99945072085},
 	{-6.462348523533467e-27, -2.3763644720331857e-211, 4.000000000931324, 4.000000000931324},
 
-	// Effective addition
+	// 有效加法
 	{-2.0000000037252907, 6.7904383376e-313, -3.3951933161e-313, -1.697607001654e-312},
 	{-0.12499999999999999, 512.007568359375, -1.4193627164960366e-16, -64.00094604492188},
 	{-2.7550648847397148e-39, -3.4028301595800694e+38, 0.9960937495343386, 1.9335955376735676},
@@ -2081,7 +2080,7 @@ var fmaC = []struct{ x, y, z, want float64 }{
 	{-3.8146972665201165e-06, 4.2949672959999385e+09, -2.2204460489938386e-16, -16384.000003844263},
 	{6.98156394130982e-309, -1.1072962560000002e+09, -4.4414561548793455e-308, -7.73065965765153e-300},
 
-	// Effective subtraction
+	// 有效减法
 	{5e-324, 4.5, -2e-323, 0},
 	{5e-324, 7, -3.5e-323, 0},
 	{5e-324, 0.5000000000000001, -5e-324, Copysign(0, -1)},
@@ -2090,16 +2089,16 @@ var fmaC = []struct{ x, y, z, want float64 }{
 	{-4.450143471986689e-308, -0.9960937499927239, -4.450419332475649e-308, -1.7659233458788e-310},
 	{1.4932076393918112, -2.2248022430460833e-308, 4.449875571054211e-308, 1.127783865601762e-308},
 
-	// Overflow
+	// 溢出
 	{-2.288020632214759e+38, -8.98846570988901e+307, 1.7696041796300924e+308, Inf(0)},
 	{1.4888652783208255e+308, -9.007199254742012e+15, -6.807282911929205e+38, Inf(-1)},
 	{9.142703268902826e+192, -1.3504889569802838e+296, -1.9082200803806996e-89, Inf(-1)},
 
-	// Finite x and y, but non-finite z.
+	// 有限的 x 和 y，但 z 非有限。
 	{31.99218749627471, -1.7976930544991702e+308, Inf(0), Inf(0)},
 	{-1.7976931281784667e+308, -2.0009765625002265, Inf(-1), Inf(-1)},
 
-	// Special
+	// 特殊情况
 	{0, 0, 0, 0},
 	{Copysign(0, -1), 0, 0, 0},
 	{0, 0, Copysign(0, -1), 0},
@@ -2111,7 +2110,7 @@ var fmaC = []struct{ x, y, z, want float64 }{
 	{Inf(-1), 0.1252441407414153, -1.387184532981584e-76, Inf(-1)},
 	{Inf(0), 1.525878907671432e-05, -9.214364835452549e+18, Inf(0)},
 
-	// Random
+	// 随机
 	{0.1777916152213626, -32.000015266239636, -2.2204459148334633e-16, -5.689334401293007},
 	{-2.0816681711722314e-16, -0.4997558592585846, -0.9465627129124969, -0.9465627129124968},
 	{-1.9999997615814211, 1.8518819259933516e+19, 16.874999999999996, -3.703763410463646e+19},
@@ -2123,11 +2122,11 @@ var fmaC = []struct{ x, y, z, want float64 }{
 	{-9.094947033611148e-13, 4.450691014249257e-308, 2.086006742350485e-308, 2.086006742346437e-308},
 	{-7.751454006381804e-05, 5.588653777189071e-308, -2.2207280111272877e-308, -2.2211612130544025e-308},
 
-	// Issue #61130
+	// 问题 #61130
 	{-1, 1, 1, 0},
 	{1, 1, -1, 0},
 
-	// Issue #73757
+	// 问题 #73757
 	{0x1p-1022, -0x1p-1022, 0, Copysign(0, -1)},
 	{Copysign(0, -1), 1, 0, 0},
 	{1, Copysign(0, -1), 0, 0},
@@ -2149,9 +2148,9 @@ var sqrt32 = []float32{
 }
 
 func tolerance(a, b, e float64) bool {
-	// Multiplying by e here can underflow denormal values to zero.
-	// Check a==b so that at least if a and b are small and identical
-	// we say they match.
+	// 这里乘以 e 可能导致非规格化值下溢为零。
+	// 检查 a==b，这样至少当 a 和 b 很小且相同时
+	// 我们认为它们匹配。
 	if a == b {
 		return true
 	}
@@ -2160,8 +2159,8 @@ func tolerance(a, b, e float64) bool {
 		d = -d
 	}
 
-	// note: b is correct (expected) value, a is actual value.
-	// make error tolerance a fraction of b, not a.
+	// 注意：b 是正确（期望）值，a 是实际值。
+	// 使误差容限成为 b 的分数，而不是 a 的。
 	if b != 0 {
 		e = e * b
 		if e < 0 {
@@ -2589,7 +2588,7 @@ func TestMod(t *testing.T) {
 			t.Errorf("Mod(%g, %g) = %g, want %g", vffmodSC[i][0], vffmodSC[i][1], f, fmodSC[i])
 		}
 	}
-	// verify precision of result for extreme inputs
+	// 验证极端输入结果的精度
 	if f := Mod(5.9790119248836734e+200, 1.1258465975523544); 0.6447968302508578 != f {
 		t.Errorf("Remainder(5.9790119248836734e+200, 1.1258465975523544) = %g, want 0.6447968302508578", f)
 	}
@@ -2665,7 +2664,7 @@ func TestHypotGo(t *testing.T) {
 
 func TestIlogb(t *testing.T) {
 	for i := 0; i < len(vf); i++ {
-		a := frexp[i].i - 1 // adjust because fr in the interval [½, 1)
+		a := frexp[i].i - 1 // 调整因为 fr 在区间 [½, 1) 内
 		if e := Ilogb(vf[i]); a != e {
 			t.Errorf("Ilogb(%g) = %d, want %d", vf[i], e, a)
 		}
@@ -2934,11 +2933,11 @@ func TestRemainder(t *testing.T) {
 			t.Errorf("Remainder(%g, %g) = %g, want %g", vffmodSC[i][0], vffmodSC[i][1], f, fmodSC[i])
 		}
 	}
-	// verify precision of result for extreme inputs
+	// 验证极端输入结果的精度
 	if f := Remainder(5.9790119248836734e+200, 1.1258465975523544); -0.4810497673014966 != f {
 		t.Errorf("Remainder(5.9790119248836734e+200, 1.1258465975523544) = %g, want -0.4810497673014966", f)
 	}
-	// verify that sign is correct when r == 0.
+	// 验证当 r == 0 时符号是否正确。
 	test := func(x, y float64) {
 		if r := Remainder(x, y); r == 0 && Signbit(r) != Signbit(x) {
 			t.Errorf("Remainder(x=%f, y=%f) = %f, sign of (zero) result should agree with sign of x", x, y, r)
@@ -3053,7 +3052,7 @@ func TestTan(t *testing.T) {
 			t.Errorf("Tan(%g) = %g, want %g", vf[i], f, tan[i])
 		}
 	}
-	// same special cases as Sin
+	// 与 Sin 相同的特殊情况
 	for i := 0; i < len(vfsinSC); i++ {
 		if f := Tan(vfsinSC[i]); !alike(sinSC[i], f) {
 			t.Errorf("Tan(%g) = %g, want %g", vfsinSC[i], f, sinSC[i])
@@ -3138,7 +3137,7 @@ func TestYn(t *testing.T) {
 	}
 }
 
-var PortableFMA = FMA // hide call from compiler intrinsic; falls back to portable code
+var PortableFMA = FMA // 对编译器内联隐藏调用；回退到可移植代码
 
 func TestFMA(t *testing.T) {
 	for _, c := range fmaC {
@@ -3169,10 +3168,10 @@ func fnmadd(x, y, z float64) float64 {
 }
 
 func TestFMANegativeArgs(t *testing.T) {
-	// Some architectures have instructions for fused multiply-subtract and
-	// also negated variants of fused multiply-add and subtract. This test
-	// aims to check that the optimizations that generate those instructions
-	// are applied correctly, if they exist.
+	// 某些架构有融合乘减指令，
+	// 以及融合乘加和乘减的取反变体。此测试
+	// 旨在检查生成这些指令的优化
+	// 是否正确应用（如果存在这些指令）。
 	for _, c := range fmaC {
 		want := PortableFMA(c.x, c.y, -c.z)
 		got := fmsub(c.x, c.y, c.z)
@@ -3192,10 +3191,10 @@ func TestFMANegativeArgs(t *testing.T) {
 	}
 }
 
-// Check that math functions of high angle values
-// return accurate results. [Since (vf[i] + large) - large != vf[i],
-// testing for Trig(vf[i] + large) == Trig(vf[i]), where large is
-// a multiple of 2*Pi, is misleading.]
+// 检查大角度值的数学函数
+// 是否返回准确结果。[由于 (vf[i] + large) - large != vf[i]，
+// 测试 Trig(vf[i] + large) == Trig(vf[i])（其中 large 是
+// 2*Pi 的倍数）会产生误导。]
 func TestLargeCos(t *testing.T) {
 	large := float64(100000 * Pi)
 	for i := 0; i < len(vf); i++ {
@@ -3240,21 +3239,21 @@ func TestLargeTan(t *testing.T) {
 	}
 }
 
-// Check that trigReduce matches the standard reduction results for input values
-// below reduceThreshold.
+// 检查 trigReduce 对于 reduceThreshold 以下的输入值
+// 是否与标准归约结果匹配。
 func TestTrigReduce(t *testing.T) {
 	inputs := make([]float64, len(vf))
-	// all of the standard inputs
+	// 所有标准输入
 	copy(inputs, vf)
-	// all of the large inputs
+	// 所有大输入
 	large := float64(100000 * Pi)
 	for _, v := range vf {
 		inputs = append(inputs, v+large)
 	}
-	// Also test some special inputs, Pi and right below the reduceThreshold
+	// 也测试一些特殊输入，Pi 和刚好低于 reduceThreshold 的值
 	inputs = append(inputs, Pi, Nextafter(ReduceThreshold, 0))
 	for _, x := range inputs {
-		// reduce the value to compare
+		// 归约值以进行比较
 		j, z := TrigReduce(x)
 		xred := float64(j)*(Pi/4) + z
 
@@ -3275,8 +3274,8 @@ func TestTrigReduce(t *testing.T) {
 	}
 }
 
-// Check that math constants are accepted by compiler
-// and have right value (assumes strconv.ParseFloat works).
+// 检查数学常量是否被编译器接受
+// 并且具有正确的值（假设 strconv.ParseFloat 正常工作）。
 // https://golang.org/issue/201
 
 type floatTest struct {
@@ -3312,7 +3311,7 @@ func TestFloatMinima(t *testing.T) {
 
 var indirectSqrt = Sqrt
 
-// TestFloat32Sqrt checks the correctness of the float32 square root optimization result.
+// TestFloat32Sqrt 检查 float32 平方根优化结果的正确性。
 func TestFloat32Sqrt(t *testing.T) {
 	for _, v := range sqrt32 {
 		want := float32(indirectSqrt(float64(v)))
@@ -3329,12 +3328,12 @@ func TestFloat32Sqrt(t *testing.T) {
 	}
 }
 
-// Benchmarks
+// 基准测试
 
-// Global exported variables are used to store the
-// return values of functions measured in the benchmarks.
-// Storing the results in these variables prevents the compiler
-// from completely optimizing the benchmarked functions away.
+// 全局导出变量用于存储
+// 基准测试中测量的函数的返回值。
+// 将结果存储在这些变量中可以防止编译器
+// 完全优化掉被测函数。
 var (
 	GlobalI int
 	GlobalB bool
@@ -3845,11 +3844,11 @@ func BenchmarkSqrtGoLatency(b *testing.B) {
 }
 
 func isPrime(i int) bool {
-	// Yes, this is a dumb way to write this code,
-	// but calling Sqrt repeatedly in this way demonstrates
-	// the benefit of using a direct SQRT instruction on systems
-	// that have one, whereas the obvious loop seems not to
-	// demonstrate such a benefit.
+	// 是的，这是一种笨拙的代码编写方式，
+	// 但以这种方式重复调用 Sqrt 展示了
+	// 在有直接 SQRT 指令的系统上使用该指令的好处，
+	// 而显而易见的循环似乎无法
+	// 展示这种好处。
 	for j := 2; float64(j) <= Sqrt(float64(i)); j++ {
 		if i%j == 0 {
 			return false

@@ -1,10 +1,9 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2017 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// ARM64-specific hardware-assisted CRC32 algorithms. See crc32.go for a
-// description of the interface that each architecture-specific file
-// implements.
+// ARM64 特定的硬件加速 CRC32 算法。有关每个架构特定文件
+// 实现的接口描述，请参阅 crc32.go。
 
 package crc32
 

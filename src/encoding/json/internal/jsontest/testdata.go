@@ -1,10 +1,10 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
-// Package jsontest contains functionality to assist in testing JSON.
+// jsontest 包包含 functionality to assist in testing JSON.
 package jsontest
 
 import (
@@ -41,7 +41,7 @@ func mustGet[T any](v T, err error) T {
 	return v
 }
 
-// Data is a list of JSON testdata.
+// Data 是一个 list of JSON testdata.
 var Data = func() (entries []Entry) {
 	fis := mustGet(fs.ReadDir(testdataFS, "testdata"))
 	slices.SortFunc(fis, func(x, y fs.DirEntry) int { return strings.Compare(x.Name(), y.Name()) })
@@ -63,7 +63,7 @@ var Data = func() (entries []Entry) {
 			return mustGet(io.ReadAll(zr))
 		})
 
-		// Check whether there is a concrete type for this data.
+		// Check whether there 是一个 concrete type for this data.
 		switch entry.Name {
 		case "CanadaGeometry":
 			entry.New = func() any { return new(canadaRoot) }
@@ -588,7 +588,7 @@ type (
 	}
 )
 
-// rawValue is the raw encoded JSON value.
+// rawValue 是 raw encoded JSON value.
 type rawValue []byte
 
 func (v rawValue) MarshalJSON() ([]byte, error) {

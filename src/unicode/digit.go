@@ -1,10 +1,10 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package unicode
 
-// IsDigit reports whether the rune is a decimal digit.
+// IsDigit 报告 rune 是否是十进制数字。
 func IsDigit(r rune) bool {
 	if r <= MaxLatin1 {
 		return '0' <= r && r <= '9'

@@ -8,7 +8,7 @@ package runtime
 
 import "unsafe"
 
-// Stubs for platforms that do not implement runtime/secret
+// 不实现 runtime/secret 的平台的存根
 
 //go:linkname secret_count runtime/secret.count
 func secret_count() int32 { return 0 }

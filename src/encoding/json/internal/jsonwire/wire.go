@@ -1,10 +1,10 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build goexperiment.jsonv2
 
-// Package jsonwire implements stateless functionality for handling JSON text.
+// jsonwire 包实现了 stateless functionality for handling JSON text.
 package jsonwire
 
 import (
@@ -43,7 +43,7 @@ func TrimSuffixString(b []byte) []byte {
 	return b
 }
 
-// HasSuffixByte reports whether b ends with c.
+// HasSuffixByte 报告whether b ends with c.
 func HasSuffixByte(b []byte, c byte) bool {
 	// NOTE: The arguments and logic are kept simple to keep this inlinable.
 	return len(b) > 0 && b[len(b)-1] == c
@@ -69,9 +69,9 @@ func QuoteRune[Bytes ~[]byte | ~string](b Bytes) string {
 
 // CompareUTF16 lexicographically compares x to y according
 // to the UTF-16 codepoints of the UTF-8 encoded input strings.
-// This implements the ordering specified in RFC 8785, section 3.2.3.
+// This 实现the ordering specified in RFC 8785, section 3.2.3.
 func CompareUTF16[Bytes ~[]byte | ~string](x, y Bytes) int {
-	// NOTE: This is an optimized, mostly allocation-free implementation
+	// NOTE: This 是一个n optimized, mostly allocation-free implementation
 	// of CompareUTF16Simple in wire_test.go. FuzzCompareUTF16 verifies that the
 	// two implementations agree on the result of comparing any two strings.
 	isUTF16Self := func(r rune) bool {
@@ -99,12 +99,12 @@ func CompareUTF16[Bytes ~[]byte | ~string](x, y Bytes) int {
 		selfx := isUTF16Self(rx)
 		selfy := isUTF16Self(ry)
 		switch {
-		// The x rune is a single UTF-16 codepoint, while
-		// the y rune is a surrogate pair of UTF-16 codepoints.
+		// The x rune 是一个 single UTF-16 codepoint, while
+		// the y rune 是一个 surrogate pair of UTF-16 codepoints.
 		case selfx && !selfy:
 			ry, _ = utf16.EncodeRune(ry)
-		// The y rune is a single UTF-16 codepoint, while
-		// the x rune is a surrogate pair of UTF-16 codepoints.
+		// The y rune 是一个 single UTF-16 codepoint, while
+		// the x rune 是一个 surrogate pair of UTF-16 codepoints.
 		case selfy && !selfx:
 			rx, _ = utf16.EncodeRune(rx)
 		}
@@ -123,7 +123,7 @@ func CompareUTF16[Bytes ~[]byte | ~string](x, y Bytes) int {
 	}
 }
 
-// truncateMaxUTF8 truncates b such it contains at least one rune.
+// truncateMaxUTF8 truncates b such it 包含 at least one rune.
 //
 // The utf8 package currently lacks generic variants, which complicates
 // generic functions that operates on either []byte or string.

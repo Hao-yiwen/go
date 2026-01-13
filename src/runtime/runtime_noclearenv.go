@@ -6,12 +6,11 @@
 
 package runtime
 
-import _ "unsafe" // for go:linkname
+import _ "unsafe" // 用于 go:linkname
 
 //go:linkname syscall_runtimeClearenv syscall.runtimeClearenv
 func syscall_runtimeClearenv(env map[string]int) {
-	// The system doesn't have clearenv(3) so emulate it by unsetting all of
-	// the variables manually.
+	// 系统没有 clearenv(3)，所以通过手动取消设置所有变量来模拟它。
 	for k := range env {
 		syscall_runtimeUnsetenv(k)
 	}
