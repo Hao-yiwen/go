@@ -846,7 +846,7 @@ func TestCompactFunc(t *testing.T) {
 func TestCompactClearTail(t *testing.T) {
 	one, two, three, four := 1, 2, 3, 4
 	mem := []*int{&one, &one, &two, &two, &three, &four}
-	s := mem[0:5] // there is 1 element beyond len(s), within cap(s)
+	s := mem[0:5] // 在 len(s) 之外有 1 个元素，在 cap(s) 内
 	copy := Clone(s)
 
 	s = Compact(s)
@@ -856,7 +856,7 @@ func TestCompactClearTail(t *testing.T) {
 	}
 
 	if mem[3] != nil || mem[4] != nil {
-		// Check that potential memory leak is avoided
+		// 检查潜在的内存泄漏是否已避免
 		t.Errorf("Compact: want nil discarded elements, got %v, %v", mem[3], mem[4])
 	}
 	if mem[5] != &four {
@@ -867,7 +867,7 @@ func TestCompactClearTail(t *testing.T) {
 func TestCompactFuncClearTail(t *testing.T) {
 	a, b, c, d, e, f := 1, 1, 2, 2, 3, 4
 	mem := []*int{&a, &b, &c, &d, &e, &f}
-	s := mem[0:5] // there is 1 element beyond len(s), within cap(s)
+	s := mem[0:5] // 在 len(s) 之外有 1 个元素，在 cap(s) 内
 	copy := Clone(s)
 
 	s = CompactFunc(s, func(x, y *int) bool {
@@ -882,7 +882,7 @@ func TestCompactFuncClearTail(t *testing.T) {
 	}
 
 	if mem[3] != nil || mem[4] != nil {
-		// Check that potential memory leak is avoided
+		// 检查潜在的内存泄漏是否已避免
 		t.Errorf("CompactFunc: want nil discarded elements, got %v, %v", mem[3], mem[4])
 	}
 	if mem[5] != &f {

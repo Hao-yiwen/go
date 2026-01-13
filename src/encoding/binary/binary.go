@@ -2,23 +2,23 @@
 // 本源代码的使用受 BSD 风格许可证约束，
 // 该许可证可在 LICENSE 文件中找到。
 
-// binary 包实现了 simple translation between numbers and byte
-// sequences and encoding and decoding of varints.
+// binary 包实现了数字与字节序列之间的简单转换
+// 以及 varint 的编码和解码。
 //
-// Numbers are translated by reading and writing fixed-size values.
-// 一个fixed-size value is either a fixed-size arithmetic
-// type (bool, int8, uint8, int16, float32, complex64, ...)
-// or an array or struct containing only fixed-size values.
+// 数字通过读写固定大小的值来转换。
+// 固定大小的值是固定大小的算术类型
+// (bool, int8, uint8, int16, float32, complex64, ...)
+// 或包含仅固定大小值的数组或结构体。
 //
-// The varint functions encode and decode single integer values using
-// a variable-length encoding; smaller values require fewer bytes.
-// For a specification, see
-// https://developers.google.com/protocol-buffers/docs/encoding.
+// varint 函数使用变长编码来编码和解码单个整数值；
+// 较小的值需要较少的字节。
+// 有关规范，请参阅
+// https://developers.google.com/protocol-buffers/docs/encoding。
 //
-// This package favors simplicity over efficiency. Clients that require
-// high-performance serialization, especially for large data structures,
-// should look at more advanced solutions such as the [encoding/gob]
-// package or [google.golang.org/protobuf] for protocol buffers.
+// 此包更看重简洁性而非效率。需要高性能
+// 序列化的客户端，特别是对于大型数据结构，
+// 应该看看更高级的解决方案，如 [encoding/gob]
+// 包或 [google.golang.org/protobuf] 用于协议缓冲区。
 package binary
 
 import (

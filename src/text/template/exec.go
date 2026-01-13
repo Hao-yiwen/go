@@ -188,16 +188,15 @@ func (t *Template) ExecuteTemplate(wr io.Writer, name string, data any) error {
 	return tmpl.Execute(wr, data)
 }
 
-// Execute applies a parsed template to the specified data object,
-// and writes the output to wr.
-// If an error occurs executing the template or writing its output,
-// execution stops, but partial results may already have been written to
-// the output writer.
-// A template may be executed safely in parallel, although if parallel
-// executions share a Writer the output may be interleaved.
+// Execute 将已解析的模板应用于指定的数据对象，
+// 并将输出写入 wr。
+// 如果在执行模板或写入其输出时发生错误，
+// 执行停止，但部分结果可能已被写入输出编写器。
+// 模板可以安全地并行执行，尽管如果并行执行
+// 共享一个 Writer，输出可能会交错。
 //
-// If data is a [reflect.Value], the template applies to the concrete
-// value that the reflect.Value holds, as in [fmt.Print].
+// 如果 data 是一个 [reflect.Value]，模板应用于
+// reflect.Value 所保存的具体值，就像 [fmt.Print] 一样。
 func (t *Template) Execute(wr io.Writer, data any) error {
 	return t.execute(wr, data)
 }
@@ -220,10 +219,9 @@ func (t *Template) execute(wr io.Writer, data any) (err error) {
 	return
 }
 
-// DefinedTemplates returns a string listing the defined templates,
-// prefixed by the string "; defined templates are: ". If there are none,
-// it returns the empty string. For generating an error message here
-// and in [html/template].
+// DefinedTemplates 返回一个列出已定义模板的字符串，
+// 前缀为字符串 "; defined templates are: "。如果没有，
+// 它返回空字符串。用于在这里和在 [html/template] 中生成错误消息。
 func (t *Template) DefinedTemplates() string {
 	if t.common == nil {
 		return ""
@@ -245,20 +243,20 @@ func (t *Template) DefinedTemplates() string {
 	return b.String()
 }
 
-// Sentinel errors for use with panic to signal early exits from range loops.
+// Sentinel 错误用于 panic 以从范围循环中信号化提前退出。
 var (
 	walkBreak    = errors.New("break")
 	walkContinue = errors.New("continue")
 )
 
-// Walk functions step through the major pieces of the template structure,
-// generating output as they go.
+// Walk 函数逐步遍历模板结构的主要部分，
+// 在进行过程中生成输出。
 func (s *state) walk(dot reflect.Value, node parse.Node) {
 	s.at(node)
 	switch node := node.(type) {
 	case *parse.ActionNode:
-		// Do not pop variables so they persist until next end.
-		// Also, if the action declares variables, don't print the result.
+		// 不要弹出变量，以便它们在下一个 end 之前持续存在。
+		// 同时，如果动作声明变量，不要打印结果。
 		val := s.evalPipeline(dot, node.Pipe)
 		if len(node.Pipe.Decl) == 0 {
 			s.printValue(node, val)
@@ -289,8 +287,8 @@ func (s *state) walk(dot reflect.Value, node parse.Node) {
 	}
 }
 
-// walkIfOrWith walks an 'if' or 'with' node. The two control structures
-// are identical in behavior except that 'with' sets dot.
+// walkIfOrWith 遍历一个 'if' 或 'with' 节点。这两个控制结构
+// 在行为上是相同的，除了 'with' 设置 dot。
 func (s *state) walkIfOrWith(typ parse.NodeType, dot reflect.Value, pipe *parse.PipeNode, list, elseList *parse.ListNode) {
 	defer s.pop(s.mark())
 	val := s.evalPipeline(dot, pipe)
@@ -309,16 +307,16 @@ func (s *state) walkIfOrWith(typ parse.NodeType, dot reflect.Value, pipe *parse.
 	}
 }
 
-// IsTrue reports whether the value is 'true', in the sense of not the zero of its type,
-// and whether the value has a meaningful truth value. This is the definition of
-// truth used by if and other such actions.
+// IsTrue 报告该值是否为 'true'，即不是其类型的零值，
+// 以及该值是否有有意义的真值。这是 if 和其他此类动作
+// 使用的真值定义。
 func IsTrue(val any) (truth, ok bool) {
 	return isTrue(reflect.ValueOf(val))
 }
 
 func isTrue(val reflect.Value) (truth, ok bool) {
 	if !val.IsValid() {
-		// Something like var x interface{}, never set. It's a form of nil.
+		// 像 var x interface{}，从未设置。这是一种 nil。
 		return false, true
 	}
 	switch val.Kind() {
@@ -337,7 +335,7 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		truth = val.Uint() != 0
 	case reflect.Struct:
-		truth = true // Struct values are always true.
+		truth = true // 结构体值总是 true。
 	default:
 		return
 	}
@@ -353,21 +351,20 @@ func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 	}()
 	defer s.pop(s.mark())
 	val, _ := indirect(s.evalPipeline(dot, r.Pipe))
-	// mark top of stack before any variables in the body are pushed.
+	// 在将体中的任何变量压入之前标记栈顶。
 	mark := s.mark()
 	oneIteration := func(index, elem reflect.Value) {
 		if len(r.Pipe.Decl) > 0 {
 			if r.Pipe.IsAssign {
-				// With two variables, index comes first.
-				// With one, we use the element.
+				// 有两个变量时，索引首先出现。
+				// 只有一个时，我们使用元素。
 				if len(r.Pipe.Decl) > 1 {
 					s.setVar(r.Pipe.Decl[0].Ident[0], index)
 				} else {
 					s.setVar(r.Pipe.Decl[0].Ident[0], elem)
 				}
 			} else {
-				// Set top var (lexically the second if there
-				// are two) to the element.
+				// 设置栈顶变量（如果有两个则在词法上是第二个）为元素。
 				s.setTopVar(1, elem)
 			}
 		}
@@ -375,8 +372,7 @@ func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 			if r.Pipe.IsAssign {
 				s.setVar(r.Pipe.Decl[1].Ident[0], elem)
 			} else {
-				// Set next var (lexically the first if there
-				// are two) to the index.
+				// 设置下一个变量（如果有两个则在词法上是第一个）为索引。
 				s.setTopVar(2, index)
 			}
 		}

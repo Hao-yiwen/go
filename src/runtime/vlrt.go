@@ -227,13 +227,13 @@ func _div64by32(a uint64, b uint32, r *uint32) (q uint32)
 //go:nosplit
 func dodiv(n, d uint64) (q, r uint64) {
 	if GOARCH == "arm" {
-		// arm doesn't have a division instruction, so
-		// slowdodiv is the best that we can do.
+		// arm 没有除法指令，所以
+		// slowdodiv 是我们能做的最好的。
 		return slowdodiv(n, d)
 	}
 
 	if GOARCH == "mips" || GOARCH == "mipsle" {
-		// No _div64by32 on mips and using only _mul64by32 doesn't bring much benefit
+		// mips 上没有 _div64by32，仅使用 _mul64by32 不会带来太大好处
 		return slowdodiv(n, d)
 	}
 
@@ -251,7 +251,7 @@ func dodiv(n, d uint64) (q, r uint64) {
 		return uint64(t), n - lo64
 	}
 
-	// d is 32 bit
+	// d 是 32 位
 	var qhi uint32
 	if uint32(n>>32) >= uint32(d) {
 		if uint32(d) == 0 {
@@ -274,7 +274,7 @@ func slowdodiv(n, d uint64) (q, r uint64) {
 		panicdivide()
 	}
 
-	// Set up the divisor and find the number of iterations needed.
+	// 设置除数并找到所需的迭代次数。
 	capn := n
 	if n >= sign64 {
 		capn = sign64
@@ -296,17 +296,17 @@ func slowdodiv(n, d uint64) (q, r uint64) {
 	return q, n
 }
 
-// Floating point control word values.
-// Bits 0-5 are bits to disable floating-point exceptions.
-// Bits 8-9 are the precision control:
+// 浮点控制字值。
+// 位 0-5 是禁用浮点异常的位。
+// 位 8-9 是精度控制：
 //
-//	0 = single precision a.k.a. float32
-//	2 = double precision a.k.a. float64
+//	0 = 单精度也称为 float32
+//	2 = 双精度也称为 float64
 //
-// Bits 10-11 are the rounding mode:
+// 位 10-11 是舍入模式：
 //
-//	0 = round to nearest (even on a tie)
-//	3 = round toward zero
+//	0 = 舍入到最近（平局时向偶数舍入）
+//	3 = 舍入到零
 var (
 	controlWord64      uint16 = 0x3f + 2<<8 + 0<<10
 	controlWord64trunc uint16 = 0x3f + 2<<8 + 3<<10

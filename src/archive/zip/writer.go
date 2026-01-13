@@ -156,45 +156,45 @@ func (w *Writer) Close() error {
 		var buf [directory64EndLen + directory64LocLen]byte
 		b := writeBuf(buf[:])
 
-		// zip64 end of central directory record
+		// zip64 中央目录末尾记录
 		b.uint32(directory64EndSignature)
-		b.uint64(directory64EndLen - 12) // length minus signature (uint32) and length fields (uint64)
-		b.uint16(zipVersion45)           // version made by
-		b.uint16(zipVersion45)           // version needed to extract
-		b.uint32(0)                      // number of this disk
-		b.uint32(0)                      // number of the disk with the start of the central directory
-		b.uint64(records)                // total number of entries in the central directory on this disk
-		b.uint64(records)                // total number of entries in the central directory
-		b.uint64(size)                   // size of the central directory
-		b.uint64(offset)                 // offset of start of central directory with respect to the starting disk number
+		b.uint64(directory64EndLen - 12) // 长度减去签名（uint32）和长度字段（uint64）
+		b.uint16(zipVersion45)           // 创建版本
+		b.uint16(zipVersion45)           // 提取所需版本
+		b.uint32(0)                      // 此磁盘号
+		b.uint32(0)                      // 包含中央目录开始的磁盘号
+		b.uint64(records)                // 此磁盘上中央目录中的条目总数
+		b.uint64(records)                // 中央目录中的条目总数
+		b.uint64(size)                   // 中央目录的大小
+		b.uint64(offset)                 // 中央目录相对于起始磁盘号的开始偏移量
 
-		// zip64 end of central directory locator
+		// zip64 中央目录末尾定位器
 		b.uint32(directory64LocSignature)
-		b.uint32(0)           // number of the disk with the start of the zip64 end of central directory
-		b.uint64(uint64(end)) // relative offset of the zip64 end of central directory record
-		b.uint32(1)           // total number of disks
+		b.uint32(0)           // 包含 zip64 中央目录末尾的磁盘号
+		b.uint64(uint64(end)) // zip64 中央目录末尾记录的相对偏移量
+		b.uint32(1)           // 磁盘总数
 
 		if _, err := w.cw.Write(buf[:]); err != nil {
 			return err
 		}
 
-		// store max values in the regular end record to signal
-		// that the zip64 values should be used instead
+		// 在常规末尾记录中存储最大值以表示
+		// 应改用 zip64 值
 		records = uint16max
 		size = uint32max
 		offset = uint32max
 	}
 
-	// write end record
+	// 写入末尾记录
 	var buf [directoryEndLen]byte
 	b := writeBuf(buf[:])
 	b.uint32(uint32(directoryEndSignature))
-	b = b[4:]                        // skip over disk number and first disk number (2x uint16)
-	b.uint16(uint16(records))        // number of entries this disk
-	b.uint16(uint16(records))        // number of entries total
-	b.uint32(uint32(size))           // size of directory
-	b.uint32(uint32(offset))         // start of directory
-	b.uint16(uint16(len(w.comment))) // byte size of EOCD comment
+	b = b[4:]                        // 跳过磁盘号和首个磁盘号（2x uint16）
+	b.uint16(uint16(records))        // 此磁盘上的条目数
+	b.uint16(uint16(records))        // 条目总数
+	b.uint32(uint32(size))           // 目录大小
+	b.uint32(uint32(offset))         // 目录开始
+	b.uint16(uint16(len(w.comment))) // EOCD 注释的字节大小
 	if _, err := w.cw.Write(buf[:]); err != nil {
 		return err
 	}
@@ -205,16 +205,14 @@ func (w *Writer) Close() error {
 	return w.cw.w.(*bufio.Writer).Flush()
 }
 
-// Create adds a file to the zip file using the provided name.
-// It returns a [Writer] to which the file contents should be written.
-// The file contents will be compressed using the [Deflate] method.
-// The name must be a relative path: it must not start with a drive
-// letter (e.g. C:) or leading slash, and only forward slashes are
-// allowed. To create a directory instead of a file, add a trailing
-// slash to the name. Duplicate names will not overwrite previous entries
-// and are appended to the zip file.
-// The file's contents must be written to the [io.Writer] before the next
-// call to [Writer.Create], [Writer.CreateHeader], or [Writer.Close].
+// Create 使用提供的名称将文件添加到 zip 文件。
+// 它返回一个应写入文件内容的 [Writer]。
+// 文件内容将使用 [Deflate] 方法压缩。
+// 名称必须是相对路径：它不能以驱动器号（例如 C:）或前导斜杠开头，
+// 仅允许正斜杠。要创建目录而不是文件，请向名称添加尾部斜杠。
+// 重复的名称不会覆盖以前的条目，而是附加到 zip 文件。
+// 文件的内容必须在下一次调用 [Writer.Create]、[Writer.CreateHeader]
+// 或 [Writer.Close] 之前写入 [io.Writer]。
 func (w *Writer) Create(name string) (io.Writer, error) {
 	header := &FileHeader{
 		Name:   name,
@@ -223,19 +221,19 @@ func (w *Writer) Create(name string) (io.Writer, error) {
 	return w.CreateHeader(header)
 }
 
-// detectUTF8 reports whether s is a valid UTF-8 string, and whether the string
-// must be considered UTF-8 encoding (i.e., not compatible with CP-437, ASCII,
-// or any other common encoding).
+// detectUTF8 报告 s 是否是有效的 UTF-8 字符串，
+// 以及字符串是否必须被视为 UTF-8 编码
+//（即与 CP-437、ASCII 或任何其他常见编码不兼容）。
 func detectUTF8(s string) (valid, require bool) {
 	for i := 0; i < len(s); {
 		r, size := utf8.DecodeRuneInString(s[i:])
 		i += size
-		// Officially, ZIP uses CP-437, but many readers use the system's
-		// local character encoding. Most encoding are compatible with a large
-		// subset of CP-437, which itself is ASCII-like.
+		// 官方上，ZIP 使用 CP-437，但许多读取器使用系统的
+		// 本地字符编码。大多数编码与大量的 CP-437 子集兼容，
+		// 而 CP-437 本身是类似 ASCII 的。
 		//
-		// Forbid 0x7e and 0x5c since EUC-KR and Shift-JIS replace those
-		// characters with localized currency and overline characters.
+		// 禁止 0x7e 和 0x5c，因为 EUC-KR 和 Shift-JIS 将这些
+		// 字符替换为本地化的货币和上划线字符。
 		if r < 0x20 || r > 0x7d || r == 0x5c {
 			if !utf8.ValidRune(r) || (r == utf8.RuneError && size == 1) {
 				return false, false
@@ -246,8 +244,7 @@ func detectUTF8(s string) (valid, require bool) {
 	return true, require
 }
 
-// prepare performs the bookkeeping operations required at the start of
-// CreateHeader and CreateRaw.
+// prepare 执行 CreateHeader 和 CreateRaw 开始时所需的簿记操作。
 func (w *Writer) prepare(fh *FileHeader) error {
 	if w.last != nil && !w.last.closed {
 		if err := w.last.close(); err != nil {
@@ -261,34 +258,34 @@ func (w *Writer) prepare(fh *FileHeader) error {
 	return nil
 }
 
-// CreateHeader adds a file to the zip archive using the provided [FileHeader]
-// for the file metadata. [Writer] takes ownership of fh and may mutate
-// its fields. The caller must not modify fh after calling [Writer.CreateHeader].
+// CreateHeader 使用提供的 [FileHeader] 将文件添加到 zip 归档，
+// 用于文件元数据。[Writer] 获取 fh 的所有权并可能改变
+// 其字段。调用者在调用 [Writer.CreateHeader] 后不得修改 fh。
 //
-// This returns a [Writer] to which the file contents should be written.
-// The file's contents must be written to the io.Writer before the next
-// call to [Writer.Create], [Writer.CreateHeader], [Writer.CreateRaw], or [Writer.Close].
+// 这返回一个应写入文件内容的 [Writer]。
+// 文件的内容必须在下一次调用 [Writer.Create]、[Writer.CreateHeader]、
+// [Writer.CreateRaw] 或 [Writer.Close] 之前写入 io.Writer。
 func (w *Writer) CreateHeader(fh *FileHeader) (io.Writer, error) {
 	if err := w.prepare(fh); err != nil {
 		return nil, err
 	}
 
-	// The ZIP format has a sad state of affairs regarding character encoding.
-	// Officially, the name and comment fields are supposed to be encoded
-	// in CP-437 (which is mostly compatible with ASCII), unless the UTF-8
-	// flag bit is set. However, there are several problems:
+	// ZIP 格式在字符编码方面处于一个悲哀的状态。
+	// 官方上，名称和注释字段应该使用 CP-437 进行编码
+	//（大部分与 ASCII 兼容），除非设置了 UTF-8 标志位。
+	// 但是，存在一些问题：
 	//
-	//	* Many ZIP readers still do not support UTF-8.
-	//	* If the UTF-8 flag is cleared, several readers simply interpret the
-	//	name and comment fields as whatever the local system encoding is.
+	//	* 许多 ZIP 读取器仍然不支持 UTF-8。
+	//	* 如果清除了 UTF-8 标志，几个读取器只是将
+	//	名称和注释字段解释为本地系统编码。
 	//
-	// In order to avoid breaking readers without UTF-8 support,
-	// we avoid setting the UTF-8 flag if the strings are CP-437 compatible.
-	// However, if the strings require multibyte UTF-8 encoding and is a
-	// valid UTF-8 string, then we set the UTF-8 bit.
+	// 为了避免破坏不支持 UTF-8 的读取器，
+	// 如果字符串是 CP-437 兼容的，我们避免设置 UTF-8 标志。
+	// 但是，如果字符串需要多字节 UTF-8 编码并且是
+	// 有效的 UTF-8 字符串，则我们设置 UTF-8 位。
 	//
-	// For the case, where the user explicitly wants to specify the encoding
-	// as UTF-8, they will need to set the flag bit themselves.
+	// 对于用户明确想要指定编码为 UTF-8 的情况，
+	// 他们需要自己设置标志位。
 	utf8Valid1, utf8Require1 := detectUTF8(fh.Name)
 	utf8Valid2, utf8Require2 := detectUTF8(fh.Comment)
 	switch {
@@ -298,16 +295,16 @@ func (w *Writer) CreateHeader(fh *FileHeader) (io.Writer, error) {
 		fh.Flags |= 0x800
 	}
 
-	fh.CreatorVersion = fh.CreatorVersion&0xff00 | zipVersion20 // preserve compatibility byte
+	fh.CreatorVersion = fh.CreatorVersion&0xff00 | zipVersion20 // 保留兼容性字节
 	fh.ReaderVersion = zipVersion20
 
-	// If Modified is set, this takes precedence over MS-DOS timestamp fields.
+	// 如果设置了 Modified，则优先于 MS-DOS 时间戳字段。
 	if !fh.Modified.IsZero() {
-		// Contrary to the FileHeader.SetModTime method, we intentionally
-		// do not convert to UTC, because we assume the user intends to encode
-		// the date using the specified timezone. A user may want this control
-		// because many legacy ZIP readers interpret the timestamp according
-		// to the local timezone.
+		// 与 FileHeader.SetModTime 方法相反，我们故意
+		// 不转换为 UTC，因为我们假设用户打算使用
+		// 指定的时区对日期进行编码。用户可能需要这种控制
+		// 因为许多遗留 ZIP 读取器根据本地时区
+		// 解释时间戳。
 		//
 		// The timezone is only non-UTC if a user directly sets the Modified
 		// field directly themselves. All other approaches sets UTC.
@@ -426,16 +423,16 @@ func writeHeader(w io.Writer, h *header) error {
 	return err
 }
 
-// CreateRaw adds a file to the zip archive using the provided [FileHeader] and
-// returns a [Writer] to which the file contents should be written. The file's
-// contents must be written to the io.Writer before the next call to [Writer.Create],
-// [Writer.CreateHeader], [Writer.CreateRaw], or [Writer.Close].
+// CreateRaw 使用提供的 [FileHeader] 将文件添加到 zip 归档，
+// 并返回应写入文件内容的 [Writer]。文件的内容
+// 必须在下一次调用 [Writer.Create]、[Writer.CreateHeader]、
+// [Writer.CreateRaw] 或 [Writer.Close] 之前写入 io.Writer。
 //
-// In contrast to [Writer.CreateHeader], the bytes passed to Writer are not compressed.
+// 与 [Writer.CreateHeader] 相反，传递给 Writer 的字节不会被压缩。
 //
-// CreateRaw's argument is stored in w. If the argument is a pointer to the embedded
-// [FileHeader] in a [File] obtained from a [Reader] created from in-memory data,
-// then w will refer to all of that memory.
+// CreateRaw 的参数存储在 w 中。如果参数是来自
+// 从内存中数据创建的 [Reader] 获得的 [File] 中
+// 嵌入的 [FileHeader] 的指针，则 w 将引用该内存的所有内容。
 func (w *Writer) CreateRaw(fh *FileHeader) (io.Writer, error) {
 	if err := w.prepare(fh); err != nil {
 		return nil, err
@@ -467,8 +464,8 @@ func (w *Writer) CreateRaw(fh *FileHeader) (io.Writer, error) {
 	return fw, nil
 }
 
-// Copy copies the file f (obtained from a [Reader]) into w. It copies the raw
-// form directly bypassing decompression, compression, and validation.
+// Copy 将文件 f（从 [Reader] 获得）复制到 w。
+// 它直接复制原始形式，绕过解压缩、压缩和验证。
 func (w *Writer) Copy(f *File) error {
 	r, err := f.OpenRaw()
 	if err != nil {
@@ -485,9 +482,9 @@ func (w *Writer) Copy(f *File) error {
 	return err
 }
 
-// RegisterCompressor registers or overrides a custom compressor for a specific
-// method ID. If a compressor for a given method is not found, [Writer] will
-// default to looking up the compressor at the package level.
+// RegisterCompressor 为特定的方法 ID 注册或覆盖自定义压缩器。
+// 如果未找到给定方法的压缩器，[Writer] 将
+// 默认在包级别查找压缩器。
 func (w *Writer) RegisterCompressor(method uint16, comp Compressor) {
 	if w.compressors == nil {
 		w.compressors = make(map[uint16]Compressor)
@@ -495,9 +492,9 @@ func (w *Writer) RegisterCompressor(method uint16, comp Compressor) {
 	w.compressors[method] = comp
 }
 
-// AddFS adds the files from fs.FS to the archive.
-// It walks the directory tree starting at the root of the filesystem
-// adding each file to the zip using deflate while maintaining the directory structure.
+// AddFS 将来自 fs.FS 的文件添加到归档。
+// 它从文件系统的根开始遍历目录树，
+// 使用压缩将每个文件添加到 zip，同时保持目录结构。
 func (w *Writer) AddFS(fsys fs.FS) error {
 	return fs.WalkDir(fsys, ".", func(name string, d fs.DirEntry, err error) error {
 		if err != nil {

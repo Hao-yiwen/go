@@ -55,7 +55,7 @@ func cbTrueColor(cb int) bool {
 	return cb == cbTC8 || cb == cbTC16
 }
 
-// Filter type, as per the PNG spec.
+// 过滤器类型，根据 PNG 规范。
 const (
 	ftNone    = 0
 	ftSub     = 1
@@ -65,19 +65,19 @@ const (
 	nFilter   = 5
 )
 
-// Interlace type.
+// 交错类型。
 const (
 	itNone  = 0
 	itAdam7 = 1
 )
 
-// interlaceScan defines the placement and size of a pass for Adam7 interlacing.
+// interlaceScan 定义 Adam7 交错的传递的放置和大小。
 type interlaceScan struct {
 	xFactor, yFactor, xOffset, yOffset int
 }
 
-// interlacing defines Adam7 interlacing, with 7 passes of reduced images.
-// See https://www.w3.org/TR/PNG/#8Interlace
+// interlacing 定义了 Adam7 交错，具有 7 个减少图像的传递。
+// 见 https://www.w3.org/TR/PNG/#8Interlace
 var interlacing = []interlaceScan{
 	{8, 8, 0, 0},
 	{8, 8, 4, 0},
@@ -88,11 +88,11 @@ var interlacing = []interlaceScan{
 	{1, 2, 0, 1},
 }
 
-// Decoding stage.
-// The PNG specification says that the IHDR, PLTE (if present), tRNS (if
-// present), IDAT and IEND chunks must appear in that order. There may be
-// multiple IDAT chunks, and IDAT chunks must be sequential (i.e. they may not
-// have any other chunks between them).
+// 解码阶段。
+// PNG 规范说 IHDR、PLTE（如果存在）、tRNS（如果
+// 存在）、IDAT 和 IEND 块必须按该顺序出现。可能有
+// 多个 IDAT 块，IDAT 块必须是顺序的（即它们之间可能没有
+// 任何其他块）。
 // https://www.w3.org/TR/PNG/#5ChunkOrdering
 const (
 	dsStart = iota
@@ -118,20 +118,20 @@ type decoder struct {
 	tmp           [3 * 256]byte
 	interlace     int
 
-	// useTransparent and transparent are used for grayscale and truecolor
-	// transparency, as opposed to palette transparency.
+	// useTransparent 和 transparent 用于灰度和真色
+	// 透明度，与调色板透明度相对。
 	useTransparent bool
 	transparent    [6]byte
 }
 
-// A FormatError reports that the input is not a valid PNG.
+// FormatError 表示输入不是有效的 PNG。
 type FormatError string
 
 func (e FormatError) Error() string { return "png: invalid format: " + string(e) }
 
 var chunkOrderError = FormatError("chunk out of order")
 
-// An UnsupportedError reports that the input uses a valid but unimplemented PNG feature.
+// UnsupportedError 表示输入使用了有效但未实现的 PNG 功能。
 type UnsupportedError string
 
 func (e UnsupportedError) Error() string { return "png: unsupported feature: " + string(e) }
@@ -165,7 +165,7 @@ func (d *decoder) parseIHDR(length uint32) error {
 	if nPixels64 != int64(nPixels) {
 		return UnsupportedError("dimension overflow")
 	}
-	// There can be up to 8 bytes per pixel, for 16 bits per channel RGBA.
+	// 对于每个通道 16 位的 RGBA，每个像素最多可以有 8 个字节。
 	if nPixels != (nPixels*8)/8 {
 		return UnsupportedError("dimension overflow")
 	}
@@ -227,7 +227,7 @@ func (d *decoder) parseIHDR(length uint32) error {
 }
 
 func (d *decoder) parsePLTE(length uint32) error {
-	np := int(length / 3) // The number of palette entries.
+	np := int(length / 3) // 调色板条目的数量。
 	if length%3 != 0 || np <= 0 || np > 256 || np > 1<<uint(d.depth) {
 		return FormatError("bad PLTE length")
 	}
@@ -243,17 +243,16 @@ func (d *decoder) parsePLTE(length uint32) error {
 			d.palette[i] = color.RGBA{d.tmp[3*i+0], d.tmp[3*i+1], d.tmp[3*i+2], 0xff}
 		}
 		for i := np; i < 256; i++ {
-			// Initialize the rest of the palette to opaque black. The spec (section
-			// 11.2.3) says that "any out-of-range pixel value found in the image data
-			// is an error", but some real-world PNG files have out-of-range pixel
-			// values. We fall back to opaque black, the same as libpng 1.5.13;
-			// ImageMagick 6.5.7 returns an error.
+			// 将调色板的其余部分初始化为不透明黑色。规范（第 11.2.3 节）
+			// 说"在图像数据中找到的任何超出范围的像素值是错误"，但一些真实的 PNG 文件
+			// 有超出范围的像素值。我们回退到不透明黑色，与 libpng 1.5.13 相同；
+			// ImageMagick 6.5.7 返回错误。
 			d.palette[i] = color.RGBA{0x00, 0x00, 0x00, 0xff}
 		}
 		d.palette = d.palette[:np]
 	case cbTC8, cbTCA8, cbTC16, cbTCA16:
-		// As per the PNG spec, a PLTE chunk is optional (and for practical purposes,
-		// ignorable) for the ctTrueColor and ctTrueColorAlpha color types (section 4.1.2).
+		// 根据 PNG 规范，对于 ctTrueColor 和 ctTrueColorAlpha 颜色类型，
+		// PLTE 块是可选的（出于实际目的，可忽略）（第 4.1.2 节）。
 	default:
 		return FormatError("PLTE, color type mismatch")
 	}

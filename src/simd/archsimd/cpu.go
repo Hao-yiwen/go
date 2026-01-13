@@ -10,119 +10,119 @@ type X86Features struct{}
 
 var X86 X86Features
 
-// AES returns whether the CPU supports the AES feature.
+// AES 返回 CPU 是否支持 AES 功能。
 //
-// AES is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AES 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AES() bool {
 	return cpu.X86.HasAES
 }
 
-// AVX returns whether the CPU supports the AVX feature.
+// AVX 返回 CPU 是否支持 AVX 功能。
 //
-// AVX is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX() bool {
 	return cpu.X86.HasAVX
 }
 
-// AVX2 returns whether the CPU supports the AVX2 feature.
+// AVX2 返回 CPU 是否支持 AVX2 功能。
 //
-// AVX2 is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX2 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX2() bool {
 	return cpu.X86.HasAVX2
 }
 
-// AVX512 returns whether the CPU supports the AVX512F+CD+BW+DQ+VL features.
+// AVX512 返回 CPU 是否支持 AVX512F+CD+BW+DQ+VL 功能。
 //
-// These five CPU features are bundled together, and no use of AVX-512
-// is allowed unless all of these features are supported together.
-// Nearly every CPU that has shipped with any support for AVX-512 has
-// supported all five of these features.
+// 这五个 CPU 功能捆绑在一起，AVX-512 的使用
+// 只有在所有这些功能一起支持时才被允许。
+// 几乎每个支持 AVX-512 的 CPU 都
+// 支持这五个功能中的所有功能。
 //
-// AVX512 is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX512 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX512() bool {
 	return cpu.X86.HasAVX512
 }
 
-// AVX512BITALG returns whether the CPU supports the AVX512BITALG feature.
+// AVX512BITALG 返回 CPU 是否支持 AVX512BITALG 功能。
 //
-// AVX512BITALG is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX512BITALG 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX512BITALG() bool {
 	return cpu.X86.HasAVX512BITALG
 }
 
-// AVX512GFNI returns whether the CPU supports the AVX512GFNI feature.
+// AVX512GFNI 返回 CPU 是否支持 AVX512GFNI 功能。
 //
-// AVX512GFNI is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX512GFNI 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX512GFNI() bool {
 	return cpu.X86.HasAVX512GFNI
 }
 
-// AVX512VAES returns whether the CPU supports the AVX512VAES feature.
+// AVX512VAES 返回 CPU 是否支持 AVX512VAES 功能。
 //
-// AVX512VAES is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX512VAES 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX512VAES() bool {
 	return cpu.X86.HasAVX512VAES
 }
 
-// AVX512VBMI returns whether the CPU supports the AVX512VBMI feature.
+// AVX512VBMI 返回 CPU 是否支持 AVX512VBMI 功能。
 //
-// AVX512VBMI is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX512VBMI 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX512VBMI() bool {
 	return cpu.X86.HasAVX512VBMI
 }
 
-// AVX512VBMI2 returns whether the CPU supports the AVX512VBMI2 feature.
+// AVX512VBMI2 返回 CPU 是否支持 AVX512VBMI2 功能。
 //
-// AVX512VBMI2 is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX512VBMI2 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX512VBMI2() bool {
 	return cpu.X86.HasAVX512VBMI2
 }
 
-// AVX512VNNI returns whether the CPU supports the AVX512VNNI feature.
+// AVX512VNNI 返回 CPU 是否支持 AVX512VNNI 功能。
 //
-// AVX512VNNI is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX512VNNI 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX512VNNI() bool {
 	return cpu.X86.HasAVX512VNNI
 }
 
-// AVX512VPCLMULQDQ returns whether the CPU supports the AVX512VPCLMULQDQ feature.
+// AVX512VPCLMULQDQ 返回 CPU 是否支持 AVX512VPCLMULQDQ 功能。
 //
-// AVX512VPCLMULQDQ is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX512VPCLMULQDQ 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX512VPCLMULQDQ() bool {
 	return cpu.X86.HasAVX512VPCLMULQDQ
 }
 
-// AVX512VPOPCNTDQ returns whether the CPU supports the AVX512VPOPCNTDQ feature.
+// AVX512VPOPCNTDQ 返回 CPU 是否支持 AVX512VPOPCNTDQ 功能。
 //
-// AVX512VPOPCNTDQ is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVX512VPOPCNTDQ 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVX512VPOPCNTDQ() bool {
 	return cpu.X86.HasAVX512VPOPCNTDQ
 }
 
-// AVXVNNI returns whether the CPU supports the AVXVNNI feature.
+// AVXVNNI 返回 CPU 是否支持 AVXVNNI 功能。
 //
-// AVXVNNI is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// AVXVNNI 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) AVXVNNI() bool {
 	return cpu.X86.HasAVXVNNI
 }
 
-// SHA returns whether the CPU supports the SHA feature.
+// SHA 返回 CPU 是否支持 SHA 功能。
 //
-// SHA is defined on all GOARCHes, but will only return true on
-// GOARCH amd64.
+// SHA 在所有 GOARCH 上定义，但仅在
+// GOARCH amd64 上返回 true。
 func (X86Features) SHA() bool {
 	return cpu.X86.HasSHA
 }

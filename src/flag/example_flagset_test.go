@@ -13,7 +13,7 @@ import (
 func ExampleFlagSet() {
 
 	start := func(args []string) {
-		// A real program (not an example) would use flag.ExitOnError.
+		// 一个真实的程序（不是示例）将使用 flag.ExitOnError。
 		fs := flag.NewFlagSet("start", flag.ContinueOnError)
 		addr := fs.String("addr", ":8080", "`address` to listen on")
 		if err := fs.Parse(args); err != nil {
@@ -34,7 +34,7 @@ func ExampleFlagSet() {
 	}
 
 	main := func(args []string) {
-		subArgs := args[2:] // Drop program name and command.
+		subArgs := args[2:] // 删除程序名称和命令。
 		switch args[1] {
 		case "start":
 			start(subArgs)
@@ -42,7 +42,7 @@ func ExampleFlagSet() {
 			stop(subArgs)
 		default:
 			fmt.Printf("error: unknown command - %q\n", args[1])
-			// In a real program (not an example) print to os.Stderr and exit the program with non-zero value.
+			// 在一个真实的程序（不是示例）中，打印到 os.Stderr 并以非零值退出程序。
 		}
 	}
 

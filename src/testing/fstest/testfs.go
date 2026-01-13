@@ -1,8 +1,8 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package fstest implements support for testing implementations and users of file systems.
+// Package fstest 实现了对文件系统的实现和用户进行测试的支持。
 package fstest
 
 import (
@@ -17,21 +17,20 @@ import (
 	"testing/iotest"
 )
 
-// TestFS tests a file system implementation.
-// It walks the entire tree of files in fsys,
-// opening and checking that each file behaves correctly.
-// Symbolic links are not followed,
-// but their Lstat values are checked
-// if the file system implements [fs.ReadLinkFS].
-// It also checks that the file system contains at least the expected files.
-// As a special case, if no expected files are listed, fsys must be empty.
-// Otherwise, fsys must contain at least the listed files; it can also contain others.
-// The contents of fsys must not change concurrently with TestFS.
+// TestFS 测试文件系统实现。
+// 它遍历 fsys 中的整个文件树，
+// 打开并检查每个文件的行为是否正确。
+// 不跟随符号链接，
+// 但如果文件系统实现了 [fs.ReadLinkFS]，则检查其 Lstat 值。
+// 它还检查文件系统至少包含预期的文件。
+// 作为特殊情况，如果未列出任何预期文件，fsys 必须为空。
+// 否则，fsys 必须至少包含列出的文件；它也可以包含其他文件。
+// fsys 的内容不能与 TestFS 并发更改。
 //
-// If TestFS finds any misbehaviors, it returns either the first error or a
-// list of errors. Use [errors.Is] or [errors.AsType] to inspect.
+// 如果 TestFS 发现任何不当行为，它返回第一个错误或
+// 错误列表。使用 [errors.Is] 或 [errors.AsType] 进行检查。
 //
-// Typical usage inside a test is:
+// 在测试中的典型用法是：
 //
 //	if err := fstest.TestFS(myFS, "file/that/should/be/present"); err != nil {
 //		t.Fatal(err)

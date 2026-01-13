@@ -15,9 +15,9 @@ import (
 	"unicode/utf8"
 )
 
-const smallMaxTokenSize = 256 // Much smaller for more efficient testing.
+const smallMaxTokenSize = 256 // 小得多以提高测试效率。
 
-// Test white space table matches the Unicode definition.
+// 测试空白表与 Unicode 定义匹配。
 func TestSpace(t *testing.T) {
 	for r := rune(0); r <= utf8.MaxRune; r++ {
 		if IsSpace(r) != unicode.IsSpace(r) {
@@ -31,8 +31,8 @@ var scanTests = []string{
 	"a",
 	"¼",
 	"☹",
-	"\x81",   // UTF-8 error
-	"\uFFFD", // correctly encoded RuneError
+	"\x81",   // UTF-8 错误
+	"\uFFFD", // 正确编码的 RuneError
 	"abcdefgh",
 	"abc def\n\t\tgh    ",
 	"abc¼☹\x81\uFFFD日本語\x82abc",
@@ -59,7 +59,7 @@ func TestScanByte(t *testing.T) {
 	}
 }
 
-// Test that the rune splitter returns same sequence of runes (not bytes) as for range string.
+// 测试 rune splitter 返回与范围字符串相同的 rune 序列（而不是字节）。
 func TestScanRune(t *testing.T) {
 	for n, test := range scanTests {
 		buf := strings.NewReader(test)
@@ -67,7 +67,7 @@ func TestScanRune(t *testing.T) {
 		s.Split(ScanRunes)
 		var i, runeCount int
 		var expect rune
-		// Use a string range loop to validate the sequence of runes.
+		// 使用字符串范围循环来验证 rune 序列。
 		for i, expect = range test {
 			if !s.Scan() {
 				break

@@ -412,7 +412,7 @@ func low32(x nat) uint32 {
 	return uint32(x[0])
 }
 
-// low64 returns the least significant 64 bits of x.
+// low64 返回 x 的最低有效 64 位。
 func low64(x nat) uint64 {
 	if len(x) == 0 {
 		return 0
@@ -424,8 +424,8 @@ func low64(x nat) uint64 {
 	return v
 }
 
-// Int64 returns the int64 representation of x.
-// If x cannot be represented in an int64, the result is undefined.
+// Int64 返回 x 的 int64 表示。
+// 如果 x 无法在 int64 中表示，结果未定义。
 func (x *Int) Int64() int64 {
 	v := int64(low64(x.abs))
 	if x.neg {
@@ -434,13 +434,13 @@ func (x *Int) Int64() int64 {
 	return v
 }
 
-// Uint64 returns the uint64 representation of x.
-// If x cannot be represented in a uint64, the result is undefined.
+// Uint64 返回 x 的 uint64 表示。
+// 如果 x 无法在 uint64 中表示，结果未定义。
 func (x *Int) Uint64() uint64 {
 	return low64(x.abs)
 }
 
-// IsInt64 reports whether x can be represented as an int64.
+// IsInt64 报告 x 是否可以表示为 int64。
 func (x *Int) IsInt64() bool {
 	if len(x.abs) <= 64/_W {
 		w := int64(low64(x.abs))
@@ -449,20 +449,20 @@ func (x *Int) IsInt64() bool {
 	return false
 }
 
-// IsUint64 reports whether x can be represented as a uint64.
+// IsUint64 报告 x 是否可以表示为 uint64。
 func (x *Int) IsUint64() bool {
 	return !x.neg && len(x.abs) <= 64/_W
 }
 
-// Float64 returns the float64 value nearest x,
-// and an indication of any rounding that occurred.
+// Float64 返回最接近 x 的 float64 值，
+// 以及发生的任何舍入的指示。
 func (x *Int) Float64() (float64, Accuracy) {
 	n := x.abs.bitLen() // NB: still uses slow crypto impl!
 	if n == 0 {
 		return 0.0, Exact
 	}
 
-	// Fast path: no more than 53 significant bits.
+	// 快速路径：不超过 53 个有效位。
 	if n <= 53 || n < 64 && n-int(x.abs.trailingZeroBits()) <= 53 {
 		f := float64(low64(x.abs))
 		if x.neg {
@@ -474,96 +474,95 @@ func (x *Int) Float64() (float64, Accuracy) {
 	return new(Float).SetInt(x).Float64()
 }
 
-// SetString sets z to the value of s, interpreted in the given base,
-// and returns z and a boolean indicating success. The entire string
-// (not just a prefix) must be valid for success. If SetString fails,
-// the value of z is undefined but the returned value is nil.
+// SetString 将 z 设置为 s 的值，在给定的基数中解释，
+// 并返回 z 和一个布尔值，指示成功。整个字符串
+// （不仅仅是前缀）必须有效才能成功。如果 SetString 失败，
+// z 的值未定义，但返回的值为 nil。
 //
-// The base argument must be 0 or a value between 2 and [MaxBase].
-// For base 0, the number prefix determines the actual base: A prefix of
-// “0b” or “0B” selects base 2, “0”, “0o” or “0O” selects base 8,
-// and “0x” or “0X” selects base 16. Otherwise, the selected base is 10
-// and no prefix is accepted.
+// 基数参数必须是 0 或介于 2 和 [MaxBase] 之间的值。
+// 对于基数 0，数字前缀确定实际基数：前缀为
+// "0b" 或 "0B" 选择基数 2，"0"、"0o" 或 "0O" 选择基数 8，
+// "0x" 或 "0X" 选择基数 16。否则，选定的基数为 10
+// 且不接受前缀。
 //
-// For bases <= 36, lower and upper case letters are considered the same:
-// The letters 'a' to 'z' and 'A' to 'Z' represent digit values 10 to 35.
-// For bases > 36, the upper case letters 'A' to 'Z' represent the digit
-// values 36 to 61.
+// 对于基数 <= 36，大小写字母被视为相同：
+// 字母 'a' 到 'z' 和 'A' 到 'Z' 代表数字值 10 到 35。
+// 对于基数 > 36，大写字母 'A' 到 'Z' 代表数字
+// 值 36 到 61。
 //
-// For base 0, an underscore character “_” may appear between a base
-// prefix and an adjacent digit, and between successive digits; such
-// underscores do not change the value of the number.
-// Incorrect placement of underscores is reported as an error if there
-// are no other errors. If base != 0, underscores are not recognized
-// and act like any other character that is not a valid digit.
+// 对于基数 0，下划线字符 "_" 可能出现在基数
+// 前缀和相邻数字之间，以及连续数字之间；这样的
+// 下划线不会改变数字的值。
+// 如果没有其他错误，下划线的不正确放置会被报告为错误。如果 base != 0，下划线无法识别
+// 并表现为任何其他无效数字的字符。
 func (z *Int) SetString(s string, base int) (*Int, bool) {
 	return z.setFromScanner(strings.NewReader(s), base)
 }
 
-// setFromScanner implements SetString given an io.ByteScanner.
-// For documentation see comments of SetString.
+// setFromScanner 实现给定 io.ByteScanner 的 SetString。
+// 有关文档，请参见 SetString 的注释。
 func (z *Int) setFromScanner(r io.ByteScanner, base int) (*Int, bool) {
 	if _, _, err := z.scan(r, base); err != nil {
 		return nil, false
 	}
-	// entire content must have been consumed
+	// 整个内容必须已被消耗
 	if _, err := r.ReadByte(); err != io.EOF {
 		return nil, false
 	}
-	return z, true // err == io.EOF => scan consumed all content of r
+	return z, true // err == io.EOF => 扫描消耗了 r 的所有内容
 }
 
-// SetBytes interprets buf as the bytes of a big-endian unsigned
-// integer, sets z to that value, and returns z.
+// SetBytes 将 buf 解释为大端无符号
+// 整数的字节，将 z 设置为该值，并返回 z。
 func (z *Int) SetBytes(buf []byte) *Int {
 	z.abs = z.abs.setBytes(buf)
 	z.neg = false
 	return z
 }
 
-// Bytes returns the absolute value of x as a big-endian byte slice.
+// Bytes 将 x 的绝对值返回为大端字节切片。
 //
-// To use a fixed length slice, or a preallocated one, use [Int.FillBytes].
+// 要使用固定长度切片或预分配的切片，请使用 [Int.FillBytes]。
 func (x *Int) Bytes() []byte {
-	// This function is used in cryptographic operations. It must not leak
-	// anything but the Int's sign and bit size through side-channels. Any
-	// changes must be reviewed by a security expert.
+	// 此函数用于密码学操作。它不能通过
+	// 侧通道泄漏 Int 的符号和位大小之外的任何信息。任何
+	// 更改都必须由安全专家审查。
 	buf := make([]byte, len(x.abs)*_S)
 	return buf[x.abs.bytes(buf):]
 }
 
-// FillBytes sets buf to the absolute value of x, storing it as a zero-extended
-// big-endian byte slice, and returns buf.
+// FillBytes 将 buf 设置为 x 的绝对值，将其存储为零扩展的
+// 大端字节切片，并返回 buf。
 //
-// If the absolute value of x doesn't fit in buf, FillBytes will panic.
+// 如果 x 的绝对值不适合 buf，FillBytes 将发生恐慌。
 func (x *Int) FillBytes(buf []byte) []byte {
-	// Clear whole buffer.
+	// 清除整个缓冲区。
 	clear(buf)
 	x.abs.bytes(buf)
 	return buf
 }
 
-// BitLen returns the length of the absolute value of x in bits.
-// The bit length of 0 is 0.
+// BitLen 返回 x 绝对值以位为单位的长度。
+// 0 的位长度是 0。
 func (x *Int) BitLen() int {
-	// This function is used in cryptographic operations. It must not leak
-	// anything but the Int's sign and bit size through side-channels. Any
-	// changes must be reviewed by a security expert.
+	// 此函数用于密码学操作。它不能通过
+	// 侧通道泄漏 Int 的符号和位大小之外的任何信息。任何
+	// 更改都必须由安全专家审查。
 	return x.abs.bitLen()
 }
 
-// TrailingZeroBits returns the number of consecutive least significant zero
-// bits of |x|.
+// TrailingZeroBits 返回 |x| 的连续最低有效零
+// 位的数量。
 func (x *Int) TrailingZeroBits() uint {
 	return x.abs.trailingZeroBits()
 }
 
-// Exp sets z = x**y mod |m| (i.e. the sign of m is ignored), and returns z.
-// If m == nil or m == 0, z = x**y unless y <= 0 then z = 1. If m != 0, y < 0,
-// and x and m are not relatively prime, z is unchanged and nil is returned.
+// Exp 设置 z = x**y mod |m|（即 m 的符号被忽略），并返回 z。
+// 如果 m == nil 或 m == 0，z = x**y，除非 y <= 0 则 z = 1。如果 m != 0、y < 0，
+// 且 x 和 m 不互质，z 保持不变并返回 nil。
 //
-// Modular exponentiation of inputs of a particular size is not a
-// cryptographically constant-time operation.
+// 特定大小输入的模指数不是
+// 密码学恒定时间操作。
 func (z *Int) Exp(x, y, m *Int) *Int {
 	return z.exp(x, y, m, false)
 }
@@ -573,13 +572,13 @@ func (z *Int) expSlow(x, y, m *Int) *Int {
 }
 
 func (z *Int) exp(x, y, m *Int, slow bool) *Int {
-	// See Knuth, volume 2, section 4.6.3.
+	// 参见 Knuth，第 2 卷，第 4.6.3 节。
 	xWords := x.abs
 	if y.neg {
 		if m == nil || len(m.abs) == 0 {
 			return z.SetInt64(1)
 		}
-		// for y < 0: x**y mod m == (x**(-1))**|y| mod m
+		// 对于 y < 0: x**y mod m == (x**(-1))**|y| mod m
 		inverse := new(Int).ModInverse(x, m)
 		if inverse == nil {
 			return nil
@@ -593,13 +592,13 @@ func (z *Int) exp(x, y, m *Int, slow bool) *Int {
 		if z == m || alias(z.abs, m.abs) {
 			m = new(Int).Set(m)
 		}
-		mWords = m.abs // m.abs may be nil for m == 0
+		mWords = m.abs // 对于 m == 0，m.abs 可能为 nil
 	}
 
 	z.abs = z.abs.expNN(nil, xWords, yWords, mWords, slow)
-	z.neg = len(z.abs) > 0 && x.neg && len(yWords) > 0 && yWords[0]&1 == 1 // 0 has no sign
+	z.neg = len(z.abs) > 0 && x.neg && len(yWords) > 0 && yWords[0]&1 == 1 // 0 没有符号
 	if z.neg && len(mWords) > 0 {
-		// make modulus result positive
+		// 使模的结果为正
 		z.abs = z.abs.sub(mWords, z.abs) // z == x**y mod |m| && 0 <= z < |m|
 		z.neg = false
 	}
@@ -607,17 +606,17 @@ func (z *Int) exp(x, y, m *Int, slow bool) *Int {
 	return z
 }
 
-// GCD sets z to the greatest common divisor of a and b and returns z.
-// If x or y are not nil, GCD sets their value such that z = a*x + b*y.
+// GCD 将 z 设置为 a 和 b 的最大公约数并返回 z。
+// 如果 x 或 y 不为 nil，GCD 设置它们的值使得 z = a*x + b*y。
 //
-// a and b may be positive, zero or negative. (Before Go 1.14 both had
-// to be > 0.) Regardless of the signs of a and b, z is always >= 0.
+// a 和 b 可以是正数、零或负数。（在 Go 1.14 之前，两者都必须
+// 大于 0。）无论 a 和 b 的符号如何，z 总是 >= 0。
 //
-// If a == b == 0, GCD sets z = x = y = 0.
+// 如果 a == b == 0，GCD 设置 z = x = y = 0。
 //
-// If a == 0 and b != 0, GCD sets z = |b|, x = 0, y = sign(b) * 1.
+// 如果 a == 0 且 b != 0，GCD 设置 z = |b|、x = 0、y = sign(b) * 1。
 //
-// If a != 0 and b == 0, GCD sets z = |a|, x = sign(a) * 1, y = 0.
+// 如果 a != 0 且 b == 0，GCD 设置 z = |a|、x = sign(a) * 1、y = 0。
 func (z *Int) GCD(x, y, a, b *Int) *Int {
 	if len(a.abs) == 0 || len(b.abs) == 0 {
 		lenA, lenB, negA, negB := len(a.abs), len(b.abs), a.neg, b.neg
@@ -649,29 +648,28 @@ func (z *Int) GCD(x, y, a, b *Int) *Int {
 	return z.lehmerGCD(x, y, a, b)
 }
 
-// lehmerSimulate attempts to simulate several Euclidean update steps
-// using the leading digits of A and B.  It returns u0, u1, v0, v1
-// such that A and B can be updated as:
+// lehmerSimulate 尝试使用 A 和 B 的前导数字模拟多个欧几里得更新步骤。
+// 它返回 u0、u1、v0、v1，使得 A 和 B 可以更新为：
 //
 //	A = u0*A + v0*B
 //	B = u1*A + v1*B
 //
-// Requirements: A >= B and len(B.abs) >= 2
-// Since we are calculating with full words to avoid overflow,
-// we use 'even' to track the sign of the cosequences.
-// For even iterations: u0, v1 >= 0 && u1, v0 <= 0
-// For odd  iterations: u0, v1 <= 0 && u1, v0 >= 0
+// 要求：A >= B 且 len(B.abs) >= 2
+// 由于我们使用完整字来计算以避免溢出，
+// 我们使用 'even' 来跟踪结果的符号。
+// 对于偶数迭代：u0, v1 >= 0 && u1, v0 <= 0
+// 对于奇数迭代：u0, v1 <= 0 && u1, v0 >= 0
 func lehmerSimulate(A, B *Int) (u0, u1, v0, v1 Word, even bool) {
-	// initialize the digits
+	// 初始化数字
 	var a1, a2, u2, v2 Word
 
 	m := len(B.abs) // m >= 2
 	n := len(A.abs) // n >= m >= 2
 
-	// extract the top Word of bits from A and B
+	// 从 A 和 B 中提取最高位的 Word
 	h := nlz(A.abs[n-1])
 	a1 = A.abs[n-1]<<h | A.abs[n-2]>>(_W-h)
-	// B may have implicit zero words in the high bits if the lengths differ
+	// 如果长度不同，B 在高位可能有隐含的零字
 	switch {
 	case n == m:
 		a2 = B.abs[n-1]<<h | B.abs[n-2]>>(_W-h)
@@ -681,20 +679,20 @@ func lehmerSimulate(A, B *Int) (u0, u1, v0, v1 Word, even bool) {
 		a2 = 0
 	}
 
-	// Since we are calculating with full words to avoid overflow,
-	// we use 'even' to track the sign of the cosequences.
-	// For even iterations: u0, v1 >= 0 && u1, v0 <= 0
-	// For odd  iterations: u0, v1 <= 0 && u1, v0 >= 0
-	// The first iteration starts with k=1 (odd).
+	// 由于我们使用完整字来计算以避免溢出，
+	// 我们使用 'even' 来跟踪结果的符号。
+	// 对于偶数迭代：u0, v1 >= 0 && u1, v0 <= 0
+	// 对于奇数迭代：u0, v1 <= 0 && u1, v0 >= 0
+	// 第一次迭代从 k=1（奇数）开始。
 	even = false
-	// variables to track the cosequences
+	// 跟踪结果的变量
 	u0, u1, u2 = 0, 1, 0
 	v0, v1, v2 = 0, 0, 1
 
-	// Calculate the quotient and cosequences using Collins' stopping condition.
-	// Note that overflow of a Word is not possible when computing the remainder
-	// sequence and cosequences since the cosequence size is bounded by the input size.
-	// See section 4.2 of Jebelean for details.
+	// 使用 Collins 停止条件计算商和结果。
+	// 请注意，在计算余数时不可能出现 Word 溢出
+	// 序列和结果，因为结果大小由输入大小限制。
+	// 有关详细信息，请参见 Jebelean 的第 4.2 节。
 	for a2 >= v2 && a1-a2 >= v1+v2 {
 		q, r := a1/a2, a1%a2
 		a1, a2 = a2, r
@@ -705,15 +703,15 @@ func lehmerSimulate(A, B *Int) (u0, u1, v0, v1 Word, even bool) {
 	return
 }
 
-// lehmerUpdate updates the inputs A and B such that:
+// lehmerUpdate 更新输入 A 和 B 使得：
 //
 //	A = u0*A + v0*B
 //	B = u1*A + v1*B
 //
-// where the signs of u0, u1, v0, v1 are given by even
-// For even == true: u0, v1 >= 0 && u1, v0 <= 0
-// For even == false: u0, v1 <= 0 && u1, v0 >= 0
-// q, r, s, t are temporary variables to avoid allocations in the multiplication.
+// 其中 u0、u1、v0、v1 的符号由 even 给出
+// 对于 even == true：u0, v1 >= 0 && u1, v0 <= 0
+// 对于 even == false：u0, v1 <= 0 && u1, v0 >= 0
+// q、r、s、t 是临时变量，用于避免乘法中的分配。
 func lehmerUpdate(A, B, q, r *Int, u0, u1, v0, v1 Word, even bool) {
 	mulW(q, B, even, v0)
 	mulW(r, A, even, u1)
@@ -723,16 +721,16 @@ func lehmerUpdate(A, B, q, r *Int, u0, u1, v0, v1 Word, even bool) {
 	B.Add(B, r)
 }
 
-// mulW sets z = x * (-?)w
-// where the minus sign is present when neg is true.
+// mulW 设置 z = x * (-?)w
+// 其中当 neg 为 true 时存在负号。
 func mulW(z, x *Int, neg bool, w Word) {
 	z.abs = z.abs.mulAddWW(x.abs, w, 0)
 	z.neg = x.neg != neg
 }
 
-// euclidUpdate performs a single step of the Euclidean GCD algorithm
-// if extended is true, it also updates the cosequence Ua, Ub.
-// q and r are used as temporaries; the initial values are ignored.
+// euclidUpdate 执行欧几里得 GCD 算法的单个步骤
+// 如果 extended 为 true，它还会更新结果 Ua、Ub。
+// q 和 r 用作临时变量；初始值被忽略。
 func euclidUpdate(A, B, Ua, Ub, q, r *Int, extended bool) (nA, nB, nr, nUa, nUb *Int) {
 	q.QuoRem(A, B, r)
 
@@ -746,16 +744,16 @@ func euclidUpdate(A, B, Ua, Ub, q, r *Int, extended bool) (nA, nB, nr, nUa, nUb 
 	return B, r, A, Ua, Ub
 }
 
-// lehmerGCD sets z to the greatest common divisor of a and b,
-// which both must be != 0, and returns z.
-// If x or y are not nil, their values are set such that z = a*x + b*y.
-// See Knuth, The Art of Computer Programming, Vol. 2, Section 4.5.2, Algorithm L.
-// This implementation uses the improved condition by Collins requiring only one
-// quotient and avoiding the possibility of single Word overflow.
-// See Jebelean, "Improving the multiprecision Euclidean algorithm",
-// Design and Implementation of Symbolic Computation Systems, pp 45-58.
-// The cosequences are updated according to Algorithm 10.45 from
-// Cohen et al. "Handbook of Elliptic and Hyperelliptic Curve Cryptography" pp 192.
+// lehmerGCD 将 z 设置为 a 和 b 的最大公约数，
+// 两者都必须 != 0，并返回 z。
+// 如果 x 或 y 不为 nil，设置它们的值使得 z = a*x + b*y。
+// 参见 Knuth，《计算机程序设计艺术》，第 2 卷，第 4.5.2 节，算法 L。
+// 此实现使用 Collins 的改进条件，只需要一个
+// 商并避免单个 Word 溢出的可能性。
+// 参见 Jebelean，"改进多精度欧几里得算法"，
+// 符号计算系统的设计和实现，第 45-58 页。
+// 结果根据来自 Cohen et al 的算法 10.45 更新
+// "椭圆和超椭圆曲线密码学手册"第 192 页。
 func (z *Int) lehmerGCD(x, y, a, b *Int) *Int {
 	var A, B, Ua, Ub *Int
 
@@ -765,29 +763,29 @@ func (z *Int) lehmerGCD(x, y, a, b *Int) *Int {
 	extended := x != nil || y != nil
 
 	if extended {
-		// Ua (Ub) tracks how many times input a has been accumulated into A (B).
+		// Ua (Ub) 跟踪输入 a 被累积到 A (B) 中的次数。
 		Ua = new(Int).SetInt64(1)
 		Ub = new(Int)
 	}
 
-	// temp variables for multiprecision update
+	// 多精度更新的临时变量
 	q := new(Int)
 	r := new(Int)
 
-	// ensure A >= B
+	// 确保 A >= B
 	if A.abs.cmp(B.abs) < 0 {
 		A, B = B, A
 		Ub, Ua = Ua, Ub
 	}
 
-	// loop invariant A >= B
+	// 循环不变式 A >= B
 	for len(B.abs) > 1 {
-		// Attempt to calculate in single-precision using leading words of A and B.
+		// 尝试使用 A 和 B 的前导字以单精度计算。
 		u0, u1, v0, v1, even := lehmerSimulate(A, B)
 
-		// multiprecision Step
+		// 多精度步骤
 		if v0 != 0 {
-			// Simulate the effect of the single-precision steps using the cosequences.
+			// 使用结果模拟单精度步骤的效果。
 			// A = u0*A + v0*B
 			// B = u1*A + v1*B
 			lehmerUpdate(A, B, q, r, u0, u1, v0, v1, even)
@@ -799,20 +797,20 @@ func (z *Int) lehmerGCD(x, y, a, b *Int) *Int {
 			}
 
 		} else {
-			// Single-digit calculations failed to simulate any quotients.
-			// Do a standard Euclidean step.
+			// 单精度计算未能模拟任何商。
+			// 执行标准的欧几里得步骤。
 			A, B, r, Ua, Ub = euclidUpdate(A, B, Ua, Ub, q, r, extended)
 		}
 	}
 
 	if len(B.abs) > 0 {
-		// extended Euclidean algorithm base case if B is a single Word
+		// 如果 B 是单个 Word，扩展欧几里得算法的基本情况
 		if len(A.abs) > 1 {
-			// A is longer than a single Word, so one update is needed.
+			// A 比单个 Word 长，因此需要一次更新。
 			A, B, r, Ua, Ub = euclidUpdate(A, B, Ua, Ub, q, r, extended)
 		}
 		if len(B.abs) > 0 {
-			// A and B are both a single Word.
+			// A 和 B 都是单个 Word。
 			aWord, bWord := A.abs[0], B.abs[0]
 			if extended {
 				var ua, ub, va, vb Word
@@ -840,14 +838,14 @@ func (z *Int) lehmerGCD(x, y, a, b *Int) *Int {
 	}
 	negA := a.neg
 	if y != nil {
-		// avoid aliasing b needed in the division below
+		// 避免下面除法中需要的 b 的别名
 		if y == b {
 			B.Set(b)
 		} else {
 			B = b
 		}
 		// y = (z - a*x)/b
-		y.Mul(a, Ua) // y can safely alias a
+		y.Mul(a, Ua) // y 可以安全地别名 a
 		if negA {
 			y.neg = !y.neg
 		}
@@ -867,12 +865,12 @@ func (z *Int) lehmerGCD(x, y, a, b *Int) *Int {
 	return z
 }
 
-// Rand sets z to a pseudo-random number in [0, n) and returns z.
+// Rand 将 z 设置为 [0, n) 中的伪随机数并返回 z。
 //
-// As this uses the [math/rand] package, it must not be used for
-// security-sensitive work. Use [crypto/rand.Int] instead.
+// 由于此使用 [math/rand] 包，不能用于
+// 安全敏感的工作。改用 [crypto/rand.Int]。
 func (z *Int) Rand(rnd *rand.Rand, n *Int) *Int {
-	// z.neg is not modified before the if check, because z and n might alias.
+	// z.neg 在 if 检查之前未被修改，因为 z 和 n 可能会别名。
 	if n.neg || len(n.abs) == 0 {
 		z.neg = false
 		z.abs = nil
@@ -883,12 +881,12 @@ func (z *Int) Rand(rnd *rand.Rand, n *Int) *Int {
 	return z
 }
 
-// ModInverse sets z to the multiplicative inverse of g in the ring ℤ/nℤ
-// and returns z. If g and n are not relatively prime, g has no multiplicative
-// inverse in the ring ℤ/nℤ.  In this case, z is unchanged and the return value
-// is nil. If n == 0, a division-by-zero run-time panic occurs.
+// ModInverse 将 z 设置为 g 在环 ℤ/nℤ 中的乘法逆元
+// 并返回 z。如果 g 和 n 不互质，g 在环 ℤ/nℤ 中没有乘法逆元。
+// 在这种情况下，z 保持不变，返回值
+// 为 nil。如果 n == 0，将发生除以零的运行时错误。
 func (z *Int) ModInverse(g, n *Int) *Int {
-	// GCD expects parameters a and b to be > 0.
+	// GCD 期望参数 a 和 b 大于 0。
 	if n.neg {
 		var n2 Int
 		n = n2.Neg(n)
@@ -900,13 +898,13 @@ func (z *Int) ModInverse(g, n *Int) *Int {
 	var d, x Int
 	d.GCD(&x, nil, g, n)
 
-	// if and only if d==1, g and n are relatively prime
+	// 当且仅当 d==1 时，g 和 n 互质
 	if d.Cmp(intOne) != 0 {
 		return nil
 	}
 
-	// x and y are such that g*x + n*y = 1, therefore x is the inverse element,
-	// but it may be negative, so convert to the range 0 <= z < |n|
+	// x 和 y 使得 g*x + n*y = 1，因此 x 是逆元素，
+	// 但它可能是负数，所以转换到范围 0 <= z < |n|
 	if x.neg {
 		z.Add(&x, n)
 	} else {
@@ -916,19 +914,19 @@ func (z *Int) ModInverse(g, n *Int) *Int {
 }
 
 func (z nat) modInverse(g, n nat) nat {
-	// TODO(rsc): ModInverse should be implemented in terms of this function.
+	// TODO(rsc): ModInverse 应该根据此函数实现。
 	return (&Int{abs: z}).ModInverse(&Int{abs: g}, &Int{abs: n}).abs
 }
 
-// Jacobi returns the Jacobi symbol (x/y), either +1, -1, or 0.
-// The y argument must be an odd integer.
+// Jacobi 返回 Jacobi 符号 (x/y)，为 +1、-1 或 0。
+// y 参数必须是奇整数。
 func Jacobi(x, y *Int) int {
 	if len(y.abs) == 0 || y.abs[0]&1 == 0 {
 		panic(fmt.Sprintf("big: invalid 2nd argument to Int.Jacobi: need odd integer but got %s", y.String()))
 	}
 
-	// We use the formulation described in chapter 2, section 2.4,
-	// "The Yacas Book of Algorithms":
+	// 我们使用第 2 章第 2.4 节中描述的公式，
+	// "Yacas 算法书"：
 	// http://yacas.sourceforge.net/Algo.book.pdf
 
 	var a, b, c Int
@@ -956,7 +954,7 @@ func Jacobi(x, y *Int) int {
 		}
 		// a > 0
 
-		// handle factors of 2 in 'a'
+		// 处理 'a' 中的 2 的因子
 		s := a.abs.trailingZeroBits()
 		if s&1 != 0 {
 			bmod8 := b.abs[0] & 7
@@ -966,7 +964,7 @@ func Jacobi(x, y *Int) int {
 		}
 		c.Rsh(&a, s) // a = 2^s*c
 
-		// swap numerator and denominator
+		// 交换分子和分母
 		if b.abs[0]&3 == 3 && c.abs[0]&3 == 3 {
 			j = -j
 		}
@@ -975,14 +973,14 @@ func Jacobi(x, y *Int) int {
 	}
 }
 
-// modSqrt3Mod4 uses the identity
+// modSqrt3Mod4 使用恒等式
 //
 //	   (a^((p+1)/4))^2  mod p
 //	== u^(p+1)          mod p
 //	== u^2              mod p
 //
-// to calculate the square root of any quadratic residue mod p quickly for 3
-// mod 4 primes.
+// 快速计算任何二次剩余 mod p 的平方根，用于 3
+// mod 4 素数。
 func (z *Int) modSqrt3Mod4Prime(x, p *Int) *Int {
 	e := new(Int).Add(p, intOne) // e = p + 1
 	e.Rsh(e, 2)                  // e = (p + 1) / 4
@@ -990,17 +988,17 @@ func (z *Int) modSqrt3Mod4Prime(x, p *Int) *Int {
 	return z
 }
 
-// modSqrt5Mod8Prime uses Atkin's observation that 2 is not a square mod p
+// modSqrt5Mod8Prime 使用 Atkin 的观察，即 2 不是 mod p 的平方
 //
 //	alpha ==  (2*a)^((p-5)/8)    mod p
-//	beta  ==  2*a*alpha^2        mod p  is a square root of -1
-//	b     ==  a*alpha*(beta-1)   mod p  is a square root of a
+//	beta  ==  2*a*alpha^2        mod p  是 -1 的平方根
+//	b     ==  a*alpha*(beta-1)   mod p  是 a 的平方根
 //
-// to calculate the square root of any quadratic residue mod p quickly for 5
-// mod 8 primes.
+// 快速计算任何二次剩余 mod p 的平方根，用于 5
+// mod 8 素数。
 func (z *Int) modSqrt5Mod8Prime(x, p *Int) *Int {
-	// p == 5 mod 8 implies p = e*8 + 5
-	// e is the quotient and 5 the remainder on division by 8
+	// p == 5 mod 8 意味着 p = e*8 + 5
+	// e 是商，5 是除以 8 的余数
 	e := new(Int).Rsh(p, 3)  // e = (p - 5) / 8
 	tx := new(Int).Lsh(x, 1) // tx = 2*x
 	alpha := new(Int).Exp(tx, e, p)
@@ -1016,25 +1014,24 @@ func (z *Int) modSqrt5Mod8Prime(x, p *Int) *Int {
 	return z
 }
 
-// modSqrtTonelliShanks uses the Tonelli-Shanks algorithm to find the square
-// root of a quadratic residue modulo any prime.
+// modSqrtTonelliShanks 使用 Tonelli-Shanks 算法找到平方
+// 任何素数模的二次剩余的根。
 func (z *Int) modSqrtTonelliShanks(x, p *Int) *Int {
-	// Break p-1 into s*2^e such that s is odd.
+	// 将 p-1 分解为 s*2^e，使得 s 是奇数。
 	var s Int
 	s.Sub(p, intOne)
 	e := s.abs.trailingZeroBits()
 	s.Rsh(&s, e)
 
-	// find some non-square n
+	// 找到一些非平方 n
 	var n Int
 	n.SetInt64(2)
 	for Jacobi(&n, p) != -1 {
 		n.Add(&n, intOne)
 	}
 
-	// Core of the Tonelli-Shanks algorithm. Follows the description in
-	// section 6 of "Square roots from 1; 24, 51, 10 to Dan Shanks" by Ezra
-	// Brown:
+	// Tonelli-Shanks 算法的核心。遵循描述 in
+	// Ezra Brown 的"从 1; 24, 51, 10 到 Dan Shanks 的平方根"的第 6 节：
 	// https://www.maa.org/sites/default/files/pdf/upload_library/22/Polya/07468342.di020786.02p0470a.pdf
 	var y, b, g, t Int
 	y.Add(&s, intOne)
@@ -1044,7 +1041,7 @@ func (z *Int) modSqrtTonelliShanks(x, p *Int) *Int {
 	g.Exp(&n, &s, p) // g = n^s
 	r := e
 	for {
-		// find the least m such that ord_p(b) = 2^m
+		// 找到最小的 m 使得 ord_p(b) = 2^m
 		var m uint
 		t.Set(&b)
 		for t.Cmp(intOne) != 0 {
@@ -1065,51 +1062,51 @@ func (z *Int) modSqrtTonelliShanks(x, p *Int) *Int {
 	}
 }
 
-// ModSqrt sets z to a square root of x mod p if such a square root exists, and
-// returns z. The modulus p must be an odd prime. If x is not a square mod p,
-// ModSqrt leaves z unchanged and returns nil. This function panics if p is
-// not an odd integer, its behavior is undefined if p is odd but not prime.
+// ModSqrt 如果平方根存在，将 z 设置为 x mod p 的平方根，
+// 并返回 z。模 p 必须是奇素数。如果 x 不是 mod p 的平方，
+// ModSqrt 将 z 保持不变并返回 nil。如果 p 不是
+// 奇整数，此函数会引发恐慌；如果 p 是奇数但不是素数，其行为未定义。
 func (z *Int) ModSqrt(x, p *Int) *Int {
 	switch Jacobi(x, p) {
 	case -1:
-		return nil // x is not a square mod p
+		return nil // x 不是 mod p 的平方
 	case 0:
 		return z.SetInt64(0) // sqrt(0) mod p = 0
 	case 1:
 		break
 	}
-	if x.neg || x.Cmp(p) >= 0 { // ensure 0 <= x < p
+	if x.neg || x.Cmp(p) >= 0 { // 确保 0 <= x < p
 		x = new(Int).Mod(x, p)
 	}
 
 	switch {
 	case p.abs[0]%4 == 3:
-		// Check whether p is 3 mod 4, and if so, use the faster algorithm.
+		// 检查 p 是否为 3 mod 4，如果是，使用更快的算法。
 		return z.modSqrt3Mod4Prime(x, p)
 	case p.abs[0]%8 == 5:
-		// Check whether p is 5 mod 8, use Atkin's algorithm.
+		// 检查 p 是否为 5 mod 8，使用 Atkin 的算法。
 		return z.modSqrt5Mod8Prime(x, p)
 	default:
-		// Otherwise, use Tonelli-Shanks.
+		// 否则，使用 Tonelli-Shanks。
 		return z.modSqrtTonelliShanks(x, p)
 	}
 }
 
-// Lsh sets z = x << n and returns z.
+// Lsh 设置 z = x << n 并返回 z。
 func (z *Int) Lsh(x *Int, n uint) *Int {
 	z.abs = z.abs.lsh(x.abs, n)
 	z.neg = x.neg
 	return z
 }
 
-// Rsh sets z = x >> n and returns z.
+// Rsh 设置 z = x >> n 并返回 z。
 func (z *Int) Rsh(x *Int, n uint) *Int {
 	if x.neg {
 		// (-x) >> s == ^(x-1) >> s == ^((x-1) >> s) == -(((x-1) >> s) + 1)
-		t := z.abs.sub(x.abs, natOne) // no underflow because |x| > 0
+		t := z.abs.sub(x.abs, natOne) // 没有下溢，因为 |x| > 0
 		t = t.rsh(t, n)
 		z.abs = t.add(t, natOne)
-		z.neg = true // z cannot be zero if x is negative
+		z.neg = true // 如果 x 是负数，z 不能为零
 		return z
 	}
 
@@ -1118,13 +1115,13 @@ func (z *Int) Rsh(x *Int, n uint) *Int {
 	return z
 }
 
-// Bit returns the value of the i'th bit of x. That is, it
-// returns (x>>i)&1. The bit index i must be >= 0.
+// Bit 返回 x 第 i 位的值。也就是说，它
+// 返回 (x>>i)&1。位索引 i 必须 >= 0。
 func (x *Int) Bit(i int) uint {
 	if i == 0 {
-		// optimization for common case: odd/even test of x
+		// 常见情况的优化：x 的奇偶性测试
 		if len(x.abs) > 0 {
-			return uint(x.abs[0] & 1) // bit 0 is same for -x
+			return uint(x.abs[0] & 1) // 位 0 对于 -x 相同
 		}
 		return 0
 	}
@@ -1139,11 +1136,11 @@ func (x *Int) Bit(i int) uint {
 	return x.abs.bit(uint(i))
 }
 
-// SetBit sets z to x, with x's i'th bit set to b (0 or 1).
-// That is,
-//   - if b is 1, SetBit sets z = x | (1 << i);
-//   - if b is 0, SetBit sets z = x &^ (1 << i);
-//   - if b is not 0 or 1, SetBit will panic.
+// SetBit 将 z 设置为 x，将 x 的第 i 位设置为 b（0 或 1）。
+// 也就是说，
+//   - 如果 b 是 1，SetBit 设置 z = x | (1 << i)；
+//   - 如果 b 是 0，SetBit 设置 z = x &^ (1 << i)；
+//   - 如果 b 不是 0 或 1，SetBit 将引发恐慌。
 func (z *Int) SetBit(x *Int, i int, b uint) *Int {
 	if i < 0 {
 		panic("negative bit index")
@@ -1160,7 +1157,7 @@ func (z *Int) SetBit(x *Int, i int, b uint) *Int {
 	return z
 }
 
-// And sets z = x & y and returns z.
+// And 设置 z = x & y 并返回 z。
 func (z *Int) And(x, y *Int) *Int {
 	if x.neg == y.neg {
 		if x.neg {
@@ -1168,7 +1165,7 @@ func (z *Int) And(x, y *Int) *Int {
 			x1 := nat(nil).sub(x.abs, natOne)
 			y1 := nat(nil).sub(y.abs, natOne)
 			z.abs = z.abs.add(z.abs.or(x1, y1), natOne)
-			z.neg = true // z cannot be zero if x and y are negative
+			z.neg = true // 如果 x 和 y 都是负数，z 不能为零
 			return z
 		}
 
@@ -1180,7 +1177,7 @@ func (z *Int) And(x, y *Int) *Int {
 
 	// x.neg != y.neg
 	if x.neg {
-		x, y = y, x // & is symmetric
+		x, y = y, x // & 是对称的
 	}
 
 	// x & (-y) == x & ^(y-1) == x &^ (y-1)
@@ -1190,7 +1187,7 @@ func (z *Int) And(x, y *Int) *Int {
 	return z
 }
 
-// AndNot sets z = x &^ y and returns z.
+// AndNot 设置 z = x &^ y 并返回 z。
 func (z *Int) AndNot(x, y *Int) *Int {
 	if x.neg == y.neg {
 		if x.neg {
@@ -1212,7 +1209,7 @@ func (z *Int) AndNot(x, y *Int) *Int {
 		// (-x) &^ y == ^(x-1) &^ y == ^(x-1) & ^y == ^((x-1) | y) == -(((x-1) | y) + 1)
 		x1 := nat(nil).sub(x.abs, natOne)
 		z.abs = z.abs.add(z.abs.or(x1, y.abs), natOne)
-		z.neg = true // z cannot be zero if x is negative and y is positive
+		z.neg = true // 如果 x 是负数且 y 是正数，z 不能为零
 		return z
 	}
 
@@ -1223,7 +1220,7 @@ func (z *Int) AndNot(x, y *Int) *Int {
 	return z
 }
 
-// Or sets z = x | y and returns z.
+// Or 设置 z = x | y 并返回 z。
 func (z *Int) Or(x, y *Int) *Int {
 	if x.neg == y.neg {
 		if x.neg {
@@ -1231,7 +1228,7 @@ func (z *Int) Or(x, y *Int) *Int {
 			x1 := nat(nil).sub(x.abs, natOne)
 			y1 := nat(nil).sub(y.abs, natOne)
 			z.abs = z.abs.add(z.abs.and(x1, y1), natOne)
-			z.neg = true // z cannot be zero if x and y are negative
+			z.neg = true // 如果 x 和 y 都是负数，z 不能为零
 			return z
 		}
 
@@ -1243,17 +1240,17 @@ func (z *Int) Or(x, y *Int) *Int {
 
 	// x.neg != y.neg
 	if x.neg {
-		x, y = y, x // | is symmetric
+		x, y = y, x // | 是对称的
 	}
 
 	// x | (-y) == x | ^(y-1) == ^((y-1) &^ x) == -(^((y-1) &^ x) + 1)
 	y1 := nat(nil).sub(y.abs, natOne)
 	z.abs = z.abs.add(z.abs.andNot(y1, x.abs), natOne)
-	z.neg = true // z cannot be zero if one of x or y is negative
+	z.neg = true // 如果 x 或 y 之一是负数，z 不能为零
 	return z
 }
 
-// Xor sets z = x ^ y and returns z.
+// Xor 设置 z = x ^ y 并返回 z。
 func (z *Int) Xor(x, y *Int) *Int {
 	if x.neg == y.neg {
 		if x.neg {
@@ -1273,17 +1270,17 @@ func (z *Int) Xor(x, y *Int) *Int {
 
 	// x.neg != y.neg
 	if x.neg {
-		x, y = y, x // ^ is symmetric
+		x, y = y, x // ^ 是对称的
 	}
 
 	// x ^ (-y) == x ^ ^(y-1) == ^(x ^ (y-1)) == -((x ^ (y-1)) + 1)
 	y1 := nat(nil).sub(y.abs, natOne)
 	z.abs = z.abs.add(z.abs.xor(x.abs, y1), natOne)
-	z.neg = true // z cannot be zero if only one of x or y is negative
+	z.neg = true // 如果仅 x 或 y 之一是负数，z 不能为零
 	return z
 }
 
-// Not sets z = ^x and returns z.
+// Not 设置 z = ^x 并返回 z。
 func (z *Int) Not(x *Int) *Int {
 	if x.neg {
 		// ^(-x) == ^(^(x-1)) == x-1
@@ -1294,12 +1291,12 @@ func (z *Int) Not(x *Int) *Int {
 
 	// ^x == -x-1 == -(x+1)
 	z.abs = z.abs.add(x.abs, natOne)
-	z.neg = true // z cannot be zero if x is positive
+	z.neg = true // 如果 x 是正数，z 不能为零
 	return z
 }
 
-// Sqrt sets z to ⌊√x⌋, the largest integer such that z² ≤ x, and returns z.
-// It panics if x is negative.
+// Sqrt 将 z 设置为 ⌊√x⌋，最大整数使得 z² ≤ x，并返回 z。
+// 如果 x 是负数，它会引发恐慌。
 func (z *Int) Sqrt(x *Int) *Int {
 	if x.neg {
 		panic("square root of negative number")

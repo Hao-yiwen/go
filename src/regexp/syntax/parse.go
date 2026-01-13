@@ -1251,11 +1251,11 @@ Loop:
 	return "", &Error{ErrInvalidPerlOp, s[:len(s)-len(t)]}
 }
 
-// isValidCaptureName reports whether name
-// is a valid capture name: [A-Za-z0-9_]+.
-// PCRE limits names to 32 bytes.
-// Python rejects names starting with digits.
-// We don't enforce either of those.
+// isValidCaptureName 报告 name
+// 是否是有效的捕获名称：[A-Za-z0-9_]+。
+// PCRE 将名称限制为 32 字节。
+// Python 拒绝以数字开头的名称。
+// 我们不强制任何这些。
 func isValidCaptureName(name string) bool {
 	if name == "" {
 		return false
@@ -1268,7 +1268,7 @@ func isValidCaptureName(name string) bool {
 	return true
 }
 
-// parseInt parses a decimal integer.
+// parseInt 解析一个十进制整数。
 func (p *parser) parseInt(s string) (n int, rest string, ok bool) {
 	if s == "" || s[0] < '0' || '9' < s[0] {
 		return
@@ -1296,8 +1296,8 @@ func (p *parser) parseInt(s string) (n int, rest string, ok bool) {
 	return
 }
 
-// can this be represented as a character class?
-// single-rune literal string, char class, ., and .|\n.
+// 这可以表示为字符类吗?
+// 单 rune 字面字符串、char 类、.、和 .|\n。
 func isCharClass(re *Regexp) bool {
 	return re.Op == OpLiteral && len(re.Rune) == 1 ||
 		re.Op == OpCharClass ||
@@ -1305,7 +1305,7 @@ func isCharClass(re *Regexp) bool {
 		re.Op == OpAnyChar
 }
 
-// does re match r?
+// re 匹配 r 吗？
 func matchRune(re *Regexp, r rune) bool {
 	switch re.Op {
 	case OpLiteral:
@@ -1325,7 +1325,7 @@ func matchRune(re *Regexp, r rune) bool {
 	return false
 }
 
-// parseVerticalBar handles a | in the input.
+// parseVerticalBar 处理输入中的 |。
 func (p *parser) parseVerticalBar() {
 	p.concat()
 
@@ -1338,9 +1338,9 @@ func (p *parser) parseVerticalBar() {
 	}
 }
 
-// mergeCharClass makes dst = dst|src.
-// The caller must ensure that dst.Op >= src.Op,
-// to reduce the amount of copying.
+// mergeCharClass 创建 dst = dst|src。
+// 调用者必须确保 dst.Op >= src.Op，
+// 以减少复制量。
 func mergeCharClass(dst, src *Regexp) {
 	switch dst.Op {
 	case OpAnyChar:
@@ -1368,9 +1368,9 @@ func mergeCharClass(dst, src *Regexp) {
 	}
 }
 
-// If the top of the stack is an element followed by an opVerticalBar
-// swapVerticalBar swaps the two and returns true.
-// Otherwise it returns false.
+// 如果栈的顶部是一个元素后跟 opVerticalBar
+// swapVerticalBar 交换这两个并返回 true。
+// 否则返回 false。
 func (p *parser) swapVerticalBar() bool {
 	// If above and below vertical bar are literal or char class,
 	// can merge into a single char class.
@@ -1406,7 +1406,7 @@ func (p *parser) swapVerticalBar() bool {
 	return false
 }
 
-// parseRightParen handles a ) in the input.
+// parseRightParen 处理输入中的 )。
 func (p *parser) parseRightParen() error {
 	p.concat()
 	if p.swapVerticalBar() {
@@ -1439,8 +1439,8 @@ func (p *parser) parseRightParen() error {
 	return nil
 }
 
-// parseEscape parses an escape sequence at the beginning of s
-// and returns the rune.
+// parseEscape 解析 s 开头的转义序列
+// 并返回该 rune。
 func (p *parser) parseEscape(s string) (r rune, rest string, err error) {
 	t := s[1:]
 	if t == "" {
@@ -1533,12 +1533,12 @@ Switch:
 		}
 		return x*16 + y, t, nil
 
-	// C escapes. There is no case 'b', to avoid misparsing
-	// the Perl word-boundary \b as the C backspace \b
-	// when in POSIX mode. In Perl, /\b/ means word-boundary
-	// but /[\b]/ means backspace. We don't support that.
-	// If you want a backspace, embed a literal backspace
-	// character or use \x08.
+	// C 转义。没有 'b' 情况，以避免误解
+	// Perl 单词边界 \b 作为 C 退格 \b
+	// 在 POSIX 模式下。在 Perl 中，/\b/ 表示单词边界
+	// 但 /[\b]/ 表示退格。我们不支持那个。
+	// 如果你想要退格，嵌入字面退格
+	// 字符或使用 \x08。
 	case 'a':
 		return '\a', t, err
 	case 'f':
@@ -1555,8 +1555,8 @@ Switch:
 	return 0, "", &Error{ErrInvalidEscape, s[:len(s)-len(t)]}
 }
 
-// parseClassChar parses a character class character at the beginning of s
-// and returns it.
+// parseClassChar 解析 s 开头的字符类字符
+// 并返回它。
 func (p *parser) parseClassChar(s, wholeClass string) (r rune, rest string, err error) {
 	if s == "" {
 		return 0, "", &Error{Code: ErrMissingBracket, Expr: wholeClass}
@@ -1578,9 +1578,9 @@ type charGroup struct {
 
 //go:generate perl make_perl_groups.pl perl_groups.go
 
-// parsePerlClassEscape parses a leading Perl character class escape like \d
-// from the beginning of s. If one is present, it appends the characters to r
-// and returns the new slice r and the remainder of the string.
+// parsePerlClassEscape 解析从 s 开头开始的 \d 之类的前导 Perl 字符类转义。
+// 如果存在，它将字符追加到 r
+// 并返回新的切片 r 和字符串的其余部分。
 func (p *parser) parsePerlClassEscape(s string, r []rune) (out []rune, rest string) {
 	if p.flags&PerlX == 0 || len(s) < 2 || s[0] != '\\' {
 		return
@@ -1592,9 +1592,9 @@ func (p *parser) parsePerlClassEscape(s string, r []rune) (out []rune, rest stri
 	return p.appendGroup(r, g), s[2:]
 }
 
-// parseNamedClass parses a leading POSIX named character class like [:alnum:]
-// from the beginning of s. If one is present, it appends the characters to r
-// and returns the new slice r and the remainder of the string.
+// parseNamedClass 解析从 s 开头开始的 [:alnum:] 之类的前导 POSIX 命名字符类。
+// 如果存在，它将字符追加到 r
+// 并返回新的切片 r 和字符串的其余部分。
 func (p *parser) parseNamedClass(s string, r []rune) (out []rune, rest string, err error) {
 	if len(s) < 2 || s[0] != '[' || s[1] != ':' {
 		return
@@ -1651,14 +1651,14 @@ var asciiFoldTable = &unicode.RangeTable{
 	},
 }
 
-// categoryAliases is a lazily constructed copy of unicode.CategoryAliases
-// but with the keys passed through canonicalName, to support inexact matches.
+// categoryAliases 是 unicode.CategoryAliases 的惰性构造副本
+// 但关键字通过 canonicalName 传递，以支持不精确匹配。
 var categoryAliases struct {
 	once sync.Once
 	m    map[string]string
 }
 
-// initCategoryAliases initializes categoryAliases by canonicalizing unicode.CategoryAliases.
+// initCategoryAliases 通过规范化 unicode.CategoryAliases 来初始化 categoryAliases。
 func initCategoryAliases() {
 	categoryAliases.m = make(map[string]string)
 	for name, actual := range unicode.CategoryAliases {
@@ -1666,11 +1666,11 @@ func initCategoryAliases() {
 	}
 }
 
-// canonicalName returns the canonical lookup string for name.
-// The canonical name has a leading uppercase letter and then lowercase letters,
-// and it omits all underscores, spaces, and hyphens.
-// (We could have used all lowercase, but this way most package unicode
-// map keys are already canonical.)
+// canonicalName 返回 name 的规范查找字符串。
+// 规范名称有一个前导大写字母，然后是小写字母，
+// 并且它省略了所有下划线、空格和连字符。
+// （我们可以使用全小写，但这样大多数包 unicode
+// 映射关键字已经是规范的。）
 func canonicalName(name string) string {
 	var b []byte
 	first := true
@@ -1708,9 +1708,9 @@ func canonicalName(name string) string {
 	return string(b)
 }
 
-// unicodeTable returns the unicode.RangeTable identified by name
-// and the table of additional fold-equivalent code points.
-// If sign < 0, the result should be inverted.
+// unicodeTable 返回由 name 标识的 unicode.RangeTable
+// 和额外的折叠等价码点表。
+// 如果 sign < 0，结果应该被反演。
 func unicodeTable(name string) (tab, fold *unicode.RangeTable, sign int) {
 	name = canonicalName(name)
 
@@ -1733,9 +1733,9 @@ func unicodeTable(name string) (tab, fold *unicode.RangeTable, sign int) {
 		return t, unicode.FoldScript[name], +1
 	}
 
-	// unicode.CategoryAliases makes liberal use of underscores in its names
-	// (they are defined that way by Unicode), but we want to match ignoring
-	// the underscores, so make our own map with canonical names.
+	// unicode.CategoryAliases 在其名称中大量使用下划线
+	// （它们由 Unicode 以这种方式定义），但我们想忽略
+	// 下划线进行匹配，所以使用规范名称制作我们自己的映射。
 	categoryAliases.once.Do(initCategoryAliases)
 	if actual := categoryAliases.m[name]; actual != "" {
 		t := unicode.Categories[actual]
@@ -1744,9 +1744,9 @@ func unicodeTable(name string) (tab, fold *unicode.RangeTable, sign int) {
 	return nil, nil, 0
 }
 
-// parseUnicodeClass parses a leading Unicode character class like \p{Han}
-// from the beginning of s. If one is present, it appends the characters to r
-// and returns the new slice r and the remainder of the string.
+// parseUnicodeClass 解析从 s 开头开始的 \p{Han} 之类的前导 Unicode 字符类。
+// 如果存在，它将字符追加到 r
+// 并返回新的切片 r 和字符串的其余部分。
 func (p *parser) parseUnicodeClass(s string, r []rune) (out []rune, rest string, err error) {
 	if p.flags&UnicodeGroups == 0 || len(s) < 2 || s[0] != '\\' || s[1] != 'p' && s[1] != 'P' {
 		return
@@ -1783,7 +1783,7 @@ func (p *parser) parseUnicodeClass(s string, r []rune) (out []rune, rest string,
 		}
 	}
 
-	// Group can have leading negation too.  \p{^Han} == \P{Han}, \P{^Han} == \p{Han}.
+	// 组也可以有前导取反。\p{^Han} == \P{Han}、\P{^Han} == \p{Han}。
 	if name != "" && name[0] == '^' {
 		sign = -sign
 		name = name[1:]
@@ -1804,9 +1804,9 @@ func (p *parser) parseUnicodeClass(s string, r []rune) (out []rune, rest string,
 			r = appendNegatedTable(r, tab)
 		}
 	} else {
-		// Merge and clean tab and fold in a temporary buffer.
-		// This is necessary for the negative case and just tidy
-		// for the positive case.
+		// 在临时缓冲区中合并和清理 tab 和 fold。
+		// 这对于负数情况是必要的，对于
+		// 正数情况只是整理。
 		tmp := p.tmpClass[:0]
 		tmp = appendTable(tmp, tab)
 		tmp = appendTable(tmp, fold)
@@ -1821,8 +1821,8 @@ func (p *parser) parseUnicodeClass(s string, r []rune) (out []rune, rest string,
 	return r, t, nil
 }
 
-// parseClass parses a character class at the beginning of s
-// and pushes it onto the parse stack.
+// parseClass 解析 s 开头的字符类
+// 并将其推送到解析栈上。
 func (p *parser) parseClass(s string) (rest string, err error) {
 	t := s[1:] // chop [
 	re := p.newRegexp(OpCharClass)
@@ -1917,11 +1917,11 @@ func (p *parser) parseClass(s string) (rest string, err error) {
 	return t, nil
 }
 
-// cleanClass sorts the ranges (pairs of elements of r),
-// merges them, and eliminates duplicates.
+// cleanClass 对范围（r 的元素对）进行排序，
+// 合并它们，并消除重复项。
 func cleanClass(rp *[]rune) []rune {
 
-	// Sort by lo increasing, hi decreasing to break ties.
+	// 按 lo 递增、hi 递减排序以打破平局。
 	sort.Sort(ranges{rp})
 
 	r := *rp
@@ -1929,18 +1929,18 @@ func cleanClass(rp *[]rune) []rune {
 		return r
 	}
 
-	// Merge abutting, overlapping.
-	w := 2 // write index
+	// 合并相邻、重叠。
+	w := 2 // 写索引
 	for i := 2; i < len(r); i += 2 {
 		lo, hi := r[i], r[i+1]
 		if lo <= r[w-1]+1 {
-			// merge with previous range
+			// 与前一个范围合并
 			if hi > r[w-1] {
 				r[w-1] = hi
 			}
 			continue
 		}
-		// new disjoint range
+		// 新的不相交范围
 		r[w] = lo
 		r[w+1] = hi
 		w += 2
@@ -1949,8 +1949,8 @@ func cleanClass(rp *[]rune) []rune {
 	return r[:w]
 }
 
-// inCharClass reports whether r is in the class.
-// It assumes the class has been cleaned by cleanClass.
+// inCharClass 报告 r 是否在该类中。
+// 它假设该类已被 cleanClass 清理。
 func inCharClass(r rune, class []rune) bool {
 	_, ok := sort.Find(len(class)/2, func(i int) int {
 		lo, hi := class[2*i], class[2*i+1]
@@ -1965,7 +1965,7 @@ func inCharClass(r rune, class []rune) bool {
 	return ok
 }
 
-// appendLiteral returns the result of appending the literal x to the class r.
+// appendLiteral 返回将字面 x 追加到类 r 的结果。
 func appendLiteral(r []rune, x rune, flags Flags) []rune {
 	if flags&FoldCase != 0 {
 		return appendFoldedRange(r, x, x)
@@ -1973,14 +1973,14 @@ func appendLiteral(r []rune, x rune, flags Flags) []rune {
 	return appendRange(r, x, x)
 }
 
-// appendRange returns the result of appending the range lo-hi to the class r.
+// appendRange 返回将范围 lo-hi 追加到类 r 的结果。
 func appendRange(r []rune, lo, hi rune) []rune {
-	// Expand last range or next to last range if it overlaps or abuts.
-	// Checking two ranges helps when appending case-folded
-	// alphabets, so that one range can be expanding A-Z and the
-	// other expanding a-z.
+	// 展开最后一个范围或倒数第二个范围（如果它重叠或相邻）。
+	// 检查两个范围有助于附加大小写折叠的
+	// 字母表，以便一个范围可以扩展 A-Z，另一个
+	// 扩展 a-z。
 	n := len(r)
-	for i := 2; i <= 4; i += 2 { // twice, using i=2, i=4
+	for i := 2; i <= 4; i += 2 { // 两次，使用 i=2、i=4
 		if n >= i {
 			rlo, rhi := r[n-i], r[n-i+1]
 			if lo <= rhi+1 && rlo <= hi+1 {
@@ -1999,36 +1999,36 @@ func appendRange(r []rune, lo, hi rune) []rune {
 }
 
 const (
-	// minimum and maximum runes involved in folding.
-	// checked during test.
+	// 涉及折叠的最小和最大 runes。
+	// 在测试期间检查。
 	minFold = 0x0041
 	maxFold = 0x1e943
 )
 
-// appendFoldedRange returns the result of appending the range lo-hi
-// and its case folding-equivalent runes to the class r.
+// appendFoldedRange 返回追加范围 lo-hi 的结果
+// 和其大小写折叠等价的 runes 到类 r。
 func appendFoldedRange(r []rune, lo, hi rune) []rune {
-	// Optimizations.
+	// 优化。
 	if lo <= minFold && hi >= maxFold {
-		// Range is full: folding can't add more.
+		// 范围是完整的：折叠无法添加更多。
 		return appendRange(r, lo, hi)
 	}
 	if hi < minFold || lo > maxFold {
-		// Range is outside folding possibilities.
+		// 范围在折叠可能性之外。
 		return appendRange(r, lo, hi)
 	}
 	if lo < minFold {
-		// [lo, minFold-1] needs no folding.
+		// [lo, minFold-1] 不需要折叠。
 		r = appendRange(r, lo, minFold-1)
 		lo = minFold
 	}
 	if hi > maxFold {
-		// [maxFold+1, hi] needs no folding.
+		// [maxFold+1, hi] 不需要折叠。
 		r = appendRange(r, maxFold+1, hi)
 		hi = maxFold
 	}
 
-	// Brute force. Depend on appendRange to coalesce ranges on the fly.
+	// 蛮力。依靠 appendRange 即时合并范围。
 	for c := lo; c <= hi; c++ {
 		r = appendRange(r, c, c)
 		f := unicode.SimpleFold(c)
@@ -2040,8 +2040,8 @@ func appendFoldedRange(r []rune, lo, hi rune) []rune {
 	return r
 }
 
-// appendClass returns the result of appending the class x to the class r.
-// It assume x is clean.
+// appendClass 返回将类 x 追加到类 r 的结果。
+// 它假设 x 是干净的。
 func appendClass(r []rune, x []rune) []rune {
 	for i := 0; i < len(x); i += 2 {
 		r = appendRange(r, x[i], x[i+1])
@@ -2049,7 +2049,7 @@ func appendClass(r []rune, x []rune) []rune {
 	return r
 }
 
-// appendFoldedClass returns the result of appending the case folding of the class x to the class r.
+// appendFoldedClass 返回将类 x 的大小写折叠追加到类 r 的结果。
 func appendFoldedClass(r []rune, x []rune) []rune {
 	for i := 0; i < len(x); i += 2 {
 		r = appendFoldedRange(r, x[i], x[i+1])
@@ -2057,8 +2057,8 @@ func appendFoldedClass(r []rune, x []rune) []rune {
 	return r
 }
 
-// appendNegatedClass returns the result of appending the negation of the class x to the class r.
-// It assumes x is clean.
+// appendNegatedClass 返回将类 x 的取反追加到类 r 的结果。
+// 它假设 x 是干净的。
 func appendNegatedClass(r []rune, x []rune) []rune {
 	nextLo := '\u0000'
 	for i := 0; i < len(x); i += 2 {
@@ -2074,7 +2074,7 @@ func appendNegatedClass(r []rune, x []rune) []rune {
 	return r
 }
 
-// appendTable returns the result of appending x to the class r.
+// appendTable 返回将 x 追加到类 r 的结果。
 func appendTable(r []rune, x *unicode.RangeTable) []rune {
 	for _, xr := range x.R16 {
 		lo, hi, stride := rune(xr.Lo), rune(xr.Hi), rune(xr.Stride)
@@ -2099,9 +2099,9 @@ func appendTable(r []rune, x *unicode.RangeTable) []rune {
 	return r
 }
 
-// appendNegatedTable returns the result of appending the negation of x to the class r.
+// appendNegatedTable 返回将 x 的取反追加到类 r 的结果。
 func appendNegatedTable(r []rune, x *unicode.RangeTable) []rune {
-	nextLo := '\u0000' // lo end of next class to add
+	nextLo := '\u0000' // 要添加的下一个类的 lo 端
 	for _, xr := range x.R16 {
 		lo, hi, stride := rune(xr.Lo), rune(xr.Hi), rune(xr.Stride)
 		if stride == 1 {
@@ -2140,10 +2140,10 @@ func appendNegatedTable(r []rune, x *unicode.RangeTable) []rune {
 	return r
 }
 
-// negateClass overwrites r and returns r's negation.
-// It assumes the class r is already clean.
+// negateClass 覆盖 r 并返回 r 的取反。
+// 它假设类 r 已经是干净的。
 func negateClass(r []rune) []rune {
-	nextLo := '\u0000' // lo end of next class to add
+	nextLo := '\u0000' // 要添加的下一个类的 lo 端
 	w := 0             // write index
 	for i := 0; i < len(r); i += 2 {
 		lo, hi := r[i], r[i+1]
@@ -2156,17 +2156,17 @@ func negateClass(r []rune) []rune {
 	}
 	r = r[:w]
 	if nextLo <= unicode.MaxRune {
-		// It's possible for the negation to have one more
-		// range - this one - than the original class, so use append.
+		// 取反可能有一个范围——这个——比原始类更多，
+		// 所以使用 append。
 		r = append(r, nextLo, unicode.MaxRune)
 	}
 	return r
 }
 
-// ranges implements sort.Interface on a []rune.
-// The choice of receiver type definition is strange
-// but avoids an allocation since we already have
-// a *[]rune.
+// ranges 在 []rune 上实现 sort.Interface。
+// 接收器类型定义的选择很奇怪
+// 但避免了分配，因为我们已经有
+// 一个 *[]rune。
 type ranges struct {
 	p *[]rune
 }

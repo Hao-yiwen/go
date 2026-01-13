@@ -1,58 +1,58 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package synctest provides support for testing concurrent code.
+// Package synctest 提供对测试并发代码的支持。
 //
-// The [Test] function runs a function in an isolated "bubble".
-// Any goroutines started within the bubble are also part of the bubble.
+// [Test] 函数在隔离的"泡泡"中运行一个函数。
+// 在泡泡内启动的任何 goroutine 也是泡泡的一部分。
 //
-// Each test should be entirely self-contained:
-// The following guidelines should apply to most tests:
+// 每个测试应该完全自包含：
+// 以下指南应适用于大多数测试：
 //
-//   - Avoid interacting with goroutines not started from within the test.
-//   - Avoid using the network. Use a fake network implementation as needed.
-//   - Avoid interacting with external processes.
-//   - Avoid leaking goroutines in background tasks.
+//   - 避免与不是从测试中启动的 goroutine 交互。
+//   - 避免使用网络。根据需要使用虚假网络实现。
+//   - 避免与外部进程交互。
+//   - 避免在后台任务中泄露 goroutine。
 //
-// # Time
+// # 时间
 //
-// Within a bubble, the [time] package uses a fake clock.
-// Each bubble has its own clock.
-// The initial time is midnight UTC 2000-01-01.
+// 在泡泡内，[time] 包使用虚假时钟。
+// 每个泡泡都有自己的时钟。
+// 初始时间是 2000-01-01 UTC 午夜。
 //
-// Time in a bubble only advances when every goroutine in the
-// bubble is durably blocked.
-// See below for the exact definition of "durably blocked".
+// 泡泡中的时间仅在泡泡中的每个 goroutine 都
+// 持久阻塞时才会前进。
+// 有关"持久阻塞"的确切定义，请参见下面。
 //
-// For example, this test runs immediately rather than taking
-// two seconds:
+// 例如，此测试立即运行，而不是花费
+// 两秒钟：
 //
 //	func TestTime(t *testing.T) {
 //		synctest.Test(t, func(t *testing.T) {
-//			start := time.Now() // always midnight UTC 2000-01-01
+//			start := time.Now() // 总是 2000-01-01 UTC 午夜
 //			go func() {
 //				time.Sleep(1 * time.Second)
-//				t.Log(time.Since(start)) // always logs "1s"
+//				t.Log(time.Since(start)) // 总是记录 "1s"
 //			}()
-//			time.Sleep(2 * time.Second) // the goroutine above will run before this Sleep returns
-//			t.Log(time.Since(start))    // always logs "2s"
+//			time.Sleep(2 * time.Second) // 上面的 goroutine 将在此 Sleep 返回之前运行
+//			t.Log(time.Since(start))    // 总是记录 "2s"
 //		})
 //	}
 //
-// Time stops advancing when the root goroutine of the bubble exits.
+// 当泡泡的根 goroutine 退出时，时间停止前进。
 //
-// # Blocking
+// # 阻塞
 //
-// A goroutine in a bubble is "durably blocked" when it is blocked
-// and can only be unblocked by another goroutine in the same bubble.
-// A goroutine which can be unblocked by an event from outside its
-// bubble is not durably blocked.
+// 泡泡中的 goroutine 是"持久阻塞"当它被阻塞
+// 并且只能由同一泡泡中的另一个 goroutine 取消阻塞。
+// 可以由来自泡泡外的事件取消阻塞的 goroutine
+// 不是持久阻塞。
 //
-// The [Wait] function blocks until all other goroutines in the
-// bubble are durably blocked.
+// [Wait] 函数阻塞直到泡泡中的所有其他 goroutine
+// 都持久阻塞。
 //
-// For example:
+// 例如：
 //
 //	func TestWait(t *testing.T) {
 //		synctest.Test(t, func(t *testing.T) {
@@ -60,59 +60,58 @@
 //			go func() {
 //				done = true
 //			}()
-//			// Wait will block until the goroutine above has finished.
+//			// Wait 将阻塞直到上面的 goroutine 完成。
 //			synctest.Wait()
-//			t.Log(done) // always logs "true"
+//			t.Log(done) // 总是记录 "true"
 //		})
 //	}
 //
-// When every goroutine in a bubble is durably blocked:
+// 当泡泡中的每个 goroutine 都持久阻塞时：
 //
-//   - [Wait] returns, if it has been called.
-//   - Otherwise, time advances to the next time that will
-//     unblock at least one goroutine, if there is such a time
-//     and the root goroutine of the bubble has not exited.
-//   - Otherwise, there is a deadlock and [Test] panics.
+//   - [Wait] 返回（如果已被调用）。
+//   - 否则，时间前进到将至少取消
+//     一个 goroutine 阻塞的下一时间（如果存在
+//     这样的时间并且泡泡的根 goroutine 尚未退出）。
+//   - 否则，存在死锁，[Test] panic。
 //
-// The following operations durably block a goroutine:
+// 以下操作持久阻塞 goroutine：
 //
-//   - a blocking send or receive on a channel created within the bubble
-//   - a blocking select statement where every case is a channel created
-//     within the bubble
+//   - 在泡泡中创建的通道上的阻塞发送或接收
+//   - 阻塞的 select 语句，其中每个 case 都是在
+//     泡泡中创建的通道
 //   - [sync.Cond.Wait]
-//   - [sync.WaitGroup.Wait], when [sync.WaitGroup.Add] was called within the bubble
+//   - [sync.WaitGroup.Wait]，当 [sync.WaitGroup.Add] 在泡泡中调用时
 //   - [time.Sleep]
 //
-// Operations not in the above list are not durably blocking.
-// In particular, the following operations may block a goroutine,
-// but are not durably blocking because the goroutine can be unblocked
-// by an event occurring outside its bubble:
+// 上述列表中没有的操作不是持久阻塞。
+// 特别是，以下操作可能会阻塞 goroutine，
+// 但不是持久阻塞，因为 goroutine 可以被
+// 泡泡外发生的事件取消阻塞：
 //
-//   - locking a [sync.Mutex] or [sync.RWMutex]
-//   - blocking on I/O, such as reading from a network socket
-//   - system calls
+//   - 锁定 [sync.Mutex] 或 [sync.RWMutex]
+//   - 阻塞 I/O，如从网络套接字读取
+//   - 系统调用
 //
-// # Isolation
+// # 隔离
 //
-// A channel, [time.Timer], or [time.Ticker] created within a bubble
-// is associated with it. Operating on a bubbled channel, timer, or
-// ticker from outside the bubble panics.
+// 在泡泡中创建的通道、[time.Timer] 或 [time.Ticker]
+// 与其相关联。从泡泡外操作泡泡化的通道、计时器或
+// 计时器会 panic。
 //
-// A [sync.WaitGroup] becomes associated with a bubble on the first
-// call to Add or Go. Once a WaitGroup is associated with a bubble,
-// calling Add or Go from outside that bubble is a fatal error.
-// (As a technical limitation, a WaitGroup defined as a package
-// variable, such as "var wg sync.WaitGroup", cannot be associated
-// with a bubble and operations on it may not be durably blocking.
-// This limitation does not apply to a *WaitGroup stored in a
-// package variable, such as "var wg = new(sync.WaitGroup)".)
+// [sync.WaitGroup] 在第一次调用 Add 或 Go 时与泡泡相关联。
+// 一旦 WaitGroup 与泡泡相关联，从泡泡外调用 Add 或 Go 是致命错误。
+// (作为技术限制，定义为包变量的 WaitGroup，
+// 例如 "var wg sync.WaitGroup"，不能与泡泡关联，
+// 对其的操作可能不是持久阻塞。
+// 此限制不适用于存储在包变量中的 *WaitGroup，
+// 例如 "var wg = new(sync.WaitGroup)"。)
 //
-// [sync.Cond.Wait] is durably blocking. Waking a goroutine in a bubble
-// blocked on Cond.Wait from outside the bubble is a fatal error.
+// [sync.Cond.Wait] 是持久阻塞。从泡泡外唤醒阻塞在
+// Cond.Wait 上的泡泡中的 goroutine 是致命错误。
 //
-// Cleanup functions and finalizers registered with
-// [runtime.AddCleanup] and [runtime.SetFinalizer]
-// run outside of any bubble.
+// 用 [runtime.AddCleanup] 和 [runtime.SetFinalizer]
+// 注册的清理函数和终结器
+// 运行在任何泡泡之外。
 //
 // # Example: Context.AfterFunc
 //

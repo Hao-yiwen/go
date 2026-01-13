@@ -1,43 +1,42 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package exec runs external commands. It wraps os.StartProcess to make it
-// easier to remap stdin and stdout, connect I/O with pipes, and do other
-// adjustments.
+// 包 exec 运行外部命令。它包装 os.StartProcess 以使其更容易
+// 重新映射 stdin 和 stdout、使用管道连接 I/O 以及进行其他
+// 调整。
 //
-// Unlike the "system" library call from C and other languages, the
-// os/exec package intentionally does not invoke the system shell and
-// does not expand any glob patterns or handle other expansions,
-// pipelines, or redirections typically done by shells. The package
-// behaves more like C's "exec" family of functions. To expand glob
-// patterns, either call the shell directly, taking care to escape any
-// dangerous input, or use the [path/filepath] package's Glob function.
-// To expand environment variables, use package os's ExpandEnv.
+// 与 C 和其他语言的"system"库调用不同，
+// os/exec 包有意不调用系统 shell，也不展开任何 glob 模式或处理其他
+// 展开、管道或通常由 shell 进行的重定向。该包
+// 的行为更像 C 的"exec"函数族。要展开 glob
+// 模式，要么直接调用 shell，注意转义任何
+// 危险输入，要么使用 [path/filepath] 包的 Glob 函数。
+// 要展开环境变量，请使用包 os 的 ExpandEnv。
 //
-// Note that the examples in this package assume a Unix system.
-// They may not run on Windows, and they do not run in the Go Playground
-// used by go.dev and pkg.go.dev.
+// 注意此包中的示例假设为 Unix 系统。
+// 它们可能无法在 Windows 上运行，也不会在 go.dev 和 pkg.go.dev
+// 使用的 Go Playground 中运行。
 //
-// # Executables in the current directory
+// # 当前目录中的可执行文件
 //
-// The functions [Command] and [LookPath] look for a program
-// in the directories listed in the current path, following the
-// conventions of the host operating system.
-// Operating systems have for decades included the current
-// directory in this search, sometimes implicitly and sometimes
-// configured explicitly that way by default.
-// Modern practice is that including the current directory
-// is usually unexpected and often leads to security problems.
+// 函数 [Command] 和 [LookPath] 在
+// 当前路径中列出的目录中查找程序，遵循
+// 主机操作系统的约定。
+// 几十年来，操作系统已包含当前
+// 目录在此搜索中，有时隐式地，有时
+// 默认明确配置为这样。
+// 现代做法是包含当前目录
+// 通常是意想不到的，经常导致安全问题。
 //
-// To avoid those security problems, as of Go 1.19, this package will not resolve a program
-// using an implicit or explicit path entry relative to the current directory.
-// That is, if you run [LookPath]("go"), it will not successfully return
-// ./go on Unix nor .\go.exe on Windows, no matter how the path is configured.
-// Instead, if the usual path algorithms would result in that answer,
-// these functions return an error err satisfying [errors.Is](err, [ErrDot]).
+// 为了避免这些安全问题，从 Go 1.19 起，此包不会解析使用
+// 相对于当前目录的隐式或显式路径条目的程序。
+// 也就是说，如果你运行 [LookPath]("go")，它不会成功返回
+// Unix 上的 ./go 或 Windows 上的 .\go.exe，无论路径如何配置。
+// 相反，如果通常的路径算法会导致该答案，
+// 这些函数返回一个错误 err，满足 [errors.Is](err, [ErrDot])。
 //
-// For example, consider these two program snippets:
+// 例如，考虑这两个程序片段：
 //
 //	path, err := exec.LookPath("prog")
 //	if err != nil {
@@ -45,21 +44,21 @@
 //	}
 //	use(path)
 //
-// and
+// 和
 //
 //	cmd := exec.Command("prog")
 //	if err := cmd.Run(); err != nil {
 //		log.Fatal(err)
 //	}
 //
-// These will not find and run ./prog or .\prog.exe,
-// no matter how the current path is configured.
+// 这些不会找到并运行 ./prog 或 .\prog.exe，
+// 无论当前路径如何配置。
 //
-// Code that always wants to run a program from the current directory
-// can be rewritten to say "./prog" instead of "prog".
+// 想要始终从当前目录运行程序的代码
+// 可以改写为说"./prog"而不是"prog"。
 //
-// Code that insists on including results from relative path entries
-// can instead override the error using an errors.Is check:
+// 坚持包含来自相对路径条目的结果的代码
+// 可以使用 errors.Is 检查来覆盖错误：
 //
 //	path, err := exec.LookPath("prog")
 //	if errors.Is(err, exec.ErrDot) {
@@ -70,7 +69,7 @@
 //	}
 //	use(path)
 //
-// and
+// 和
 //
 //	cmd := exec.Command("prog")
 //	if errors.Is(cmd.Err, exec.ErrDot) {
@@ -80,14 +79,14 @@
 //		log.Fatal(err)
 //	}
 //
-// Setting the environment variable GODEBUG=execerrdot=0
-// disables generation of ErrDot entirely, temporarily restoring the pre-Go 1.19
-// behavior for programs that are unable to apply more targeted fixes.
-// A future version of Go may remove support for this variable.
+// 设置环境变量 GODEBUG=execerrdot=0
+// 完全禁用 ErrDot 的生成，临时恢复 pre-Go 1.19
+// 行为，供无法应用更有针对性的修复的程序使用。
+// Go 的未来版本可能会删除对此变量的支持。
 //
-// Before adding such overrides, make sure you understand the
-// security implications of doing so.
-// See https://go.dev/blog/path-security for more information.
+// 在添加此类覆盖之前，请确保你理解
+// 这样做的安全含义。
+// 有关详细信息，请参见 https://go.dev/blog/path-security。
 package exec
 
 import (
@@ -107,12 +106,12 @@ import (
 	"time"
 )
 
-// Error is returned by [LookPath] when it fails to classify a file as an
-// executable.
+// Error 由 [LookPath] 在无法将文件分类为
+// 可执行文件时返回。
 type Error struct {
-	// Name is the file name for which the error occurred.
+	// Name 是发生错误的文件名。
 	Name string
-	// Err is the underlying error.
+	// Err 是底层错误。
 	Err error
 }
 

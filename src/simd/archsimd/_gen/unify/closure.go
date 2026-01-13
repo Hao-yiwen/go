@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package unify
 
@@ -21,13 +21,13 @@ func NewSum(vs ...*Value) Closure {
 	return Closure{NewValue(Var{id}), topEnv.bind(id, vs...)}
 }
 
-// IsBottom returns whether c consists of no values.
+// IsBottom 返回 c 是否包含没有值。
 func (c Closure) IsBottom() bool {
 	return c.val.Domain == nil
 }
 
-// Summands returns the top-level Values of c. This assumes the top-level of c
-// was constructed as a sum, and is mostly useful for debugging.
+// Summands 返回 c 的顶级 Values。这假设 c 的顶级
+// 被构造为和，主要用于调试。
 func (c Closure) Summands() iter.Seq[*Value] {
 	return func(yield func(*Value) bool) {
 		var rec func(v *Value, env envSet) bool
@@ -50,28 +50,27 @@ func (c Closure) Summands() iter.Seq[*Value] {
 	}
 }
 
-// All enumerates all possible concrete values of c by substituting variables
-// from the environment.
+// All 通过从环境替换变量来枚举 c 的所有可能的具体值。
 //
-// E.g., enumerating this Value
+// 例如，枚举此值
 //
 //	a: !sum [1, 2]
 //	b: !sum [3, 4]
 //
-// results in
+// 结果为
 //
 //   - {a: 1, b: 3}
 //   - {a: 1, b: 4}
 //   - {a: 2, b: 3}
 //   - {a: 2, b: 4}
 func (c Closure) All() iter.Seq[*Value] {
-	// In order to enumerate all concrete values under all possible variable
-	// bindings, we use a "non-deterministic continuation passing style" to
-	// implement this. We use CPS to traverse the Value tree, threading the
-	// (possibly narrowing) environment through that CPS following an Euler
-	// tour. Where the environment permits multiple choices, we invoke the same
-	// continuation for each choice. Similar to a yield function, the
-	// continuation can return false to stop the non-deterministic walk.
+	// 为了枚举所有可能的变量下的所有具体值
+	// 绑定，我们使用"非确定性延续传递风格"来
+	// 实现这个。我们使用 CPS 来遍历 Value 树，线程化
+	// （可能缩小的）环境通过该 CPS 跟随欧拉
+	// 巡回。当环境允许多个选择时，我们调用相同的
+	// 每个选择的延续。与 yield 函数类似，
+	// 延续可以返回 false 来停止非确定性遍历。
 	return func(yield func(*Value) bool) {
 		c.val.all1(c.env, func(v *Value, e envSet) bool {
 			return yield(v)
@@ -92,18 +91,18 @@ func (v *Value) all1(e envSet, cont func(*Value, envSet) bool) bool {
 
 	case Def:
 		fields := d.keys()
-		// We can reuse this parts slice because we're doing a DFS through the
-		// state space. (Otherwise, we'd have to do some messy threading of an
-		// immutable slice-like value through allElt.)
+		// 我们可以重用此 parts 片，因为我们通过
+		// 状态空间进行 DFS。（否则，我们必须进行一些混乱的线程化
+		// 不可变类似于切片的值通过 allElt。）
 		parts := make(map[string]*Value, len(fields))
 
-		// TODO: If there are no Vars or Sums under this Def, then nothing can
-		// change the Value or env, so we could just cont(v, e).
+		// TODO: 如果在此 Def 下没有 Vars 或 Sums，那么没有什么可以
+		// 改变 Value 或 env，所以我们可以只调用 cont(v, e)。
 		var allElt func(elt int, e envSet) bool
 		allElt = func(elt int, e envSet) bool {
 			if elt == len(fields) {
-				// Build a new Def from the concrete parts. Clone parts because
-				// we may reuse it on other non-deterministic branches.
+				// 从具体部分构建新 Def。Clone parts 因为
+				// 我们可能在其他非确定性分支上重用它。
 				nVal := newValueFrom(Def{maps.Clone(parts)}, v)
 				return cont(nVal, e)
 			}
@@ -116,17 +115,17 @@ func (v *Value) all1(e envSet, cont func(*Value, envSet) bool) bool {
 		return allElt(0, e)
 
 	case Tuple:
-		// Essentially the same as Def.
+		// 本质上与 Def 相同。
 		if d.repeat != nil {
-			// There's nothing we can do with this.
+			// 我们对此无能为力。
 			return cont(v, e)
 		}
 		parts := make([]*Value, len(d.vs))
 		var allElt func(elt int, e envSet) bool
 		allElt = func(elt int, e envSet) bool {
 			if elt == len(d.vs) {
-				// Build a new tuple from the concrete parts. Clone parts because
-				// we may reuse it on other non-deterministic branches.
+				// 从具体部分构建新元组。Clone parts 因为
+				// 我们可能在其他非确定性分支上重用它。
 				nVal := newValueFrom(Tuple{vs: slices.Clone(parts)}, v)
 				return cont(nVal, e)
 			}
@@ -139,11 +138,11 @@ func (v *Value) all1(e envSet, cont func(*Value, envSet) bool) bool {
 		return allElt(0, e)
 
 	case Var:
-		// Go each way this variable can be bound.
+		// 遍历此变量可以绑定的每种方式。
 		for _, ePart := range e.partitionBy(d.id) {
-			// d.id is no longer bound in this environment partition. We'll may
-			// need it later in the Euler tour, so bind it back to this single
-			// value.
+			// d.id 在此环境分区中不再绑定。我们稍后可能
+			// 在欧拉巡回中需要它，所以将其绑定回这个单一
+			// 值。
 			env := ePart.env.bind(d.id, ePart.value)
 			if !ePart.value.all1(env, cont) {
 				return false

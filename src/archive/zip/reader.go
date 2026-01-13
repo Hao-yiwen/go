@@ -766,7 +766,7 @@ func (f *fileListEntry) stat() (fileInfoDirEntry, error) {
 	return f, nil
 }
 
-// Only used for directories.
+// 仅用于目录。
 func (f *fileListEntry) Name() string      { _, elem, _ := split(f.name); return elem }
 func (f *fileListEntry) Size() int64       { return 0 }
 func (f *fileListEntry) Mode() fs.FileMode { return fs.ModeDir | 0555 }
@@ -879,10 +879,10 @@ func fileEntryCompare(x, y string) int {
 	return strings.Compare(xelem, yelem)
 }
 
-// Open opens the named file in the ZIP archive,
-// using the semantics of fs.FS.Open:
-// paths are always slash separated, with no
-// leading / or ../ elements.
+// Open 打开 ZIP 归档中的命名文件，
+// 使用 fs.FS.Open 的语义：
+// 路径始终用斜杠分隔，没有
+// 前导 / 或 ../ 元素。
 func (r *Reader) Open(name string) (fs.File, error) {
 	r.initFileList()
 

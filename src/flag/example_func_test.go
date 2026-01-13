@@ -26,7 +26,7 @@ func ExampleFunc() {
 	fs.Parse([]string{"-ip", "127.0.0.1"})
 	fmt.Printf("{ip: %v, loopback: %t}\n\n", ip, ip.IsLoopback())
 
-	// 256 is not a valid IPv4 component
+	// 256 不是有效的 IPv4 组件
 	fs.Parse([]string{"-ip", "256.0.0.1"})
 	fmt.Printf("{ip: %v, loopback: %t}\n\n", ip, ip.IsLoopback())
 

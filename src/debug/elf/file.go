@@ -3,15 +3,15 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package elf implements access to ELF object files.
+Package elf 实现对 ELF 目标文件的访问。
 
-# Security
+# 安全性
 
-This package is not designed to be hardened against adversarial inputs, and is
-outside the scope of https://go.dev/security/policy. In particular, only basic
-validation is done when parsing object files. As such, care should be taken when
-parsing untrusted inputs, as parsing malformed files may consume significant
-resources, or cause panics.
+此包不旨在针对对抗性输入进行强化，
+并且超出 https://go.dev/security/policy 的范围。特别是，
+在解析目标文件时只执行基本验证。因此，在
+解析不受信任的输入时应小心，因为解析格式错误的文件
+可能会消耗大量资源或导致 panic。
 */
 package elf
 
@@ -31,13 +31,13 @@ import (
 	"unsafe"
 )
 
-// TODO: error reporting detail
+// TODO: 错误报告详情
 
 /*
- * Internal ELF representation
+ * ELF 内部表示
  */
 
-// A FileHeader represents an ELF file header.
+// FileHeader 表示 ELF 文件头。
 type FileHeader struct {
 	Class      Class
 	Data       Data
@@ -50,7 +50,7 @@ type FileHeader struct {
 	Entry      uint64
 }
 
-// A File represents an open ELF file.
+// File 表示打开的 ELF 文件。
 type File struct {
 	FileHeader
 	Sections    []*Section
@@ -61,7 +61,7 @@ type File struct {
 	gnuVersym   []byte
 }
 
-// A SectionHeader represents a single ELF section header.
+// SectionHeader 表示单个 ELF 节头。
 type SectionHeader struct {
 	Name      string
 	Type      SectionType
@@ -74,27 +74,25 @@ type SectionHeader struct {
 	Addralign uint64
 	Entsize   uint64
 
-	// FileSize is the size of this section in the file in bytes.
-	// If a section is compressed, FileSize is the size of the
-	// compressed data, while Size (above) is the size of the
-	// uncompressed data.
+	// FileSize 是此节在文件中的字节大小。
+	// 如果节被压缩，FileSize 是压缩数据的大小，
+	// 而 Size（上面）是未压缩数据的大小。
 	FileSize uint64
 }
 
-// A Section represents a single section in an ELF file.
+// Section 表示 ELF 文件中的单个节。
 type Section struct {
 	SectionHeader
 
-	// Embed ReaderAt for ReadAt method.
-	// Do not embed SectionReader directly
-	// to avoid having Read and Seek.
-	// If a client wants Read and Seek it must use
-	// Open() to avoid fighting over the seek offset
-	// with other clients.
+	// 嵌入 ReaderAt 用于 ReadAt 方法。
+	// 不要直接嵌入 SectionReader
+	// 以避免拥有 Read 和 Seek。
+	// 如果客户端想要 Read 和 Seek，必须使用
+	// Open() 以避免与其他客户端争用 seek 偏移。
 	//
-	// ReaderAt may be nil if the section is not easily available
-	// in a random-access form. For example, a compressed section
-	// may have a nil ReaderAt.
+	// 如果该节不容易以随机访问形式获得，
+	// ReaderAt 可能为 nil。例如，压缩节
+	// 可能有 nil ReaderAt。
 	io.ReaderAt
 	sr *io.SectionReader
 

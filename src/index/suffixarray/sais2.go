@@ -18,7 +18,7 @@ func sais_8_64(text []byte, textMax int, sa, tmp []int64) {
 		panic("suffixarray: misuse of sais_8_64")
 	}
 
-	// Trivial base cases. Sorting 0 or 1 things is easy.
+	// 平凡的基础情况。排序 0 或 1 个东西很容易。
 	if len(text) == 0 {
 		return
 	}
@@ -27,26 +27,25 @@ func sais_8_64(text []byte, textMax int, sa, tmp []int64) {
 		return
 	}
 
-	// Establish slices indexed by text character
-	// holding character frequency and bucket-sort offsets.
-	// If there's only enough tmp for one slice,
-	// we make it the bucket offsets and recompute
-	// the character frequency each time we need it.
+	// 建立由文本字符索引的切片，
+	// 保存字符频率和桶排序偏移。
+	// 如果临时空间只足够一个切片，
+	// 我们将其用作桶偏移，
+	// 每次需要时重新计算字符频率。
 	var freq, bucket []int64
 	if len(tmp) >= 2*textMax {
 		freq, bucket = tmp[:textMax], tmp[textMax:2*textMax]
-		freq[0] = -1 // mark as uninitialized
+		freq[0] = -1 // 标记为未初始化
 	} else {
 		freq, bucket = nil, tmp[:textMax]
 	}
 
-	// The SAIS algorithm.
-	// Each of these calls makes one scan through sa.
-	// See the individual functions for documentation
-	// about each's role in the algorithm.
+	// SAIS 算法。
+	// 这些调用中的每一个都进行一次通过 sa 的扫描。
+	// 有关每个函数在算法中的角色，请参见各个函数的文档。
 	numLMS := placeLMS_8_64(text, sa, freq, bucket)
 	if numLMS <= 1 {
-		// 0 or 1 items are already sorted. Do nothing.
+		// 0 或 1 个项已排序。什么都不做。
 	} else {
 		induceSubL_8_64(text, sa, freq, bucket)
 		induceSubS_8_64(text, sa, freq, bucket)
@@ -57,13 +56,13 @@ func sais_8_64(text []byte, textMax int, sa, tmp []int64) {
 			recurse_64(sa, tmp, numLMS, maxID)
 			unmap_8_64(text, sa, numLMS)
 		} else {
-			// If maxID == numLMS, then each LMS-substring
-			// is unique, so the relative ordering of two LMS-suffixes
-			// is determined by just the leading LMS-substring.
-			// That is, the LMS-suffix sort order matches the
-			// (simpler) LMS-substring sort order.
-			// Copy the original LMS-substring order into the
-			// suffix array destination.
+			// 如果 maxID == numLMS，则每个 LMS 子串
+			// 是唯一的，所以两个 LMS 后缀的相对顺序
+			// 仅由前导 LMS 子串确定。
+			// 也就是说，LMS 后缀排序顺序与
+			// （更简单的）LMS 子串排序顺序相匹配。
+			// 将原始 LMS 子串顺序复制到
+			// 后缀数组目标。
 			copy(sa, sa[len(sa)-numLMS:])
 		}
 		expand_8_64(text, freq, bucket, sa, numLMS)
@@ -71,7 +70,7 @@ func sais_8_64(text []byte, textMax int, sa, tmp []int64) {
 	induceL_8_64(text, sa, freq, bucket)
 	induceS_8_64(text, sa, freq, bucket)
 
-	// Mark for caller that we overwrote tmp.
+	// 向调用者标记我们已覆盖 tmp。
 	tmp[0] = -1
 }
 
@@ -80,7 +79,7 @@ func sais_32(text []int32, textMax int, sa, tmp []int32) {
 		panic("suffixarray: misuse of sais_32")
 	}
 
-	// Trivial base cases. Sorting 0 or 1 things is easy.
+	// 平凡的基础情况。排序 0 或 1 个东西很容易。
 	if len(text) == 0 {
 		return
 	}
@@ -89,15 +88,15 @@ func sais_32(text []int32, textMax int, sa, tmp []int32) {
 		return
 	}
 
-	// Establish slices indexed by text character
-	// holding character frequency and bucket-sort offsets.
-	// If there's only enough tmp for one slice,
-	// we make it the bucket offsets and recompute
-	// the character frequency each time we need it.
+	// 建立由文本字符索引的切片，
+	// 保存字符频率和桶排序偏移。
+	// 如果临时空间只足够一个切片，
+	// 我们将其用作桶偏移，
+	// 每次需要时重新计算字符频率。
 	var freq, bucket []int32
 	if len(tmp) >= 2*textMax {
 		freq, bucket = tmp[:textMax], tmp[textMax:2*textMax]
-		freq[0] = -1 // mark as uninitialized
+		freq[0] = -1 // 标记为未初始化
 	} else {
 		freq, bucket = nil, tmp[:textMax]
 	}

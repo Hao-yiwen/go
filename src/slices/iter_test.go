@@ -243,8 +243,8 @@ func TestChunk(t *testing.T) {
 				return
 			}
 
-			// Verify that appending to the end of the first chunk does not
-			// clobber the beginning of the next chunk.
+			// 验证追加到第一个块的末尾不会
+			// 破坏下一个块的开头。
 			s := Clone(tc.s)
 			chunks[0] = append(chunks[0], -1)
 			if !Equal(s, tc.s) {

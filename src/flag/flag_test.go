@@ -79,7 +79,7 @@ func TestEverything(t *testing.T) {
 			t.Log(k, *v)
 		}
 	}
-	// Now set all flags
+	// 现在设置所有标志
 	Set("test_bool", "true")
 	Set("test_int", "1")
 	Set("test_int64", "1")
@@ -98,7 +98,7 @@ func TestEverything(t *testing.T) {
 			t.Log(k, *v)
 		}
 	}
-	// Now test they're visited in sort order.
+	// 现在测试它们是否按排序顺序被访问。
 	var flagNames []string
 	Visit(func(f *Flag) { flagNames = append(flagNames, f.Name) })
 	if !slices.IsSorted(flagNames) {
@@ -236,7 +236,7 @@ func TestFlagSetParse(t *testing.T) {
 	testParse(NewFlagSet("test", ContinueOnError), t)
 }
 
-// Declare a user-defined flag type.
+// 声明用户定义的标志类型。
 type flagVar []string
 
 func (f *flagVar) String() string {
@@ -284,24 +284,24 @@ func TestUserDefinedFunc(t *testing.T) {
 	if got := fmt.Sprint(ss); got != expect {
 		t.Errorf("expected value %q got %q", expect, got)
 	}
-	// test usage
+	// 测试用法
 	var buf strings.Builder
 	flags.SetOutput(&buf)
 	flags.Parse([]string{"-h"})
 	if usage := buf.String(); !strings.Contains(usage, "usage") {
 		t.Errorf("usage string not included: %q", usage)
 	}
-	// test Func error
+	// 测试 Func 错误
 	flags = NewFlagSet("test", ContinueOnError)
 	flags.SetOutput(io.Discard)
 	flags.Func("v", "usage", func(s string) error {
 		return fmt.Errorf("test error")
 	})
-	// flag not set, so no error
+	// 标志未设置，因此没有错误
 	if err := flags.Parse(nil); err != nil {
 		t.Error(err)
 	}
-	// flag set, expect error
+	// 标志已设置，期望出现错误
 	if err := flags.Parse([]string{"-v", "1"}); err == nil {
 		t.Error("expected error; got none")
 	} else if errMsg := err.Error(); !strings.Contains(errMsg, "test error") {
@@ -319,7 +319,7 @@ func TestUserDefinedForCommandLine(t *testing.T) {
 	}
 }
 
-// Declare a user-defined boolean flag type.
+// 声明用户定义的布尔标志类型。
 type boolFlagVar struct {
 	count int
 }
@@ -369,7 +369,7 @@ func TestUserDefinedBoolUsage(t *testing.T) {
 	var b boolFlagVar
 	flags.Var(&b, "b", "X")
 	b.count = 0
-	// b.IsBoolFlag() will return true and usage will look boolean.
+	// b.IsBoolFlag() 将返回 true，用法将看起来是布尔值。
 	flags.PrintDefaults()
 	got := buf.String()
 	want := "  -b\tX\n"
@@ -377,7 +377,7 @@ func TestUserDefinedBoolUsage(t *testing.T) {
 		t.Errorf("false: want %q; got %q", want, got)
 	}
 	b.count = 4
-	// b.IsBoolFlag() will return false and usage will look non-boolean.
+	// b.IsBoolFlag() 将返回 false，用法将看起来是非布尔值。
 	flags.PrintDefaults()
 	got = buf.String()
 	want = "  -b\tX\n  -b value\n    \tX\n"
@@ -397,8 +397,8 @@ func TestSetOutput(t *testing.T) {
 	}
 }
 
-// This tests that one can reset the flags. This still works but not well, and is
-// superseded by FlagSet.
+// 这测试了人们可以重置标志。这仍然有效但不太好，并且被
+// FlagSet 取代。
 func TestChangingArgs(t *testing.T) {
 	ResetForTesting(func() { t.Fatal("bad parse") })
 	oldArgs := os.Args
@@ -419,14 +419,14 @@ func TestChangingArgs(t *testing.T) {
 	}
 }
 
-// Test that -help invokes the usage message and returns ErrHelp.
+// 测试 -help 调用用法消息并返回 ErrHelp。
 func TestHelp(t *testing.T) {
 	var helpCalled = false
 	fs := NewFlagSet("help test", ContinueOnError)
 	fs.Usage = func() { helpCalled = true }
 	var flag bool
 	fs.BoolVar(&flag, "flag", false, "regular flag")
-	// Regular flag invocation should work
+	// 常规标志调用应该有效
 	err := fs.Parse([]string{"-flag=true"})
 	if err != nil {
 		t.Fatal("expected no error; got ", err)
@@ -438,7 +438,7 @@ func TestHelp(t *testing.T) {
 		t.Error("help called for regular flag")
 		helpCalled = false // reset for next test
 	}
-	// Help flag should work as expected.
+	// 帮助标志应该按预期工作。
 	err = fs.Parse([]string{"-help"})
 	if err == nil {
 		t.Fatal("error expected")
@@ -449,7 +449,7 @@ func TestHelp(t *testing.T) {
 	if !helpCalled {
 		t.Fatal("help was not called")
 	}
-	// If we define a help flag, that should override.
+	// 如果我们定义一个帮助标志，那应该会覆盖。
 	var help bool
 	fs.BoolVar(&help, "help", false, "help flag")
 	helpCalled = false
@@ -462,8 +462,8 @@ func TestHelp(t *testing.T) {
 	}
 }
 
-// zeroPanicker is a flag.Value whose String method panics if its dontPanic
-// field is false.
+// zeroPanicker 是一个 flag.Value，如果其 dontPanic
+// 字段为 false，其 String 方法会引发 panic。
 type zeroPanicker struct {
 	dontPanic bool
 	v         string
@@ -542,7 +542,7 @@ func TestPrintDefaults(t *testing.T) {
 	}
 }
 
-// Issue 19230: validate range of Int and Uint flag values.
+// Issue 19230：验证 Int 和 Uint 标志值的范围。
 func TestIntFlagOverflow(t *testing.T) {
 	if strconv.IntSize != 32 {
 		return
@@ -558,7 +558,7 @@ func TestIntFlagOverflow(t *testing.T) {
 	}
 }
 
-// Issue 20998: Usage should respect CommandLine.output.
+// Issue 20998：Usage 应该尊重 CommandLine.output。
 func TestUsageOutput(t *testing.T) {
 	ResetForTesting(DefaultUsage)
 	var buf strings.Builder
@@ -616,7 +616,7 @@ func TestParseError(t *testing.T) {
 		_ = fs.Uint64("uint64", 0, "")
 		_ = fs.Float64("float64", 0, "")
 		_ = fs.Duration("duration", 0, "")
-		// Strings cannot give errors.
+		// 字符串无法给出错误。
 		args := []string{"-" + typ + "=x"}
 		err := fs.Parse(args) // x is not a valid setting for any flag.
 		if err == nil {
@@ -645,7 +645,7 @@ func TestRangeError(t *testing.T) {
 		_ = fs.Uint("uint", 0, "")
 		_ = fs.Uint64("uint64", 0, "")
 		_ = fs.Float64("float64", 0, "")
-		// Strings cannot give errors, and bools and durations do not return strconv.NumError.
+		// 字符串无法给出错误，布尔值和持续时间不返回 strconv.NumError。
 		err := fs.Parse([]string{arg})
 		if err == nil {
 			t.Errorf("Parse(%q)=%v; expected range error", arg, err)
@@ -709,7 +709,7 @@ func TestExitCode(t *testing.T) {
 		)
 		cmd.Run()
 		got := cmd.ProcessState.ExitCode()
-		// ExitCode is either 0 or 1 on Plan 9.
+		// 在 Plan 9 上，ExitCode 为 0 或 1。
 		if runtime.GOOS == "plan9" && test.expectExit != 0 {
 			test.expectExit = 1
 		}
@@ -821,24 +821,24 @@ func TestUserDefinedBoolFunc(t *testing.T) {
 	if got := fmt.Sprint(ss); got != want {
 		t.Errorf("got %q; want %q", got, want)
 	}
-	// test usage
+	// 测试用法
 	var buf strings.Builder
 	flags.SetOutput(&buf)
 	flags.Parse([]string{"-h"})
 	if usage := buf.String(); !strings.Contains(usage, "usage") {
 		t.Errorf("usage string not included: %q", usage)
 	}
-	// test BoolFunc error
+	// 测试 BoolFunc 错误
 	flags = NewFlagSet("test", ContinueOnError)
 	flags.SetOutput(io.Discard)
 	flags.BoolFunc("v", "usage", func(s string) error {
 		return fmt.Errorf("test error")
 	})
-	// flag not set, so no error
+	// 标志未设置，因此没有错误
 	if err := flags.Parse(nil); err != nil {
 		t.Error(err)
 	}
-	// flag set, expect error
+	// 标志已设置，期望出现错误
 	if err := flags.Parse([]string{"-v", ""}); err == nil {
 		t.Error("got err == nil; want err != nil")
 	} else if errMsg := err.Error(); !strings.Contains(errMsg, "test error") {

@@ -236,22 +236,22 @@ func (x *Index) at(i int) []byte {
 	return x.data[x.sa.get(i):]
 }
 
-// lookupAll returns a slice into the matching region of the index.
-// The runtime is O(log(N)*len(s)).
+// lookupAll 返回索引的匹配区域中的一个切片。
+// 运行时是 O(log(N)*len(s))。
 func (x *Index) lookupAll(s []byte) ints {
-	// find matching suffix index range [i:j]
-	// find the first index where s would be the prefix
+	// 查找匹配的后缀索引范围 [i:j]
+	// 找到第一个 s 将成为前缀的索引
 	i := sort.Search(x.sa.len(), func(i int) bool { return bytes.Compare(x.at(i), s) >= 0 })
-	// starting at i, find the first index at which s is not a prefix
+	// 从 i 开始，找到第一个 s 不是前缀的索引
 	j := i + sort.Search(x.sa.len()-i, func(j int) bool { return !bytes.HasPrefix(x.at(j+i), s) })
 	return x.sa.slice(i, j)
 }
 
-// Lookup returns an unsorted list of at most n indices where the byte string s
-// occurs in the indexed data. If n < 0, all occurrences are returned.
-// The result is nil if s is empty, s is not found, or n == 0.
-// Lookup time is O(log(N)*len(s) + len(result)) where N is the
-// size of the indexed data.
+// Lookup 返回字节串 s 在索引数据中出现的最多 n 个索引的无序列表。
+// 如果 n < 0，返回所有出现位置。
+// 如果 s 为空、找不到 s 或 n == 0，结果为 nil。
+// Lookup 时间是 O(log(N)*len(s) + len(result))，其中 N 是
+// 索引数据的大小。
 func (x *Index) Lookup(s []byte, n int) (result []int) {
 	if len(s) > 0 && n != 0 {
 		matches := x.lookupAll(s)
@@ -276,33 +276,30 @@ func (x *Index) Lookup(s []byte, n int) (result []int) {
 	return
 }
 
-// FindAllIndex returns a sorted list of non-overlapping matches of the
-// regular expression r, where a match is a pair of indices specifying
-// the matched slice of x.Bytes(). If n < 0, all matches are returned
-// in successive order. Otherwise, at most n matches are returned and
-// they may not be successive. The result is nil if there are no matches,
-// or if n == 0.
+// FindAllIndex 返回正则表达式 r 的非重叠匹配的排序列表，
+// 其中匹配是指定 x.Bytes() 的匹配切片的一对索引。
+// 如果 n < 0，所有匹配都按连续顺序返回。
+// 否则，最多返回 n 个匹配，它们可能不连续。
+// 如果没有匹配或 n == 0，结果为 nil。
 func (x *Index) FindAllIndex(r *regexp.Regexp, n int) (result [][]int) {
-	// a non-empty literal prefix is used to determine possible
-	// match start indices with Lookup
+	// 使用非空字面前缀来确定可能的匹配开始索引
+	// 使用 Lookup
 	prefix, complete := r.LiteralPrefix()
 	lit := []byte(prefix)
 
-	// worst-case scenario: no literal prefix
+	// 最坏的情况：没有字面前缀
 	if prefix == "" {
 		return r.FindAllIndex(x.data, n)
 	}
 
-	// if regexp is a literal just use Lookup and convert its
-	// result into match pairs
+	// 如果 regexp 是字面量，只需使用 Lookup 并将其结果转换为匹配对
 	if complete {
-		// Lookup returns indices that may belong to overlapping matches.
-		// After eliminating them, we may end up with fewer than n matches.
-		// If we don't have enough at the end, redo the search with an
-		// increased value n1, but only if Lookup returned all the requested
-		// indices in the first place (if it returned fewer than that then
-		// there cannot be more).
-		for n1 := n; ; n1 += 2 * (n - len(result)) /* overflow ok */ {
+		// Lookup 返回的索引可能属于重叠的匹配。
+		// 消除它们后，我们最终可能会有少于 n 个匹配。
+		// 如果最后没有足够的，重做搜索
+		// 增加了值 n1，但仅当 Lookup 首先返回所有请求的
+		// 索引（如果返回的少于那个，那么不能有更多）。
+		for n1 := n; ; n1 += 2 * (n - len(result)) /* 溢出 ok */ {
 			indices := x.Lookup(lit, n1)
 			if len(indices) == 0 {
 				return
@@ -316,7 +313,7 @@ func (x *Index) FindAllIndex(r *regexp.Regexp, n int) (result [][]int) {
 				if count == n {
 					break
 				}
-				// ignore indices leading to overlapping matches
+				// 忽略导致重叠匹配的索引
 				if prev <= i {
 					j := 2 * count
 					pairs[j+0] = i
@@ -328,8 +325,8 @@ func (x *Index) FindAllIndex(r *regexp.Regexp, n int) (result [][]int) {
 			}
 			result = result[0:count]
 			if len(result) >= n || len(indices) != n1 {
-				// found all matches or there's no chance to find more
-				// (n and n1 can be negative)
+				// 找到所有匹配或没有机会找到更多
+				// （n 和 n1 可以是负数）
 				break
 			}
 		}
@@ -339,14 +336,14 @@ func (x *Index) FindAllIndex(r *regexp.Regexp, n int) (result [][]int) {
 		return
 	}
 
-	// regexp has a non-empty literal prefix; Lookup(lit) computes
-	// the indices of possible complete matches; use these as starting
-	// points for anchored searches
-	// (regexp "^" matches beginning of input, not beginning of line)
-	r = regexp.MustCompile("^" + r.String()) // compiles because r compiled
+	// regexp 有非空字面前缀；Lookup(lit) 计算
+	// 可能的完整匹配的索引；使用这些作为
+	// 锚定搜索的起点
+	// （regexp "^" 匹配输入的开始，不是行的开始）
+	r = regexp.MustCompile("^" + r.String()) // 编译因为 r 编译了
 
-	// same comment about Lookup applies here as in the loop above
-	for n1 := n; ; n1 += 2 * (n - len(result)) /* overflow ok */ {
+	// 与上面循环中的 Lookup 相同的注释也适用于这里
+	for n1 := n; ; n1 += 2 * (n - len(result)) /* 溢出 ok */ {
 		indices := x.Lookup(lit, n1)
 		if len(indices) == 0 {
 			return
@@ -358,18 +355,18 @@ func (x *Index) FindAllIndex(r *regexp.Regexp, n int) (result [][]int) {
 			if len(result) == n {
 				break
 			}
-			m := r.FindIndex(x.data[i:]) // anchored search - will not run off
-			// ignore indices leading to overlapping matches
+			m := r.FindIndex(x.data[i:]) // 锚定搜索 - 不会溢出
+			// 忽略导致重叠匹配的索引
 			if m != nil && prev <= i {
-				m[0] = i // correct m
+				m[0] = i // 正确的 m
 				m[1] += i
 				result = append(result, m)
 				prev = m[1]
 			}
 		}
 		if len(result) >= n || len(indices) != n1 {
-			// found all matches or there's no chance to find more
-			// (n and n1 can be negative)
+			// 找到所有匹配或没有机会找到更多
+			// （n 和 n1 可以是负数）
 			break
 		}
 	}

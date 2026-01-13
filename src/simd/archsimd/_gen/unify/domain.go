@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package unify
 
@@ -15,34 +15,34 @@ import (
 	"strings"
 )
 
-// A Domain is a non-empty set of values, all of the same kind.
+// A Domain 是一个非空的值集合，都是相同类型的。
 //
-// Domain may be a scalar:
+// Domain 可以是标量：
 //
-//   - [String] - Represents string-typed values.
+//   - [String] - 表示字符串类型的值。
 //
-// Or a composite:
+// 或复合：
 //
-//   - [Def] - A mapping from fixed keys to [Domain]s.
+//   - [Def] - 从固定键到 [Domain] 的映射。
 //
-//   - [Tuple] - A fixed-length sequence of [Domain]s or
-//     all possible lengths repeating a [Domain].
+//   - [Tuple] - 固定长度的 [Domain] 序列或
+//     重复 [Domain] 的所有可能长度。
 //
-// Or top or bottom:
+// 或顶或底：
 //
-//   - [Top] - Represents all possible values of all kinds.
+//   - [Top] - 表示所有可能类型的所有可能值。
 //
-//   - nil - Represents no values.
+//   - nil - 表示没有值。
 //
-// Or a variable:
+// 或变量：
 //
-//   - [Var] - A value captured in the environment.
+//   - [Var] - 在环境中捕获的值。
 type Domain interface {
 	Exact() bool
 	WhyNotExact() string
 
-	// decode stores this value in a Go value. If this value is not exact, this
-	// returns a potentially wrapped *inexactError.
+	// decode 将此值存储在 Go 值中。如果此值不精确，
+	// 返回一个可能包装的 *inexactError。
 	decode(reflect.Value) error
 }
 
@@ -75,14 +75,14 @@ func (e *decodeError) Error() string {
 	return fmt.Sprintf("%s: %s", e.path, e.err)
 }
 
-// Top represents all possible values of all possible types.
+// Top 表示所有可能类型的所有可能值。
 type Top struct{}
 
 func (t Top) Exact() bool         { return false }
 func (t Top) WhyNotExact() string { return "is top" }
 
 func (t Top) decode(rv reflect.Value) error {
-	// We can decode Top into a pointer-typed value as nil.
+	// 我们可以将 Top 解码为指针类型值为 nil。
 	if rv.Kind() != reflect.Pointer {
 		return &inexactError{"top", rv.Type().String()}
 	}
@@ -90,14 +90,14 @@ func (t Top) decode(rv reflect.Value) error {
 	return nil
 }
 
-// A Def is a mapping from field names to [Value]s. Any fields not explicitly
-// listed have [Value] [Top].
+// A Def 是从字段名到 [Value] 的映射。任何未明确
+// 列出的字段都有 [Value] [Top]。
 type Def struct {
 	fields map[string]*Value
 }
 
-// A DefBuilder builds a [Def] one field at a time. The zero value is an empty
-// [Def].
+// A DefBuilder 一次一个字段地构建 [Def]。零值是空的
+// [Def]。
 type DefBuilder struct {
 	fields map[string]*Value
 }
@@ -112,12 +112,12 @@ func (b *DefBuilder) Add(name string, v *Value) {
 	b.fields[name] = v
 }
 
-// Build constructs a [Def] from the fields added to this builder.
+// Build 从添加到此生成器的字段构建 [Def]。
 func (b *DefBuilder) Build() Def {
 	return Def{maps.Clone(b.fields)}
 }
 
-// Exact returns true if all field Values are exact.
+// Exact 如果所有字段值都精确，则返回 true。
 func (d Def) Exact() bool {
 	for _, v := range d.fields {
 		if !v.Exact() {
@@ -127,7 +127,7 @@ func (d Def) Exact() bool {
 	return true
 }
 
-// WhyNotExact returns why the value is not exact
+// WhyNotExact 返回值不精确的原因。
 func (d Def) WhyNotExact() string {
 	for s, v := range d.fields {
 		if !v.Exact() {

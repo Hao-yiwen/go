@@ -157,16 +157,16 @@ func Dump(data []byte) string {
 	return buf.String()
 }
 
-// bufferSize 是 number of hexadecimal characters to buffer in encoder and decoder.
+// bufferSize 是编码器和解码器中要缓冲的十六进制字符数。
 const bufferSize = 1024
 
 type encoder struct {
 	w   io.Writer
 	err error
-	out [bufferSize]byte // output buffer
+	out [bufferSize]byte // 输出缓冲区
 }
 
-// NewEncoder 返回an [io.Writer] that writes lowercase hexadecimal characters to w.
+// NewEncoder 返回一个 [io.Writer]，将小写十六进制字符写入 w。
 func NewEncoder(w io.Writer) io.Writer {
 	return &encoder{w: w}
 }
@@ -190,21 +190,21 @@ func (e *encoder) Write(p []byte) (n int, err error) {
 type decoder struct {
 	r   io.Reader
 	err error
-	in  []byte           // input buffer (encoded form)
-	arr [bufferSize]byte // backing array for in
+	in  []byte           // 输入缓冲区（编码形式）
+	arr [bufferSize]byte // in 的后备数组
 }
 
-// NewDecoder 返回an [io.Reader] that decodes hexadecimal characters from r.
-// NewDecoder expects that r contain only an even number of hexadecimal characters.
+// NewDecoder 返回一个 [io.Reader]，从 r 解码十六进制字符。
+// NewDecoder 期望 r 只包含偶数个十六进制字符。
 func NewDecoder(r io.Reader) io.Reader {
 	return &decoder{r: r}
 }
 
 func (d *decoder) Read(p []byte) (n int, err error) {
-	// Fill internal buffer with sufficient bytes to decode
+	// 使用足够的字节填充内部缓冲区进行解码
 	if len(d.in) < 2 && d.err == nil {
 		var numCopy, numRead int
-		numCopy = copy(d.arr[:], d.in) // Copies either 0 or 1 bytes
+		numCopy = copy(d.arr[:], d.in) // 复制 0 或 1 字节
 		numRead, d.err = d.r.Read(d.arr[numCopy:])
 		d.in = d.arr[:numCopy+numRead]
 		if d.err == io.EOF && len(d.in)%2 != 0 {
@@ -217,25 +217,24 @@ func (d *decoder) Read(p []byte) (n int, err error) {
 		}
 	}
 
-	// Decode internal buffer into output buffer
+	// 将内部缓冲区解码到输出缓冲区
 	if numAvail := len(d.in) / 2; len(p) > numAvail {
 		p = p[:numAvail]
 	}
 	numDec, err := Decode(p, d.in[:len(p)*2])
 	d.in = d.in[2*numDec:]
 	if err != nil {
-		d.in, d.err = nil, err // Decode error; discard input remainder
+		d.in, d.err = nil, err // 解码错误；丢弃输入的其余部分
 	}
 
 	if len(d.in) < 2 {
-		return numDec, d.err // Only expose errors when buffer fully consumed
+		return numDec, d.err // 仅在缓冲区完全耗尽时才公开错误
 	}
 	return numDec, nil
 }
 
-// Dumper 返回a [io.WriteCloser] that writes a hex dump of all written data to
-// w. The format of the dump matches the output of `hexdump -C` on the command
-// line.
+// Dumper 返回一个 [io.WriteCloser]，将所有写入数据的十六进制转储
+// 写入 w。转储的格式与命令行上 `hexdump -C` 的输出匹配。
 func Dumper(w io.Writer) io.WriteCloser {
 	return &dumper{w: w}
 }
@@ -244,8 +243,8 @@ type dumper struct {
 	w          io.Writer
 	rightChars [18]byte
 	buf        [14]byte
-	used       int  // number of bytes in the current line
-	n          uint // number of bytes, total
+	used       int  // 当前行中的字节数
+	n          uint // 字节数，总计
 	closed     bool
 }
 
@@ -261,13 +260,13 @@ func (h *dumper) Write(data []byte) (n int, err error) {
 		return 0, errors.New("encoding/hex: dumper closed")
 	}
 
-	// Output lines look like:
+	// 输出行看起来像：
 	// 00000010  2e 2f 30 31 32 33 34 35  36 37 38 39 3a 3b 3c 3d  |./0123456789:;<=|
-	// ^ offset                          ^ extra space              ^ ASCII of line.
+	// ^ 偏移量                          ^ 额外空格              ^ 行的 ASCII。
 	for i := range data {
 		if h.used == 0 {
-			// At the beginning of a line we print the current
-			// offset in hex.
+			// 在行的开头，我们打印当前
+			// 十六进制偏移量。
 			h.buf[0] = byte(h.n >> 24)
 			h.buf[1] = byte(h.n >> 16)
 			h.buf[2] = byte(h.n >> 8)
@@ -284,12 +283,12 @@ func (h *dumper) Write(data []byte) (n int, err error) {
 		h.buf[2] = ' '
 		l := 3
 		if h.used == 7 {
-			// There's an additional space after the 8th byte.
+			// 在第 8 个字节后有额外的空格。
 			h.buf[3] = ' '
 			l = 4
 		} else if h.used == 15 {
-			// At the end of the line there's an extra space and
-			// the bar for the right column.
+			// 在行的末尾有额外的空格和
+			// 右列的栏。
 			h.buf[3] = ' '
 			h.buf[4] = '|'
 			l = 5
@@ -316,7 +315,7 @@ func (h *dumper) Write(data []byte) (n int, err error) {
 }
 
 func (h *dumper) Close() (err error) {
-	// See the comments in Write() for the details of this format.
+	// 有关此格式的详细信息，请参阅 Write() 中的注释。
 	if h.closed {
 		return
 	}

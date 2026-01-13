@@ -17,7 +17,7 @@ func ExampleWriter() {
 	w := bufio.NewWriter(os.Stdout)
 	fmt.Fprint(w, "Hello, ")
 	fmt.Fprint(w, "world!")
-	w.Flush() // Don't forget to flush!
+	w.Flush() // 不要忘记 flush！
 	// Output: Hello, world!
 }
 
@@ -33,7 +33,7 @@ func ExampleWriter_AvailableBuffer() {
 	// Output: 1 2 3 4
 }
 
-// ExampleWriter_ReadFrom demonstrates how to use the ReadFrom method of Writer.
+// ExampleWriter_ReadFrom 演示如何使用 Writer 的 ReadFrom 方法。
 func ExampleWriter_ReadFrom() {
 	var buf bytes.Buffer
 	writer := bufio.NewWriter(&buf)
@@ -60,18 +60,18 @@ func ExampleWriter_ReadFrom() {
 	// This is a ReadFrom example.
 }
 
-// The simplest use of a Scanner, to read standard input as a set of lines.
+// Scanner 的最简单用法，将标准输入作为一组行读取。
 func ExampleScanner_lines() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text()) // Println will add back the final '\n'
+		fmt.Println(scanner.Text()) // Println 会加回最后的 '\n'
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 }
 
-// Return the most recent call to Scan as a []byte.
+// 将最近的 Scan 调用作为 []byte 返回。
 func ExampleScanner_Bytes() {
 	scanner := bufio.NewScanner(strings.NewReader("gopher"))
 	for scanner.Scan() {
@@ -84,15 +84,15 @@ func ExampleScanner_Bytes() {
 	// true
 }
 
-// Use a Scanner to implement a simple word-count utility by scanning the
-// input as a sequence of space-delimited tokens.
+// 使用 Scanner 通过扫描
+// 输入作为空格分隔 token 的序列来实现简单的字数统计工具。
 func ExampleScanner_words() {
-	// An artificial input source.
+	// 人工输入源。
 	const input = "Now is the winter of our discontent,\nMade glorious summer by this sun of York.\n"
 	scanner := bufio.NewScanner(strings.NewReader(input))
-	// Set the split function for the scanning operation.
+	// 为扫描操作设置分割函数。
 	scanner.Split(bufio.ScanWords)
-	// Count the words.
+	// 计算单词。
 	count := 0
 	for scanner.Scan() {
 		count++
@@ -104,13 +104,13 @@ func ExampleScanner_words() {
 	// Output: 15
 }
 
-// Use a Scanner with a custom split function (built by wrapping ScanWords) to validate
-// 32-bit decimal input.
+// 使用带有自定义分割函数的 Scanner（通过包装 ScanWords 构建）来验证
+// 32 位十进制输入。
 func ExampleScanner_custom() {
-	// An artificial input source.
+	// 人工输入源。
 	const input = "1234 5678 1234567901234567890"
 	scanner := bufio.NewScanner(strings.NewReader(input))
-	// Create a custom split function by wrapping the existing ScanWords function.
+	// 通过包装现有的 ScanWords 函数来创建自定义分割函数。
 	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 		advance, token, err = bufio.ScanWords(data, atEOF)
 		if err == nil && token != nil {
@@ -118,9 +118,9 @@ func ExampleScanner_custom() {
 		}
 		return
 	}
-	// Set the split function for the scanning operation.
+	// 为扫描操作设置分割函数。
 	scanner.Split(split)
-	// Validate the input
+	// 验证输入
 	for scanner.Scan() {
 		fmt.Printf("%s\n", scanner.Text())
 	}
@@ -134,13 +134,13 @@ func ExampleScanner_custom() {
 	// Invalid input: strconv.ParseInt: parsing "1234567901234567890": value out of range
 }
 
-// Use a Scanner with a custom split function to parse a comma-separated
-// list with an empty final value.
+// 使用带有自定义分割函数的 Scanner 来解析逗号分隔的
+// 列表，其中最后一个值为空。
 func ExampleScanner_emptyFinalToken() {
-	// Comma-separated list; last entry is empty.
+	// 逗号分隔的列表；最后一项为空。
 	const input = "1,2,3,4,"
 	scanner := bufio.NewScanner(strings.NewReader(input))
-	// Define a split function that separates on commas.
+	// 定义一个在逗号处分隔的分割函数。
 	onComma := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 		for i := 0; i < len(data); i++ {
 			if data[i] == ',' {
@@ -150,13 +150,13 @@ func ExampleScanner_emptyFinalToken() {
 		if !atEOF {
 			return 0, nil, nil
 		}
-		// There is one final token to be delivered, which may be the empty string.
-		// Returning bufio.ErrFinalToken here tells Scan there are no more tokens after this
-		// but does not trigger an error to be returned from Scan itself.
+		// 有一个最终的 token 要被传送，可能是空字符串。
+		// 在这里返回 bufio.ErrFinalToken 告诉 Scan 之后没有更多 token
+		// 但不会从 Scan 本身触发返回的错误。
 		return 0, data, bufio.ErrFinalToken
 	}
 	scanner.Split(onComma)
-	// Scan.
+	// 扫描。
 	for scanner.Scan() {
 		fmt.Printf("%q ", scanner.Text())
 	}
@@ -166,8 +166,8 @@ func ExampleScanner_emptyFinalToken() {
 	// Output: "1" "2" "3" "4" ""
 }
 
-// Use a Scanner with a custom split function to parse a comma-separated
-// list with an empty final value but stops at the token "STOP".
+// 使用带有自定义分割函数的 Scanner 来解析逗号分隔的
+// 列表，其中最后一个值为空，但在 token "STOP" 处停止。
 func ExampleScanner_earlyStop() {
 	onComma := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 		i := bytes.IndexByte(data, ',')
@@ -175,14 +175,14 @@ func ExampleScanner_earlyStop() {
 			if !atEOF {
 				return 0, nil, nil
 			}
-			// If we have reached the end, return the last token.
+			// 如果我们已到达末尾，返回最后一个 token。
 			return 0, data, bufio.ErrFinalToken
 		}
-		// If the token is "STOP", stop the scanning and ignore the rest.
+		// 如果 token 是 "STOP"，停止扫描并忽略其余部分。
 		if string(data[:i]) == "STOP" {
 			return i + 1, nil, bufio.ErrFinalToken
 		}
-		// Otherwise, return the token before the comma.
+		// 否则，返回逗号前的 token。
 		return i + 1, data[:i], nil
 	}
 	const input = "1,2,STOP,4,"

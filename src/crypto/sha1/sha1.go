@@ -1,11 +1,11 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package sha1 implements the SHA-1 hash algorithm as defined in RFC 3174.
+// Package sha1 实现了 RFC 3174 中定义的 SHA-1 哈希算法。
 //
-// SHA-1 is cryptographically broken and should not be used for secure
-// applications.
+// SHA-1 在密码学上已损坏，不应用于安全
+// 应用程序。
 package sha1
 
 import (
@@ -21,10 +21,10 @@ func init() {
 	crypto.RegisterHash(crypto.SHA1, New)
 }
 
-// The size of a SHA-1 checksum in bytes.
+// SHA-1 校验和的大小（以字节为单位）。
 const Size = 20
 
-// The blocksize of SHA-1 in bytes.
+// SHA-1 的块大小（以字节为单位）。
 const BlockSize = 64
 
 const (
@@ -36,7 +36,7 @@ const (
 	init4 = 0xC3D2E1F0
 )
 
-// digest represents the partial evaluation of a checksum.
+// digest 表示校验和的部分计算。
 type digest struct {
 	h   [5]uint32
 	x   [chunk]byte
@@ -108,10 +108,10 @@ func (d *digest) Reset() {
 	d.len = 0
 }
 
-// New returns a new [hash.Hash] computing the SHA1 checksum. The Hash
-// also implements [encoding.BinaryMarshaler], [encoding.BinaryAppender] and
-// [encoding.BinaryUnmarshaler] to marshal and unmarshal the internal
-// state of the hash.
+// New 返回一个计算 SHA1 校验和的新 [hash.Hash]。Hash
+// 还实现了 [encoding.BinaryMarshaler]、[encoding.BinaryAppender] 和
+// [encoding.BinaryUnmarshaler] 来编组和解组内部
+// 的哈希状态。
 func New() hash.Hash {
 	if boring.Enabled {
 		return boring.NewSHA1()
@@ -154,7 +154,7 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 
 func (d *digest) Sum(in []byte) []byte {
 	boring.Unreachable()
-	// Make a copy of d so that caller can keep writing and summing.
+	// 制作 d 的副本，以便调用者可以继续写入和求和。
 	d0 := *d
 	hash := d0.checkSum()
 	return append(in, hash[:]...)
@@ -166,8 +166,8 @@ func (d *digest) checkSum() [Size]byte {
 	}
 
 	len := d.len
-	// Padding.  Add a 1 bit and 0 bits until 56 bytes mod 64.
-	var tmp [64 + 8]byte // padding + length buffer
+	// 填充。添加 1 位和 0 位，直到 56 字节模 64。
+	var tmp [64 + 8]byte // 填充 + 长度缓冲区
 	tmp[0] = 0x80
 	var t uint64
 	if len%64 < 56 {
@@ -176,7 +176,7 @@ func (d *digest) checkSum() [Size]byte {
 		t = 64 + 56 - len%64
 	}
 
-	// Length in bits.
+	// 长度（以位为单位）。
 	len <<= 3
 	padlen := tmp[:t+8]
 	byteorder.BEPutUint64(padlen[t:], len)
@@ -197,7 +197,7 @@ func (d *digest) checkSum() [Size]byte {
 	return digest
 }
 
-// ConstantTimeSum computes the same result of [Sum] but in constant time
+// ConstantTimeSum 计算与 [Sum] 相同的结果，但在常数时间内
 func (d *digest) ConstantTimeSum(in []byte) []byte {
 	d0 := *d
 	hash := d0.constSum()
@@ -219,23 +219,23 @@ func (d *digest) constSum() [Size]byte {
 	t := nx - 56                 // if nx < 56 then the MSB of t is one
 	mask1b := byte(int8(t) >> 7) // mask1b is 0xFF iff one block is enough
 
-	separator := byte(0x80) // gets reset to 0x00 once used
+	separator := byte(0x80) // 一旦使用，就重置为 0x00
 	for i := byte(0); i < chunk; i++ {
-		mask := byte(int8(i-nx) >> 7) // 0x00 after the end of data
+		mask := byte(int8(i-nx) >> 7) // 数据结束后为 0x00
 
-		// if we reached the end of the data, replace with 0x80 or 0x00
+		// 如果到达数据末尾，替换为 0x80 或 0x00
 		d.x[i] = (^mask & separator) | (mask & d.x[i])
 
-		// zero the separator once used
+		// 一旦使用，将分隔符清零
 		separator &= mask
 
 		if i >= 56 {
-			// we might have to write the length here if all fit in one block
+			// 如果所有内容都适合在一个块中，我们可能需要在这里写入长度
 			d.x[i] |= mask1b & length[i-56]
 		}
 	}
 
-	// compress, and only keep the digest if all fit in one block
+	// 压缩，并且只有当所有内容都适合一个块时才保留摘要
 	block(d, d.x[:])
 
 	var digest [Size]byte
@@ -247,7 +247,7 @@ func (d *digest) constSum() [Size]byte {
 	}
 
 	for i := byte(0); i < chunk; i++ {
-		// second block, it's always past the end of data, might start with 0x80
+		// 第二个块，总是超过数据末尾，可能以 0x80 开头
 		if i < 56 {
 			d.x[i] = separator
 			separator = 0
@@ -256,7 +256,7 @@ func (d *digest) constSum() [Size]byte {
 		}
 	}
 
-	// compress, and only keep the digest if we actually needed the second block
+	// 压缩，并且只有当我们实际需要第二个块时才保留摘要
 	block(d, d.x[:])
 
 	for i, s := range d.h {
@@ -269,7 +269,7 @@ func (d *digest) constSum() [Size]byte {
 	return digest
 }
 
-// Sum returns the SHA-1 checksum of the data.
+// Sum 返回数据的 SHA-1 校验和。
 func Sum(data []byte) [Size]byte {
 	if boring.Enabled {
 		return boring.SHA1(data)

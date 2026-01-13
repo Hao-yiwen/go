@@ -21,7 +21,7 @@ type Prog struct {
 	NumCap int // 正则表达式中 InstCapture 指令的数量
 }
 
-// An InstOp is an instruction opcode.
+// InstOp 是一个指令操作码。
 type InstOp uint8
 
 const (
@@ -59,7 +59,7 @@ func (i InstOp) String() string {
 	return instOpNames[i]
 }
 
-// An EmptyOp specifies a kind or mixture of zero-width assertions.
+// EmptyOp 指定了零宽度断言的种类或混合。
 type EmptyOp uint8
 
 const (
@@ -71,12 +71,12 @@ const (
 	EmptyNoWordBoundary
 )
 
-// EmptyOpContext returns the zero-width assertions
-// satisfied at the position between the runes r1 and r2.
-// Passing r1 == -1 indicates that the position is
-// at the beginning of the text.
-// Passing r2 == -1 indicates that the position is
-// at the end of the text.
+// EmptyOpContext 返回在 runes r1 和 r2 之间的位置处
+// 满足的零宽度断言。
+// 传递 r1 == -1 表示该位置
+// 在文本的开头。
+// 传递 r2 == -1 表示该位置
+// 在文本的末尾。
 func EmptyOpContext(r1, r2 rune) EmptyOp {
 	var op EmptyOp = EmptyNoWordBoundary
 	var boundary byte

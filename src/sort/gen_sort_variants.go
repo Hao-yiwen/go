@@ -4,10 +4,10 @@
 
 //go:build ignore
 
-// This program is run via "go generate" (via a directive in sort.go)
-// to generate implementation variants of the underlying sorting algorithm.
-// When passed the -generic flag it generates generic variants of sorting;
-// otherwise it generates the non-generic variants used by the sort package.
+// 此程序通过 "go generate"（通过 sort.go 中的指令）运行
+// 以生成底层排序算法的实现变体。
+// 当传递 -generic 标志时，它生成排序的通用变体；
+// 否则它生成 sort 包使用的非通用变体。
 
 package main
 
@@ -22,48 +22,44 @@ import (
 )
 
 type Variant struct {
-	// Name is the variant name: should be unique among variants.
+	// Name 是变体名称：在变体中应该是唯一的。
 	Name string
 
-	// Path is the file path into which the generator will emit the code for this
-	// variant.
+	// Path 是生成器将为此变体发出代码的文件路径。
 	Path string
 
-	// Package is the package this code will be emitted into.
+	// Package 是此代码将被发出到的包。
 	Package string
 
-	// Imports is the imports needed for this package.
+	// Imports 是此包所需的导入。
 	Imports string
 
-	// FuncSuffix is appended to all function names in this variant's code. All
-	// suffixes should be unique within a package.
+	// FuncSuffix 附加到此变体代码中的所有函数名称。
+	// 所有后缀在包中应该是唯一的。
 	FuncSuffix string
 
-	// DataType is the type of the data parameter of functions in this variant's
-	// code.
+	// DataType 是此变体代码中函数的 data 参数的类型。
 	DataType string
 
-	// TypeParam is the optional type parameter for the function.
+	// TypeParam 是函数的可选类型参数。
 	TypeParam string
 
-	// ExtraParam is an extra parameter to pass to the function. Should begin with
-	// ", " to separate from other params.
+	// ExtraParam 是要传递给函数的额外参数。应该以 ", " 开头
+	// 来与其他参数分开。
 	ExtraParam string
 
-	// ExtraArg is an extra argument to pass to calls between functions; typically
-	// it invokes ExtraParam. Should begin with ", " to separate from other args.
+	// ExtraArg 是要传递给函数之间调用的额外参数；
+	// 通常它调用 ExtraParam。应该以 ", " 开头来与其他参数分开。
 	ExtraArg string
 
-	// Funcs is a map of functions used from within the template. The following
-	// functions are expected to exist:
+	// Funcs 是从模板中使用的函数映射。以下函数应该存在：
 	//
 	//    Less (name, i, j):
-	//      emits a comparison expression that checks if the value `name` at
-	//      index `i` is smaller than at index `j`.
+	//      发出一个比较表达式，检查值 `name` 在索引 `i` 处是否小于
+	//      索引 `j` 处的值。
 	//
 	//    Swap (name, i, j):
-	//      emits a statement that performs a data swap between elements `i` and
-	//      `j` of the value `name`.
+	//      发出一个语句，执行值 `name` 的元素 `i` 和 `j` 之间的数据交换。
 	Funcs template.FuncMap
 }
 
@@ -208,10 +204,10 @@ func main() {
 	}
 }
 
-// generate generates the code for variant `v` into a file named by `v.Path`.
+// generate 为变体 `v` 生成代码到由 `v.Path` 命名的文件。
 func generate(v *Variant) {
-	// Parse templateCode anew for each variant because Parse requires Funcs to be
-	// registered, and it helps type-check the funcs.
+	// 为每个变体重新解析 templateCode，因为 Parse 要求 Funcs 被注册，
+	// 并且有助于对 funcs 进行类型检查。
 	tmpl, err := template.New("gen").Funcs(v.Funcs).Parse(templateCode)
 	if err != nil {
 		log.Fatal("template Parse:", err)

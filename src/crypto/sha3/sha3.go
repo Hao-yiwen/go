@@ -1,9 +1,9 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package sha3 implements the SHA-3 hash algorithms and the SHAKE extendable
-// output functions defined in FIPS 202.
+// Package sha3 实现了 FIPS 202 中定义的 SHA-3 哈希算法和 SHAKE 可扩展
+// 输出函数。
 package sha3
 
 import (
@@ -20,7 +20,7 @@ func init() {
 	crypto.RegisterHash(crypto.SHA3_512, func() hash.Hash { return New512() })
 }
 
-// Sum224 returns the SHA3-224 hash of data.
+// Sum224 返回数据的 SHA3-224 哈希。
 func Sum224(data []byte) [28]byte {
 	var out [28]byte
 	h := sha3.New224()
@@ -29,7 +29,7 @@ func Sum224(data []byte) [28]byte {
 	return out
 }
 
-// Sum256 returns the SHA3-256 hash of data.
+// Sum256 返回数据的 SHA3-256 哈希。
 func Sum256(data []byte) [32]byte {
 	var out [32]byte
 	h := sha3.New256()
@@ -38,7 +38,7 @@ func Sum256(data []byte) [32]byte {
 	return out
 }
 
-// Sum384 returns the SHA3-384 hash of data.
+// Sum384 返回数据的 SHA3-384 哈希。
 func Sum384(data []byte) [48]byte {
 	var out [48]byte
 	h := sha3.New384()
@@ -47,7 +47,7 @@ func Sum384(data []byte) [48]byte {
 	return out
 }
 
-// Sum512 returns the SHA3-512 hash of data.
+// Sum512 返回数据的 SHA3-512 哈希。
 func Sum512(data []byte) [64]byte {
 	var out [64]byte
 	h := sha3.New512()
@@ -56,10 +56,10 @@ func Sum512(data []byte) [64]byte {
 	return out
 }
 
-// SumSHAKE128 applies the SHAKE128 extendable output function to data and
-// returns an output of the given length in bytes.
+// SumSHAKE128 对数据应用 SHAKE128 可扩展输出函数，并
+// 返回给定字节长度的输出。
 func SumSHAKE128(data []byte, length int) []byte {
-	// Outline the allocation for up to 256 bits of output to the caller's stack.
+	// 为最多 256 位的输出分配到调用者的堆栈。
 	out := make([]byte, 32)
 	return sumSHAKE128(out, data, length)
 }
@@ -76,10 +76,10 @@ func sumSHAKE128(out, data []byte, length int) []byte {
 	return out
 }
 
-// SumSHAKE256 applies the SHAKE256 extendable output function to data and
-// returns an output of the given length in bytes.
+// SumSHAKE256 对数据应用 SHAKE256 可扩展输出函数，并
+// 返回给定字节长度的输出。
 func SumSHAKE256(data []byte, length int) []byte {
-	// Outline the allocation for up to 512 bits of output to the caller's stack.
+	// 为最多 512 位的输出分配到调用者的堆栈。
 	out := make([]byte, 64)
 	return sumSHAKE256(out, data, length)
 }
@@ -96,8 +96,8 @@ func sumSHAKE256(out, data []byte, length int) []byte {
 	return out
 }
 
-// SHA3 is an instance of a SHA-3 hash. It implements [hash.Hash].
-// The zero value is a usable SHA3-256 hash.
+// SHA3 是 SHA-3 哈希的实例。它实现了 [hash.Hash]。
+// 零值是可用的 SHA3-256 哈希。
 type SHA3 struct {
 	s sha3.Digest
 }
@@ -107,22 +107,22 @@ func fips140hash_sha3Unwrap(sha3 *SHA3) *sha3.Digest {
 	return &sha3.s
 }
 
-// New224 creates a new SHA3-224 hash.
+// New224 创建一个新的 SHA3-224 哈希。
 func New224() *SHA3 {
 	return &SHA3{*sha3.New224()}
 }
 
-// New256 creates a new SHA3-256 hash.
+// New256 创建一个新的 SHA3-256 哈希。
 func New256() *SHA3 {
 	return &SHA3{*sha3.New256()}
 }
 
-// New384 creates a new SHA3-384 hash.
+// New384 创建一个新的 SHA3-384 哈希。
 func New384() *SHA3 {
 	return &SHA3{*sha3.New384()}
 }
 
-// New512 creates a new SHA3-512 hash.
+// New512 创建一个新的 SHA3-512 哈希。
 func New512() *SHA3 {
 	return &SHA3{*sha3.New512()}
 }
@@ -133,62 +133,62 @@ func (s *SHA3) init() {
 	}
 }
 
-// Write absorbs more data into the hash's state.
+// Write 将更多数据吸收到哈希的状态中。
 func (s *SHA3) Write(p []byte) (n int, err error) {
 	s.init()
 	return s.s.Write(p)
 }
 
-// Sum appends the current hash to b and returns the resulting slice.
+// Sum 将当前哈希追加到 b 并返回结果切片。
 func (s *SHA3) Sum(b []byte) []byte {
 	s.init()
 	return s.s.Sum(b)
 }
 
-// Reset resets the hash to its initial state.
+// Reset 将哈希重置为其初始状态。
 func (s *SHA3) Reset() {
 	s.init()
 	s.s.Reset()
 }
 
-// Size returns the number of bytes Sum will produce.
+// Size 返回 Sum 将产生的字节数。
 func (s *SHA3) Size() int {
 	s.init()
 	return s.s.Size()
 }
 
-// BlockSize returns the hash's rate.
+// BlockSize 返回哈希的速率。
 func (s *SHA3) BlockSize() int {
 	s.init()
 	return s.s.BlockSize()
 }
 
-// MarshalBinary implements [encoding.BinaryMarshaler].
+// MarshalBinary 实现了 [encoding.BinaryMarshaler]。
 func (s *SHA3) MarshalBinary() ([]byte, error) {
 	s.init()
 	return s.s.MarshalBinary()
 }
 
-// AppendBinary implements [encoding.BinaryAppender].
+// AppendBinary 实现了 [encoding.BinaryAppender]。
 func (s *SHA3) AppendBinary(p []byte) ([]byte, error) {
 	s.init()
 	return s.s.AppendBinary(p)
 }
 
-// UnmarshalBinary implements [encoding.BinaryUnmarshaler].
+// UnmarshalBinary 实现了 [encoding.BinaryUnmarshaler]。
 func (s *SHA3) UnmarshalBinary(data []byte) error {
 	s.init()
 	return s.s.UnmarshalBinary(data)
 }
 
-// Clone implements [hash.Cloner].
+// Clone 实现了 [hash.Cloner]。
 func (d *SHA3) Clone() (hash.Cloner, error) {
 	r := *d
 	return &r, nil
 }
 
-// SHAKE is an instance of a SHAKE extendable output function.
-// The zero value is a usable SHAKE256 hash.
+// SHAKE 是 SHAKE 可扩展输出函数的实例。
+// 零值是可用的 SHAKE256 哈希。
 type SHAKE struct {
 	s sha3.SHAKE
 }
@@ -199,75 +199,75 @@ func (s *SHAKE) init() {
 	}
 }
 
-// NewSHAKE128 creates a new SHAKE128 XOF.
+// NewSHAKE128 创建一个新的 SHAKE128 XOF。
 func NewSHAKE128() *SHAKE {
 	return &SHAKE{*sha3.NewShake128()}
 }
 
-// NewSHAKE256 creates a new SHAKE256 XOF.
+// NewSHAKE256 创建一个新的 SHAKE256 XOF。
 func NewSHAKE256() *SHAKE {
 	return &SHAKE{*sha3.NewShake256()}
 }
 
-// NewCSHAKE128 creates a new cSHAKE128 XOF.
+// NewCSHAKE128 创建一个新的 cSHAKE128 XOF。
 //
-// N is used to define functions based on cSHAKE, it can be empty when plain
-// cSHAKE is desired. S is a customization byte string used for domain
-// separation. When N and S are both empty, this is equivalent to NewSHAKE128.
+// N 用于定义基于 cSHAKE 的函数，当需要纯 cSHAKE 时可以为空。
+// S 是用于域分离的自定义字节字符串。当 N 和 S 都为空时，
+// 这等价于 NewSHAKE128。
 func NewCSHAKE128(N, S []byte) *SHAKE {
 	return &SHAKE{*sha3.NewCShake128(N, S)}
 }
 
-// NewCSHAKE256 creates a new cSHAKE256 XOF.
+// NewCSHAKE256 创建一个新的 cSHAKE256 XOF。
 //
-// N is used to define functions based on cSHAKE, it can be empty when plain
-// cSHAKE is desired. S is a customization byte string used for domain
-// separation. When N and S are both empty, this is equivalent to NewSHAKE256.
+// N 用于定义基于 cSHAKE 的函数，当需要纯 cSHAKE 时可以为空。
+// S 是用于域分离的自定义字节字符串。当 N 和 S 都为空时，
+// 这等价于 NewSHAKE256。
 func NewCSHAKE256(N, S []byte) *SHAKE {
 	return &SHAKE{*sha3.NewCShake256(N, S)}
 }
 
-// Write absorbs more data into the XOF's state.
+// Write 将更多数据吸收到 XOF 的状态中。
 //
-// It panics if any output has already been read.
+// 如果已读取任何输出，则会 panic。
 func (s *SHAKE) Write(p []byte) (n int, err error) {
 	s.init()
 	return s.s.Write(p)
 }
 
-// Read squeezes more output from the XOF.
+// Read 从 XOF 中挤出更多输出。
 //
-// Any call to Write after a call to Read will panic.
+// 在 Read 调用后的任何 Write 调用都会 panic。
 func (s *SHAKE) Read(p []byte) (n int, err error) {
 	s.init()
 	return s.s.Read(p)
 }
 
-// Reset resets the XOF to its initial state.
+// Reset 将 XOF 重置为其初始状态。
 func (s *SHAKE) Reset() {
 	s.init()
 	s.s.Reset()
 }
 
-// BlockSize returns the rate of the XOF.
+// BlockSize 返回 XOF 的速率。
 func (s *SHAKE) BlockSize() int {
 	s.init()
 	return s.s.BlockSize()
 }
 
-// MarshalBinary implements [encoding.BinaryMarshaler].
+// MarshalBinary 实现了 [encoding.BinaryMarshaler]。
 func (s *SHAKE) MarshalBinary() ([]byte, error) {
 	s.init()
 	return s.s.MarshalBinary()
 }
 
-// AppendBinary implements [encoding.BinaryAppender].
+// AppendBinary 实现了 [encoding.BinaryAppender]。
 func (s *SHAKE) AppendBinary(p []byte) ([]byte, error) {
 	s.init()
 	return s.s.AppendBinary(p)
 }
 
-// UnmarshalBinary implements [encoding.BinaryUnmarshaler].
+// UnmarshalBinary 实现了 [encoding.BinaryUnmarshaler]。
 func (s *SHAKE) UnmarshalBinary(data []byte) error {
 	s.init()
 	return s.s.UnmarshalBinary(data)

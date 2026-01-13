@@ -435,7 +435,7 @@ func TestUnreadByteOthers(t *testing.T) {
 			}
 		}
 
-		// Read the data with occasional UnreadByte calls.
+		// 读取具有偶尔 UnreadByte 调用的数据。
 		for i := 0; i < n; i++ {
 			readTo('d', "abcd")
 			for j := 0; j < 3; j++ {
@@ -447,7 +447,7 @@ func TestUnreadByteOthers(t *testing.T) {
 			readTo('g', "efg")
 		}
 
-		// All data should have been read.
+		// 应该已读取所有数据。
 		_, err := r.ReadByte()
 		if err != io.EOF {
 			t.Errorf("#%d: got error %v; want EOF", rno, err)
@@ -455,9 +455,9 @@ func TestUnreadByteOthers(t *testing.T) {
 	}
 }
 
-// Test that UnreadRune fails if the preceding operation was not a ReadRune.
+// 测试如果前面的操作不是 ReadRune，UnreadRune 失败。
 func TestUnreadRuneError(t *testing.T) {
-	buf := make([]byte, 3) // All runes in this test are 3 bytes long
+	buf := make([]byte, 3) // 此测试中的所有 rune 都是 3 字节长
 	r := NewReader(&StringReader{data: []string{"日本語日本語日本語"}})
 	if r.UnreadRune() == nil {
 		t.Error("expected error on UnreadRune from fresh buffer")
@@ -472,8 +472,8 @@ func TestUnreadRuneError(t *testing.T) {
 	if r.UnreadRune() == nil {
 		t.Error("expected error after UnreadRune (1)")
 	}
-	// Test error after Read.
-	_, _, err = r.ReadRune() // reset state
+	// 测试 Read 后的错误。
+	_, _, err = r.ReadRune() // 重置状态
 	if err != nil {
 		t.Error("unexpected error on ReadRune (2):", err)
 	}
@@ -484,8 +484,8 @@ func TestUnreadRuneError(t *testing.T) {
 	if r.UnreadRune() == nil {
 		t.Error("expected error after Read (2)")
 	}
-	// Test error after ReadByte.
-	_, _, err = r.ReadRune() // reset state
+	// 测试 ReadByte 后的错误。
+	_, _, err = r.ReadRune() // 重置状态
 	if err != nil {
 		t.Error("unexpected error on ReadRune (2):", err)
 	}

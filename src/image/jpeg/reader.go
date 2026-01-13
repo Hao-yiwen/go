@@ -1,10 +1,10 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package jpeg implements a JPEG image decoder and encoder.
+// jpeg 包实现 JPEG 图像解码器和编码器。
 //
-// JPEG is defined in ITU-T T.81: https://www.w3.org/Graphics/JPEG/itu-t81.pdf.
+// JPEG 定义在 ITU-T T.81 中：https://www.w3.org/Graphics/JPEG/itu-t81.pdf。
 package jpeg
 
 import (
@@ -14,24 +14,24 @@ import (
 	"io"
 )
 
-// A FormatError reports that the input is not a valid JPEG.
+// FormatError 表示输入不是有效的 JPEG。
 type FormatError string
 
 func (e FormatError) Error() string { return "invalid JPEG format: " + string(e) }
 
-// An UnsupportedError reports that the input uses a valid but unimplemented JPEG feature.
+// UnsupportedError 表示输入使用了有效但未实现的 JPEG 功能。
 type UnsupportedError string
 
 func (e UnsupportedError) Error() string { return "unsupported JPEG feature: " + string(e) }
 
 var errUnsupportedSubsamplingRatio = UnsupportedError("luma/chroma subsampling ratio")
 
-// Component specification, specified in section B.2.2.
+// 组件规格，在第 B.2.2 节中指定。
 type component struct {
-	h  int   // Horizontal sampling factor.
-	v  int   // Vertical sampling factor.
-	c  uint8 // Component identifier.
-	tq uint8 // Quantization table destination selector.
+	h  int   // 水平采样因子。
+	v  int   // 垂直采样因子。
+	c  uint8 // 组件标识符。
+	tq uint8 // 量化表目标选择器。
 }
 
 const (
@@ -45,36 +45,36 @@ const (
 )
 
 const (
-	sof0Marker = 0xc0 // Start Of Frame (Baseline Sequential).
-	sof1Marker = 0xc1 // Start Of Frame (Extended Sequential).
-	sof2Marker = 0xc2 // Start Of Frame (Progressive).
-	dhtMarker  = 0xc4 // Define Huffman Table.
-	rst0Marker = 0xd0 // ReSTart (0).
-	rst7Marker = 0xd7 // ReSTart (7).
-	soiMarker  = 0xd8 // Start Of Image.
-	eoiMarker  = 0xd9 // End Of Image.
-	sosMarker  = 0xda // Start Of Scan.
-	dqtMarker  = 0xdb // Define Quantization Table.
-	driMarker  = 0xdd // Define Restart Interval.
-	comMarker  = 0xfe // COMment.
-	// "APPlication specific" markers aren't part of the JPEG spec per se,
-	// but in practice, their use is described at
+	sof0Marker = 0xc0 // 帧开始（基线顺序）。
+	sof1Marker = 0xc1 // 帧开始（扩展顺序）。
+	sof2Marker = 0xc2 // 帧开始（渐进）。
+	dhtMarker  = 0xc4 // 定义哈夫曼表。
+	rst0Marker = 0xd0 // 重新启动（0）。
+	rst7Marker = 0xd7 // 重新启动（7）。
+	soiMarker  = 0xd8 // 图像开始。
+	eoiMarker  = 0xd9 // 图像结束。
+	sosMarker  = 0xda // 扫描开始。
+	dqtMarker  = 0xdb // 定义量化表。
+	driMarker  = 0xdd // 定义重新启动间隔。
+	comMarker  = 0xfe // 注释。
+	// "应用特定"标记不是 JPEG 规范本身的一部分，
+	// 但实际上，它们的使用在以下位置有描述
 	// https://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/JPEG.html
 	app0Marker  = 0xe0
 	app14Marker = 0xee
 	app15Marker = 0xef
 )
 
-// See https://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/JPEG.html#Adobe
+// 见 https://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/JPEG.html#Adobe
 const (
 	adobeTransformUnknown = 0
 	adobeTransformYCbCr   = 1
 	adobeTransformYCbCrK  = 2
 )
 
-// unzig maps from the zig-zag ordering to the natural ordering. For example,
-// unzig[3] is the column and row of the fourth element in zig-zag order. The
-// value is 16, which means first column (16%8 == 0) and third row (16/8 == 2).
+// unzig 从 zig-zag 顺序映射到自然顺序。例如，
+// unzig[3] 是 zig-zag 顺序中第四个元素的列和行。
+// 值是 16，表示第一列（16%8 == 0）和第三行（16/8 == 2）。
 var unzig = [blockSize]int{
 	0, 1, 8, 16, 9, 2, 3, 10,
 	17, 24, 32, 25, 18, 11, 4, 5,
@@ -86,16 +86,16 @@ var unzig = [blockSize]int{
 	53, 60, 61, 54, 47, 55, 62, 63,
 }
 
-// Deprecated: Reader is not used by the [image/jpeg] package and should
-// not be used by others. It is kept for compatibility.
+// 弃用：Reader 不被 [image/jpeg] 包使用，不应
+// 被其他人使用。它是为了兼容性而保留的。
 type Reader interface {
 	io.ByteReader
 	io.Reader
 }
 
-// bits holds the unprocessed bits that have been taken from the byte-stream.
-// The n least significant bits of a form the unread bits, to be read in MSB to
-// LSB order.
+// bits 保存从字节流中取出的未处理位。
+// a 的 n 个最低有效位形成未读位，按 MSB 到
+// LSB 顺序读取。
 type bits struct {
 	a uint32 // accumulator.
 	m uint32 // mask. m==1<<(n-1) when n>0, with m==0 when n==0.

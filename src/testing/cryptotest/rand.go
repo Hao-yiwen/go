@@ -1,8 +1,8 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package cryptotest provides deterministic random source testing.
+// Package cryptotest 提供确定性随机源测试。
 package cryptotest
 
 import (
@@ -13,8 +13,8 @@ import (
 	"sync"
 	"testing"
 
-	// Import unsafe and crypto/rand, which imports crypto/internal/rand,
-	// for the crypto/internal/rand.SetTestingReader go:linkname.
+	// 导入 unsafe 和 crypto/rand，后者导入 crypto/internal/rand，
+	// 用于 crypto/internal/rand.SetTestingReader go:linkname。
 	_ "crypto/rand"
 	_ "unsafe"
 )
@@ -25,23 +25,22 @@ func randSetTestingReader(r io.Reader)
 //go:linkname testingCheckParallel testing.checkParallel
 func testingCheckParallel(t *testing.T)
 
-// SetGlobalRandom sets a global, deterministic cryptographic randomness source
-// for the duration of test t. It affects crypto/rand, and all implicit sources
-// of cryptographic randomness in the crypto/... packages.
+// SetGlobalRandom 为测试 t 的持续时间设置全局确定性密码随机源。
+// 它影响 crypto/rand 和 crypto/... 包中的所有隐式密码随机源。
 //
-// SetGlobalRandom may be called multiple times in the same test to reset the
-// random stream or change the seed.
+// SetGlobalRandom 可以在同一个测试中多次调用以重置
+// 随机流或更改种子。
 //
-// Because SetGlobalRandom affects the whole process, it cannot be used in
-// parallel tests or tests with parallel ancestors.
+// 因为 SetGlobalRandom 影响整个进程，它不能在
+// 并行测试或具有并行祖先的测试中使用。
 //
-// Note that the way cryptographic algorithms use randomness is generally not
-// specified and may change over time. Thus, if a test expects a specific output
-// from a cryptographic function, it may fail in the future even if it uses
-// SetGlobalRandom.
+// 请注意，密码算法使用随机性的方式通常未指定，
+// 可能会随时间变化。因此，如果测试期望从
+// 密码函数获得特定输出，即使它使用
+// SetGlobalRandom，也可能在未来失败。
 //
-// SetGlobalRandom is not supported when building against the Go Cryptographic
-// Module v1.0.0 (i.e. when [crypto/fips140.Version] returns "v1.0.0").
+// 针对 Go Cryptographic Module v1.0.0 构建时不支持 SetGlobalRandom
+// (即当 [crypto/fips140.Version] 返回 "v1.0.0" 时)。
 func SetGlobalRandom(t *testing.T, seed uint64) {
 	if t == nil {
 		panic("cryptotest: SetGlobalRandom called with a nil *testing.T")

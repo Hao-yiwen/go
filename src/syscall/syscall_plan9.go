@@ -1,13 +1,13 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Plan 9 system calls.
-// This file is compiled as ordinary Go code,
-// but it is also input to mksyscall,
-// which parses the //sys lines and generates system call stubs.
-// Note that sometimes we use a lowercase //sys name and
-// wrap it in our own nicer implementation.
+// Plan 9 系统调用。
+// 此文件被编译为普通 Go 代码，
+// 但它也是 mksyscall 的输入，
+// mksyscall 解析 //sys 行并生成系统调用桩。
+// 注意，有时我们使用小写的 //sys 名称并
+// 在我们自己更好的实现中包装它。
 
 package syscall
 

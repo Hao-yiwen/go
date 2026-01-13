@@ -1,42 +1,42 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package rsa implements RSA encryption as specified in PKCS #1 and RFC 8017.
+// Package rsa 实现了 PKCS #1 和 RFC 8017 中指定的 RSA 加密。
 //
-// RSA is a single, fundamental operation that is used in this package to
-// implement either public-key encryption or public-key signatures.
+// RSA 是在此包中使用的单个、基本操作
+// 实现公钥加密或公钥签名。
 //
-// The original specification for encryption and signatures with RSA is PKCS #1
-// and the terms "RSA encryption" and "RSA signatures" by default refer to
-// PKCS #1 version 1.5. However, that specification has flaws and new designs
-// should use version 2, usually called by just OAEP and PSS, where
-// possible.
+// RSA 加密和签名的原始规范是 PKCS #1
+// "RSA 加密"和"RSA 签名"默认指的是
+// PKCS #1 版本 1.5。但是，该规范有缺陷，新设计
+// 应使用版本 2，通常称为 OAEP 和 PSS，
+// 如果可能的话。
 //
-// Two sets of interfaces are included in this package. When a more abstract
-// interface isn't necessary, there are functions for encrypting/decrypting
-// with v1.5/OAEP and signing/verifying with v1.5/PSS. If one needs to abstract
-// over the public key primitive, the PrivateKey type implements the
-// Decrypter and Signer interfaces from the crypto package.
+// 此包中包含两组接口。当更抽象的
+// 接口不必要时，有用于加密/解密的函数
+// 用 v1.5/OAEP 和签名/验证 v1.5/PSS。如果需要抽象
+// 公钥原始，PrivateKey 类型实现了
+// 来自 crypto 包的 Decrypter 和 Signer 接口。
 //
-// Operations involving private keys are implemented using constant-time
-// algorithms, except for [GenerateKey] and for some operations involving
-// deprecated multi-prime keys.
+// 涉及私钥的操作使用恒定时间
+// 算法实现，除了 [GenerateKey] 和一些涉及
+// 已弃用的多素数密钥的操作。
 //
-// # Minimum key size
+// # 最小密钥大小
 //
-// [GenerateKey] returns an error if a key of less than 1024 bits is requested,
-// and all Sign, Verify, Encrypt, and Decrypt methods return an error if used
-// with a key smaller than 1024 bits. Such keys are insecure and should not be
-// used.
+// [GenerateKey] 如果请求少于 1024 位的密钥，则返回错误，
+// 所有 Sign、Verify、Encrypt 和 Decrypt 方法在使用时返回错误
+// 小于 1024 位的密钥。这样的密钥不安全，不应该
+// 被使用。
 //
-// The rsa1024min=0 GODEBUG setting suppresses this error, but we recommend
-// doing so only in tests, if necessary. Tests can set this option using
-// [testing.T.Setenv] or by including "//go:debug rsa1024min=0" in a *_test.go
-// source file.
+// rsa1024min=0 GODEBUG 设置会禁止此错误，但我们建议
+// 仅在测试中必要时这样做。测试可以使用
+// [testing.T.Setenv] 或在 *_test.go 中包含"//go:debug rsa1024min=0"
+// 源文件来设置此选项。
 //
-// Alternatively, see the [GenerateKey (TestKey)] example for a pregenerated
-// test-only 2048-bit key.
+// 或者，查看 [GenerateKey (TestKey)] 示例以获取预先生成的
+// 仅测试 2048 位密钥。
 //
 // [GenerateKey (TestKey)]: https://pkg.go.dev/crypto/rsa#example-GenerateKey-TestKey
 package rsa
@@ -61,25 +61,25 @@ import (
 
 var bigOne = big.NewInt(1)
 
-// A PublicKey represents the public part of an RSA key.
+// PublicKey 代表 RSA 密钥的公开部分。
 //
-// The values of N and E are not considered confidential, and may leak through
-// side channels, or could be mathematically derived from other public values.
+// N 和 E 的值不被视为机密，可能会通过
+// 侧信道泄露，或可能是从其他公开值数学推导出来的。
 type PublicKey struct {
-	N *big.Int // modulus
-	E int      // public exponent
+	N *big.Int // 模数
+	E int      // 公开指数
 }
 
-// Any methods implemented on PublicKey might need to also be implemented on
-// PrivateKey, as the latter embeds the former and will expose its methods.
+// 在 PublicKey 上实现的任何方法也可能需要在
+// PrivateKey 上实现，因为后者嵌入前者并会暴露其方法。
 
-// Size returns the modulus size in bytes. Raw signatures and ciphertexts
-// for or by this public key will have the same size.
+// Size 返回模数大小（以字节为单位）。原始签名和密文
+// 对于或由此公钥生成的大小将相同。
 func (pub *PublicKey) Size() int {
 	return (pub.N.BitLen() + 7) / 8
 }
 
-// Equal reports whether pub and x have the same value.
+// Equal 报告 pub 和 x 是否具有相同的值。
 func (pub *PublicKey) Equal(x crypto.PublicKey) bool {
 	xx, ok := x.(*PublicKey)
 	if !ok {
@@ -88,43 +88,43 @@ func (pub *PublicKey) Equal(x crypto.PublicKey) bool {
 	return bigIntEqual(pub.N, xx.N) && pub.E == xx.E
 }
 
-// OAEPOptions allows passing options to OAEP encryption and decryption
-// through the [PrivateKey.Decrypt] and [EncryptOAEPWithOptions] functions.
+// OAEPOptions 允许通过 [PrivateKey.Decrypt] 和 [EncryptOAEPWithOptions] 函数
+// 将选项传递给 OAEP 加密和解密。
 type OAEPOptions struct {
-	// Hash is the hash function that will be used when generating the mask.
+	// Hash 是生成掩码时将使用的哈希函数。
 	Hash crypto.Hash
 
-	// MGFHash is the hash function used for MGF1.
-	// If zero, Hash is used instead.
+	// MGFHash 是用于 MGF1 的哈希函数。
+	// 如果为零，则改用 Hash。
 	MGFHash crypto.Hash
 
-	// Label is an arbitrary byte string that must be equal to the value
-	// used when encrypting.
+	// Label 是任意字节字符串，必须等于
+	// 加密时使用的值。
 	Label []byte
 }
 
-// A PrivateKey represents an RSA key.
+// PrivateKey 代表 RSA 密钥。
 //
-// Its fields must not be modified after calling [PrivateKey.Precompute], and
-// should not be used directly as big.Int values for cryptographic purposes.
+// 调用 [PrivateKey.Precompute] 后，其字段必须不修改，并且
+// 不应直接用作大整数值用于密码目的。
 type PrivateKey struct {
-	PublicKey            // public part.
-	D         *big.Int   // private exponent
-	Primes    []*big.Int // prime factors of N, has >= 2 elements.
+	PublicKey            // 公开部分。
+	D         *big.Int   // 私有指数
+	Primes    []*big.Int // N 的质因数，具有 >= 2 个元素。
 
-	// Precomputed contains precomputed values that speed up RSA operations,
-	// if available. It must be generated by calling PrivateKey.Precompute and
-	// must not be modified afterwards.
+	// Precomputed 包含加快 RSA 操作的预计算值，
+	// 如果可用。必须通过调用 PrivateKey.Precompute 生成
+	// 并且之后不得修改。
 	Precomputed PrecomputedValues
 }
 
-// Public returns the public key corresponding to priv.
+// Public 返回对应于 priv 的公钥。
 func (priv *PrivateKey) Public() crypto.PublicKey {
 	return &priv.PublicKey
 }
 
-// Equal reports whether priv and x have equivalent values. It ignores
-// Precomputed values.
+// Equal 报告 priv 和 x 是否具有等效值。它忽略
+// Precomputed 值。
 func (priv *PrivateKey) Equal(x crypto.PrivateKey) bool {
 	xx, ok := x.(*PrivateKey)
 	if !ok {
@@ -144,20 +144,19 @@ func (priv *PrivateKey) Equal(x crypto.PrivateKey) bool {
 	return true
 }
 
-// bigIntEqual reports whether a and b are equal leaking only their bit length
-// through timing side-channels.
+// bigIntEqual 报告 a 和 b 是否相等，仅通过
+// 计时侧信道泄露其位长。
 func bigIntEqual(a, b *big.Int) bool {
 	return subtle.ConstantTimeCompare(a.Bytes(), b.Bytes()) == 1
 }
 
-// Sign signs digest with priv, reading randomness from rand. If opts is a
-// *[PSSOptions] then the PSS algorithm will be used, otherwise PKCS #1 v1.5 will
-// be used. digest must be the result of hashing the input message using
-// opts.HashFunc().
+// Sign 用 priv 对摘要进行签名，从 rand 读取随机数。如果 opts 是
+// *[PSSOptions]，则将使用 PSS 算法，否则使用 PKCS #1 v1.5。
+// digest 必须是使用 opts.HashFunc() 对输入消息进行哈希的结果。
 //
-// This method implements [crypto.Signer], which is an interface to support keys
-// where the private part is kept in, for example, a hardware module. Common
-// uses should use the Sign* functions in this package directly.
+// 此方法实现了 [crypto.Signer]，这是一个支持密钥的接口，
+// 其中私有部分保存在例如硬件模块中。常见
+// 的用途应直接使用此包中的 Sign* 函数。
 func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	if pssOpts, ok := opts.(*PSSOptions); ok {
 		return SignPSS(rand, priv, pssOpts.Hash, digest, pssOpts)
@@ -166,9 +165,9 @@ func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOp
 	return SignPKCS1v15(rand, priv, opts.HashFunc(), digest)
 }
 
-// Decrypt decrypts ciphertext with priv. If opts is nil or of type
-// *[PKCS1v15DecryptOptions] then PKCS #1 v1.5 decryption is performed. Otherwise
-// opts must have type *[OAEPOptions] and OAEP decryption is done.
+// Decrypt 用 priv 解密密文。如果 opts 为 nil 或类型为
+// *[PKCS1v15DecryptOptions]，则执行 PKCS #1 v1.5 解密。否则
+// opts 必须具有类型 *[OAEPOptions] 并执行 OAEP 解密。
 func (priv *PrivateKey) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) (plaintext []byte, err error) {
 	if opts == nil {
 		return DecryptPKCS1v15(rand, priv, ciphertext)

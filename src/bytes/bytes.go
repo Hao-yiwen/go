@@ -1305,7 +1305,7 @@ func Index(s, sep []byte) int {
 			}
 			fails++
 			i++
-			// Switch to bytealg.Index when IndexByte produces too many false positives.
+			// 当 IndexByte 产生太多假正检查时切换到 bytealg.Index。
 			if fails > bytealg.Cutover(i) {
 				r := bytealg.Index(s[i:], sep)
 				if r >= 0 {
@@ -1335,14 +1335,13 @@ func Index(s, sep []byte) int {
 		i++
 		fails++
 		if fails >= 4+i>>4 && i < t {
-			// Give up on IndexByte, it isn't skipping ahead
-			// far enough to be better than Rabin-Karp.
-			// Experiments (using IndexPeriodic) suggest
-			// the cutover is about 16 byte skips.
-			// TODO: if large prefixes of sep are matching
-			// we should cutover at even larger average skips,
-			// because Equal becomes that much more expensive.
-			// This code does not take that effect into account.
+			// 放弃 IndexByte，它跳过的距离不足以优于 Rabin-Karp。
+			// 实验（使用 IndexPeriodic）建议
+			// 转折点大约是 16 字节的跳过。
+			// TODO: 如果 sep 的大前缀匹配，
+			// 我们应该以更大的平均跳过转折，
+			// 因为 Equal 变得那样更昂贵。
+			// 此代码未考虑该效果。
 			j := bytealg.IndexRabinKarp(s[i:], sep)
 			if j < 0 {
 				return -1
@@ -1353,12 +1352,12 @@ func Index(s, sep []byte) int {
 	return -1
 }
 
-// Cut slices s around the first instance of sep,
-// returning the text before and after sep.
-// The found result reports whether sep appears in s.
-// If sep does not appear in s, cut returns s, nil, false.
+// Cut 围绕 sep 的第一个实例拆分 s，
+// 返回 sep 前后的文本。
+// found 结果报告 sep 是否出现在 s 中。
+// 如果 sep 不在 s 中，cut 返回 s, nil, false。
 //
-// Cut returns slices of the original slice s, not copies.
+// Cut 返回原始切片 s 的切片，不是副本。
 func Cut(s, sep []byte) (before, after []byte, found bool) {
 	if i := Index(s, sep); i >= 0 {
 		return s[:i], s[i+len(sep):], true
@@ -1366,9 +1365,9 @@ func Cut(s, sep []byte) (before, after []byte, found bool) {
 	return s, nil, false
 }
 
-// Clone returns a copy of b[:len(b)].
-// The result may have additional unused capacity.
-// Clone(nil) returns nil.
+// Clone 返回 b[:len(b)] 的副本。
+// 结果可能有额外的未使用容量。
+// Clone(nil) 返回 nil。
 func Clone(b []byte) []byte {
 	if b == nil {
 		return nil
@@ -1376,12 +1375,12 @@ func Clone(b []byte) []byte {
 	return append([]byte{}, b...)
 }
 
-// CutPrefix returns s without the provided leading prefix byte slice
-// and reports whether it found the prefix.
-// If s doesn't start with prefix, CutPrefix returns s, false.
-// If prefix is the empty byte slice, CutPrefix returns s, true.
+// CutPrefix 返回 s 不包括提供的前导前缀字节切片
+// 并报告是否找到了前缀。
+// 如果 s 不以 prefix 开始，CutPrefix 返回 s, false。
+// 如果 prefix 是空字节切片，CutPrefix 返回 s, true。
 //
-// CutPrefix returns slices of the original slice s, not copies.
+// CutPrefix 返回原始切片 s 的切片，不是副本。
 func CutPrefix(s, prefix []byte) (after []byte, found bool) {
 	if !HasPrefix(s, prefix) {
 		return s, false
@@ -1389,12 +1388,12 @@ func CutPrefix(s, prefix []byte) (after []byte, found bool) {
 	return s[len(prefix):], true
 }
 
-// CutSuffix returns s without the provided ending suffix byte slice
-// and reports whether it found the suffix.
-// If s doesn't end with suffix, CutSuffix returns s, false.
-// If suffix is the empty byte slice, CutSuffix returns s, true.
+// CutSuffix 返回 s 不包括提供的末尾后缀字节切片
+// 并报告是否找到了后缀。
+// 如果 s 不以 suffix 结束，CutSuffix 返回 s, false。
+// 如果 suffix 是空字节切片，CutSuffix 返回 s, true。
 //
-// CutSuffix returns slices of the original slice s, not copies.
+// CutSuffix 返回原始切片 s 的切片，不是副本。
 func CutSuffix(s, suffix []byte) (before []byte, found bool) {
 	if !HasSuffix(s, suffix) {
 		return s, false

@@ -9,13 +9,13 @@ import (
 	"os"
 )
 
-// Additional routines compiled into the package only during testing.
+// 仅在测试期间编译到包中的其他例程。
 
 var DefaultUsage = Usage
 
-// ResetForTesting clears all flag state and sets the usage function as directed.
-// After calling ResetForTesting, parse errors in flag handling will not
-// exit the program.
+// ResetForTesting 清除所有标志状态并按指示设置用法函数。
+// 在调用 ResetForTesting 后，标志处理中的解析错误将不会
+// 退出程序。
 func ResetForTesting(usage func()) {
 	CommandLine = NewFlagSet(os.Args[0], ContinueOnError)
 	CommandLine.SetOutput(io.Discard)

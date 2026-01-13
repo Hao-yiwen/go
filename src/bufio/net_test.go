@@ -16,14 +16,13 @@ import (
 	"testing"
 )
 
-// TestCopyUnixpacket tests that we can use bufio when copying
-// across a unixpacket socket. This used to fail due to an unnecessary
-// empty Write call that was interpreted as an EOF.
+// TestCopyUnixpacket 测试我们可以在跨 unixpacket socket 复制时使用 bufio。
+// 由于不必要的空 Write 调用被解释为 EOF，这曾经失败。
 func TestCopyUnixpacket(t *testing.T) {
 	tmpDir := t.TempDir()
 	socket := filepath.Join(tmpDir, "unixsock")
 
-	// Start a unixpacket server.
+	// 启动一个 unixpacket 服务器。
 	addr := &net.UnixAddr{
 		Name: socket,
 		Net:  "unixpacket",
@@ -33,9 +32,9 @@ func TestCopyUnixpacket(t *testing.T) {
 		t.Skipf("skipping test because opening a unixpacket socket failed: %v", err)
 	}
 
-	// Start a goroutine for the server to accept one connection
-	// and read all the data sent on the connection,
-	// reporting the number of bytes read on ch.
+	// 为服务器启动一个 goroutine 以接受一个连接
+	// 并读取在连接上发送的所有数据，
+	// 在 ch 上报告读取的字节数。
 	ch := make(chan int, 1)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -69,7 +68,7 @@ func TestCopyUnixpacket(t *testing.T) {
 
 	clientConn, err := net.DialUnix("unixpacket", nil, addr)
 	if err != nil {
-		// Leaves the server goroutine hanging. Oh well.
+		// 让服务器 goroutine 挂起。没关系。
 		t.Fatal(err)
 	}
 

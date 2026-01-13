@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package zstd
 
@@ -17,27 +17,27 @@ const (
 	xxhPrime64c5 = 0x27d4eb2f165667c5
 )
 
-// xxhash64 is the state of a xxHash-64 checksum.
+// xxhash64 是 xxHash-64 校验和的状态。
 type xxhash64 struct {
-	len uint64    // total length hashed
-	v   [4]uint64 // accumulators
-	buf [32]byte  // buffer
-	cnt int       // number of bytes in buffer
+	len uint64    // 已哈希的总长度
+	v   [4]uint64 // 累加器
+	buf [32]byte  // 缓冲区
+	cnt int       // 缓冲区中的字节数
 }
 
-// reset discards the current state and prepares to compute a new hash.
-// We assume a seed of 0 since that is what zstd uses.
+// reset 丢弃当前状态并准备计算新哈希。
+// 我们假设种子为 0，因为这是 zstd 使用的。
 func (xh *xxhash64) reset() {
 	xh.len = 0
 
-	// Separate addition for awkward constant overflow.
+	// 为尴尬的常数溢出进行单独的加法。
 	xh.v[0] = xxhPrime64c1
 	xh.v[0] += xxhPrime64c2
 
 	xh.v[1] = xxhPrime64c2
 	xh.v[2] = 0
 
-	// Separate negation for awkward constant overflow.
+	// 为尴尬的常数溢出进行单独的否定。
 	xh.v[3] = xxhPrime64c1
 	xh.v[3] = -xh.v[3]
 
@@ -45,7 +45,7 @@ func (xh *xxhash64) reset() {
 	xh.cnt = 0
 }
 
-// update adds a buffer to the has.
+// update 将缓冲区添加到哈希。
 func (xh *xxhash64) update(b []byte) {
 	xh.len += uint64(len(b))
 
@@ -79,7 +79,7 @@ func (xh *xxhash64) update(b []byte) {
 	}
 }
 
-// digest returns the final hash value.
+// digest 返回最终哈希值。
 func (xh *xxhash64) digest() uint64 {
 	var h64 uint64
 	if xh.len < 32 {

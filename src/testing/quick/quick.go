@@ -214,13 +214,13 @@ func (c *Config) getMaxCount() (maxCount int) {
 	return
 }
 
-// A SetupError is the result of an error in the way that check is being
-// used, independent of the functions being tested.
+// SetupError 是检查的使用方式中出现错误的结果，与
+// 被测试的函数无关。
 type SetupError string
 
 func (s SetupError) Error() string { return string(s) }
 
-// A CheckError is the result of Check finding an error.
+// CheckError 是 Check 找到错误的结果。
 type CheckError struct {
 	Count int
 	In    []any
@@ -230,7 +230,7 @@ func (s *CheckError) Error() string {
 	return fmt.Sprintf("#%d: failed on input %s", s.Count, toString(s.In))
 }
 
-// A CheckEqualError is the result [CheckEqual] finding an error.
+// CheckEqualError 是 [CheckEqual] 找到错误的结果。
 type CheckEqualError struct {
 	CheckError
 	Out1 []any
@@ -241,11 +241,11 @@ func (s *CheckEqualError) Error() string {
 	return fmt.Sprintf("#%d: failed on input %s. Output 1: %s. Output 2: %s", s.Count, toString(s.In), toString(s.Out1), toString(s.Out2))
 }
 
-// Check looks for an input to f, any function that returns bool,
-// such that f returns false. It calls f repeatedly, with arbitrary
-// values for each argument. If f returns false on a given input,
-// Check returns that input as a *[CheckError].
-// For example:
+// Check 查找函数 f（返回 bool 的任何函数）的输入，
+// 使得 f 返回 false。它对 f 重复调用，为每个参数使用任意值。
+// 如果 f 在给定输入上返回 false，
+// Check 会将该输入作为 *[CheckError] 返回。
+// 例如：
 //
 //	func TestOddMultipleOfThree(t *testing.T) {
 //		f := func(x int) bool {
@@ -291,10 +291,10 @@ func Check(f any, config *Config) error {
 	return nil
 }
 
-// CheckEqual looks for an input on which f and g return different results.
-// It calls f and g repeatedly with arbitrary values for each argument.
-// If f and g return different answers, CheckEqual returns a *[CheckEqualError]
-// describing the input and the outputs.
+// CheckEqual 查找 f 和 g 返回不同结果的输入。
+// 它对 f 和 g 重复调用，为每个参数使用任意值。
+// 如果 f 和 g 返回不同的答案，CheckEqual 返回 *[CheckEqualError]
+// 来描述输入和输出。
 func CheckEqual(f, g any, config *Config) error {
 	if config == nil {
 		config = &defaultConfig
@@ -334,8 +334,8 @@ func CheckEqual(f, g any, config *Config) error {
 	return nil
 }
 
-// arbitraryValues writes Values to args such that args contains Values
-// suitable for calling f.
+// arbitraryValues 写入 Values 到 args，使得 args 包含适合
+// 调用 f 的 Values。
 func arbitraryValues(args []reflect.Value, f reflect.Type, config *Config, rand *rand.Rand) (err error) {
 	if config.Values != nil {
 		config.Values(args, rand)

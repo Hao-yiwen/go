@@ -3,24 +3,24 @@
 // license that can be found in the LICENSE file.
 
 /*
- * Plan 9 a.out constants and data structures
+ * Plan 9 a.out 常数和数据结构
  */
 
 package plan9obj
 
-// Plan 9 Program header.
+// Plan 9 程序头。
 type prog struct {
-	Magic uint32 /* magic number */
-	Text  uint32 /* size of text segment */
-	Data  uint32 /* size of initialized data */
-	Bss   uint32 /* size of uninitialized data */
-	Syms  uint32 /* size of symbol table */
-	Entry uint32 /* entry point */
-	Spsz  uint32 /* size of pc/sp offset table */
-	Pcsz  uint32 /* size of pc/line number table */
+	Magic uint32 /* 魔术数字 */
+	Text  uint32 /* 文本段的大小 */
+	Data  uint32 /* 初始化数据的大小 */
+	Bss   uint32 /* 未初始化数据的大小 */
+	Syms  uint32 /* 符号表的大小 */
+	Entry uint32 /* 入口点 */
+	Spsz  uint32 /* pc/sp 偏移表的大小 */
+	Pcsz  uint32 /* pc/行号表的大小 */
 }
 
-// Plan 9 symbol table entries.
+// Plan 9 符号表条目。
 type sym struct {
 	value uint64
 	typ   byte
@@ -28,7 +28,7 @@ type sym struct {
 }
 
 const (
-	Magic64 = 0x8000 // 64-bit expanded header
+	Magic64 = 0x8000 // 64 位扩展头
 
 	Magic386   = (4*11+0)*11 + 7
 	MagicAMD64 = (4*26+0)*26 + 7 + Magic64

@@ -19,7 +19,7 @@ type slice struct {
 	cap   int
 }
 
-// A notInHeapSlice is a slice backed by internal/runtime/sys.NotInHeap memory.
+// notInHeapSlice 是由 internal/runtime/sys.NotInHeap 内存支持的切片。
 type notInHeapSlice struct {
 	array *notInHeap
 	len   int
@@ -34,8 +34,8 @@ func panicmakeslicecap() {
 	panic(errorString("makeslice: cap out of range"))
 }
 
-// makeslicecopy allocates a slice of "tolen" elements of type "et",
-// then copies "fromlen" elements of type "et" into that new allocation from "from".
+// makeslicecopy 分配一个包含 "tolen" 个类型为 "et" 的元素的切片，
+// 然后将 "fromlen" 个类型为 "et" 的元素从 "from" 复制到该新分配中。
 func makeslicecopy(et *_type, tolen int, fromlen int, from unsafe.Pointer) unsafe.Pointer {
 	var tomem, copymem uintptr
 	if uintptr(tolen) > uintptr(fromlen) {
@@ -46,9 +46,9 @@ func makeslicecopy(et *_type, tolen int, fromlen int, from unsafe.Pointer) unsaf
 		}
 		copymem = et.Size_ * uintptr(fromlen)
 	} else {
-		// fromlen is a known good length providing and equal or greater than tolen,
-		// thereby making tolen a good slice length too as from and to slices have the
-		// same element width.
+		// fromlen 是一个已知的良好长度，提供并等于或大于 tolen，
+		// 因此也使 tolen 成为一个好的切片长度，因为 from 和 to 切片具有
+		// 相同的元素宽度。
 		tomem = et.Size_ * uintptr(tolen)
 		copymem = tomem
 	}
@@ -60,15 +60,15 @@ func makeslicecopy(et *_type, tolen int, fromlen int, from unsafe.Pointer) unsaf
 			memclrNoHeapPointers(add(to, copymem), tomem-copymem)
 		}
 	} else {
-		// Note: can't use rawmem (which avoids zeroing of memory), because then GC can scan uninitialized memory.
+		// 注意：不能使用 rawmem（避免内存清零），因为那样 GC 可以扫描未初始化的内存。
 		to = mallocgc(tomem, et, true)
 		if copymem > 0 && writeBarrier.enabled {
-			// Only shade the pointers in old.array since we know the destination slice to
-			// only contains nil pointers because it has been cleared during alloc.
+			// 仅对 old.array 中的指针进行着色，因为我们知道目标切片
+			// 仅包含 nil 指针，因为它在分配期间已清除。
 			//
-			// It's safe to pass a type to this function as an optimization because
-			// from and to only ever refer to memory representing whole values of
-			// type et. See the comment on bulkBarrierPreWrite.
+			// 将类型传递给此函数作为优化是安全的，因为
+			// from 和 to 仅引用表示
+			// 类型 et 的整个值的内存。参见 bulkBarrierPreWrite 上的注释。
 			bulkBarrierPreWriteSrcOnly(uintptr(to), uintptr(from), copymem, et)
 		}
 	}
@@ -90,23 +90,23 @@ func makeslicecopy(et *_type, tolen int, fromlen int, from unsafe.Pointer) unsaf
 	return to
 }
 
-// makeslice should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// makeslice 应该是一个内部细节，
+// 但广泛使用的包通过 linkname 访问它。
+// 耻辱榜上的知名成员包括：
 //   - github.com/bytedance/sonic
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname makeslice
 func makeslice(et *_type, len, cap int) unsafe.Pointer {
 	mem, overflow := math.MulUintptr(et.Size_, uintptr(cap))
 	if overflow || mem > maxAlloc || len < 0 || len > cap {
-		// NOTE: Produce a 'len out of range' error instead of a
-		// 'cap out of range' error when someone does make([]T, bignumber).
-		// 'cap out of range' is true too, but since the cap is only being
-		// supplied implicitly, saying len is clearer.
-		// See golang.org/issue/4085.
+		// 注意：当某人执行 make([]T, bignumber) 时，产生"len 超出范围"错误而不是
+		// "cap 超出范围"错误。
+		// "cap 超出范围"也是真的，但由于上限仅隐含地
+		// 供应，说 len 更清楚。
+		// 参见 golang.org/issue/4085。
 		mem, overflow := math.MulUintptr(et.Size_, uintptr(len))
 		if overflow || mem > maxAlloc || len < 0 {
 			panicmakeslicelen()
@@ -131,48 +131,48 @@ func makeslice64(et *_type, len64, cap64 int64) unsafe.Pointer {
 	return makeslice(et, len, cap)
 }
 
-// growslice allocates new backing store for a slice.
+// growslice 为切片分配新的备份存储。
 //
-// arguments:
+// 参数：
 //
-//	oldPtr = pointer to the slice's backing array
-//	newLen = new length (= oldLen + num)
-//	oldCap = original slice's capacity.
-//	   num = number of elements being added
-//	    et = element type
+//	oldPtr = 指向切片的备份数组的指针
+//	newLen = 新长度（= oldLen + num）
+//	oldCap = 原始切片的容量。
+//	   num = 被添加的元素数
+//	    et = 元素类型
 //
-// return values:
+// 返回值：
 //
-//	newPtr = pointer to the new backing store
-//	newLen = same value as the argument
-//	newCap = capacity of the new backing store
+//	newPtr = 指向新备份存储的指针
+//	newLen = 与参数相同的值
+//	newCap = 新备份存储的容量
 //
-// Requires that uint(newLen) > uint(oldCap).
-// Assumes the original slice length is newLen - num
+// 要求 uint(newLen) > uint(oldCap)。
+// 假设原始切片长度为 newLen - num
 //
-// A new backing store is allocated with space for at least newLen elements.
-// Existing entries [0, oldLen) are copied over to the new backing store.
-// Added entries [oldLen, newLen) are not initialized by growslice
-// (although for pointer-containing element types, they are zeroed). They
-// must be initialized by the caller.
-// Trailing entries [newLen, newCap) are zeroed.
+// 分配新的备份存储，至少有 newLen 个元素的空间。
+// 现有条目 [0, oldLen) 被复制到新的备份存储。
+// 添加的条目 [oldLen, newLen) 不由 growslice 初始化
+// （尽管对于包含指针的元素类型，它们被清零）。它们
+// 必须由调用者初始化。
+// 尾随条目 [newLen, newCap) 被清零。
 //
-// growslice's odd calling convention makes the generated code that calls
-// this function simpler. In particular, it accepts and returns the
-// new length so that the old length is not live (does not need to be
-// spilled/restored) and the new length is returned (also does not need
-// to be spilled/restored).
+// growslice 的奇怪调用约定使得调用
+// 此函数的生成代码更简单。特别是，它接受并返回
+// 新长度，以便旧长度不是活跃的（不需要
+// 溢出/恢复），并且新长度被返回（也不需要
+// 溢出/恢复）。
 //
-// growslice should be an internal detail,
-// but widely used packages access it using linkname.
-// Notable members of the hall of shame include:
+// growslice 应该是一个内部细节，
+// 但广泛使用的包通过 linkname 访问它。
+// 耻辱榜上的知名成员包括：
 //   - github.com/bytedance/sonic
 //   - github.com/chenzhuoyu/iasm
 //   - github.com/cloudwego/dynamicgo
 //   - github.com/ugorji/go/codec
 //
-// Do not remove or change the type signature.
-// See go.dev/issue/67401.
+// 请勿删除或更改类型签名。
+// 参见 go.dev/issue/67401。
 //
 //go:linkname growslice
 func growslice(oldPtr unsafe.Pointer, newLen, oldCap, num int, et *_type) slice {
@@ -193,8 +193,8 @@ func growslice(oldPtr unsafe.Pointer, newLen, oldCap, num int, et *_type) slice 
 	}
 
 	if et.Size_ == 0 {
-		// append should not create a slice with nil pointer but non-zero len.
-		// We assume that append doesn't need to preserve oldPtr in this case.
+		// append 不应该创建一个具有 nil 指针但非零 len 的切片。
+		// 我们假设 append 在这种情况下不需要保留 oldPtr。
 		return slice{unsafe.Pointer(&zerobase), newLen, newLen}
 	}
 
@@ -202,10 +202,10 @@ func growslice(oldPtr unsafe.Pointer, newLen, oldCap, num int, et *_type) slice 
 
 	var overflow bool
 	var lenmem, newlenmem, capmem uintptr
-	// Specialize for common values of et.Size.
-	// For 1 we don't need any division/multiplication.
-	// For goarch.PtrSize, compiler will optimize division/multiplication into a shift by a constant.
-	// For powers of 2, use a variable shift.
+	// 对 et.Size 的常见值进行专业化。
+	// 对于 1，我们不需要任何除法/乘法。
+	// 对于 goarch.PtrSize，编译器会优化除法/乘法为一个常数的移位。
+	// 对于 2 的幂，使用变量移位。
 	noscan := !et.Pointers()
 	switch {
 	case et.Size_ == 1:
@@ -223,7 +223,7 @@ func growslice(oldPtr unsafe.Pointer, newLen, oldCap, num int, et *_type) slice 
 	case isPowerOfTwo(et.Size_):
 		var shift uintptr
 		if goarch.PtrSize == 8 {
-			// Mask shift for better code generation.
+			// 掩码移位以更好的代码生成。
 			shift = uintptr(sys.TrailingZeros64(uint64(et.Size_))) & 63
 		} else {
 			shift = uintptr(sys.TrailingZeros32(uint32(et.Size_))) & 31
@@ -243,9 +243,9 @@ func growslice(oldPtr unsafe.Pointer, newLen, oldCap, num int, et *_type) slice 
 		capmem = uintptr(newcap) * et.Size_
 	}
 
-	// The check of overflow in addition to capmem > maxAlloc is needed
-	// to prevent an overflow which can be used to trigger a segfault
-	// on 32bit architectures with this example program:
+	// 除了 capmem > maxAlloc 之外，overflow 的检查是必要的
+	// 以防止可用于触发的溢出
+	// 在 32 位体系结构上使用此示例程序出现分段错误：
 	//
 	// type T [1<<27 + 1]int64
 	//

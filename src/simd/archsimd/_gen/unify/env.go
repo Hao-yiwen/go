@@ -271,35 +271,35 @@ func unionEnvs(envs ...envSet) envSet {
 	return envSet{newEnvExprSum(exprs...)}
 }
 
-// envPartition is a subset of an env where id is bound to value in all
-// deterministic environments.
+// envPartition 是 env 的一个子集，其中 id 在所有
+// 确定性环境中绑定到值。
 type envPartition struct {
 	id    *ident
 	value *Value
 	env   envSet
 }
 
-// partitionBy splits e by distinct bindings of id and removes id from each
-// partition.
+// partitionBy 按 id 的不同绑定分割 e，并从每个
+// 分区中移除 id。
 //
-// If there are environments in e where id is not bound, they will not be
-// reflected in any partition.
+// 如果 e 中有 id 未绑定的环境，它们将不会
+// 反映在任何分区中。
 //
-// It panics if e is bottom, since attempting to partition an empty environment
-// set almost certainly indicates a bug.
+// 如果 e 是底，它会崩溃，因为尝试对空环境
+// 集进行分区几乎肯定表示错误。
 func (e envSet) partitionBy(id *ident) []envPartition {
 	if e.isEmpty() {
-		// We could return zero partitions, but getting here at all almost
-		// certainly indicates a bug.
+		// 我们可以返回零个分区，但来到这里
+		// 几乎肯定表示错误。
 		panic("cannot partition empty environment set")
 	}
 
-	// Emit a partition for each value of id.
+	// 为 id 的每个值发出一个分区。
 	var seen smallSet[*Value]
 	var parts []envPartition
 	for n := range e.root.bindings(id) {
 		if !seen.Add(n.val) {
-			// Already emitted a partition for this value.
+			// 已为此值发出分区。
 			continue
 		}
 
@@ -313,8 +313,8 @@ func (e envSet) partitionBy(id *ident) []envPartition {
 	return parts
 }
 
-// substitute replaces bindings of id to val with 1 and bindings of id to any
-// other value with 0 and simplifies the result.
+// substitute 用 1 替换 id 到 val 的绑定，用 0 替换 id 到任何
+// 其他值的绑定，并简化结果。
 func (e *envExpr) substitute(id *ident, val *Value) *envExpr {
 	switch e.kind {
 	default:
@@ -333,13 +333,13 @@ func (e *envExpr) substitute(id *ident, val *Value) *envExpr {
 		}
 
 	case envProduct, envSum:
-		// Substitute each operand. Sometimes, this won't change anything, so we
-		// build the new operands list lazily.
+		// 替换每个操作数。有时，这不会改变任何内容，因此我们
+		// 延迟构建新操作数列表。
 		var nOperands []*envExpr
 		for i, op := range e.operands {
 			nOp := op.substitute(id, val)
 			if nOperands == nil && op != nOp {
-				// Operand diverged; initialize nOperands.
+				// 操作数分歧；初始化 nOperands。
 				nOperands = make([]*envExpr, 0, len(e.operands))
 				nOperands = append(nOperands, e.operands[:i]...)
 			}
@@ -348,7 +348,7 @@ func (e *envExpr) substitute(id *ident, val *Value) *envExpr {
 			}
 		}
 		if nOperands == nil {
-			// Nothing changed.
+			// 没有改变。
 			return e
 		}
 		if e.kind == envProduct {
@@ -359,7 +359,7 @@ func (e *envExpr) substitute(id *ident, val *Value) *envExpr {
 	}
 }
 
-// A smallSet is a set optimized for stack allocation when small.
+// A smallSet 是一个为小规模堆栈分配优化的集合。
 type smallSet[T comparable] struct {
 	array [32]T
 	n     int
@@ -367,7 +367,7 @@ type smallSet[T comparable] struct {
 	m map[T]struct{}
 }
 
-// Has returns whether val is in set.
+// Has 返回 val 是否在集合中。
 func (s *smallSet[T]) Has(val T) bool {
 	arr := s.array[:s.n]
 	for i := range arr {
@@ -379,15 +379,15 @@ func (s *smallSet[T]) Has(val T) bool {
 	return ok
 }
 
-// Add adds val to the set and returns true if it was added (not already
-// present).
+// Add 将 val 添加到集合中，如果添加了（之前不存在）则返回 true。
+// 存在）。
 func (s *smallSet[T]) Add(val T) bool {
-	// Test for presence.
+	// 测试存在。
 	if s.Has(val) {
 		return false
 	}
 
-	// Add it
+	// 添加它
 	if s.n < len(s.array) {
 		s.array[s.n] = val
 		s.n++
@@ -410,12 +410,12 @@ type Var struct {
 }
 
 func (d Var) Exact() bool {
-	// These can't appear in concrete Values.
+	// 这些不能出现在具体的 Values 中。
 	panic("Exact called on non-concrete Value")
 }
 
 func (d Var) WhyNotExact() string {
-	// These can't appear in concrete Values.
+	// 这些不能出现在具体的 Values 中。
 	return "WhyNotExact called on non-concrete Value"
 }
 
@@ -424,40 +424,40 @@ func (d Var) decode(rv reflect.Value) error {
 }
 
 func (d Var) unify(w *Value, e envSet, swap bool, uf *unifier) (Domain, envSet, error) {
-	// TODO: Vars from !sums in the input can have a huge number of values.
-	// Unifying these could be way more efficient with some indexes over any
-	// exact values we can pull out, like Def fields that are exact Strings.
-	// Maybe we try to produce an array of yes/no/maybe matches and then we only
-	// have to do deeper evaluation of the maybes. We could probably cache this
-	// on an envTerm. It may also help to special-case Var/Var unification to
-	// pick which one to index versus enumerate.
+	// TODO: 输入中的 !sums 中的 Vars 可能有大量的值。
+	// 统一这些可能会更有效，一些索引用于
+	// 我们可以提取的任何精确值，如精确为字符串的 Def 字段。
+	// 也许我们尝试生成一个是/否/可能匹配数组，然后我们只需
+	// 对可能的进行更深层次的评估。我们可能可以缓存这个
+	// 在 envTerm 上。特殊处理 Var/Var 统一也可能有帮助
+	// 选择要索引还是枚举哪一个。
 
 	if vd, ok := w.Domain.(Var); ok && d.id == vd.id {
-		// Unifying $x with $x results in $x. If we descend into this we'll have
-		// problems because we strip $x out of the environment to keep ourselves
-		// honest and then can't find it on the other side.
+		// 统一 $x 与 $x 得到 $x。如果我们下降到这个，我们会有
+		// 问题，因为我们从环境中删除 $x 以保持自己
+		// 诚实，然后在另一边找不到它。
 		//
-		// TODO: I'm not positive this is the right fix.
+		// TODO: 我不确定这是否是正确的修复。
 		return vd, e, nil
 	}
 
-	// We need to unify w with the value of d in each possible environment. We
-	// can save some work by grouping environments by the value of d, since
-	// there will be a lot of redundancy here.
+	// 我们需要在每个可能的环境中将 w 与 d 的值统一。我们
+	// 可以通过按 d 的值对环境进行分组来节省一些工作，因为
+	// 这里会有很多冗余。
 	var nEnvs []envSet
 	envParts := e.partitionBy(d.id)
 	for i, envPart := range envParts {
 		exit := uf.enterVar(d.id, i)
-		// Each branch logically gets its own copy of the initial environment
-		// (narrowed down to just this binding of the variable), and each branch
-		// may result in different changes to that starting environment.
+		// 每个分支在逻辑上获得初始环境的自己的副本
+		// （缩小到仅此变量的绑定），每个分支
+		// 可能导致对该起始环境的不同更改。
 		res, e2, err := w.unify(envPart.value, envPart.env, swap, uf)
 		exit.exit()
 		if err != nil {
 			return nil, envSet{}, err
 		}
 		if res.Domain == nil {
-			// This branch entirely failed to unify, so it's gone.
+			// 这个分支完全未能统一，所以它消失了。
 			continue
 		}
 		nEnv := e2.bind(d.id, res)
@@ -465,16 +465,16 @@ func (d Var) unify(w *Value, e envSet, swap bool, uf *unifier) (Domain, envSet, 
 	}
 
 	if len(nEnvs) == 0 {
-		// All branches failed
+		// 所有分支失败
 		return nil, bottomEnv, nil
 	}
 
-	// The effect of this is entirely captured in the environment. We can return
-	// back the same Bind node.
+	// 这的效果完全在环境中捕获。我们可以返回
+	// 相同的 Bind 节点。
 	return d, unionEnvs(nEnvs...), nil
 }
 
-// An identPrinter maps [ident]s to unique string names.
+// An identPrinter 将 [ident] 映射到唯一的字符串名称。
 type identPrinter struct {
 	ids   map[*ident]string
 	idGen map[string]int
