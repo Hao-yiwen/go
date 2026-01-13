@@ -1,6 +1,6 @@
-// Copyright 2018 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2018 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package errors_test
 
@@ -198,7 +198,7 @@ func TestAs(t *testing.T) {
 	}}
 	for i, tc := range testCases {
 		name := fmt.Sprintf("%d:As(Errorf(..., %v), %v)", i, tc.err, tc.target)
-		// Clear the target pointer, in case it was set in a previous test.
+		// 清空目标指针，以防在前一个测试中设置过。
 		rtarget := reflect.ValueOf(tc.target)
 		rtarget.Elem().Set(reflect.Zero(reflect.TypeOf(tc.target).Elem()))
 		t.Run(name, func(t *testing.T) {

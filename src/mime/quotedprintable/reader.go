@@ -1,9 +1,8 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package quotedprintable implements quoted-printable encoding as specified by
-// RFC 2045.
+// Package quotedprintable 实现 RFC 2045 规定的 quoted-printable 编码。
 package quotedprintable
 
 import (
@@ -13,14 +12,14 @@ import (
 	"io"
 )
 
-// Reader is a quoted-printable decoder.
+// Reader 是一个 quoted-printable 解码器。
 type Reader struct {
 	br   *bufio.Reader
-	rerr error  // last read error
-	line []byte // to be consumed before more of br
+	rerr error  // 上次读取错误
+	line []byte // 在从 br 读取更多数据之前要消费的字节
 }
 
-// NewReader returns a quoted-printable reader, decoding from r.
+// NewReader 返回一个 quoted-printable 读取器，从 r 进行解码。
 func NewReader(r io.Reader) *Reader {
 	return &Reader{
 		br: bufio.NewReader(r),
@@ -33,11 +32,11 @@ func fromHex(b byte) (byte, error) {
 		return b - '0', nil
 	case b >= 'A' && b <= 'F':
 		return b - 'A' + 10, nil
-	// Accept badly encoded bytes.
+	// 接受格式不规范的字节。
 	case b >= 'a' && b <= 'f':
 		return b - 'a' + 10, nil
 	}
-	return 0, fmt.Errorf("quotedprintable: invalid hex byte 0x%02x", b)
+	return 0, fmt.Errorf("quotedprintable: 无效的十六进制字节 0x%02x", b)
 }
 
 func readHexByte(v []byte) (b byte, err error) {
@@ -69,17 +68,17 @@ var (
 	lwspChar   = " \t"
 )
 
-// Read reads and decodes quoted-printable data from the underlying reader.
+// Read 从底层读取器读取和解码 quoted-printable 数据。
 func (r *Reader) Read(p []byte) (n int, err error) {
-	// Deviations from RFC 2045:
-	// 1. in addition to "=\r\n", "=\n" is also treated as soft line break.
-	// 2. it will pass through a '\r' or '\n' not preceded by '=', consistent
-	//    with other broken QP encoders & decoders.
-	// 3. it accepts soft line-break (=) at end of message (issue 15486); i.e.
-	//    the final byte read from the underlying reader is allowed to be '=',
-	//    and it will be silently ignored.
-	// 4. it takes = as literal = if not followed by two hex digits
-	//    but not at end of line (issue 13219).
+	// RFC 2045 的偏差：
+	// 1. 除了 "=\r\n"，"=\n" 也被视为软行中断。
+	// 2. 它将传递未被 '=' 前缀的 '\r' 或 '\n'，这与
+	//    其他不规范的 QP 编码器和解码器一致。
+	// 3. 它接受消息末尾的软行中断（=）（issue 15486）；即
+	//    从底层读取器读取的最后一个字节允许是 '='，
+	//    并将被静默忽略。
+	// 4. 如果 = 后面没有跟两个十六进制数字（但不在行尾），
+	//    则将其作为字面 = 对待（issue 13219）。
 	for len(p) > 0 {
 		if len(r.line) == 0 {
 			if r.rerr != nil {
@@ -87,7 +86,7 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 			}
 			r.line, r.rerr = r.br.ReadSlice('\n')
 
-			// Does the line end in CRLF instead of just LF?
+			// 该行是否以 CRLF 结尾而不是仅以 LF 结尾？
 			hasLF := bytes.HasSuffix(r.line, lf)
 			hasCR := bytes.HasSuffix(r.line, crlf)
 			wholeLine := r.line
@@ -97,7 +96,7 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 				r.line = r.line[:len(r.line)-1]
 				if !bytes.HasPrefix(rightStripped, lf) && !bytes.HasPrefix(rightStripped, crlf) &&
 					!(len(rightStripped) == 0 && len(r.line) > 0 && r.rerr == io.EOF) {
-					r.rerr = fmt.Errorf("quotedprintable: invalid bytes after =: %q", rightStripped)
+					r.rerr = fmt.Errorf("quotedprintable: = 后面的无效字节：%q", rightStripped)
 				}
 			} else if hasLF {
 				if hasCR {
@@ -115,21 +114,21 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 			b, err = readHexByte(r.line[1:])
 			if err != nil {
 				if len(r.line) >= 2 && r.line[1] != '\r' && r.line[1] != '\n' {
-					// Take the = as a literal =.
+					// 将 = 作为字面 = 处理。
 					b = '='
 					break
 				}
 				return n, err
 			}
-			r.line = r.line[2:] // 2 of the 3; other 1 is done below
+			r.line = r.line[2:] // 3 中的 2；其他 1 在下面完成
 		case b == '\t' || b == '\r' || b == '\n':
 			break
 		case b >= 0x80:
-			// As an extension to RFC 2045, we accept
-			// values >= 0x80 without complaint. Issue 22597.
+			// 作为 RFC 2045 的扩展，我们接受
+			// 值 >= 0x80 而不提出抱怨。Issue 22597。
 			break
 		case b < ' ' || b > '~':
-			return n, fmt.Errorf("quotedprintable: invalid unescaped byte 0x%02x in body", b)
+			return n, fmt.Errorf("quotedprintable: 主体中的无效未转义字节 0x%02x", b)
 		}
 		p[0] = b
 		p = p[1:]

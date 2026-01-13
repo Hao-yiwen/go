@@ -1,27 +1,27 @@
-// Copyright 2018 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2018 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package alias implements memory aliasing tests.
-// This code also exists as golang.org/x/crypto/internal/alias.
+// Package alias 实现内存别名测试。
+// 此代码也存在于 golang.org/x/crypto/internal/alias。
 package alias
 
 import "unsafe"
 
-// AnyOverlap reports whether x and y share memory at any (not necessarily
-// corresponding) index. The memory beyond the slice length is ignored.
+// AnyOverlap 报告 x 和 y 是否在任何（不一定对应的）索引处共享内存。
+// 超出切片长度的内存会被忽略。
 func AnyOverlap(x, y []byte) bool {
 	return len(x) > 0 && len(y) > 0 &&
 		uintptr(unsafe.Pointer(&x[0])) <= uintptr(unsafe.Pointer(&y[len(y)-1])) &&
 		uintptr(unsafe.Pointer(&y[0])) <= uintptr(unsafe.Pointer(&x[len(x)-1]))
 }
 
-// InexactOverlap reports whether x and y share memory at any non-corresponding
-// index. The memory beyond the slice length is ignored. Note that x and y can
-// have different lengths and still not have any inexact overlap.
+// InexactOverlap 报告 x 和 y 是否在任何非对应索引处共享内存。
+// 超出切片长度的内存会被忽略。注意，x 和 y 可以
+// 有不同的长度，并且仍然没有任何不精确的重叠。
 //
-// InexactOverlap can be used to implement the requirements of the crypto/cipher
-// AEAD, Block, BlockMode and Stream interfaces.
+// InexactOverlap 可用于实现 crypto/cipher
+// AEAD、Block、BlockMode 和 Stream 接口的要求。
 func InexactOverlap(x, y []byte) bool {
 	if len(x) == 0 || len(y) == 0 || &x[0] == &y[0] {
 		return false

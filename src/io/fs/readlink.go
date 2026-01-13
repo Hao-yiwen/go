@@ -1,28 +1,27 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package fs
 
-// ReadLinkFS is the interface implemented by a file system
-// that supports reading symbolic links.
+// ReadLinkFS 是由支持读取符号链接的文件系统实现的接口。
 type ReadLinkFS interface {
 	FS
 
-	// ReadLink returns the destination of the named symbolic link.
-	// If there is an error, it should be of type [*PathError].
+	// ReadLink 返回指定符号链接的目标。
+	// 如果发生错误，它应该是 [*PathError] 类型。
 	ReadLink(name string) (string, error)
 
-	// Lstat returns a [FileInfo] describing the named file.
-	// If the file is a symbolic link, the returned [FileInfo] describes the symbolic link.
-	// Lstat makes no attempt to follow the link.
-	// If there is an error, it should be of type [*PathError].
+	// Lstat 返回描述指定文件的 [FileInfo]。
+	// 如果文件是符号链接，返回的 [FileInfo] 描述符号链接本身。
+	// Lstat 不尝试跟随链接。
+	// 如果发生错误，它应该是 [*PathError] 类型。
 	Lstat(name string) (FileInfo, error)
 }
 
-// ReadLink returns the destination of the named symbolic link.
+// ReadLink 返回指定符号链接的目标。
 //
-// If fsys does not implement [ReadLinkFS], then ReadLink returns an error.
+// 如果 fsys 没有实现 [ReadLinkFS]，则 ReadLink 返回错误。
 func ReadLink(fsys FS, name string) (string, error) {
 	sym, ok := fsys.(ReadLinkFS)
 	if !ok {
@@ -31,11 +30,11 @@ func ReadLink(fsys FS, name string) (string, error) {
 	return sym.ReadLink(name)
 }
 
-// Lstat returns a [FileInfo] describing the named file.
-// If the file is a symbolic link, the returned [FileInfo] describes the symbolic link.
-// Lstat makes no attempt to follow the link.
+// Lstat 返回描述指定文件的 [FileInfo]。
+// 如果文件是符号链接，返回的 [FileInfo] 描述符号链接本身。
+// Lstat 不尝试跟随链接。
 //
-// If fsys does not implement [ReadLinkFS], then Lstat is identical to [Stat].
+// 如果 fsys 没有实现 [ReadLinkFS]，则 Lstat 与 [Stat] 相同。
 func Lstat(fsys FS, name string) (FileInfo, error) {
 	sym, ok := fsys.(ReadLinkFS)
 	if !ok {

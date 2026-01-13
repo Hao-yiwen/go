@@ -72,8 +72,8 @@ func TestXGlobal(t *testing.T) {
 		return
 	}
 
-	// Could check &glass[0] == &glass2[0] but also want to make sure write does not fault
-	// (data must not be in read-only memory).
+	// 可以检查 &glass[0] == &glass2[0]，但也想确保写入不会出错
+	// （数据必须不在只读内存中）。
 	old := glass[0]
 	glass[0]++
 	if glass2[0] != glass[0] {
@@ -81,8 +81,8 @@ func TestXGlobal(t *testing.T) {
 	}
 	glass[0] = old
 
-	// Could check &bbig[0] == &bbig2[0] but also want to make sure write does not fault
-	// (data must not be in read-only memory).
+	// 可以检查 &bbig[0] == &bbig2[0]，但也想确保写入不会出错
+	// （数据必须不在只读内存中）。
 	old = bbig[0]
 	bbig[0]++
 	if bbig2[0] != bbig[0] {

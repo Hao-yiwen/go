@@ -1,9 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package sha256 implements the SHA224 and SHA256 hash algorithms as defined
-// in FIPS 180-4.
+// Package sha256 实现了 FIPS 180-4 中定义的 SHA224 和 SHA256 哈希算法。
 package sha256
 
 import (
@@ -18,19 +17,19 @@ func init() {
 	crypto.RegisterHash(crypto.SHA256, New)
 }
 
-// The size of a SHA256 checksum in bytes.
+// SHA256 校验和的大小（以字节为单位）。
 const Size = 32
 
-// The size of a SHA224 checksum in bytes.
+// SHA224 校验和的大小（以字节为单位）。
 const Size224 = 28
 
-// The blocksize of SHA256 and SHA224 in bytes.
+// SHA256 和 SHA224 的块大小（以字节为单位）。
 const BlockSize = 64
 
-// New returns a new [hash.Hash] computing the SHA256 checksum. The Hash
-// also implements [encoding.BinaryMarshaler], [encoding.BinaryAppender] and
-// [encoding.BinaryUnmarshaler] to marshal and unmarshal the internal
-// state of the hash.
+// New 返回一个计算 SHA256 校验和的新 [hash.Hash]。Hash
+// 还实现了 [encoding.BinaryMarshaler]、[encoding.BinaryAppender] 和
+// [encoding.BinaryUnmarshaler] 来编组和解组内部
+// 的哈希状态。
 func New() hash.Hash {
 	if boring.Enabled {
 		return boring.NewSHA256()
@@ -38,10 +37,10 @@ func New() hash.Hash {
 	return sha256.New()
 }
 
-// New224 returns a new [hash.Hash] computing the SHA224 checksum. The Hash
-// also implements [encoding.BinaryMarshaler], [encoding.BinaryAppender] and
-// [encoding.BinaryUnmarshaler] to marshal and unmarshal the internal
-// state of the hash.
+// New224 返回一个计算 SHA224 校验和的新 [hash.Hash]。Hash
+// 还实现了 [encoding.BinaryMarshaler]、[encoding.BinaryAppender] 和
+// [encoding.BinaryUnmarshaler] 来编组和解组内部
+// 的哈希状态。
 func New224() hash.Hash {
 	if boring.Enabled {
 		return boring.NewSHA224()
@@ -49,7 +48,7 @@ func New224() hash.Hash {
 	return sha256.New224()
 }
 
-// Sum256 returns the SHA256 checksum of the data.
+// Sum256 返回数据的 SHA256 校验和。
 func Sum256(data []byte) [Size]byte {
 	if boring.Enabled {
 		return boring.SHA256(data)
@@ -61,7 +60,7 @@ func Sum256(data []byte) [Size]byte {
 	return sum
 }
 
-// Sum224 returns the SHA224 checksum of the data.
+// Sum224 返回数据的 SHA224 校验和。
 func Sum224(data []byte) [Size224]byte {
 	if boring.Enabled {
 		return boring.SHA224(data)

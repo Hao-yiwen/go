@@ -2,58 +2,50 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package context defines the Context type, which carries deadlines,
-// cancellation signals, and other request-scoped values across API boundaries
-// and between processes.
+// 包 context 定义了 Context 类型，它在 API 边界和进程之间携带截止时间、
+// 取消信号和其他请求作用域的值。
 //
-// Incoming requests to a server should create a [Context], and outgoing
-// calls to servers should accept a Context. The chain of function
-// calls between them must propagate the Context, optionally replacing
-// it with a derived Context created using [WithCancel], [WithDeadline],
-// [WithTimeout], or [WithValue].
+// 传入服务器的请求应该创建一个 [Context]，而对服务器的传出调用应该接受一个 Context。
+// 函数调用链必须传播 Context，可以选择用 [WithCancel]、[WithDeadline]、
+// [WithTimeout] 或 [WithValue] 创建的派生 Context 替换它。
 //
-// A Context may be canceled to indicate that work done on its behalf should stop.
-// A Context with a deadline is canceled after the deadline passes.
-// When a Context is canceled, all Contexts derived from it are also canceled.
+// Context 可能会被取消以表示不应该继续代表它完成的工作。
+// 有截止时间的 Context 在截止时间过后会被取消。
+// 当一个 Context 被取消时，派生自它的所有 Context 也会被取消。
 //
-// The [WithCancel], [WithDeadline], and [WithTimeout] functions take a
-// Context (the parent) and return a derived Context (the child) and a
-// [CancelFunc]. Calling the CancelFunc directly cancels the child and its
-// children, removes the parent's reference to the child, and stops
-// any associated timers. Failing to call the CancelFunc leaks the
-// child and its children until the parent is canceled. The go vet tool
-// checks that CancelFuncs are used on all control-flow paths.
+// [WithCancel]、[WithDeadline] 和 [WithTimeout] 函数接受一个 Context（父级）
+// 并返回一个派生的 Context（子级）和一个 [CancelFunc]。
+// 直接调用 CancelFunc 会取消子级及其子级，移除父级对子级的引用，
+// 并停止任何关联的计时器。
+// 如果未能调用 CancelFunc，子级及其子级会泄漏直到父级被取消。
+// go vet 工具会检查 CancelFunc 在所有控制流路径上的使用情况。
 //
-// The [WithCancelCause], [WithDeadlineCause], and [WithTimeoutCause] functions
-// return a [CancelCauseFunc], which takes an error and records it as
-// the cancellation cause. Calling [Cause] on the canceled context
-// or any of its children retrieves the cause. If no cause is specified,
-// Cause(ctx) returns the same value as ctx.Err().
+// [WithCancelCause]、[WithDeadlineCause] 和 [WithTimeoutCause] 函数
+// 返回一个 [CancelCauseFunc]，它接受一个错误并将其记录为取消原因。
+// 在被取消的 context 或其任何子级上调用 [Cause] 会检索该原因。
+// 如果未指定原因，Cause(ctx) 返回与 ctx.Err() 相同的值。
 //
-// Programs that use Contexts should follow these rules to keep interfaces
-// consistent across packages and enable static analysis tools to check context
-// propagation:
+// 使用 Context 的程序应该遵循这些规则以保持接口的一致性，
+// 并让静态分析工具能够检查 context 的传播：
 //
-// Do not store Contexts inside a struct type; instead, pass a Context
-// explicitly to each function that needs it. This is discussed further in
-// https://go.dev/blog/context-and-structs. The Context should be the first
-// parameter, typically named ctx:
+// 不要在结构体类型中存储 Context；而是显式地将 Context 传递给需要它的每个函数。
+// 有关详细讨论，请参见 https://go.dev/blog/context-and-structs。
+// Context 应该是第一个参数，通常命名为 ctx：
 //
 //	func DoSomething(ctx context.Context, arg Arg) error {
-//		// ... use ctx ...
+//		// ... 使用 ctx ...
 //	}
 //
-// Do not pass a nil [Context], even if a function permits it. Pass [context.TODO]
-// if you are unsure about which Context to use.
+// 不要传递 nil [Context]，即使函数允许这样做。如果不确定使用哪个 Context，
+// 应传递 [context.TODO]。
 //
-// Use context Values only for request-scoped data that transits processes and
-// APIs, not for passing optional parameters to functions.
+// 仅将 context 值用于在进程和 API 间传输的请求作用域数据，
+// 而不用于向函数传递可选参数。
 //
-// The same Context may be passed to functions running in different goroutines;
-// Contexts are safe for simultaneous use by multiple goroutines.
+// 同一个 Context 可能会被传递给在不同 goroutine 中运行的函数；
+// Context 对多个 goroutine 的同时使用是安全的。
 //
-// See https://go.dev/blog/context for example code for a server that uses
-// Contexts.
+// 有关使用 Context 的服务器的示例代码，请参见 https://go.dev/blog/context。
 package context
 
 import (

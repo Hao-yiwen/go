@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package slog
 
@@ -12,49 +12,46 @@ import (
 
 const nAttrsInline = 5
 
-// A Record holds information about a log event.
-// Copies of a Record share state.
-// Do not modify a Record after handing out a copy to it.
-// Call [NewRecord] to create a new Record.
-// Use [Record.Clone] to create a copy with no shared state.
+// Record 保存有关日志事件的信息。
+// Record 的副本共享状态。
+// 在将副本交给 Record 后不要修改 Record。
+// 调用 [NewRecord] 创建新的 Record。
+// 使用 [Record.Clone] 创建无共享状态的副本。
 type Record struct {
-	// The time at which the output method (Log, Info, etc.) was called.
+	// 调用输出方法 (Log、Info 等) 的时间。
 	Time time.Time
 
-	// The log message.
+	// 日志消息。
 	Message string
 
-	// The level of the event.
+	// 事件的级别。
 	Level Level
 
-	// The program counter at the time the record was constructed, as determined
-	// by runtime.Callers. If zero, no program counter is available.
+	// 构造记录时的程序计数器，由 runtime.Callers 确定。
+	// 如果为零，则没有可用的程序计数器。
 	//
-	// The only valid use for this value is as an argument to
-	// [runtime.CallersFrames]. In particular, it must not be passed to
-	// [runtime.FuncForPC].
+	// 此值的唯一有效用途是作为参数传递给 [runtime.CallersFrames]。
+	// 特别是，它不得传递给 [runtime.FuncForPC]。
 	PC uintptr
 
-	// Allocation optimization: an inline array sized to hold
-	// the majority of log calls (based on examination of open-source
-	// code). It holds the start of the list of Attrs.
+	// 分配优化：一个内联数组，其大小足以容纳大多数日志调用
+	// (基于对开源代码的检查)。它保存 Attr 列表的开始。
 	front [nAttrsInline]Attr
 
-	// The number of Attrs in front.
+	// front 中 Attr 的数量。
 	nFront int
 
-	// The list of Attrs except for those in front.
-	// Invariants:
-	//   - len(back) > 0 iff nFront == len(front)
-	//   - Unused array elements are zero. Used to detect mistakes.
+	// Attr 列表，除了 front 中的那些。
+	// 不变量：
+	//   - len(back) > 0 当且仅当 nFront == len(front)
+	//   - 未使用的数组元素为零。用于检测错误。
 	back []Attr
 }
 
-// NewRecord creates a [Record] from the given arguments.
-// Use [Record.AddAttrs] to add attributes to the Record.
+// NewRecord 从给定的参数创建一个 [Record]。
+// 使用 [Record.AddAttrs] 向 Record 添加属性。
 //
-// NewRecord is intended for logging APIs that want to support a [Handler] as
-// a backend.
+// NewRecord 用于想要支持 [Handler] 作为后端的日志 API。
 func NewRecord(t time.Time, level Level, msg string, pc uintptr) Record {
 	return Record{
 		Time:    t,
@@ -64,21 +61,20 @@ func NewRecord(t time.Time, level Level, msg string, pc uintptr) Record {
 	}
 }
 
-// Clone returns a copy of the record with no shared state.
-// The original record and the clone can both be modified
-// without interfering with each other.
+// Clone 返回 Record 的副本，不带共享状态。
+// 原始记录和克隆都可以被修改，而不会相互干扰。
 func (r Record) Clone() Record {
-	r.back = slices.Clip(r.back) // prevent append from mutating shared array
+	r.back = slices.Clip(r.back) // 防止 append 修改共享数组
 	return r
 }
 
-// NumAttrs returns the number of attributes in the [Record].
+// NumAttrs 返回 [Record] 中的属性数量。
 func (r Record) NumAttrs() int {
 	return r.nFront + len(r.back)
 }
 
-// Attrs calls f on each Attr in the [Record].
-// Iteration stops if f returns false.
+// Attrs 在 [Record] 中的每个 Attr 上调用 f。
+// 如果 f 返回 false，迭代停止。
 func (r Record) Attrs(f func(Attr) bool) {
 	for i := 0; i < r.nFront; i++ {
 		if !f(r.front[i]) {
@@ -92,8 +88,8 @@ func (r Record) Attrs(f func(Attr) bool) {
 	}
 }
 
-// AddAttrs appends the given Attrs to the [Record]'s list of Attrs.
-// It omits empty groups.
+// AddAttrs 将给定的 Attr 附加到 [Record] 的 Attr 列表。
+// 它省略空组。
 func (r *Record) AddAttrs(attrs ...Attr) {
 	var i int
 	for i = 0; i < len(attrs) && r.nFront < len(r.front); i++ {

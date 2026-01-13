@@ -1,6 +1,6 @@
-// Copyright 2014 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2014 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package atomic
 
@@ -8,28 +8,28 @@ import (
 	"unsafe"
 )
 
-// A Value provides an atomic load and store of a consistently typed value.
-// The zero value for a Value returns nil from [Value.Load].
-// Once [Value.Store] has been called, a Value must not be copied.
+// Value 提供了对一致类型的值的原子加载和存储。
+// Value 的零值从 [Value.Load] 返回 nil。
+// 一旦调用了 [Value.Store]，Value 就不能被复制。
 //
-// A Value must not be copied after first use.
+// Value 在首次使用后不能被复制。
 type Value struct {
 	v any
 }
 
-// efaceWords is interface{} internal representation.
+// efaceWords 是 interface{} 的内部表示。
 type efaceWords struct {
 	typ  unsafe.Pointer
 	data unsafe.Pointer
 }
 
-// Load returns the value set by the most recent Store.
-// It returns nil if there has been no call to Store for this Value.
+// Load 返回由最近一次 Store 设置的值。
+// 如果没有调用过 Store，则返回 nil。
 func (v *Value) Load() (val any) {
 	vp := (*efaceWords)(unsafe.Pointer(v))
 	typ := LoadPointer(&vp.typ)
 	if typ == nil || typ == unsafe.Pointer(&firstStoreInProgress) {
-		// First store not yet completed.
+		// 第一次存储还未完成。
 		return nil
 	}
 	data := LoadPointer(&vp.data)
@@ -41,9 +41,9 @@ func (v *Value) Load() (val any) {
 
 var firstStoreInProgress byte
 
-// Store sets the value of the [Value] v to val.
-// All calls to Store for a given Value must use values of the same concrete type.
-// Store of an inconsistent type panics, as does Store(nil).
+// Store 将 [Value] v 的值设置为 val。
+// 对给定 Value 的所有 Store 调用必须使用相同具体类型的值。
+// 不同类型的 Store 会导致 panic，Store(nil) 也会。
 func (v *Value) Store(val any) {
 	if val == nil {
 		panic("sync/atomic: store of nil value into Value")
@@ -53,27 +53,27 @@ func (v *Value) Store(val any) {
 	for {
 		typ := LoadPointer(&vp.typ)
 		if typ == nil {
-			// Attempt to start first store.
-			// Disable preemption so that other goroutines can use
-			// active spin wait to wait for completion.
+			// 尝试开始第一次存储。
+			// 禁用抢占，以便其他 goroutine 可以使用
+			// 主动自旋等待来等待完成。
 			runtime_procPin()
 			if !CompareAndSwapPointer(&vp.typ, nil, unsafe.Pointer(&firstStoreInProgress)) {
 				runtime_procUnpin()
 				continue
 			}
-			// Complete first store.
+			// 完成第一次存储。
 			StorePointer(&vp.data, vlp.data)
 			StorePointer(&vp.typ, vlp.typ)
 			runtime_procUnpin()
 			return
 		}
 		if typ == unsafe.Pointer(&firstStoreInProgress) {
-			// First store in progress. Wait.
-			// Since we disable preemption around the first store,
-			// we can wait with active spinning.
+			// 第一次存储进行中。等待。
+			// 由于我们在第一次存储周围禁用了抢占，
+			// 我们可以通过主动自旋来等待。
 			continue
 		}
-		// First store completed. Check type and overwrite data.
+		// 第一次存储完成。检查类型并覆盖数据。
 		if typ != vlp.typ {
 			panic("sync/atomic: store of inconsistently typed value into Value")
 		}
@@ -82,11 +82,10 @@ func (v *Value) Store(val any) {
 	}
 }
 
-// Swap stores new into Value and returns the previous value. It returns nil if
-// the Value is empty.
+// Swap 将 new 存储到 Value 中并返回之前的值。如果 Value 为空则返回 nil。
 //
-// All calls to Swap for a given Value must use values of the same concrete
-// type. Swap of an inconsistent type panics, as does Swap(nil).
+// 对给定 Value 的所有 Swap 调用必须使用相同具体类型的值。
+// 不同类型的 Swap 会导致 panic，Swap(nil) 也会。
 func (v *Value) Swap(new any) (old any) {
 	if new == nil {
 		panic("sync/atomic: swap of nil value into Value")
@@ -96,27 +95,27 @@ func (v *Value) Swap(new any) (old any) {
 	for {
 		typ := LoadPointer(&vp.typ)
 		if typ == nil {
-			// Attempt to start first store.
-			// Disable preemption so that other goroutines can use
-			// active spin wait to wait for completion.
+			// 尝试开始第一次存储。
+			// 禁用抢占，以便其他 goroutine 可以使用
+			// 主动自旋等待来等待完成。
 			runtime_procPin()
 			if !CompareAndSwapPointer(&vp.typ, nil, unsafe.Pointer(&firstStoreInProgress)) {
 				runtime_procUnpin()
 				continue
 			}
-			// Complete first store.
+			// 完成第一次存储。
 			StorePointer(&vp.data, np.data)
 			StorePointer(&vp.typ, np.typ)
 			runtime_procUnpin()
 			return nil
 		}
 		if typ == unsafe.Pointer(&firstStoreInProgress) {
-			// First store in progress. Wait.
-			// Since we disable preemption around the first store,
-			// we can wait with active spinning.
+			// 第一次存储进行中。等待。
+			// 由于我们在第一次存储周围禁用了抢占，
+			// 我们可以通过主动自旋来等待。
 			continue
 		}
-		// First store completed. Check type and overwrite data.
+		// 第一次存储完成。检查类型并覆盖数据。
 		if typ != np.typ {
 			panic("sync/atomic: swap of inconsistently typed value into Value")
 		}
@@ -126,11 +125,10 @@ func (v *Value) Swap(new any) (old any) {
 	}
 }
 
-// CompareAndSwap executes the compare-and-swap operation for the [Value].
+// CompareAndSwap 对 [Value] 执行比较并交换操作。
 //
-// All calls to CompareAndSwap for a given Value must use values of the same
-// concrete type. CompareAndSwap of an inconsistent type panics, as does
-// CompareAndSwap(old, nil).
+// 对给定 Value 的所有 CompareAndSwap 调用必须使用相同具体类型的值。
+// 不同类型的 CompareAndSwap 会导致 panic，CompareAndSwap(old, nil) 也会。
 func (v *Value) CompareAndSwap(old, new any) (swapped bool) {
 	if new == nil {
 		panic("sync/atomic: compare and swap of nil value into Value")
@@ -147,35 +145,35 @@ func (v *Value) CompareAndSwap(old, new any) (swapped bool) {
 			if old != nil {
 				return false
 			}
-			// Attempt to start first store.
-			// Disable preemption so that other goroutines can use
-			// active spin wait to wait for completion.
+			// 尝试开始第一次存储。
+			// 禁用抢占，以便其他 goroutine 可以使用
+			// 主动自旋等待来等待完成。
 			runtime_procPin()
 			if !CompareAndSwapPointer(&vp.typ, nil, unsafe.Pointer(&firstStoreInProgress)) {
 				runtime_procUnpin()
 				continue
 			}
-			// Complete first store.
+			// 完成第一次存储。
 			StorePointer(&vp.data, np.data)
 			StorePointer(&vp.typ, np.typ)
 			runtime_procUnpin()
 			return true
 		}
 		if typ == unsafe.Pointer(&firstStoreInProgress) {
-			// First store in progress. Wait.
-			// Since we disable preemption around the first store,
-			// we can wait with active spinning.
+			// 第一次存储进行中。等待。
+			// 由于我们在第一次存储周围禁用了抢占，
+			// 我们可以通过主动自旋来等待。
 			continue
 		}
-		// First store completed. Check type and overwrite data.
+		// 第一次存储完成。检查类型并覆盖数据。
 		if typ != np.typ {
 			panic("sync/atomic: compare and swap of inconsistently typed value into Value")
 		}
-		// Compare old and current via runtime equality check.
-		// This allows value types to be compared, something
-		// not offered by the package functions.
-		// CompareAndSwapPointer below only ensures vp.data
-		// has not changed since LoadPointer.
+		// 通过运行时相等性检查来比较旧值和当前值。
+		// 这允许比较值类型，这是
+		// 包函数不提供的功能。
+		// 下面的 CompareAndSwapPointer 只能确保 vp.data
+		// 自 LoadPointer 以来没有改变。
 		data := LoadPointer(&vp.data)
 		var i any
 		(*efaceWords)(unsafe.Pointer(&i)).typ = typ
@@ -187,6 +185,6 @@ func (v *Value) CompareAndSwap(old, new any) (swapped bool) {
 	}
 }
 
-// Disable/enable preemption, implemented in runtime.
+// 禁用/启用抢占，在运行时中实现。
 func runtime_procPin() int
 func runtime_procUnpin()

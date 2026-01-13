@@ -2,7 +2,7 @@
 // 本源代码的使用受 BSD 风格许可证约束，
 // 该许可证可在 LICENSE 文件中找到。
 
-// This file 包含 the exported entry points for invoking the parser.
+// 此文件包含调用解析器的导出入口点。
 
 package parser
 
@@ -18,9 +18,9 @@ import (
 	"strings"
 )
 
-// If src != nil, readSource converts src to a []byte if possible;
-// 否则 it 返回一个 error. If src == nil, readSource returns
-// the result of reading the file specified by filename.
+// 如果 src != nil，readSource 会尽可能将 src 转换为 []byte；
+// 否则返回错误。如果 src == nil，readSource 返回读取
+// filename 指定的文件的结果。
 func readSource(filename string, src any) ([]byte, error) {
 	if src != nil {
 		switch s := src.(type) {
@@ -29,7 +29,7 @@ func readSource(filename string, src any) ([]byte, error) {
 		case []byte:
 			return s, nil
 		case *bytes.Buffer:
-			// is io.Reader, but src 是一个lready available in []byte form
+			// 是 io.Reader，但 src 已经以 []byte 形式提供
 			if s != nil {
 				return s.Bytes(), nil
 			}
@@ -41,46 +41,39 @@ func readSource(filename string, src any) ([]byte, error) {
 	return os.ReadFile(filename)
 }
 
-// 一个Mode value 是一个 set of flags (or 0).
-// They control the amount of source code parsed and other optional
-// parser functionality.
+// Mode 值是一组标志（或 0）。
+// 它们控制解析的源代码量和其他可选的解析器功能。
 type Mode uint
 
 const (
-	PackageClauseOnly    Mode             = 1 << iota // stop parsing after package clause
-	ImportsOnly                                       // stop parsing after import declarations
-	ParseComments                                     // parse comments and add them to AST
-	Trace                                             // print a trace of parsed productions
-	DeclarationErrors                                 // report declaration errors
-	SpuriousErrors                                    // same as AllErrors, for backward-compatibility
-	SkipObjectResolution                              // skip deprecated identifier resolution; see ParseFile
-	AllErrors            = SpuriousErrors             // report all errors (not just the first 10 on different lines)
+	PackageClauseOnly    Mode             = 1 << iota // 在包子句后停止解析
+	ImportsOnly                                       // 在导入声明后停止解析
+	ParseComments                                     // 解析注释并将其添加到 AST
+	Trace                                             // 打印解析产生式的追踪
+	DeclarationErrors                                 // 报告声明错误
+	SpuriousErrors                                    // 与 AllErrors 相同，用于向后兼容
+	SkipObjectResolution                              // 跳过已弃用的标识符解析；参见 ParseFile
+	AllErrors            = SpuriousErrors             // 报告所有错误（不仅仅是不同行上的前 10 个）
 )
 
-// ParseFile parses the source code of a single Go source file and returns
-// the corresponding [ast.File] node. The source code 可能是 provided via
-// the filename of the source file, or via the src parameter.
+// ParseFile 解析单个 Go 源文件的源代码，并返回对应的 [ast.File] 节点。
+// 源代码可以通过源文件的文件名或 src 参数提供。
 //
-// If src != nil, ParseFile parses the source from src and the filename is
-// only used when recording position information. The type of the argument
-// for the src parameter 必须是 string, []byte, or [io.Reader].
-// If src == nil, ParseFile parses the file specified by filename.
+// 如果 src != nil，ParseFile 从 src 解析源，文件名仅在记录位置信息时使用。
+// src 参数的参数类型必须是字符串、[]byte 或 [io.Reader]。
+// 如果 src == nil，ParseFile 解析由 filename 指定的文件。
 //
-// The mode parameter controls the amount of source text parsed and
-// other optional parser functionality. If the [SkipObjectResolution]
-// mode bit is set (recommended), the object resolution phase of
-// parsing 将是 skipped, causing File.Scope, File.Unresolved, and
-// all Ident.Obj fields to be nil. Those fields are deprecated; see
-// [ast.Object] for details.
+// mode 参数控制解析的源文本量和其他可选的解析器功能。
+// 如果设置了 [SkipObjectResolution] 模式位（推荐），
+// 解析的对象解析阶段将被跳过，导致 File.Scope、File.Unresolved 和
+// 所有 Ident.Obj 字段为 nil。这些字段已弃用；有关详细信息，请参见 [ast.Object]。
 //
-// Position information is recorded in the file set fset, which must not be
-// nil.
+// 位置信息被记录在文件集 fset 中，不得为 nil。
 //
-// If the source couldn't be read, the returned AST is nil and the error
-// 指示 specific failure. If the source was read but syntax
-// errors were found, the result 是一个 partial AST (with [ast.Bad]* nodes
-// representing the fragments of erroneous source code). Multiple errors
-// are returned via a scanner.ErrorList which is sorted by source position.
+// 如果无法读取源，返回的 AST 为 nil，错误指示具体的失败。
+// 如果读取了源但发现语法错误，结果是一个部分 AST
+// (包含表示错误源代码片段的 [ast.Bad]* 节点)。
+// 多个错误通过按源位置排序的 scanner.ErrorList 返回。
 func ParseFile(fset *token.FileSet, filename string, src any, mode Mode) (f *ast.File, err error) {
 	if fset == nil {
 		panic("parser.ParseFile: no token.FileSet provided (fset == nil)")

@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package strings_test
 
@@ -219,8 +219,8 @@ var lastIndexAnyTests = []IndexTest{
 	{"0123456\xcf\x80abc", "\xcfb\x80", 10},
 }
 
-// Execute f on each test case.  funcName should be the name of f; it's used
-// in failure reports.
+// 对每个测试用例执行 f。funcName 应该是 f 的名称；
+// 它在失败报告中使用。
 func runIndexTests(t *testing.T, f func(s, sep string) int, funcName string, testCases []IndexTest) {
 	for _, test := range testCases {
 		actual := f(test.s, test.sep)
@@ -609,13 +609,13 @@ func TestFieldsFunc(t *testing.T) {
 	}
 }
 
-// Test case for any function which accepts and returns a single string.
+// 任何接受并返回单个字符串的函数的测试用例。
 type StringTest struct {
 	in, out string
 }
 
-// Execute f on each test case.  funcName should be the name of f; it's used
-// in failure reports.
+// 对每个测试用例执行 f。funcName 应该是 f 的名称；
+// 它在失败报告中使用。
 func runStringTests(t *testing.T, f func(string) string, funcName string, testCases []StringTest) {
 	for _, tc := range testCases {
 		actual := f(tc.in)
@@ -679,7 +679,7 @@ func tenRunes(ch rune) string {
 	return string(r)
 }
 
-// User-defined self-inverse mapping function
+// 用户定义的自反函数
 func rot13(r rune) rune {
 	step := rune(13)
 	if r >= 'a' && r <= 'z' {
@@ -1246,7 +1246,7 @@ func repeat(s string, count int) (err error) {
 	return
 }
 
-// See Issue golang.org/issue/16237
+// 参见 Issue golang.org/issue/16237
 func TestRepeatCatchesOverflow(t *testing.T) {
 	type testCase struct {
 		s      string

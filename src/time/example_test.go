@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package time_test
 
@@ -93,7 +93,7 @@ func ExampleParseDuration() {
 	hours, _ := time.ParseDuration("10h")
 	complex, _ := time.ParseDuration("1h10m10s")
 	micro, _ := time.ParseDuration("1µs")
-	// The package also accepts the incorrect but common prefix u for micro.
+	// 该包也接受微的不正确但常见的前缀 u。
 	micro2, _ := time.ParseDuration("1us")
 
 	fmt.Println(hours)
@@ -240,49 +240,49 @@ func ExampleNewTicker() {
 }
 
 func ExampleTime_Format() {
-	// Parse a time value from a string in the standard Unix format.
+	// 从标准 Unix 格式的字符串中解析时间值。
 	t, err := time.Parse(time.UnixDate, "Wed Feb 25 11:06:39 PST 2015")
-	if err != nil { // Always check errors even if they should not happen.
+	if err != nil { // 始终检查错误，即使它们不应该发生。
 		panic(err)
 	}
 
 	tz, err := time.LoadLocation("Asia/Shanghai")
-	if err != nil { // Always check errors even if they should not happen.
+	if err != nil { // 始终检查错误，即使它们不应该发生。
 		panic(err)
 	}
 
-	// time.Time's Stringer method is useful without any format.
+	// time.Time 的 Stringer 方法在没有任何格式的情况下很有用。
 	fmt.Println("default format:", t)
 
-	// Predefined constants in the package implement common layouts.
+	// 包中的预定义常量实现了常见的布局。
 	fmt.Println("Unix format:", t.Format(time.UnixDate))
 
-	// The time zone attached to the time value affects its output.
+	// 附加到时间值的时区影响其输出。
 	fmt.Println("Same, in UTC:", t.UTC().Format(time.UnixDate))
 
 	fmt.Println("in Shanghai with seconds:", t.In(tz).Format("2006-01-02T15:04:05 -070000"))
 
 	fmt.Println("in Shanghai with colon seconds:", t.In(tz).Format("2006-01-02T15:04:05 -07:00:00"))
 
-	// The rest of this function demonstrates the properties of the
-	// layout string used in the format.
+	// 函数的其余部分演示了
+	// 格式中使用的布局字符串的属性。
 
-	// The layout string used by the Parse function and Format method
-	// shows by example how the reference time should be represented.
-	// We stress that one must show how the reference time is formatted,
-	// not a time of the user's choosing. Thus each layout string is a
-	// representation of the time stamp,
+	// Parse 函数和 Format 方法使用的布局字符串
+	// 通过示例显示如何表示参考时间。
+	// 我们强调必须显示参考时间的格式方式，
+	// 而不是用户选择的时间。因此，每个布局字符串都是
+	// 时间戳的表示，
 	//	Jan 2 15:04:05 2006 MST
-	// An easy way to remember this value is that it holds, when presented
-	// in this order, the values (lined up with the elements above):
+	// 记住这个值的一个简单方法是，当按照
+	// 这个顺序呈现时，它包含值（与上面的元素对齐）：
 	//	  1 2  3  4  5    6  -7
-	// There are some wrinkles illustrated below.
+	// 下面演示了一些问题。
 
-	// Most uses of Format and Parse use constant layout strings such as
-	// the ones defined in this package, but the interface is flexible,
-	// as these examples show.
+	// Format 和 Parse 的大多数用途都使用常量布局字符串，例如
+	// 本包中定义的那些，但接口很灵活，
+	// 如这些示例所示。
 
-	// Define a helper function to make the examples' output look nice.
+	// 定义一个辅助函数来使示例的输出看起来很好。
 	do := func(name, layout, want string) {
 		got := t.Format(layout)
 		if want != got {
@@ -292,37 +292,37 @@ func ExampleTime_Format() {
 		fmt.Printf("%-16s %q gives %q\n", name, layout, got)
 	}
 
-	// Print a header in our output.
+	// 在我们的输出中打印标题。
 	fmt.Printf("\nFormats:\n\n")
 
-	// Simple starter examples.
+	// 简单的入门示例。
 	do("Basic full date", "Mon Jan 2 15:04:05 MST 2006", "Wed Feb 25 11:06:39 PST 2015")
 	do("Basic short date", "2006/01/02", "2015/02/25")
 
-	// The hour of the reference time is 15, or 3PM. The layout can express
-	// it either way, and since our value is the morning we should see it as
-	// an AM time. We show both in one format string. Lower case too.
+	// 参考时间的小时数是 15 或 3PM。布局可以以任何方式表达，
+	// 由于我们的值是上午，我们应该将其视为
+	// 上午时间。我们在一个格式字符串中显示两者。也是小写。
 	do("AM/PM", "3PM==3pm==15h", "11AM==11am==11h")
 
-	// When parsing, if the seconds value is followed by a decimal point
-	// and some digits, that is taken as a fraction of a second even if
-	// the layout string does not represent the fractional second.
-	// Here we add a fractional second to our time value used above.
+	// 解析时，如果秒值后面跟着小数点
+	// 和一些数字，那么即使
+	// 布局字符串不表示小数秒，也会将其视为秒的分数。
+	// 这里我们向上面使用的时间值添加小数秒。
 	t, err = time.Parse(time.UnixDate, "Wed Feb 25 11:06:39.1234 PST 2015")
 	if err != nil {
 		panic(err)
 	}
-	// It does not appear in the output if the layout string does not contain
-	// a representation of the fractional second.
+	// 如果布局字符串不包含
+	// 小数秒的表示，它不会出现在输出中。
 	do("No fraction", time.UnixDate, "Wed Feb 25 11:06:39 PST 2015")
 
-	// Fractional seconds can be printed by adding a run of 0s or 9s after
-	// a decimal point in the seconds value in the layout string.
-	// If the layout digits are 0s, the fractional second is of the specified
-	// width. Note that the output has a trailing zero.
+	// 小数秒可以通过在
+	// 布局字符串中秒值的小数点后添加一系列 0 或 9 来打印。
+	// 如果布局数字是 0，则小数秒具有指定的
+	// 宽度。请注意输出有尾部零。
 	do("0s for fraction", "15:04:05.00000", "11:06:39.12340")
 
-	// If the fraction in the layout is 9s, trailing zeros are dropped.
+	// 如果布局中的分数是 9，则删除尾部零。
 	do("9s for fraction", "15:04:05.99999999", "11:06:39.1234")
 
 	// Output:
@@ -344,13 +344,13 @@ func ExampleTime_Format() {
 }
 
 func ExampleTime_Format_pad() {
-	// Parse a time value from a string in the standard Unix format.
+	// 从标准 Unix 格式的字符串中解析时间值。
 	t, err := time.Parse(time.UnixDate, "Sat Mar 7 11:06:39 PST 2015")
-	if err != nil { // Always check errors even if they should not happen.
+	if err != nil { // 始终检查错误，即使它们不应该发生。
 		panic(err)
 	}
 
-	// Define a helper function to make the examples' output look nice.
+	// 定义一个辅助函数来使示例的输出看起来很好。
 	do := func(name, layout, want string) {
 		got := t.Format(layout)
 		if want != got {
@@ -360,24 +360,24 @@ func ExampleTime_Format_pad() {
 		fmt.Printf("%-16s %q gives %q\n", name, layout, got)
 	}
 
-	// The predefined constant Unix uses an underscore to pad the day.
+	// 预定义的常量 Unix 使用下划线来填充日期。
 	do("Unix", time.UnixDate, "Sat Mar  7 11:06:39 PST 2015")
 
-	// For fixed-width printing of values, such as the date, that may be one or
-	// two characters (7 vs. 07), use an _ instead of a space in the layout string.
-	// Here we print just the day, which is 2 in our layout string and 7 in our
-	// value.
+	// 对于固定宽度的值打印，例如可能是一个或
+	// 两个字符（7 vs. 07）的日期，请在布局字符串中使用 _ 而不是空格。
+	// 这里我们只打印日期，在我们的布局字符串中是 2，在我们的
+	// 值中是 7。
 	do("No pad", "<2>", "<7>")
 
-	// An underscore represents a space pad, if the date only has one digit.
+	// 下划线表示空格填充，如果日期只有一位数字。
 	do("Spaces", "<_2>", "< 7>")
 
-	// A "0" indicates zero padding for single-digit values.
+	// "0" 表示单位数值的零填充。
 	do("Zeros", "<02>", "<07>")
 
-	// If the value is already the right width, padding is not used.
-	// For instance, the second (05 in the reference time) in our value is 39,
-	// so it doesn't need padding, but the minutes (04, 06) does.
+	// 如果值已经是正确的宽度，则不使用填充。
+	// 例如，参考时间中的秒（05）在我们的值中是 39，
+	// 所以它不需要填充，但分钟（04、06）需要。
 	do("Suppressed pad", "04:05", "06:39")
 
 	// Output:
@@ -407,27 +407,27 @@ func ExampleTime_GoString() {
 }
 
 func ExampleParse() {
-	// See the example for Time.Format for a thorough description of how
-	// to define the layout string to parse a time.Time value; Parse and
-	// Format use the same model to describe their input and output.
+	// 有关如何定义布局字符串以解析 time.Time 值的详细说明，
+	// 请参阅 Time.Format 的示例；Parse 和
+	// Format 使用相同的模型来描述它们的输入和输出。
 
-	// longForm shows by example how the reference time would be represented in
-	// the desired layout.
+	// longForm 通过示例显示参考时间在
+	// 所需布局中的表示方式。
 	const longForm = "Jan 2, 2006 at 3:04pm (MST)"
 	t, _ := time.Parse(longForm, "Feb 3, 2013 at 7:54pm (PST)")
 	fmt.Println(t)
 
-	// shortForm is another way the reference time would be represented
-	// in the desired layout; it has no time zone present.
-	// Note: without explicit zone, returns time in UTC.
+	// shortForm 是参考时间在所需布局中的另一种表示方式；
+	// 它没有时区。
+	// 注意：不显式指定区域，则以 UTC 返回时间。
 	const shortForm = "2006-Jan-02"
 	t, _ = time.Parse(shortForm, "2013-Feb-03")
 	fmt.Println(t)
 
-	// Some valid layouts are invalid time values, due to format specifiers
-	// such as _ for space padding and Z for zone information.
-	// For example the RFC3339 layout 2006-01-02T15:04:05Z07:00
-	// contains both Z and a time zone offset in order to handle both valid options:
+	// 由于格式说明符，某些有效的布局是无效的时间值，
+	// 例如用于空格填充的 _ 和用于区域信息的 Z。
+	// 例如，RFC3339 布局 2006-01-02T15:04:05Z07:00
+	// 同时包含 Z 和时区偏移，以便处理两个有效选项：
 	// 2006-01-02T15:04:05Z
 	// 2006-01-02T15:04:05+07:00
 	t, _ = time.Parse(time.RFC3339, "2006-01-02T15:04:05Z")
@@ -435,7 +435,7 @@ func ExampleParse() {
 	t, _ = time.Parse(time.RFC3339, "2006-01-02T15:04:05+07:00")
 	fmt.Println(t)
 	_, err := time.Parse(time.RFC3339, time.RFC3339)
-	fmt.Println("error", err) // Returns an error as the layout is not a valid time value
+	fmt.Println("error", err) // 返回错误，因为布局不是有效的时间值
 
 	// Output:
 	// 2013-02-03 19:54:00 -0800 PST
@@ -448,12 +448,12 @@ func ExampleParse() {
 func ExampleParseInLocation() {
 	loc, _ := time.LoadLocation("Europe/Berlin")
 
-	// This will look for the name CEST in the Europe/Berlin time zone.
+	// 这将在 Europe/Berlin 时区中查找名称 CEST。
 	const longForm = "Jan 2, 2006 at 3:04pm (MST)"
 	t, _ := time.ParseInLocation(longForm, "Jul 9, 2012 at 5:02am (CEST)", loc)
 	fmt.Println(t)
 
-	// Note: without explicit zone, returns time in given location.
+	// 注意：不指定明确的区域，则以给定位置返回时间。
 	const shortForm = "2006-Jan-02"
 	t, _ = time.ParseInLocation(shortForm, "2012-Jul-09", loc)
 	fmt.Println(t)
@@ -497,14 +497,14 @@ func ExampleUnixMilli() {
 }
 
 func ExampleTime_Unix() {
-	// 1 billion seconds of Unix, three ways.
-	fmt.Println(time.Unix(1e9, 0).UTC())     // 1e9 seconds
-	fmt.Println(time.Unix(0, 1e18).UTC())    // 1e18 nanoseconds
-	fmt.Println(time.Unix(2e9, -1e18).UTC()) // 2e9 seconds - 1e18 nanoseconds
+	// Unix 的 10 亿秒，三种方式。
+	fmt.Println(time.Unix(1e9, 0).UTC())     // 1e9 秒
+	fmt.Println(time.Unix(0, 1e18).UTC())    // 1e18 纳秒
+	fmt.Println(time.Unix(2e9, -1e18).UTC()) // 2e9 秒 - 1e18 纳秒
 
 	t := time.Date(2001, time.September, 9, 1, 46, 40, 0, time.UTC)
-	fmt.Println(t.Unix())     // seconds since 1970
-	fmt.Println(t.UnixNano()) // nanoseconds since 1970
+	fmt.Println(t.Unix())     // 自 1970 年以来的秒数
+	fmt.Println(t.UnixNano()) // 自 1970 年以来的纳秒数
 
 	// Output:
 	// 2001-09-09 01:46:40 +0000 UTC

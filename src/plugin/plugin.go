@@ -1,100 +1,101 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2016 The Go 作者。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证管制，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package plugin implements loading and symbol resolution of Go plugins.
+// Package plugin 实现 Go 插件的加载和符号解析。
 //
-// A plugin is a Go main package with exported functions and variables that
-// has been built with:
+// 一个插件是一个 Go 主包，包含导出的函数和变量，
+// 使用以下方式构建：
 //
 //	go build -buildmode=plugin
 //
-// When a plugin is first opened, the init functions of all packages not
-// already part of the program are called. The main function is not run.
-// A plugin is only initialized once, and cannot be closed.
+// 当第一次打开插件时，所有不是
+// 程序一部分的包的 init 函数都会被调用。main 函数不会运行。
+// 一个插件只初始化一次，不能被关闭。
 //
-// # Warnings
+// # 警告
 //
-// The ability to dynamically load parts of an application during
-// execution, perhaps based on user-defined configuration, may be a
-// useful building block in some designs. In particular, because
-// applications and dynamically loaded functions can share data
-// structures directly, plugins may enable very high-performance
-// integration of separate parts.
+// 在执行过程中动态加载应用程序的部分的能力，
+// 可能基于用户定义的配置，可能是
+// 某些设计中的有用构建块。特别是，因为
+// 应用程序和动态加载的函数可以直接共享数据
+// 结构，插件可能实现非常高性能的
+// 独立部分的集成。
 //
-// However, the plugin mechanism has many significant drawbacks that
-// should be considered carefully during the design. For example:
+// 然而，插件机制有许多重大缺点
+// 应该在设计过程中仔细考虑。例如：
 //
-//   - Plugins are currently supported only on Linux, FreeBSD, and
-//     macOS, making them unsuitable for applications intended to be
-//     portable.
+//   - 插件目前仅在 Linux、FreeBSD 和
+//     macOS 上受支持，使其不适合
+//     便携式应用程序。
 //
-//   - Plugins are poorly supported by the Go race detector. Even simple
-//     race conditions may not be automatically detected. See
-//     https://go.dev/issue/24245 for more information.
+//   - 插件对 Go 竞态检测器的支持很差。即使是简单的
+//     竞态条件也可能不会自动检测到。有关
+//     更多信息，请参阅
+//     https://go.dev/issue/24245。
 //
-//   - Applications that use plugins may require careful configuration
-//     to ensure that the various parts of the program be made available
-//     in the correct location in the file system (or container image).
-//     By contrast, deploying an application consisting of a single static
-//     executable is straightforward.
+//   - 使用插件的应用程序可能需要仔细配置
+//     以确保程序的各个部分在
+//     文件系统中的正确位置（或容器镜像）可用。
+//     相比之下，部署由单个静态可执行文件
+//     组成的应用程序是直接的。
 //
-//   - Reasoning about program initialization is more difficult when
-//     some packages may not be initialized until long after the
-//     application has started running.
+//   - 当某些包可能不会
+//     在应用程序启动很长时间后初始化时，
+//     关于程序初始化的推理变得更加困难。
 //
-//   - Bugs in applications that load plugins could be exploited by
-//     an attacker to load dangerous or untrusted libraries.
+//   - 加载插件的应用程序中的错误可能被
+//     攻击者利用以加载危险或不受信任的库。
 //
-//   - Runtime crashes are likely to occur unless all parts of the
-//     program (the application and all its plugins) are compiled
-//     using exactly the same version of the toolchain, the same build
-//     tags, and the same values of certain flags and environment
-//     variables.
+//   - 除非程序的所有部分
+//     （应用程序和所有插件）都用
+//     完全相同版本的工具链、相同的构建
+//     标签和某些标志和环境变量的相同值进行编译，
+//     否则很可能发生运行时崩溃。
 //
-//   - Similar crashing problems are likely to arise unless all common
-//     dependencies of the application and its plugins are built from
-//     exactly the same source code.
+//   - 类似的崩溃问题可能会出现，除非应用程序
+//     及其插件的所有常见依赖项都是从
+//     完全相同的源代码构建的。
 //
-//   - Together, these restrictions mean that, in practice, the
-//     application and its plugins must all be built together by a
-//     single person or component of a system. In that case, it may
-//     be simpler for that person or component to generate Go source
-//     files that blank-import the desired set of plugins and then
-//     compile a static executable in the usual way.
+//   - 总的来说，这些限制意味着，在实践中，
+//     应用程序及其插件必须由
+//     单个人或系统的单个组件一起构建。在这种情况下，
+//     该人或组件生成 Go 源代码文件可能更简单，
+//     这些文件 blank-import 所需的插件集，然后
+//     以通常的方式编译静态可执行文件。
 //
-// For these reasons, many users decide that traditional interprocess
-// communication (IPC) mechanisms such as sockets, pipes, remote
-// procedure call (RPC), shared memory mappings, or file system
-// operations may be more suitable despite the performance overheads.
+// 由于这些原因，许多用户决定传统进程间
+// 通信 (IPC) 机制（例如套接字、管道、远程
+// 过程调用 (RPC)、共享内存映射或文件系统
+// 操作）可能更合适，尽管性能开销。
 package plugin
 
-// Plugin is a loaded Go plugin.
+// Plugin 是加载的 Go 插件。
 type Plugin struct {
 	pluginpath string
-	err        string        // set if plugin failed to load
-	loaded     chan struct{} // closed when loaded
+	err        string        // 如果插件加载失败则设置
+	loaded     chan struct{} // 加载时关闭
 	syms       map[string]any
 }
 
-// Open opens a Go plugin.
-// If a path has already been opened, then the existing *[Plugin] is returned.
-// It is safe for concurrent use by multiple goroutines.
+// Open 打开一个 Go 插件。
+// 如果路径已经被打开过，则返回现有的 *[Plugin]。
+// 对多个 goroutine 的并发使用是安全的。
 func Open(path string) (*Plugin, error) {
 	return open(path)
 }
 
-// Lookup searches for a symbol named symName in plugin p.
-// A symbol is any exported variable or function.
-// It reports an error if the symbol is not found.
-// It is safe for concurrent use by multiple goroutines.
+// Lookup 在插件 p 中搜索名为 symName 的符号。
+// 符号是任何导出的变量或函数。
+// 如果找不到符号，则报告错误。
+// 对多个 goroutine 的并发使用是安全的。
 func (p *Plugin) Lookup(symName string) (Symbol, error) {
 	return lookup(p, symName)
 }
 
-// A Symbol is a pointer to a variable or function.
+// Symbol 是指向变量或函数的指针。
 //
-// For example, a plugin defined as
+// 例如，定义如下的插件
 //
 //	package main
 //
@@ -104,8 +105,8 @@ func (p *Plugin) Lookup(symName string) (Symbol, error) {
 //
 //	func F() { fmt.Printf("Hello, number %d\n", V) }
 //
-// may be loaded with the [Open] function and then the exported package
-// symbols V and F can be accessed
+// 可以用 [Open] 函数加载，然后可以访问导出的包
+// 符号 V 和 F
 //
 //	p, err := plugin.Open("plugin_name.so")
 //	if err != nil {
@@ -120,5 +121,5 @@ func (p *Plugin) Lookup(symName string) (Symbol, error) {
 //		panic(err)
 //	}
 //	*v.(*int) = 7
-//	f.(func())() // prints "Hello, number 7"
+//	f.(func())() // 打印 "Hello, number 7"
 type Symbol any

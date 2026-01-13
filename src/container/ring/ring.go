@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package ring implements operations on circular lists.
+// Package ring 实现了环形列表上的操作。
 package ring
 
-// A Ring is an element of a circular list, or ring.
-// Rings do not have a beginning or end; a pointer to any ring element
-// serves as reference to the entire ring. Empty rings are represented
-// as nil Ring pointers. The zero value for a Ring is a one-element
-// ring with a nil Value.
+// Ring 是环形列表的元素，或环。
+// 环没有开始或结束；对任何环元素的指针
+// 作为对整个环的引用。空环表示为
+// nil Ring 指针。Ring 的零值是一个单元素
+// 环，其值为 nil。
 type Ring struct {
 	next, prev *Ring
-	Value      any // for use by client; untouched by this library
+	Value      any // 供客户端使用；此库不修改
 }
 
 func (r *Ring) init() *Ring {
@@ -21,7 +21,7 @@ func (r *Ring) init() *Ring {
 	return r
 }
 
-// Next returns the next ring element. r must not be empty.
+// Next 返回下一个环元素。r 不能为空。
 func (r *Ring) Next() *Ring {
 	if r.next == nil {
 		return r.init()
@@ -29,7 +29,7 @@ func (r *Ring) Next() *Ring {
 	return r.next
 }
 
-// Prev returns the previous ring element. r must not be empty.
+// Prev 返回前一个环元素。r 不能为空。
 func (r *Ring) Prev() *Ring {
 	if r.next == nil {
 		return r.init()
@@ -37,8 +37,8 @@ func (r *Ring) Prev() *Ring {
 	return r.prev
 }
 
-// Move moves n % r.Len() elements backward (n < 0) or forward (n >= 0)
-// in the ring and returns that ring element. r must not be empty.
+// Move 在环中向后（n < 0）或向前（n >= 0）移动 n % r.Len() 个元素
+// 并返回那个环元素。r 不能为空。
 func (r *Ring) Move(n int) *Ring {
 	if r.next == nil {
 		return r.init()
@@ -56,7 +56,7 @@ func (r *Ring) Move(n int) *Ring {
 	return r
 }
 
-// New creates a ring of n elements.
+// New 创建一个 n 个元素的环。
 func New(n int) *Ring {
 	if n <= 0 {
 		return nil
@@ -72,27 +72,27 @@ func New(n int) *Ring {
 	return r
 }
 
-// Link connects ring r with ring s such that r.Next()
-// becomes s and returns the original value for r.Next().
-// r must not be empty.
+// Link 连接环 r 和环 s，使得 r.Next()
+// 变成 s 并返回 r.Next() 的原始值。
+// r 不能为空。
 //
-// If r and s point to the same ring, linking
-// them removes the elements between r and s from the ring.
-// The removed elements form a subring and the result is a
-// reference to that subring (if no elements were removed,
-// the result is still the original value for r.Next(),
-// and not nil).
+// 如果 r 和 s 指向同一个环，链接
+// 它们会从环中删除 r 和 s 之间的元素。
+// 被删除的元素形成一个子环，结果是
+// 对该子环的引用（如果没有删除元素，
+// 结果仍然是 r.Next() 的原始值，
+// 而不是 nil）。
 //
-// If r and s point to different rings, linking
-// them creates a single ring with the elements of s inserted
-// after r. The result points to the element following the
-// last element of s after insertion.
+// 如果 r 和 s 指向不同的环，链接
+// 它们会创建一个单一环，其中 s 的元素被插入
+// r 之后。结果指向 s 的最后一个元素之后的元素
+// 插入后。
 func (r *Ring) Link(s *Ring) *Ring {
 	n := r.Next()
 	if s != nil {
 		p := s.Prev()
-		// Note: Cannot use multiple assignment because
-		// evaluation order of LHS is not specified.
+		// 注意：不能使用多重赋值，因为
+		// LHS 的求值顺序未指定。
 		r.next = s
 		s.prev = r
 		n.prev = p
@@ -101,9 +101,9 @@ func (r *Ring) Link(s *Ring) *Ring {
 	return n
 }
 
-// Unlink removes n % r.Len() elements from the ring r, starting
-// at r.Next(). If n % r.Len() == 0, r remains unchanged.
-// The result is the removed subring. r must not be empty.
+// Unlink 从环 r 中删除 n % r.Len() 个元素，从
+// r.Next() 开始。如果 n % r.Len() == 0，r 保持不变。
+// 结果是被删除的子环。r 不能为空。
 func (r *Ring) Unlink(n int) *Ring {
 	if n <= 0 {
 		return nil
@@ -111,8 +111,8 @@ func (r *Ring) Unlink(n int) *Ring {
 	return r.Link(r.Move(n + 1))
 }
 
-// Len computes the number of elements in ring r.
-// It executes in time proportional to the number of elements.
+// Len 计算环 r 中的元素数量。
+// 执行时间与元素数量成比例。
 func (r *Ring) Len() int {
 	n := 0
 	if r != nil {
@@ -124,8 +124,8 @@ func (r *Ring) Len() int {
 	return n
 }
 
-// Do calls function f on each element of the ring, in forward order.
-// The behavior of Do is undefined if f changes *r.
+// Do 按前向顺序对环的每个元素调用函数 f。
+// 如果 f 改变 *r，Do 的行为是未定义的。
 func (r *Ring) Do(f func(any)) {
 	if r != nil {
 		f(r.Value)

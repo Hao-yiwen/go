@@ -13,34 +13,32 @@ import (
 	"sync/atomic"
 )
 
-// If debug is set, invalid offset and position values cause a panic
-// (go.dev/issue/57490).
+// 如果设置了 debug，无效的偏移和位置值会导致恐慌
+// (go.dev/issue/57490)。
 const debug = false
 
-// -----------------------------------------------------------------------------
-// Positions
-
-// Position 描述an arbitrary source position
-// including the file, line, and column location.
-// 一个Position is valid 如果 line number is > 0.
+// 位置
+//
+// Position 描述一个任意的源代码位置，包括文件、行和列位置。
+// 如果行号 > 0，则 Position 是有效的。
 type Position struct {
-	Filename string // filename, if any
-	Offset   int    // offset, starting at 0
-	Line     int    // line number, starting at 1
-	Column   int    // column number, starting at 1 (byte count)
+	Filename string // 文件名（如果有）
+	Offset   int    // 偏移量，从 0 开始
+	Line     int    // 行号，从 1 开始
+	Column   int    // 列号，从 1 开始（字节计数）
 }
 
-// IsValid 报告whether the position is valid.
+// IsValid 报告位置是否有效。
 func (pos *Position) IsValid() bool { return pos.Line > 0 }
 
-// String 返回a string in one of several forms:
+// String 返回以下几种形式之一的字符串：
 //
-//	file:line:column    valid position with file name
-//	file:line           valid position with file name but no column (column == 0)
-//	line:column         valid position without file name
-//	line                valid position without file name and no column (column == 0)
-//	file                invalid position with file name
-//	-                   invalid position without file name
+//	file:line:column    带文件名的有效位置
+//	file:line           带文件名但无列号的有效位置 (column == 0)
+//	line:column         不带文件名的有效位置
+//	line                不带文件名且无列号的有效位置 (column == 0)
+//	file                带文件名的无效位置
+//	-                   无文件名的无效位置
 func (pos Position) String() string {
 	s := pos.Filename
 	if pos.IsValid() {
@@ -58,81 +56,75 @@ func (pos Position) String() string {
 	return s
 }
 
-// Pos 是一个 compact encoding of a source position within a file set.
-// It can be converted into a [Position] for a more convenient, but much
-// larger, representation.
+// Pos 是一个源代码位置在文件集中的紧凑编码。
+// 它可以转换为 [Position] 以获得更方便但更大的表示。
 //
-// The Pos value for a given file 是一个 number in the range [base, base+size],
-// where base and size are specified when a file 是一个dded to the file set.
-// The difference between a Pos value and the corresponding file base
-// corresponds to the byte offset of that position (represented by the Pos value)
-// from the beginning of the file. Thus, the file base offset 是 Pos value
-// representing the first byte in the file.
+// 给定文件的 Pos 值是范围 [base, base+size] 中的一个数字，
+// 其中 base 和 size 在将文件添加到文件集时指定。
+// Pos 值与对应文件基址之间的差异对应于该位置（由 Pos 值表示）
+// 相对于文件开始的字节偏移。因此，文件基址偏移是表示
+// 文件中第一个字节的 Pos 值。
 //
-// To create the Pos value for a specific source offset (measured in bytes),
-// first add the respective file to the current file set using [FileSet.AddFile]
-// and then call [File.Pos](offset) for that file. Given a Pos value p
-// for a specific file set fset, the corresponding [Position] value is
-// obtained by calling fset.Position(p).
+// 要为特定的源代码偏移（以字节为单位）创建 Pos 值，
+// 首先使用 [FileSet.AddFile] 将相应文件添加到当前文件集，
+// 然后为该文件调用 [File.Pos](offset)。给定特定文件集 fset 的 Pos 值 p，
+// 对应的 [Position] 值通过调用 fset.Position(p) 获得。
 //
-// Pos values can be compared directly with the usual comparison operators:
-// If two Pos values p and q are in the same file, comparing p and q is
-// equivalent to comparing the respective source file offsets. If p and q
-// are in different files, p < q 为真 如果 file implied by p was added
-// to the respective file set before the file implied by q.
+// Pos 值可以直接用常见的比较操作符进行比较：
+// 如果两个 Pos 值 p 和 q 在同一文件中，比较 p 和 q 等价于
+// 比较相应的源文件偏移。如果 p 和 q 在不同文件中，
+// 如果 p 隐含的文件在 q 隐含的文件之前添加到相应的文件集，则 p < q 为真。
 type Pos int
 
-// The zero value for [Pos] is NoPos; there is no file and line information
-// associated with it, and NoPos.IsValid() 为假. NoPos 是一个lways
-// smaller than any other [Pos] value. The corresponding [Position] value
-// for NoPos 是 zero value for [Position].
+// [Pos] 的零值是 NoPos；没有与之相关的文件和行信息，
+// NoPos.IsValid() 为假。NoPos 总是小于任何其他 [Pos] 值。
+// NoPos 对应的 [Position] 值是 [Position] 的零值。
 const NoPos Pos = 0
 
-// IsValid 报告whether the position is valid.
+// IsValid 报告位置是否有效。
 func (p Pos) IsValid() bool {
 	return p != NoPos
 }
 
-// -----------------------------------------------------------------------------
-// File
+// 文件
 
-// 一个File 是一个 handle for a file belonging to a [FileSet].
-// 一个File has a name, size, and line offset table.
+// File 是属于 [FileSet] 的文件的句柄。
+// File 有一个名称、大小和行偏移表。
 //
-// Use [FileSet.AddFile] to create a File.
-// 一个File may belong to more than one FileSet; see [FileSet.AddExistingFiles].
+// 使用 [FileSet.AddFile] 创建一个 File。
+// 一个 File 可能属于多个 FileSet；请参见 [FileSet.AddExistingFiles]。
 type File struct {
-	name string // file name as provided to AddFile
-	base int    // Pos value range for this file is [base...base+size]
-	size int    // file size as provided to AddFile
+	name string // 提供给 AddFile 的文件名
+	base int    // 此文件的 Pos 值范围是 [base...base+size]
+	size int    // 提供给 AddFile 的文件大小
 
-	// lines and infos are protected by mutex
+	// lines 和 infos 由互斥锁保护
 	mutex sync.Mutex
-	lines []int // lines 包含 the offset of the first character for each line (the first entry 是一个lways 0)
+	lines []int // lines 包含每行第一个字符的偏移（第一个条目总是 0）
 	infos []lineInfo
 }
 
-// Name 返回the file name of file f as registered with AddFile.
+// Name 返回与 AddFile 注册的文件 f 的文件名。
 func (f *File) Name() string {
 	return f.name
 }
 
-// Base 返回the base offset of file f as registered with AddFile.
+// Base 返回与 AddFile 注册的文件 f 的基址偏移。
 func (f *File) Base() int {
 	return f.base
 }
 
-// Size 返回the size of file f as registered with AddFile.
+// Size 返回与 AddFile 注册的文件 f 的大小。
 func (f *File) Size() int {
 	return f.size
 }
 
-// End 返回the end position of file f as registered with AddFile.
+// End 返回与 AddFile 注册的文件 f 的结束位置。
 func (f *File) End() Pos {
 	return Pos(f.base + f.size)
 }
 
-// LineCount 返回the number of lines in file f.
+// LineCount 返回文件 f 中的行数。
 func (f *File) LineCount() int {
 	f.mutex.Lock()
 	n := len(f.lines)
@@ -140,9 +132,9 @@ func (f *File) LineCount() int {
 	return n
 }
 
-// AddLine adds the line offset for a new line.
-// The line offset 必须是 larger than the offset for the previous line
-// and smaller than the file size; 否则 the line offset is ignored.
+// AddLine 为新行添加行偏移。
+// 行偏移必须大于前一行的偏移，且小于文件大小；
+// 否则行偏移被忽略。
 func (f *File) AddLine(offset int) {
 	f.mutex.Lock()
 	if i := len(f.lines); (i == 0 || f.lines[i-1] < offset) && offset < f.size {
@@ -151,10 +143,9 @@ func (f *File) AddLine(offset int) {
 	f.mutex.Unlock()
 }
 
-// MergeLine merges a line with the following line. It 是一个kin to replacing
-// the newline character at the end of the line with a space (to not change the
-// remaining offsets). To obtain the line number, consult e.g. [Position.Line].
-// MergeLine will panic if given an invalid line number.
+// MergeLine 将一行与下一行合并。这类似于将行尾的换行符替换为空格
+// （以不改变其余偏移）。要获取行号，请参见例如 [Position.Line]。
+// 如果给定无效的行号，MergeLine 将会 panic。
 func (f *File) MergeLine(line int) {
 	if line < 1 {
 		panic(fmt.Sprintf("invalid line number %d (应该是 >= 1)", line))
@@ -164,17 +155,16 @@ func (f *File) MergeLine(line int) {
 	if line >= len(f.lines) {
 		panic(fmt.Sprintf("invalid line number %d (应该是 < %d)", line, len(f.lines)))
 	}
-	// To merge the line numbered <line> with the line numbered <line+1>,
-	// we need to remove the entry in lines corresponding to the line
-	// numbered <line+1>. The entry in lines corresponding to the line
-	// numbered <line+1> is located at index <line>, since indices in lines
-	// are 0-based and line numbers are 1-based.
+	// 要将编号为 <line> 的行与编号为 <line+1> 的行合并，
+	// 我们需要移除 lines 中对应于编号为 <line+1> 的行的条目。
+	// lines 中对应于编号为 <line+1> 的行的条目位于索引 <line> 处，
+	// 因为 lines 中的索引是基于 0 的，而行号是基于 1 的。
 	copy(f.lines[line:], f.lines[line+1:])
 	f.lines = f.lines[:len(f.lines)-1]
 }
 
-// Lines 返回the effective line offset table of the form described by [File.SetLines].
-// Callers must not mutate the result.
+// Lines 返回由 [File.SetLines] 描述的形式的有效行偏移表。
+// 调用者不得改变结果。
 func (f *File) Lines() []int {
 	f.mutex.Lock()
 	lines := f.lines
@@ -182,16 +172,15 @@ func (f *File) Lines() []int {
 	return lines
 }
 
-// SetLines 设置the line offsets for a file and 报告是否 it succeeded.
-// The line offsets are the offsets of the first character of each line;
-// for instance for the content "ab\nc\n" the line offsets are {0, 3}.
-// 一个empty file has an empty line offset table.
-// Each line offset 必须是 larger than the offset for the previous line
-// and smaller than the file size; 否则 SetLines fails and returns
-// false.
-// Callers must not mutate the provided slice after SetLines returns.
+// SetLines 为文件设置行偏移，并报告是否成功。
+// 行偏移是每行第一个字符的偏移；
+// 例如，对于内容 "ab\nc\n"，行偏移是 {0, 3}。
+// 空文件有一个空的行偏移表。
+// 每个行偏移必须大于前一行的偏移，且小于文件大小；
+// 否则 SetLines 失败并返回 false。
+// SetLines 返回后，调用者不得改变提供的切片。
 func (f *File) SetLines(lines []int) bool {
-	// verify validity of lines table
+	// 验证 lines 表的有效性
 	size := f.size
 	for i, offset := range lines {
 		if i > 0 && offset <= lines[i-1] || size <= offset {
@@ -199,15 +188,15 @@ func (f *File) SetLines(lines []int) bool {
 		}
 	}
 
-	// set lines table
+	// 设置 lines 表
 	f.mutex.Lock()
 	f.lines = lines
 	f.mutex.Unlock()
 	return true
 }
 
-// SetLinesForContent 设置the line offsets for the given file content.
-// It ignores position-altering //line comments.
+// SetLinesForContent 为给定的文件内容设置行偏移。
+// 它忽略改变位置的 //line 注释。
 func (f *File) SetLinesForContent(content []byte) {
 	var lines []int
 	line := 0
@@ -227,9 +216,9 @@ func (f *File) SetLinesForContent(content []byte) {
 	f.mutex.Unlock()
 }
 
-// LineStart 返回the [Pos] value of the start of the specified line.
-// It ignores any alternative positions set using [File.AddLineColumnInfo].
-// LineStart panics 如果 1-based line number is invalid.
+// LineStart 返回指定行开始的 [Pos] 值。
+// 它忽略使用 [File.AddLineColumnInfo] 设置的任何替代位置。
+// 如果基于 1 的行号无效，LineStart 会 panic。
 func (f *File) LineStart(line int) Pos {
 	if line < 1 {
 		panic(fmt.Sprintf("invalid line number %d (应该是 >= 1)", line))
@@ -242,30 +231,27 @@ func (f *File) LineStart(line int) Pos {
 	return Pos(f.base + f.lines[line-1])
 }
 
-// 一个lineInfo object 描述 alternative file, line, and column
-// number information (such as provided via a //line directive)
-// for a given file offset.
+// lineInfo 对象描述替代文件、行和列号信息（例如通过 //line 指令提供的信息），
+// 用于给定的文件偏移。
 type lineInfo struct {
-	// fields are exported to make them accessible to gob
+	// 字段被导出以使其可被 gob 访问
 	Offset       int
 	Filename     string
 	Line, Column int
 }
 
-// AddLineInfo is like [File.AddLineColumnInfo] with a column = 1 argument.
-// It is here for backward-compatibility for code prior to Go 1.11.
+// AddLineInfo 类似于 [File.AddLineColumnInfo]，参数 column = 1。
+// 它在此是为了与 Go 1.11 之前的代码向后兼容。
 func (f *File) AddLineInfo(offset int, filename string, line int) {
 	f.AddLineColumnInfo(offset, filename, line, 1)
 }
 
-// AddLineColumnInfo adds alternative file, line, and column number
-// information for a given file offset. The offset 必须是 larger
-// than the offset for the previously added alternative line info
-// and smaller than the file size; 否则 the information is
-// ignored.
+// AddLineColumnInfo 为给定的文件偏移添加替代文件、行和列号信息。
+// 偏移必须大于先前添加的替代行信息的偏移，且小于文件大小；
+// 否则该信息被忽略。
 //
-// AddLineColumnInfo is typically used to register alternative position
-// information for line directives such as //line filename:line:column.
+// AddLineColumnInfo 通常用于为行指令（例如 //line filename:line:column）
+// 注册替代位置信息。
 func (f *File) AddLineColumnInfo(offset int, filename string, line, column int) {
 	f.mutex.Lock()
 	if i := len(f.infos); (i == 0 || f.infos[i-1].Offset < offset) && offset < f.size {
@@ -274,7 +260,7 @@ func (f *File) AddLineColumnInfo(offset int, filename string, line, column int) 
 	f.mutex.Unlock()
 }
 
-// fixOffset fixes an out-of-bounds offset such that 0 <= offset <= f.size.
+// fixOffset 修复越界偏移，使得 0 <= offset <= f.size。
 func (f *File) fixOffset(offset int) int {
 	switch {
 	case offset < 0:
@@ -289,7 +275,7 @@ func (f *File) fixOffset(offset int) int {
 		return offset
 	}
 
-	// only generate this code if needed
+	// 仅在需要时生成此代码
 	if debug {
 		panic(fmt.Sprintf("offset %d out of bounds [%d, %d] (position %d out of bounds [%d, %d])",
 			0 /* for symmetry */, offset, f.size,
@@ -298,34 +284,31 @@ func (f *File) fixOffset(offset int) int {
 	return 0
 }
 
-// Pos 返回the Pos value for the given file offset.
+// Pos 返回给定文件偏移的 Pos 值。
 //
-// If offset is negative, the result 是 file's start
-// position; 如果 offset is too large, the result is
-// the file's end position (see also go.dev/issue/57490).
+// 如果偏移为负，结果是文件的开始位置；
+// 如果偏移太大，结果是文件的结束位置（另见 go.dev/issue/57490）。
 //
-// The following invariant, though not true for Pos values
-// in general, holds for the result p:
+// 以下不变式虽然对一般的 Pos 值不成立，但对结果 p 成立：
 // f.Pos(f.Offset(p)) == p.
 func (f *File) Pos(offset int) Pos {
 	return Pos(f.base + f.fixOffset(offset))
 }
 
-// Offset 返回the offset for the given file position p.
+// Offset 返回给定文件位置 p 的偏移。
 //
-// If p is before the file's start position (or if p is NoPos),
-// the result is 0; if p is past the file's end position,
-// the result 是 file size (see also go.dev/issue/57490).
+// 如果 p 在文件的开始位置之前（或如果 p 是 NoPos），
+// 结果是 0；如果 p 超过文件的结束位置，
+// 结果是文件大小（另见 go.dev/issue/57490）。
 //
-// The following invariant, though not true for offset values
-// in general, holds for the result offset:
+// 以下不变式虽然对一般的偏移值不成立，但对结果偏移成立：
 // f.Offset(f.Pos(offset)) == offset
 func (f *File) Offset(p Pos) int {
 	return f.fixOffset(int(p) - f.base)
 }
 
-// Line 返回the line number for the given file position p;
-// p 必须是 a [Pos] value in that file or [NoPos].
+// Line 返回给定文件位置 p 的行号；
+// p 必须是该文件中的 [Pos] 值或 [NoPos]。
 func (f *File) Line(p Pos) int {
 	return f.Position(p).Line
 }
@@ -335,16 +318,16 @@ func searchLineInfos(a []lineInfo, x int) int {
 		return cmp.Compare(a.Offset, x)
 	})
 	if !found {
-		// We want the lineInfo containing x, but if we didn't
-		// find x then i 是 next one.
+		// 我们想要包含 x 的 lineInfo，但如果我们没有找到 x，
+		// 则 i 是下一个。
 		i--
 	}
 	return i
 }
 
-// unpack 返回the filename and line and column number for a file offset.
-// If adjusted is set, unpack 将返回 the filename and line information
-// possibly adjusted by //line comments; 否则 those comments are ignored.
+// unpack 返回给定文件偏移的文件名、行号和列号。
+// 如果设置了 adjusted，unpack 将返回可能由 //line 注释调整的文件名和行信息；
+// 否则这些注释会被忽略。
 func (f *File) unpack(offset int, adjusted bool) (filename string, line, column int) {
 	f.mutex.Lock()
 	filename = f.name
@@ -352,30 +335,29 @@ func (f *File) unpack(offset int, adjusted bool) (filename string, line, column 
 		line, column = i+1, offset-f.lines[i]+1
 	}
 	if adjusted && len(f.infos) > 0 {
-		// few files have extra line infos
+		// 几个文件有额外的行信息
 		if i := searchLineInfos(f.infos, offset); i >= 0 {
 			alt := &f.infos[i]
 			filename = alt.Filename
 			if i := searchInts(f.lines, alt.Offset); i >= 0 {
-				// i+1 是 line at which the alternative position was recorded
-				d := line - (i + 1) // line distance from alternative position base
+				// i+1 是记录替代位置的行号
+				d := line - (i + 1) // 距替代位置基的行距
 				line = alt.Line + d
 				if alt.Column == 0 {
-					// alternative column is unknown => relative column is unknown
-					// (the current specification for line directives requires
-					// this to apply until the next PosBase/line directive,
-					// not just until the new newline)
+					// 替代列是未知的 => 相对列是未知的
+					// （line 指令的当前规范要求这一点适用于下一个
+					// PosBase/line 指令，而不仅仅是新行）
 					column = 0
 				} else if d == 0 {
-					// the alternative position base is on the current line
-					// => column is relative to alternative column
+					// 替代位置基在当前行
+					// => 列相对于替代列
 					column = alt.Column + (offset - alt.Offset)
 				}
 			}
 		}
 	}
-	// TODO(mvdan): move Unlock back under Lock with a defer statement once
-	// https://go.dev/issue/38471 is fixed to remove the performance penalty.
+	// TODO(mvdan): 一旦 https://go.dev/issue/38471 被修复以消除性能损失，
+	// 将 Unlock 移回 Lock 下的 defer 语句。
 	f.mutex.Unlock()
 	return
 }
@@ -387,11 +369,11 @@ func (f *File) position(p Pos, adjusted bool) (pos Position) {
 	return
 }
 
-// PositionFor 返回the Position value for the given file position p.
-// If p is out of bounds, it 是一个djusted to match the File.Offset behavior.
-// If adjusted is set, the position 可能是 adjusted by position-altering
-// //line comments; 否则 those comments are ignored.
-// p 必须是 a Pos value in f or NoPos.
+// PositionFor 返回给定文件位置 p 的 Position 值。
+// 如果 p 越界，它会被调整以匹配 File.Offset 行为。
+// 如果设置了 adjusted，位置可能被位置改变的 //line 注释调整；
+// 否则这些注释会被忽略。
+// p 必须是 f 中的 Pos 值或 NoPos。
 func (f *File) PositionFor(p Pos, adjusted bool) (pos Position) {
 	if p != NoPos {
 		pos = f.position(p, adjusted)
@@ -399,54 +381,47 @@ func (f *File) PositionFor(p Pos, adjusted bool) (pos Position) {
 	return
 }
 
-// Position 返回the Position value for the given file position p.
-// If p is out of bounds, it 是一个djusted to match the File.Offset behavior.
-// Calling f.Position(p) is equivalent to calling f.PositionFor(p, true).
+// Position 返回给定文件位置 p 的 Position 值。
+// 如果 p 越界，它会被调整以匹配 File.Offset 行为。
+// 调用 f.Position(p) 等价于调用 f.PositionFor(p, true)。
 func (f *File) Position(p Pos) (pos Position) {
 	return f.PositionFor(p, true)
 }
 
-// -----------------------------------------------------------------------------
-// FileSet
+// 文件集
 
-// 一个FileSet represents a set of source files.
-// Methods of file sets are synchronized; multiple goroutines
-// may invoke them concurrently.
+// FileSet 表示一组源文件。文件集的方法是同步的；
+// 多个 goroutine 可以并发调用它们。
 //
-// The byte offsets for each file in a file set are mapped into
-// distinct (integer) intervals, one interval [base, base+size]
-// per file. [FileSet.Base] represents the first byte in the file, and size
-// 是 corresponding file size. A [Pos] value 是一个 value in such
-// an interval. By determining the interval a [Pos] value belongs
-// to, the file, its file base, and thus the byte offset (position)
-// the [Pos] value is representing can be computed.
+// 文件集中每个文件的字节偏移被映射到不同的（整数）区间，
+// 每个文件一个区间 [base, base+size]。[FileSet.Base] 表示文件中的第一个字节，
+// size 是对应的文件大小。[Pos] 值是这样的区间中的一个值。
+// 通过确定 [Pos] 值所属的区间，可以计算该文件、其文件基址，
+// 从而计算 [Pos] 值表示的字节偏移（位置）。
 //
-// When adding a new file, a file base 必须是 provided. That can
-// be any integer value that is past the end of any interval of any
-// file already in the file set. For convenience, [FileSet.Base] provides
-// such a value, which is simply the end of the Pos interval of the most
-// recently added file, plus one. Unless there 是一个 need to extend an
-// interval later, using the [FileSet.Base] 应该是 used as argument
-// for [FileSet.AddFile].
+// 添加新文件时，必须提供文件基址。这可以是任何整数值，
+// 超过文件集中任何文件的任何区间的结尾。为了方便，[FileSet.Base]
+// 提供了这样的值，它就是最近添加的文件的 Pos 区间的结尾加一。
+// 除非以后需要扩展区间，否则应该使用 [FileSet.Base] 作为
+// [FileSet.AddFile] 的参数。
 //
-// 一个[File] 可能是 removed from a FileSet when it is no longer needed.
-// This may reduce memory usage in a long-running application.
+// 当不再需要文件时，可以从 FileSet 中删除 [File]。
+// 这可能会减少长时间运行的应用程序的内存使用。
 type FileSet struct {
-	mutex sync.RWMutex         // protects the file set
-	base  int                  // base offset for the next file
-	tree  tree                 // tree of files in ascending base order
-	last  atomic.Pointer[File] // cache of last file looked up
+	mutex sync.RWMutex         // 保护文件集
+	base  int                  // 下一个文件的基址偏移
+	tree  tree                 // 按升序基序排列的文件树
+	last  atomic.Pointer[File] // 最后查找的文件的缓存
 }
 
-// NewFileSet 创建 a new file set.
+// NewFileSet 创建一个新的文件集。
 func NewFileSet() *FileSet {
 	return &FileSet{
 		base: 1, // 0 == NoPos
 	}
 }
 
-// Base 返回the minimum base offset that 必须是 provided to
-// [FileSet.AddFile] when adding the next file.
+// Base 返回在添加下一个文件时必须提供给 [FileSet.AddFile] 的最小基址偏移。
 func (s *FileSet) Base() int {
 	s.mutex.RLock()
 	b := s.base
@@ -454,21 +429,18 @@ func (s *FileSet) Base() int {
 	return b
 }
 
-// AddFile adds a new file with a given filename, base offset, and file size
-// to the file set s and 返回 file. Multiple files may have the same
-// name. The base offset must not be smaller than the [FileSet.Base], and
-// size must not be negative. As a special case, if a negative base is provided,
-// the current value of the [FileSet.Base] is used instead.
+// AddFile 使用给定的文件名、基址偏移和文件大小向文件集 s 添加新文件，
+// 并返回该文件。多个文件可能有相同的名称。基址偏移不得小于 [FileSet.Base]，
+// 且大小不得为负。作为特殊情况，如果提供负基址，
+// 则使用 [FileSet.Base] 的当前值。
 //
-// Adding the file will set the file set's [FileSet.Base] value to base + size + 1
-// as the minimum base value for the next file. The following relationship
-// exists between a [Pos] value p for a given file offset offs:
+// 添加文件会将文件集的 [FileSet.Base] 值设置为 base + size + 1，
+// 作为下一个文件的最小基值。给定文件偏移 offs 的 [Pos] 值 p 与以下关系存在：
 //
 //	int(p) = base + offs
 //
-// with offs in the range [0, size] and thus p in the range [base, base+size].
-// For convenience, [File.Pos] 可能是 used to create file-specific position
-// values from a file offset.
+// 其中 offs 在范围 [0, size] 内，因此 p 在范围 [base, base+size] 内。
+// 为了方便，可以使用 [File.Pos] 从文件偏移创建文件特定的位置值。
 func (s *FileSet) AddFile(filename string, base, size int) *File {
 	// Allocate f outside the critical section.
 	f := &File{name: filename, size: size, lines: []int{0}}
@@ -486,28 +458,26 @@ func (s *FileSet) AddFile(filename string, base, size int) *File {
 		panic(fmt.Sprintf("invalid size %d (应该是 >= 0)", size))
 	}
 	// base >= s.base && size >= 0
-	base += size + 1 // +1 because EOF also has a position
+	base += size + 1 // +1 因为 EOF 也有一个位置
 	if base < 0 {
 		panic("token.Pos offset overflow (> 2G of source code in file set)")
 	}
-	// add the file to the file set
+	// 将文件添加到文件集
 	s.base = base
 	s.tree.add(f)
 	s.last.Store(f)
 	return f
 }
 
-// AddExistingFiles adds the specified files to the
-// FileSet if they are not already present.
-// The caller must ensure that no pair of Files that
-// would appear in the resulting FileSet overlap.
+// AddExistingFiles 将指定的文件添加到 FileSet（如果还不存在）。
+// 调用者必须确保在生成的 FileSet 中显示的任何文件对都不重叠。
 func (s *FileSet) AddExistingFiles(files ...*File) {
-	// This function cannot be implemented as:
+	// 此函数不能实现为：
 	//
 	//	for _, file := range files {
 	//		if prev := fset.File(token.Pos(file.Base())); prev != nil {
 	//			if prev != file {
-	//				panic("FileSet 包含 a different file at the same base")
+	//				panic("FileSet 包含一个不同的文件，位置相同")
 	//			}
 	//			continue
 	//		}
@@ -515,10 +485,10 @@ func (s *FileSet) AddExistingFiles(files ...*File) {
 	//		file2.SetLines(file.Lines())
 	//	}
 	//
-	// because all calls to AddFile 必须是 in increasing order.
-	// AddExistingFiles lets us augment an existing FileSet
-	// sequentially, so long as all sets of files have disjoint ranges.
-	// Th是一个pproach also does not preserve line directives.
+	// 因为所有对 AddFile 的调用必须按递增顺序进行。
+	// AddExistingFiles 让我们能够按顺序增强现有 FileSet，
+	// 只要所有文件集都有不相交的范围。
+	// 此方法也不保留行指令。
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -529,17 +499,15 @@ func (s *FileSet) AddExistingFiles(files ...*File) {
 	}
 }
 
-// RemoveFile removes a file from the [FileSet] so that subsequent
-// queries for its [Pos] interval yield a negative result.
-// This reduces the memory usage of a long-lived [FileSet] that
-// encounters an unbounded stream of files.
+// RemoveFile 从 [FileSet] 中删除一个文件，使后续查询其 [Pos] 区间产生负结果。
+// 这减少了遇到无界文件流的长期存活 [FileSet] 的内存使用。
 //
-// Removing a file that does not belong to the set has no effect.
+// 删除不属于该集合的文件没有任何效果。
 func (s *FileSet) RemoveFile(file *File) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	s.last.CompareAndSwap(file, nil) // clear last file cache
+	s.last.CompareAndSwap(file, nil) // 清除最后文件缓存
 
 	pn, _ := s.tree.locate(file.key())
 	if *pn != nil && (*pn).file == file {
@@ -547,15 +515,15 @@ func (s *FileSet) RemoveFile(file *File) {
 	}
 }
 
-// Iterate calls yield for the files in the file set in ascending Base
-// order until yield returns false.
+// Iterate 为文件集中的文件按升序 Base 顺序调用 yield，
+// 直到 yield 返回 false。
 func (s *FileSet) Iterate(yield func(*File) bool) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
-	// Unlock around user code.
-	// The iterator is robust to modification by yield.
-	// Avoid range here, so we can use defer.
+	// 在用户代码周围解锁。
+	// 迭代器对 yield 的修改是鲁棒的。
+	// 避免在此处使用 range，以便我们可以使用 defer。
 	s.tree.all()(func(f *File) bool {
 		s.mutex.RUnlock()
 		defer s.mutex.RLock()
@@ -564,7 +532,7 @@ func (s *FileSet) Iterate(yield func(*File) bool) {
 }
 
 func (s *FileSet) file(p Pos) *File {
-	// common case: p is in last file.
+	// 常见情况：p 在最后一个文件中。
 	if f := s.last.Load(); f != nil && f.base <= int(p) && int(p) <= f.base+f.size {
 		return f
 	}
@@ -574,16 +542,16 @@ func (s *FileSet) file(p Pos) *File {
 
 	pn, _ := s.tree.locate(key{int(p), int(p)})
 	if n := *pn; n != nil {
-		// Update cache of last file. A race is ok,
-		// but an exclusive lock causes heavy contention.
+		// 更新最后文件的缓存。竞态条件没关系，
+		// 但独占锁会导致严重竞争。
 		s.last.Store(n.file)
 		return n.file
 	}
 	return nil
 }
 
-// File 返回the file that 包含 the position p.
-// If no such file is found (for instance for p == [NoPos]),
+// File 返回包含位置 p 的文件。
+// 如果未找到此类文件（例如对于 p == [NoPos]),
 // the result is nil.
 func (s *FileSet) File(p Pos) (f *File) {
 	if p != NoPos {

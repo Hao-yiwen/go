@@ -67,12 +67,12 @@ func (w *Writer) SetBoundary(boundary string) error {
 	return nil
 }
 
-// FormDataContentType returns the Content-Type for an HTTP
-// multipart/form-data with this [Writer]'s Boundary.
+// FormDataContentType 返回 HTTP multipart/form-data 的 Content-Type，
+// 使用这个 [Writer] 的 Boundary。
 func (w *Writer) FormDataContentType() string {
 	b := w.boundary
-	// We must quote the boundary if it contains any of the
-	// tspecials characters defined by RFC 2045, or space.
+	// 如果 boundary 包含 RFC 2045 定义的 tspecials 字符或空格，
+	// 我们必须对 boundary 加上引号。
 	if strings.ContainsAny(b, `()<>@,;:\"/[]?= `) {
 		b = `"` + b + `"`
 	}
@@ -88,10 +88,9 @@ func randomBoundary() string {
 	return fmt.Sprintf("%x", buf[:])
 }
 
-// CreatePart creates a new multipart section with the provided
-// header. The body of the part should be written to the returned
-// [Writer]. After calling CreatePart, any previous part may no longer
-// be written to.
+// CreatePart 使用提供的头创建新的 multipart 部分。
+// part 的主体应该写入返回的 [Writer]。
+// 调用 CreatePart 后，任何先前的 part 将无法再进行写入。
 func (w *Writer) CreatePart(header textproto.MIMEHeader) (io.Writer, error) {
 	if w.lastpart != nil {
 		if err := w.lastpart.close(); err != nil {
@@ -124,24 +123,24 @@ func (w *Writer) CreatePart(header textproto.MIMEHeader) (io.Writer, error) {
 
 var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"", "\r", "%0D", "\n", "%0A")
 
-// escapeQuotes escapes special characters in field parameter values.
+// escapeQuotes 转义字段参数值中的特殊字符。
 //
-// For historical reasons, this uses \ escaping for " and \ characters,
-// and percent encoding for CR and LF.
+// 由于历史原因，这对 " 和 \ 字符使用 \ 转义，
+// 对 CR 和 LF 使用百分号编码。
 //
-// The WhatWG specification for form data encoding suggests that we should
-// use percent encoding for " (%22), and should not escape \.
+// WhatWG 表单数据编码规范建议我们应该
+// 对 "（%22）使用百分号编码，而不应转义 \。
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart/form-data-encoding-algorithm
 //
-// Empirically, as of the time this comment was written, it is necessary
-// to escape \ characters or else Chrome (and possibly other browsers) will
-// interpet the unescaped \ as an escape.
+// 根据经验，在写这个注释的时候，有必要
+// 转义 \ 字符，否则 Chrome（以及可能的其他浏览器）会
+// 将未转义的 \ 解释为转义符。
 func escapeQuotes(s string) string {
 	return quoteEscaper.Replace(s)
 }
 
-// CreateFormFile is a convenience wrapper around [Writer.CreatePart]. It creates
-// a new form-data header with the provided field name and file name.
+// CreateFormFile 是 [Writer.CreatePart] 的便利包装器。它使用提供的字段名和文件名
+// 创建一个新的 form-data 头。
 func (w *Writer) CreateFormFile(fieldname, filename string) (io.Writer, error) {
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", FileContentDisposition(fieldname, filename))
@@ -149,8 +148,7 @@ func (w *Writer) CreateFormFile(fieldname, filename string) (io.Writer, error) {
 	return w.CreatePart(h)
 }
 
-// CreateFormField calls [Writer.CreatePart] with a header using the
-// given field name.
+// CreateFormField 使用给定的字段名调用 [Writer.CreatePart] 和一个头。
 func (w *Writer) CreateFormField(fieldname string) (io.Writer, error) {
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition",
@@ -158,14 +156,13 @@ func (w *Writer) CreateFormField(fieldname string) (io.Writer, error) {
 	return w.CreatePart(h)
 }
 
-// FileContentDisposition returns the value of a Content-Disposition header
-// with the provided field name and file name.
+// FileContentDisposition 返回带有提供的字段名和文件名的 Content-Disposition 头的值。
 func FileContentDisposition(fieldname, filename string) string {
 	return fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
 		escapeQuotes(fieldname), escapeQuotes(filename))
 }
 
-// WriteField calls [Writer.CreateFormField] and then writes the given value.
+// WriteField 调用 [Writer.CreateFormField]，然后写入给定的值。
 func (w *Writer) WriteField(fieldname, value string) error {
 	p, err := w.CreateFormField(fieldname)
 	if err != nil {
@@ -175,8 +172,7 @@ func (w *Writer) WriteField(fieldname, value string) error {
 	return err
 }
 
-// Close finishes the multipart message and writes the trailing
-// boundary end line to the output.
+// Close 完成 multipart 消息并将尾部 boundary 结束行写入输出。
 func (w *Writer) Close() error {
 	if w.lastpart != nil {
 		if err := w.lastpart.close(); err != nil {

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// This example demonstrates an integer heap built using the heap interface.
+// 此示例演示使用堆接口构建的整数堆。
 package heap_test
 
 import (
@@ -10,7 +10,7 @@ import (
 	"fmt"
 )
 
-// An IntHeap is a min-heap of ints.
+// IntHeap 是整数的最小堆。
 type IntHeap []int
 
 func (h IntHeap) Len() int           { return len(h) }
@@ -18,8 +18,8 @@ func (h IntHeap) Less(i, j int) bool { return h[i] < h[j] }
 func (h IntHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 
 func (h *IntHeap) Push(x any) {
-	// Push and Pop use pointer receivers because they modify the slice's length,
-	// not just its contents.
+	// Push 和 Pop 使用指针接收器，因为它们修改切片的长度，
+	// 而不仅仅是其内容。
 	*h = append(*h, x.(int))
 }
 
@@ -31,8 +31,8 @@ func (h *IntHeap) Pop() any {
 	return x
 }
 
-// This example inserts several ints into an IntHeap, checks the minimum,
-// and removes them in order of priority.
+// 此示例将几个整数插入 IntHeap，检查最小值，
+// 并按优先级顺序删除它们。
 func Example_intHeap() {
 	h := &IntHeap{2, 1, 5}
 	heap.Init(h)

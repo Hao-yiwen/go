@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package slog
 
@@ -16,84 +16,74 @@ import (
 	"time"
 )
 
-// A Handler handles log records produced by a Logger.
+// Handler 处理由 Logger 生成的日志记录。
 //
-// A typical handler may print log records to standard error,
-// or write them to a file or database, or perhaps augment them
-// with additional attributes and pass them on to another handler.
+// 一个典型的处理程序可能将日志记录打印到标准错误，
+// 或将它们写入文件或数据库，或者可能用额外的属性增强它们
+// 并将它们传递给另一个处理程序。
 //
-// Any of the Handler's methods may be called concurrently with itself
-// or with other methods. It is the responsibility of the Handler to
-// manage this concurrency.
+// Handler 的任何方法都可能与自身或其他方法并发调用。
+// 由 Handler 负责管理这种并发。
 //
-// Users of the slog package should not invoke Handler methods directly.
-// They should use the methods of [Logger] instead.
+// slog 包的用户不应直接调用 Handler 方法。
+// 他们应该使用 [Logger] 的方法。
 //
-// Before implementing your own handler, consult https://go.dev/s/slog-handler-guide.
+// 在实现自己的处理程序之前，请查看 https://go.dev/s/slog-handler-guide。
 type Handler interface {
-	// Enabled reports whether the handler handles records at the given level.
-	// The handler ignores records whose level is lower.
-	// It is called early, before any arguments are processed,
-	// to save effort if the log event should be discarded.
-	// If called from a Logger method, the first argument is the context
-	// passed to that method, or context.Background() if nil was passed
-	// or the method does not take a context.
-	// The context is passed so Enabled can use its values
-	// to make a decision.
+	// Enabled 报告处理程序是否处理给定级别的记录。
+	// 处理程序忽略级别较低的记录。
+	// 它在早期调用，在任何参数处理之前，
+	// 以在应该丢弃日志事件时节省工作。
+	// 如果从 Logger 方法调用，第一个参数是传递给该方法的上下文，
+	// 或者如果传递了 nil 或该方法不接受上下文，则为 context.Background()。
+	// 传递上下文以便 Enabled 可以使用其值来做出决定。
 	Enabled(context.Context, Level) bool
 
-	// Handle handles the Record.
-	// It will only be called when Enabled returns true.
-	// The Context argument is as for Enabled.
-	// It is present solely to provide Handlers access to the context's values.
-	// Canceling the context should not affect record processing.
-	// (Among other things, log messages may be necessary to debug a
-	// cancellation-related problem.)
+	// Handle 处理 Record。
+	// 它仅在 Enabled 返回 true 时才会被调用。
+	// Context 参数与 Enabled 相同。
+	// 它仅用于为 Handler 提供对上下文值的访问。
+	// 取消上下文不应该影响记录处理。
+	// (除其他外，日志消息可能需要调试与取消相关的问题。)
 	//
-	// Handle methods that produce output should observe the following rules:
-	//   - If r.Time is the zero time, ignore the time.
-	//   - If r.PC is zero, ignore it.
-	//   - Attr's values should be resolved.
-	//   - If an Attr's key and value are both the zero value, ignore the Attr.
-	//     This can be tested with attr.Equal(Attr{}).
-	//   - If a group's key is empty, inline the group's Attrs.
-	//   - If a group has no Attrs (even if it has a non-empty key),
-	//     ignore it.
+	// 生成输出的 Handle 方法应遵守以下规则：
+	//   - 如果 r.Time 是零时间，忽略该时间。
+	//   - 如果 r.PC 为零，忽略它。
+	//   - Attr 的值应该被解析。
+	//   - 如果 Attr 的键和值都是零值，忽略该 Attr。
+	//     这可以通过 attr.Equal(Attr{}) 来测试。
+	//   - 如果一个组的键为空，内联该组的 Attr。
+	//   - 如果一个组没有 Attr (即使它有一个非空键)，忽略它。
 	//
-	// [Logger] discards any errors from Handle. Wrap the Handle method to
-	// process any errors from Handlers.
+	// [Logger] 丢弃来自 Handle 的任何错误。包装 Handle 方法以处理来自 Handler 的任何错误。
 	Handle(context.Context, Record) error
 
-	// WithAttrs returns a new Handler whose attributes consist of
-	// both the receiver's attributes and the arguments.
-	// The Handler owns the slice: it may retain, modify or discard it.
+	// WithAttrs 返回一个新的 Handler，其属性由接收者的属性和参数组成。
+	// Handler 拥有该切片：它可以保留、修改或丢弃它。
 	WithAttrs(attrs []Attr) Handler
 
-	// WithGroup returns a new Handler with the given group appended to
-	// the receiver's existing groups.
-	// The keys of all subsequent attributes, whether added by With or in a
-	// Record, should be qualified by the sequence of group names.
+	// WithGroup 返回一个新的 Handler，其给定组已附加到接收者的现有组。
+	// 所有后续属性的键，无论是通过 With 添加还是在 Record 中，
+	// 都应由组名的序列限定。
 	//
-	// How this qualification happens is up to the Handler, so long as
-	// this Handler's attribute keys differ from those of another Handler
-	// with a different sequence of group names.
+	// 此限定如何发生取决于 Handler，只要此 Handler 的属性键
+	// 与具有不同组名序列的另一个 Handler 的属性键不同。
 	//
-	// A Handler should treat WithGroup as starting a Group of Attrs that ends
-	// at the end of the log event. That is,
+	// Handler 应将 WithGroup 视为开始一个 Attr 组，该组在日志事件的末尾结束。也就是说，
 	//
 	//     logger.WithGroup("s").LogAttrs(ctx, level, msg, slog.Int("a", 1), slog.Int("b", 2))
 	//
-	// should behave like
+	// 应该表现得像
 	//
 	//     logger.LogAttrs(ctx, level, msg, slog.Group("s", slog.Int("a", 1), slog.Int("b", 2)))
 	//
-	// If the name is empty, WithGroup returns the receiver.
+	// 如果名称为空，WithGroup 返回接收者。
 	WithGroup(name string) Handler
 }
 
 type defaultHandler struct {
 	ch *commonHandler
-	// internal.DefaultOutput, except for testing
+	// internal.DefaultOutput，除了测试外
 	output func(pc uintptr, data []byte) error
 }
 
@@ -108,9 +98,9 @@ func (*defaultHandler) Enabled(_ context.Context, l Level) bool {
 	return l >= logLoggerLevel.Level()
 }
 
-// Collect the level, attributes and message in a string and
-// write it with the default log.Logger.
-// Let the log.Logger handle time and file/line.
+// 在字符串中收集级别、属性和消息，
+// 并使用默认的 log.Logger 写入。
+// 让 log.Logger 处理时间和文件/行。
 func (h *defaultHandler) Handle(ctx context.Context, r Record) error {
 	buf := buffer.New()
 	buf.WriteString(r.Level.String())
@@ -130,81 +120,78 @@ func (h *defaultHandler) WithGroup(name string) Handler {
 	return &defaultHandler{h.ch.withGroup(name), h.output}
 }
 
-// HandlerOptions are options for a [TextHandler] or [JSONHandler].
-// A zero HandlerOptions consists entirely of default values.
+// HandlerOptions 是 [TextHandler] 或 [JSONHandler] 的选项。
+// 零 HandlerOptions 完全由默认值组成。
 type HandlerOptions struct {
-	// AddSource causes the handler to compute the source code position
-	// of the log statement and add a SourceKey attribute to the output.
+	// AddSource 导致处理程序计算日志语句的源代码位置，
+	// 并向输出添加 SourceKey 属性。
 	AddSource bool
 
-	// Level reports the minimum record level that will be logged.
-	// The handler discards records with lower levels.
-	// If Level is nil, the handler assumes LevelInfo.
-	// The handler calls Level.Level for each record processed;
-	// to adjust the minimum level dynamically, use a LevelVar.
+	// Level 报告将被记录的最小记录级别。
+	// 处理程序丢弃较低级别的记录。
+	// 如果 Level 为 nil，处理程序假定 LevelInfo。
+	// 处理程序为处理的每条记录调用 Level.Level；
+	// 要动态调整最小级别，请使用 LevelVar。
 	Level Leveler
 
-	// ReplaceAttr is called to rewrite each non-group attribute before it is logged.
-	// The attribute's value has been resolved (see [Value.Resolve]).
-	// If ReplaceAttr returns a zero Attr, the attribute is discarded.
+	// ReplaceAttr 被调用以在记录之前重写每个非组属性。
+	// 属性的值已被解析 (参见 [Value.Resolve])。
+	// 如果 ReplaceAttr 返回零 Attr，该属性将被丢弃。
 	//
-	// The built-in attributes with keys "time", "level", "source", and "msg"
-	// are passed to this function, except that time is omitted
-	// if zero, and source is omitted if AddSource is false.
+	// 键为 "time"、"level"、"source" 和 "msg" 的内置属性
+	// 被传递给此函数，除了如果时间为零则省略时间，
+	// 如果 AddSource 为 false 则省略源。
 	//
-	// The first argument is a list of currently open groups that contain the
-	// Attr. It must not be retained or modified. ReplaceAttr is never called
-	// for Group attributes, only their contents. For example, the attribute
-	// list
+	// 第一个参数是当前包含该 Attr 的打开组的列表。
+	// 它不得被保留或修改。ReplaceAttr 从不为组属性调用，
+	// 仅为它们的内容调用。例如，属性列表
 	//
 	//     Int("a", 1), Group("g", Int("b", 2)), Int("c", 3)
 	//
-	// results in consecutive calls to ReplaceAttr with the following arguments:
+	// 导致连续调用 ReplaceAttr，其参数如下：
 	//
 	//     nil, Int("a", 1)
 	//     []string{"g"}, Int("b", 2)
 	//     nil, Int("c", 3)
 	//
-	// ReplaceAttr can be used to change the default keys of the built-in
-	// attributes, convert types (for example, to replace a `time.Time` with the
-	// integer seconds since the Unix epoch), sanitize personal information, or
-	// remove attributes from the output.
+	// ReplaceAttr 可用于更改内置属性的默认键、转换类型
+	// (例如，将 `time.Time` 替换为自 Unix 纪元以来的整数秒)、
+	// 清理个人信息或从输出中移除属性。
 	ReplaceAttr func(groups []string, a Attr) Attr
 }
 
-// Keys for "built-in" attributes.
+// "内置"属性的键。
 const (
-	// TimeKey is the key used by the built-in handlers for the time
-	// when the log method is called. The associated Value is a [time.Time].
+	// TimeKey 是内置处理程序用于调用日志方法的时间的键。
+	// 关联的 Value 是 [time.Time]。
 	TimeKey = "time"
-	// LevelKey is the key used by the built-in handlers for the level
-	// of the log call. The associated value is a [Level].
+	// LevelKey 是内置处理程序用于日志调用的级别的键。
+	// 关联的值是 [Level]。
 	LevelKey = "level"
-	// MessageKey is the key used by the built-in handlers for the
-	// message of the log call. The associated value is a string.
+	// MessageKey 是内置处理程序用于日志调用的消息的键。
+	// 关联的值是字符串。
 	MessageKey = "msg"
-	// SourceKey is the key used by the built-in handlers for the source file
-	// and line of the log call. The associated value is a *[Source].
+	// SourceKey 是内置处理程序用于日志调用的源文件和行的键。
+	// 关联的值是 *[Source]。
 	SourceKey = "source"
 )
 
 type commonHandler struct {
-	json              bool // true => output JSON; false => output text
+	json              bool // true => 输出 JSON；false => 输出文本
 	opts              HandlerOptions
 	preformattedAttrs []byte
-	// groupPrefix is for the text handler only.
-	// It holds the prefix for groups that were already pre-formatted.
-	// A group will appear here when a call to WithGroup is followed by
-	// a call to WithAttrs.
+	// groupPrefix 仅用于文本处理程序。
+	// 它保存已预格式化的组的前缀。
+	// 当 WithGroup 的调用后跟 WithAttrs 的调用时，组将出现在这里。
 	groupPrefix string
-	groups      []string // all groups started from WithGroup
-	nOpenGroups int      // the number of groups opened in preformattedAttrs
+	groups      []string // 从 WithGroup 开始的所有组
+	nOpenGroups int      // preformattedAttrs 中打开的组的数量
 	mu          *sync.Mutex
 	w           io.Writer
 }
 
 func (h *commonHandler) clone() *commonHandler {
-	// We can't use assignment because we can't copy the mutex.
+	// 我们不能使用赋值，因为我们不能复制互斥锁。
 	return &commonHandler{
 		json:              h.json,
 		opts:              h.opts,
@@ -213,12 +200,11 @@ func (h *commonHandler) clone() *commonHandler {
 		groups:            slices.Clip(h.groups),
 		nOpenGroups:       h.nOpenGroups,
 		w:                 h.w,
-		mu:                h.mu, // mutex shared among all clones of this handler
+		mu:                h.mu, // 在此处理程序的所有克隆之间共享的互斥锁
 	}
 }
 
-// enabled reports whether l is greater than or equal to the
-// minimum level.
+// enabled 报告 l 是否大于或等于最小级别。
 func (h *commonHandler) enabled(l Level) bool {
 	minLevel := LevelInfo
 	if h.opts.Level != nil {
@@ -228,13 +214,12 @@ func (h *commonHandler) enabled(l Level) bool {
 }
 
 func (h *commonHandler) withAttrs(as []Attr) *commonHandler {
-	// We are going to ignore empty groups, so if the entire slice consists of
-	// them, there is nothing to do.
+	// 我们将忽略空组，因此如果整个切片由它们组成，则无需做任何事情。
 	if countEmptyGroups(as) == len(as) {
 		return h
 	}
 	h2 := h.clone()
-	// Pre-format the attributes as an optimization.
+	// 作为优化预格式化属性。
 	state := h2.newHandleState((*buffer.Buffer)(&h2.preformattedAttrs), false, "")
 	defer state.free()
 	state.prefix.WriteString(h.groupPrefix)
@@ -244,16 +229,16 @@ func (h *commonHandler) withAttrs(as []Attr) *commonHandler {
 			state.sep = ""
 		}
 	}
-	// Remember the position in the buffer, in case all attrs are empty.
+	// 记住缓冲区中的位置，以防所有属性都为空。
 	pos := state.buf.Len()
 	state.openGroups()
 	if !state.appendAttrs(as) {
 		state.buf.SetLen(pos)
 	} else {
-		// Remember the new prefix for later keys.
+		// 为后续键记住新的前缀。
 		h2.groupPrefix = state.prefix.String()
-		// Remember how many opened groups are in preformattedAttrs,
-		// so we don't open them again when we handle a Record.
+		// 记住 preformattedAttrs 中打开了多少个组，
+		// 以便在处理 Record 时不再次打开它们。
 		h2.nOpenGroups = len(h2.groups)
 	}
 	return h2
@@ -265,8 +250,7 @@ func (h *commonHandler) withGroup(name string) *commonHandler {
 	return h2
 }
 
-// handle is the internal implementation of Handler.Handle
-// used by TextHandler and JSONHandler.
+// handle 是 Handler.Handle 的内部实现，由 TextHandler 和 JSONHandler 使用。
 func (h *commonHandler) handle(r Record) error {
 	state := h.newHandleState(buffer.New(), true, "")
 	defer state.free()
@@ -324,7 +308,7 @@ func (h *commonHandler) handle(r Record) error {
 }
 
 func (s *handleState) appendNonBuiltIns(r Record) {
-	// preformatted Attrs
+	// 预格式化的属性
 	if pfa := s.h.preformattedAttrs; len(pfa) > 0 {
 		s.buf.WriteString(s.sep)
 		s.buf.Write(pfa)
@@ -333,16 +317,14 @@ func (s *handleState) appendNonBuiltIns(r Record) {
 			s.sep = ""
 		}
 	}
-	// Attrs in Record -- unlike the built-in ones, they are in groups started
-	// from WithGroup.
-	// If the record has no Attrs, don't output any groups.
+	// Record 中的属性 -- 与内置属性不同，它们在从 WithGroup 开始的组中。
+	// 如果记录没有属性，不输出任何组。
 	nOpenGroups := s.h.nOpenGroups
 	if r.NumAttrs() > 0 {
 		s.prefix.WriteString(s.h.groupPrefix)
-		// The group may turn out to be empty even though it has attrs (for
-		// example, ReplaceAttr may delete all the attrs).
-		// So remember where we are in the buffer, to restore the position
-		// later if necessary.
+		// 该组可能会被证明是空的，即使它有属性
+		// (例如，ReplaceAttr 可能会删除所有属性)。
+		// 所以请记住我们在缓冲区中的位置，以便在必要时恢复该位置。
 		pos := s.buf.Len()
 		s.openGroups()
 		nOpenGroups = len(s.h.groups)
@@ -359,16 +341,16 @@ func (s *handleState) appendNonBuiltIns(r Record) {
 		}
 	}
 	if s.h.json {
-		// Close all open groups.
+		// 关闭所有打开的组。
 		for range s.h.groups[:nOpenGroups] {
 			s.buf.WriteByte('}')
 		}
-		// Close the top-level object.
+		// 关闭顶级对象。
 		s.buf.WriteByte('}')
 	}
 }
 
-// attrSep returns the separator between attributes.
+// attrSep 返回属性之间的分隔符。
 func (h *commonHandler) attrSep() string {
 	if h.json {
 		return ","
@@ -376,16 +358,15 @@ func (h *commonHandler) attrSep() string {
 	return " "
 }
 
-// handleState holds state for a single call to commonHandler.handle.
-// The initial value of sep determines whether to emit a separator
-// before the next key, after which it stays true.
+// handleState 保存对 commonHandler.handle 的单个调用的状态。
+// sep 的初始值决定是否在下一个键之前发出分隔符，之后它保持为 true。
 type handleState struct {
 	h       *commonHandler
 	buf     *buffer.Buffer
-	freeBuf bool           // should buf be freed?
-	sep     string         // separator to write before next key
-	prefix  *buffer.Buffer // for text: key prefix
-	groups  *[]string      // pool-allocated slice of active groups, for ReplaceAttr
+	freeBuf bool           // 应该释放 buf 吗？
+	sep     string         // 在下一个键之前写入的分隔符
+	prefix  *buffer.Buffer // 对于文本：键前缀
+	groups  *[]string      // 池分配的活跃组的切片，用于 ReplaceAttr
 }
 
 var groupPool = sync.Pool{New: func() any {
@@ -425,11 +406,10 @@ func (s *handleState) openGroups() {
 	}
 }
 
-// Separator for group names and keys.
+// 组名和键的分隔符。
 const keyComponentSep = '.'
 
-// openGroup starts a new group of attributes
-// with the given name.
+// openGroup 使用给定的名称启动一个新的属性组。
 func (s *handleState) openGroup(name string) {
 	if s.h.json {
 		s.appendKey(name)
@@ -439,13 +419,13 @@ func (s *handleState) openGroup(name string) {
 		s.prefix.WriteString(name)
 		s.prefix.WriteByte(keyComponentSep)
 	}
-	// Collect group names for ReplaceAttr.
+	// 为 ReplaceAttr 收集组名。
 	if s.groups != nil {
 		*s.groups = append(*s.groups, name)
 	}
 }
 
-// closeGroup ends the group with the given name.
+// closeGroup 结束具有给定名称的组。
 func (s *handleState) closeGroup(name string) {
 	if s.h.json {
 		s.buf.WriteByte('}')
@@ -458,8 +438,8 @@ func (s *handleState) closeGroup(name string) {
 	}
 }
 
-// appendAttrs appends the slice of Attrs.
-// It reports whether something was appended.
+// appendAttrs 附加 Attr 的切片。
+// 它报告是否附加了某些内容。
 func (s *handleState) appendAttrs(as []Attr) bool {
 	nonEmpty := false
 	for _, a := range as {
@@ -470,9 +450,9 @@ func (s *handleState) appendAttrs(as []Attr) bool {
 	return nonEmpty
 }
 
-// appendAttr appends the Attr's key and value.
-// It handles replacement and checking for an empty key.
-// It reports whether something was appended.
+// appendAttr 附加 Attr 的键和值。
+// 它处理替换和检查空键。
+// 它报告是否附加了某些内容。
 func (s *handleState) appendAttr(a Attr) bool {
 	a.Value = a.Value.Resolve()
 	if rep := s.h.opts.ReplaceAttr; rep != nil && a.Value.Kind() != KindGroup {
@@ -480,16 +460,16 @@ func (s *handleState) appendAttr(a Attr) bool {
 		if s.groups != nil {
 			gs = *s.groups
 		}
-		// a.Value is resolved before calling ReplaceAttr, so the user doesn't have to.
+		// a.Value 在调用 ReplaceAttr 之前被解析，所以用户不必这样做。
 		a = rep(gs, a)
-		// The ReplaceAttr function may return an unresolved Attr.
+		// ReplaceAttr 函数可能返回一个未解析的 Attr。
 		a.Value = a.Value.Resolve()
 	}
-	// Elide empty Attrs.
+	// 省略空 Attr。
 	if a.isEmpty() {
 		return false
 	}
-	// Special case: Source.
+	// 特殊情况：Source。
 	if v := a.Value; v.Kind() == KindAny {
 		if src, ok := v.Any().(*Source); ok {
 			if src.isEmpty() {
@@ -504,14 +484,13 @@ func (s *handleState) appendAttr(a Attr) bool {
 	}
 	if a.Value.Kind() == KindGroup {
 		attrs := a.Value.Group()
-		// Output only non-empty groups.
+		// 仅输出非空组。
 		if len(attrs) > 0 {
-			// The group may turn out to be empty even though it has attrs (for
-			// example, ReplaceAttr may delete all the attrs).
-			// So remember where we are in the buffer, to restore the position
-			// later if necessary.
+			// 该组可能会被证明是空的，即使它有属性
+			// (例如，ReplaceAttr 可能会删除所有属性)。
+			// 所以请记住我们在缓冲区中的位置，以便在必要时恢复该位置。
 			pos := s.buf.Len()
-			// Inline a group with an empty key.
+			// 内联具有空键的组。
 			if a.Key != "" {
 				s.openGroup(a.Key)
 			}
@@ -549,7 +528,7 @@ func (s *handleState) appendKey(key string) {
 	s.sep = s.h.attrSep()
 }
 
-// appendTwoStrings implements appendString(prefix + key), but faster.
+// appendTwoStrings 实现 appendString(prefix + key)，但速度更快。
 func (s *handleState) appendTwoStrings(x, y string) {
 	buf := *s.buf
 	switch {
@@ -585,17 +564,17 @@ func (s *handleState) appendString(str string) {
 func (s *handleState) appendValue(v Value) {
 	defer func() {
 		if r := recover(); r != nil {
-			// If it panics with a nil pointer, the most likely cases are
-			// an encoding.TextMarshaler or error fails to guard against nil,
-			// in which case "<nil>" seems to be the feasible choice.
+			// 如果它因 nil 指针而恐慌，最可能的情况是
+			// 编码。TextMarshaler 或错误无法防止 nil，
+			// 在这种情况下 "<nil>" 似乎是可行的选择。
 			//
-			// Adapted from the code in fmt/print.go.
+			// 根据 fmt/print.go 中的代码进行改编。
 			if v := reflect.ValueOf(v.any); v.Kind() == reflect.Pointer && v.IsNil() {
 				s.appendString("<nil>")
 				return
 			}
 
-			// Otherwise just print the original panic message.
+			// 否则只打印原始恐慌消息。
 			s.appendString(fmt.Sprintf("!PANIC: %v", r))
 		}
 	}()
@@ -620,20 +599,20 @@ func (s *handleState) appendTime(t time.Time) {
 }
 
 func appendRFC3339Millis(b []byte, t time.Time) []byte {
-	// Format according to time.RFC3339Nano since it is highly optimized,
-	// but truncate it to use millisecond resolution.
-	// Unfortunately, that format trims trailing 0s, so add 1/10 millisecond
-	// to guarantee that there are exactly 4 digits after the period.
+	// 根据 time.RFC3339Nano 进行格式化，因为它得到了高度优化，
+	// 但将其截断以使用毫秒分辨率。
+	// 不幸的是，该格式会修剪尾部的 0，所以添加 1/10 毫秒
+	// 以保证小数点后恰好有 4 位数字。
 	const prefixLen = len("2006-01-02T15:04:05.000")
 	n := len(b)
 	t = t.Truncate(time.Millisecond).Add(time.Millisecond / 10)
 	b = t.AppendFormat(b, time.RFC3339Nano)
-	b = append(b[:n+prefixLen], b[n+prefixLen+1:]...) // drop the 4th digit
+	b = append(b[:n+prefixLen], b[n+prefixLen+1:]...) // 删除第 4 位数字
 	return b
 }
 
-// DiscardHandler discards all log output.
-// DiscardHandler.Enabled returns false for all Levels.
+// DiscardHandler 丢弃所有日志输出。
+// DiscardHandler.Enabled 对所有级别返回 false。
 var DiscardHandler Handler = discardHandler{}
 
 type discardHandler struct{}

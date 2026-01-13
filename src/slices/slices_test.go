@@ -75,18 +75,18 @@ func TestEqual(t *testing.T) {
 	}
 }
 
-// equal is simply ==.
+// equal 就是 ==。
 func equal[T comparable](v1, v2 T) bool {
 	return v1 == v2
 }
 
-// equalNaN is like == except that all NaNs are equal.
+// equalNaN 类似于 ==，除了所有 NaN 都相等。
 func equalNaN[T comparable](v1, v2 T) bool {
 	isNaN := func(f T) bool { return f != f }
 	return v1 == v2 || (isNaN(v1) && isNaN(v2))
 }
 
-// offByOne returns true if integers v1 and v2 differ by 1.
+// offByOne 返回 true 如果整数 v1 和 v2 相差 1。
 func offByOne(v1, v2 int) bool {
 	return v1 == v2+1 || v1 == v2-1
 }

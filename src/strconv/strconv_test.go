@@ -30,8 +30,8 @@ var (
 			AppendFloat(localBuf[:0], 1.23, 'g', 5, 64)
 		}},
 		{0, `AppendFloat(globalBuf[:0], 1.23, 'g', 5, 64)`, func() { AppendFloat(globalBuf[:0], 1.23, 'g', 5, 64) }},
-		// In practice we see 7 for the next one, but allow some slop.
-		// Before pre-allocation in appendQuotedWith, we saw 39.
+		// 实际上我们看到下一个是 7，但允许一些松弛。
+		// 在 appendQuotedWith 中预分配之前，我们看到 39。
 		{10, `AppendQuoteToASCII(nil, oneMB)`, func() { AppendQuoteToASCII(nil, string(oneMB)) }},
 		{0, `ParseFloat("123.45", 64)`, func() { ParseFloat("123.45", 64) }},
 		{0, `ParseFloat("123.456789123456789", 64)`, func() { ParseFloat("123.456789123456789", 64) }},
@@ -44,7 +44,7 @@ var (
 	}
 )
 
-var oneMB []byte // Will be allocated to 1MB of random data by TestCountMallocs.
+var oneMB []byte // 将由 TestCountMallocs 分配为 1MB 的随机数据。
 
 func TestCountMallocs(t *testing.T) {
 	if testing.Short() {
@@ -53,7 +53,7 @@ func TestCountMallocs(t *testing.T) {
 	if runtime.GOMAXPROCS(0) > 1 {
 		t.Skip("skipping; GOMAXPROCS>1")
 	}
-	// Allocate a big messy buffer for AppendQuoteToASCII's test.
+	// 为 AppendQuoteToASCII 的测试分配一个大的混乱缓冲区。
 	oneMB = make([]byte, 1e6)
 	for i := range oneMB {
 		oneMB[i] = byte(i)
@@ -66,7 +66,7 @@ func TestCountMallocs(t *testing.T) {
 	}
 }
 
-// Sink makes sure the compiler cannot optimize away the benchmarks.
+// Sink 确保编译器不能优化掉基准测试。
 var Sink struct {
 	Bool       bool
 	Int        int

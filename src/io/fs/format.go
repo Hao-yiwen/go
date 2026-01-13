@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package fs
 
@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-// FormatFileInfo returns a formatted version of info for human readability.
-// Implementations of [FileInfo] can call this from a String method.
-// The output for a file named "hello.go", 100 bytes, mode 0o644, created
-// January 1, 1970 at noon is
+// FormatFileInfo 返回 info 的格式化版本，便于人类阅读。
+// [FileInfo] 的实现可以从 String 方法调用它。
+// 对于名为 "hello.go"、100 字节、权限 0o644、创建于
+// 1970 年 1 月 1 日中午的文件的输出为：
 //
 //	-rw-r--r-- 100 1970-01-01 12:00:00 hello.go
 func FormatFileInfo(info FileInfo) string {
@@ -51,9 +51,9 @@ func FormatFileInfo(info FileInfo) string {
 	return string(b)
 }
 
-// FormatDirEntry returns a formatted version of dir for human readability.
-// Implementations of [DirEntry] can call this from a String method.
-// The outputs for a directory named subdir and a file named hello.go are:
+// FormatDirEntry 返回 dir 的格式化版本，便于人类阅读。
+// [DirEntry] 的实现可以从 String 方法调用它。
+// 对于名为 subdir 的目录和名为 hello.go 的文件的输出为：
 //
 //	d subdir/
 //	- hello.go
@@ -61,8 +61,8 @@ func FormatDirEntry(dir DirEntry) string {
 	name := dir.Name()
 	b := make([]byte, 0, 5+len(name))
 
-	// The Type method does not return any permission bits,
-	// so strip them from the string.
+	// Type 方法不返回任何权限位，
+	// 因此从字符串中删除它们。
 	mode := dir.Type().String()
 	mode = mode[:len(mode)-9]
 

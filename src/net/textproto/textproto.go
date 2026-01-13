@@ -1,30 +1,28 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package textproto implements generic support for text-based request/response
-// protocols in the style of HTTP, NNTP, and SMTP.
+// Package textproto 为 HTTP、NNTP 和 SMTP 风格的基于文本的请求/响应
+// 协议提供通用支持。
 //
-// This package enforces the HTTP/1.1 character set defined by
-// RFC 9112 for header keys and values.
+// 此包强制 RFC 9112 为标题键和值定义的 HTTP/1.1 字符集。
 //
-// The package provides:
+// 该包提供：
 //
-// [Error], which represents a numeric error response from
-// a server.
+// [Error]，表示来自
+// 服务器的数字错误响应。
 //
-// [Pipeline], to manage pipelined requests and responses
-// in a client.
+// [Pipeline]，管理客户端中的流水线请求和响应。
 //
-// [Reader], to read numeric response code lines,
-// key: value headers, lines wrapped with leading spaces
-// on continuation lines, and whole text blocks ending
-// with a dot on a line by itself.
+// [Reader]，读取数字响应代码行，
+// key: value 标题，前导空格包裹的行
+// 在续行上，以及以
+// 行本身上的点结尾的完整文本块。
 //
-// [Writer], to write dot-encoded text blocks.
+// [Writer]，写入点编码的文本块。
 //
-// [Conn], a convenient packaging of [Reader], [Writer], and [Pipeline] for use
-// with a single network connection.
+// [Conn]，[Reader]、[Writer] 和 [Pipeline] 的便捷打包，用于
+// 单个网络连接。
 package textproto
 
 import (
@@ -34,7 +32,7 @@ import (
 	"net"
 )
 
-// An Error represents a numeric error response from a server.
+// Error 表示来自服务器的数字错误响应。
 type Error struct {
 	Code int
 	Msg  string
@@ -44,19 +42,19 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("%03d %s", e.Code, e.Msg)
 }
 
-// A ProtocolError describes a protocol violation such
-// as an invalid response or a hung-up connection.
+// ProtocolError 描述协议违规，例如
+// 无效响应或挂起的连接。
 type ProtocolError string
 
 func (p ProtocolError) Error() string {
 	return string(p)
 }
 
-// A Conn represents a textual network protocol connection.
-// It consists of a [Reader] and [Writer] to manage I/O
-// and a [Pipeline] to sequence concurrent requests on the connection.
-// These embedded types carry methods with them;
-// see the documentation of those types for details.
+// Conn 表示文本网络协议连接。
+// 它由 [Reader] 和 [Writer] 组成，用于管理 I/O
+// 以及 [Pipeline] 在连接上排序并发请求。
+// 这些嵌入的类型带有方法；
+// 有关详细信息，请参阅这些类型的文档。
 type Conn struct {
 	Reader
 	Writer
@@ -64,7 +62,7 @@ type Conn struct {
 	conn io.ReadWriteCloser
 }
 
-// NewConn returns a new [Conn] using conn for I/O.
+// NewConn 返回一个新的 [Conn]，使用 conn 进行 I/O。
 func NewConn(conn io.ReadWriteCloser) *Conn {
 	return &Conn{
 		Reader: Reader{R: bufio.NewReader(conn)},
@@ -73,13 +71,13 @@ func NewConn(conn io.ReadWriteCloser) *Conn {
 	}
 }
 
-// Close closes the connection.
+// Close 关闭连接。
 func (c *Conn) Close() error {
 	return c.conn.Close()
 }
 
-// Dial connects to the given address on the given network using [net.Dial]
-// and then returns a new [Conn] for the connection.
+// Dial 使用 [net.Dial] 连接到给定网络上的给定地址，
+// 然后返回连接的新 [Conn]。
 func Dial(network, addr string) (*Conn, error) {
 	c, err := net.Dial(network, addr)
 	if err != nil {
@@ -88,13 +86,12 @@ func Dial(network, addr string) (*Conn, error) {
 	return NewConn(c), nil
 }
 
-// Cmd is a convenience method that sends a command after
-// waiting its turn in the pipeline. The command text is the
-// result of formatting format with args and appending \r\n.
-// Cmd returns the id of the command, for use with StartResponse and EndResponse.
+// Cmd 是一个便捷方法，在等待其在流水线中的轮流后发送命令。
+// 命令文本是用 args 格式化 format 并追加 \r\n 的结果。
+// Cmd 返回命令的 id，用于 StartResponse 和 EndResponse。
 //
-// For example, a client might run a HELP command that returns a dot-body
-// by using:
+// 例如，客户端可能运行返回点体的 HELP 命令
+// 通过使用：
 //
 //	id, err := c.Cmd("HELP")
 //	if err != nil {
@@ -123,7 +120,7 @@ func (c *Conn) Cmd(format string, args ...any) (id uint, err error) {
 	return id, nil
 }
 
-// TrimString returns s without leading and trailing ASCII space.
+// TrimString 返回 s 去掉前导和尾随 ASCII 空格。
 func TrimString(s string) string {
 	for len(s) > 0 && isASCIISpace(s[0]) {
 		s = s[1:]
@@ -134,7 +131,7 @@ func TrimString(s string) string {
 	return s
 }
 
-// TrimBytes returns b without leading and trailing ASCII space.
+// TrimBytes 返回 b 去掉前导和尾随 ASCII 空格。
 func TrimBytes(b []byte) []byte {
 	for len(b) > 0 && isASCIISpace(b[0]) {
 		b = b[1:]
@@ -150,6 +147,6 @@ func isASCIISpace(b byte) bool {
 }
 
 func isASCIILetter(b byte) bool {
-	b |= 0x20 // make lower case
+	b |= 0x20 // 转换为小写
 	return 'a' <= b && b <= 'z'
 }

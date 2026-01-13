@@ -1,7 +1,7 @@
 /*
- * ELF constants and data structures
+ * ELF 常数和数据结构
  *
- * Derived from:
+ * 派生自：
  * $FreeBSD: src/sys/sys/elf32.h,v 1.8.14.1 2005/12/30 22:13:58 marcel Exp $
  * $FreeBSD: src/sys/sys/elf64.h,v 1.10.14.1 2005/12/30 22:13:58 marcel Exp $
  * $FreeBSD: src/sys/sys/elf_common.h,v 1.15.8.1 2005/12/30 22:13:58 marcel Exp $
@@ -14,7 +14,7 @@
  * "System V ABI" (http://www.sco.com/developers/gabi/latest/ch4.eheader.html)
  * "ELF for the ARM® 64-bit Architecture (AArch64)" (ARM IHI 0056B)
  * "RISC-V ELF psABI specification" (https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-elf.adoc)
- * llvm/BinaryFormat/ELF.h - ELF constants and structures
+ * llvm/BinaryFormat/ELF.h - ELF 常数和结构
  *
  * Copyright (c) 1996-1998 John D. Polstra.  All rights reserved.
  * Copyright (c) 2001 David E. O'Brien
@@ -47,29 +47,29 @@ package elf
 import "strconv"
 
 /*
- * Constants
+ * 常数
  */
 
-// Indexes into the Header.Ident array.
+// 进入 Header.Ident 数组的索引。
 const (
-	EI_CLASS      = 4  /* Class of machine. */
-	EI_DATA       = 5  /* Data format. */
-	EI_VERSION    = 6  /* ELF format version. */
-	EI_OSABI      = 7  /* Operating system / ABI identification */
-	EI_ABIVERSION = 8  /* ABI version */
-	EI_PAD        = 9  /* Start of padding (per SVR4 ABI). */
-	EI_NIDENT     = 16 /* Size of e_ident array. */
+	EI_CLASS      = 4  /* 机器类型。*/
+	EI_DATA       = 5  /* 数据格式。*/
+	EI_VERSION    = 6  /* ELF 格式版本。*/
+	EI_OSABI      = 7  /* 操作系统 / ABI 标识 */
+	EI_ABIVERSION = 8  /* ABI 版本 */
+	EI_PAD        = 9  /* 填充的开始（根据 SVR4 ABI）。*/
+	EI_NIDENT     = 16 /* e_ident 数组的大小。*/
 )
 
-// Initial magic number for ELF files.
+// ELF 文件的初始魔术数字。
 const ELFMAG = "\177ELF"
 
-// Version is found in Header.Ident[EI_VERSION] and Header.Version.
+// Version 在 Header.Ident[EI_VERSION] 和 Header.Version 中找到。
 type Version byte
 
 const (
-	EV_NONE    Version = 0
-	EV_CURRENT Version = 1
+	EV_NONE    Version = 0 // 无
+	EV_CURRENT Version = 1 // 当前版本
 )
 
 var versionStrings = []intName{
@@ -80,13 +80,13 @@ var versionStrings = []intName{
 func (i Version) String() string   { return stringName(uint32(i), versionStrings, false) }
 func (i Version) GoString() string { return stringName(uint32(i), versionStrings, true) }
 
-// Class is found in Header.Ident[EI_CLASS] and Header.Class.
+// Class 在 Header.Ident[EI_CLASS] 和 Header.Class 中找到。
 type Class byte
 
 const (
-	ELFCLASSNONE Class = 0 /* Unknown class. */
-	ELFCLASS32   Class = 1 /* 32-bit architecture. */
-	ELFCLASS64   Class = 2 /* 64-bit architecture. */
+	ELFCLASSNONE Class = 0 /* 未知类型。*/
+	ELFCLASS32   Class = 1 /* 32 位架构。*/
+	ELFCLASS64   Class = 2 /* 64 位架构。*/
 )
 
 var classStrings = []intName{
@@ -98,13 +98,13 @@ var classStrings = []intName{
 func (i Class) String() string   { return stringName(uint32(i), classStrings, false) }
 func (i Class) GoString() string { return stringName(uint32(i), classStrings, true) }
 
-// Data is found in Header.Ident[EI_DATA] and Header.Data.
+// Data 在 Header.Ident[EI_DATA] 和 Header.Data 中找到。
 type Data byte
 
 const (
-	ELFDATANONE Data = 0 /* Unknown data format. */
-	ELFDATA2LSB Data = 1 /* 2's complement little-endian. */
-	ELFDATA2MSB Data = 2 /* 2's complement big-endian. */
+	ELFDATANONE Data = 0 /* 未知数据格式。*/
+	ELFDATA2LSB Data = 1 /* 2 的补码小端。*/
+	ELFDATA2MSB Data = 2 /* 2 的补码大端。*/
 )
 
 var dataStrings = []intName{
@@ -116,16 +116,16 @@ var dataStrings = []intName{
 func (i Data) String() string   { return stringName(uint32(i), dataStrings, false) }
 func (i Data) GoString() string { return stringName(uint32(i), dataStrings, true) }
 
-// OSABI is found in Header.Ident[EI_OSABI] and Header.OSABI.
+// OSABI 在 Header.Ident[EI_OSABI] 和 Header.OSABI 中找到。
 type OSABI byte
 
 const (
 	ELFOSABI_NONE       OSABI = 0   /* UNIX System V ABI */
-	ELFOSABI_HPUX       OSABI = 1   /* HP-UX operating system */
+	ELFOSABI_HPUX       OSABI = 1   /* HP-UX 操作系统 */
 	ELFOSABI_NETBSD     OSABI = 2   /* NetBSD */
 	ELFOSABI_LINUX      OSABI = 3   /* Linux */
 	ELFOSABI_HURD       OSABI = 4   /* Hurd */
-	ELFOSABI_86OPEN     OSABI = 5   /* 86Open common IA32 ABI */
+	ELFOSABI_86OPEN     OSABI = 5   /* 86Open 常见 IA32 ABI */
 	ELFOSABI_SOLARIS    OSABI = 6   /* Solaris */
 	ELFOSABI_AIX        OSABI = 7   /* AIX */
 	ELFOSABI_IRIX       OSABI = 8   /* IRIX */
@@ -136,10 +136,10 @@ const (
 	ELFOSABI_OPENVMS    OSABI = 13  /* Open VMS */
 	ELFOSABI_NSK        OSABI = 14  /* HP Non-Stop Kernel */
 	ELFOSABI_AROS       OSABI = 15  /* Amiga Research OS */
-	ELFOSABI_FENIXOS    OSABI = 16  /* The FenixOS highly scalable multi-core OS */
+	ELFOSABI_FENIXOS    OSABI = 16  /* FenixOS 高度可扩展的多核操作系统 */
 	ELFOSABI_CLOUDABI   OSABI = 17  /* Nuxi CloudABI */
 	ELFOSABI_ARM        OSABI = 97  /* ARM */
-	ELFOSABI_STANDALONE OSABI = 255 /* Standalone (embedded) application */
+	ELFOSABI_STANDALONE OSABI = 255 /* 独立（嵌入式）应用程序 */
 )
 
 var osabiStrings = []intName{
@@ -168,19 +168,19 @@ var osabiStrings = []intName{
 func (i OSABI) String() string   { return stringName(uint32(i), osabiStrings, false) }
 func (i OSABI) GoString() string { return stringName(uint32(i), osabiStrings, true) }
 
-// Type is found in Header.Type.
+// Type 在 Header.Type 中找到。
 type Type uint16
 
 const (
-	ET_NONE   Type = 0      /* Unknown type. */
-	ET_REL    Type = 1      /* Relocatable. */
-	ET_EXEC   Type = 2      /* Executable. */
-	ET_DYN    Type = 3      /* Shared object. */
-	ET_CORE   Type = 4      /* Core file. */
-	ET_LOOS   Type = 0xfe00 /* First operating system specific. */
-	ET_HIOS   Type = 0xfeff /* Last operating system-specific. */
-	ET_LOPROC Type = 0xff00 /* First processor-specific. */
-	ET_HIPROC Type = 0xffff /* Last processor-specific. */
+	ET_NONE   Type = 0      /* 未知类型。*/
+	ET_REL    Type = 1      /* 可重定位。*/
+	ET_EXEC   Type = 2      /* 可执行文件。*/
+	ET_DYN    Type = 3      /* 共享对象。*/
+	ET_CORE   Type = 4      /* 核心文件。*/
+	ET_LOOS   Type = 0xfe00 /* 第一个操作系统特定。*/
+	ET_HIOS   Type = 0xfeff /* 最后一个操作系统特定。*/
+	ET_LOPROC Type = 0xff00 /* 第一个处理器特定。*/
+	ET_HIPROC Type = 0xffff /* 最后一个处理器特定。*/
 )
 
 var typeStrings = []intName{

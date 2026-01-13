@@ -1,22 +1,19 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package lzw implements the Lempel-Ziv-Welch compressed data format,
-// described in T. A. Welch, “A Technique for High-Performance Data
-// Compression”, Computer, 17(6) (June 1984), pp 8-19.
+// Package lzw 实现 Lempel-Ziv-Welch 压缩数据格式，
+// 如 T. A. Welch 所述，"高性能数据压缩技术"，Computer, 17(6)（1984 年 6 月），pp 8-19。
 //
-// In particular, it implements LZW as used by the GIF and PDF file
-// formats, which means variable-width codes up to 12 bits and the first
-// two non-literal codes are a clear code and an EOF code.
+// 特别是，它实现了 GIF 和 PDF 文件格式使用的 LZW，
+// 这意味着可变宽度码最多 12 位，前两个非字面码是清除码和 EOF 码。
 //
-// The TIFF file format uses a similar but incompatible version of the LZW
-// algorithm. See the [golang.org/x/image/tiff/lzw] package for an
-// implementation.
+// TIFF 文件格式使用 LZW 算法的类似但不兼容的版本。
+// 参见 [golang.org/x/image/tiff/lzw] 包以获得实现。
 package lzw
 
-// TODO(nigeltao): check that PDF uses LZW in the same way as GIF,
-// modulo LSB/MSB packing order.
+// TODO(nigeltao): 检查 PDF 是否以与 GIF 相同的方式使用 LZW，
+// 修正 LSB/MSB 打包顺序。
 
 import (
 	"bufio"
@@ -25,14 +22,13 @@ import (
 	"io"
 )
 
-// Order specifies the bit ordering in an LZW data stream.
+// Order 指定 LZW 数据流中的位顺序。
 type Order int
 
 const (
-	// LSB means Least Significant Bits first, as used in the GIF file format.
+	// LSB 表示最低有效位优先，用于 GIF 文件格式。
 	LSB Order = iota
-	// MSB means Most Significant Bits first, as used in the TIFF and PDF
-	// file formats.
+	// MSB 表示最高有效位优先，用于 TIFF 和 PDF 文件格式。
 	MSB
 )
 
@@ -42,42 +38,40 @@ const (
 	flushBuffer        = 1 << maxWidth
 )
 
-// Reader is an [io.Reader] which can be used to read compressed data in the
-// LZW format.
+// Reader 是一个 [io.Reader]，可用于读取 LZW 格式的压缩数据。
 type Reader struct {
 	r        io.ByteReader
 	bits     uint32
 	nBits    uint
 	width    uint
-	read     func(*Reader) (uint16, error) // readLSB or readMSB
-	litWidth int                           // width in bits of literal codes
+	read     func(*Reader) (uint16, error) // readLSB 或 readMSB
+	litWidth int                           // 字面码的位宽
 	err      error
 
-	// The first 1<<litWidth codes are literal codes.
-	// The next two codes mean clear and EOF.
-	// Other valid codes are in the range [lo, hi] where lo := clear + 2,
-	// with the upper bound incrementing on each code seen.
+	// 前 1<<litWidth 个码是字面码。
+	// 接下来的两个码表示清除和 EOF。
+	// 其他有效码在范围 [lo, hi] 内，其中 lo := clear + 2，
+	// 每次看到代码时上界递增。
 	//
-	// overflow is the code at which hi overflows the code width. It always
-	// equals 1 << width.
+	// overflow 是 hi 溢出代码宽度的码。
+	// 它总是等于 1 << width。
 	//
-	// last is the most recently seen code, or decoderInvalidCode.
+	// last 是最近看到的码，或 decoderInvalidCode。
 	//
-	// An invariant is that hi < overflow.
+	// 一个不变量是 hi < overflow。
 	clear, eof, hi, overflow, last uint16
 
-	// Each code c in [lo, hi] expands to two or more bytes. For c != hi:
-	//   suffix[c] is the last of these bytes.
-	//   prefix[c] is the code for all but the last byte.
-	//   This code can either be a literal code or another code in [lo, c).
-	// The c == hi case is a special case.
+	// [lo, hi] 中的每个码 c 扩展为两个或更多字节。对于 c != hi：
+	//   suffix[c] 是这些字节中的最后一个。
+	//   prefix[c] 是除最后一个字节外所有字节的码。
+	//   此码可以是字面码或 [lo, c) 中的另一个码。
+	// c == hi 的情况是特殊情况。
 	suffix [1 << maxWidth]uint8
 	prefix [1 << maxWidth]uint16
 
-	// output is the temporary output buffer.
-	// Literal codes are accumulated from the start of the buffer.
-	// Non-literal codes decode to a sequence of suffixes that are first
-	// written right-to-left from the end of the buffer before being copied
+	// output 是临时输出缓冲区。
+	// 字面码从缓冲区的开始累积。
+	// 非字面码解码为后缀序列，首先从缓冲区末尾向左向右书写，然后被复制
 	// to the start of the buffer.
 	// It is flushed when it contains >= 1<<maxWidth bytes,
 	// so that there is always room to decode an entire code.

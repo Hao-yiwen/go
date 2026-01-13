@@ -2,9 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package gosym implements access to the Go symbol
-// and line number tables embedded in Go binaries generated
-// by the gc compilers.
+// Package gosym 实现对 Go 符号的访问
+// 和 gc 编译器生成的 Go 二进制文件中嵌入的行号表。
 package gosym
 
 import (
@@ -16,29 +15,28 @@ import (
 )
 
 /*
- * Symbols
+ * 符号
  */
 
-// A Sym represents a single symbol table entry.
+// Sym 表示单个符号表项。
 type Sym struct {
 	Value  uint64
 	Type   byte
 	Name   string
 	GoType uint64
-	// If this symbol is a function symbol, the corresponding Func
+	// 如果此符号是函数符号，则对应的 Func
 	Func *Func
 
 	goVersion version
 }
 
-// Static reports whether this symbol is static (not visible outside its file).
+// Static 报告此符号是否为静态的（在其文件外不可见）。
 func (s *Sym) Static() bool { return s.Type >= 'a' }
 
-// nameWithoutInst returns s.Name if s.Name has no brackets (does not reference an
-// instantiated type, function, or method). If s.Name contains brackets, then it
-// returns s.Name with all the contents between (and including) the outermost left
-// and right bracket removed. This is useful to ignore any extra slashes or dots
-// inside the brackets from the string searches below, where needed.
+// nameWithoutInst 如果 s.Name 没有方括号（不引用实例化的
+// 类型、函数或方法）则返回 s.Name。如果 s.Name 包含方括号，则
+// 返回删除了最外层左右方括号之间（包括方括号）所有内容的 s.Name。
+// 这对于忽略字符串搜索中方括号内的任何额外斜杠或点很有用。
 func (s *Sym) nameWithoutInst() string {
 	start := strings.Index(s.Name, "[")
 	if start < 0 {
@@ -46,26 +44,26 @@ func (s *Sym) nameWithoutInst() string {
 	}
 	end := strings.LastIndex(s.Name, "]")
 	if end < 0 {
-		// Malformed name, should contain closing bracket too.
+		// 格式错误的名称，也应该包含右方括号。
 		return s.Name
 	}
 	return s.Name[0:start] + s.Name[end+1:]
 }
 
-// PackageName returns the package part of the symbol name,
-// or the empty string if there is none.
+// PackageName 返回符号名称的包部分，
+// 或如果不存在则返回空字符串。
 func (s *Sym) PackageName() string {
 	name := s.nameWithoutInst()
 
-	// Since go1.20, a prefix of "type:" and "go:" is a compiler-generated symbol,
-	// they do not belong to any package.
+	// 从 go1.20 开始，前缀 "type:" 和 "go:" 是编译器生成的符号，
+	// 它们不属于任何包。
 	//
-	// See cmd/compile/internal/base/link.go:ReservedImports variable.
+	// 参见 cmd/compile/internal/base/link.go:ReservedImports 变量。
 	if s.goVersion >= ver120 && (strings.HasPrefix(name, "go:") || strings.HasPrefix(name, "type:")) {
 		return ""
 	}
 
-	// For go1.18 and below, the prefix are "type." and "go." instead.
+	// 对于 go1.18 及以下版本，前缀是 "type." 和 "go." 代替。
 	if s.goVersion <= ver118 && (strings.HasPrefix(name, "go.") || strings.HasPrefix(name, "type.")) {
 		return ""
 	}
@@ -81,9 +79,9 @@ func (s *Sym) PackageName() string {
 	return ""
 }
 
-// ReceiverName returns the receiver type name of this symbol,
-// or the empty string if there is none.  A receiver name is only detected in
-// the case that s.Name is fully-specified with a package name.
+// ReceiverName 返回此符号的接收器类型名称，
+// 或如果不存在则返回空字符串。只有在 s.Name
+// 用包名称完全指定的情况下才会检测到接收器名称。
 func (s *Sym) ReceiverName() string {
 	name := s.nameWithoutInst()
 	// If we find a slash in name, it should precede any bracketed expression

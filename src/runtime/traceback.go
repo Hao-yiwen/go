@@ -14,138 +14,136 @@ import (
 	"unsafe"
 )
 
-// The code in this file implements stack trace walking for all architectures.
-// The most important fact about a given architecture is whether it uses a link register.
-// On systems with link registers, the prologue for a non-leaf function stores the
-// incoming value of LR at the bottom of the newly allocated stack frame.
-// On systems without link registers (x86), the architecture pushes a return PC during
-// the call instruction, so the return PC ends up above the stack frame.
-// In this file, the return PC is always called LR, no matter how it was found.
+// 此文件中的代码实现了所有架构的堆栈跟踪遍历。
+// 关于给定体系结构最重要的事实是它是否使用链接寄存器。
+// 在具有链接寄存器的系统上，非叶函数的序言将
+// LR的入站值存储在新分配的堆栈帧的底部。
+// 在没有链接寄存器（x86）的系统上，架构在
+// 调用指令期间推送返回PC，因此返回PC最终位于堆栈帧上方。
+// 在此文件中，返回PC总是称为LR，无论如何找到它。
 
 const usesLR = sys.MinFrameSize > 0
 
 const (
-	// tracebackInnerFrames is the number of innermost frames to print in a
-	// stack trace. The total maximum frames is tracebackInnerFrames +
-	// tracebackOuterFrames.
+	// tracebackInnerFrames 是堆栈跟踪中要打印的最内层帧的数量。
+	// 总最大帧数是 tracebackInnerFrames +
+	// tracebackOuterFrames。
 	tracebackInnerFrames = 50
 
-	// tracebackOuterFrames is the number of outermost frames to print in a
-	// stack trace.
+	// tracebackOuterFrames 是堆栈跟踪中要打印的最外层帧的数量。
 	tracebackOuterFrames = 50
 )
 
-// unwindFlags control the behavior of various unwinders.
+// unwindFlags 控制各种展开器的行为。
 type unwindFlags uint8
 
 const (
-	// unwindPrintErrors indicates that if unwinding encounters an error, it
-	// should print a message and stop without throwing. This is used for things
-	// like stack printing, where it's better to get incomplete information than
-	// to crash. This is also used in situations where everything may not be
-	// stopped nicely and the stack walk may not be able to complete, such as
-	// during profiling signals or during a crash.
+	// unwindPrintErrors 表示如果展开遇到错误，它
+	// 应该打印一条消息并停止，不抛出异常。这用于
+	// 堆栈打印之类的事情，在这种情况下获得不完整信息比
+	// 崩溃更好。这也用在所有内容可能不是
+	// 很好地停止的情况下，堆栈遍历可能无法完成，例如
+	// 在分析信号期间或崩溃期间。
 	//
-	// If neither unwindPrintErrors or unwindSilentErrors are set, unwinding
-	// performs extra consistency checks and throws on any error.
+	// 如果既未设置 unwindPrintErrors 也未设置 unwindSilentErrors，展开
+	// 会执行额外的一致性检查并在任何错误上抛出异常。
 	//
-	// Note that there are a small number of fatal situations that will throw
-	// regardless of unwindPrintErrors or unwindSilentErrors.
+	// 注意存在少量致命情况，无论如何都会抛出异常
+	// unwindPrintErrors 或 unwindSilentErrors。
 	unwindPrintErrors unwindFlags = 1 << iota
 
-	// unwindSilentErrors silently ignores errors during unwinding.
+	// unwindSilentErrors 在展开期间静默忽略错误。
 	unwindSilentErrors
 
-	// unwindTrap indicates that the initial PC and SP are from a trap, not a
-	// return PC from a call.
+	// unwindTrap 表示初始PC和SP来自陷阱，而不是
+	// 调用的返回PC。
 	//
-	// The unwindTrap flag is updated during unwinding. If set, frame.pc is the
-	// address of a faulting instruction instead of the return address of a
-	// call. It also means the liveness at pc may not be known.
+	// unwindTrap 标志在展开期间更新。如果设置，frame.pc 是
+	// 故障指令的地址，而不是
+	// 调用的返回地址。这也意味着PC处的活跃性可能不为人所知。
 	//
-	// TODO: Distinguish frame.continpc, which is really the stack map PC, from
-	// the actual continuation PC, which is computed differently depending on
-	// this flag and a few other things.
+	// TODO: 区分 frame.continpc（这实际上是堆栈映射PC）和
+	// 实际的继续PC，它的计算方式取决于
+	// 此标志和其他一些内容。
 	unwindTrap
 
-	// unwindJumpStack indicates that, if the traceback is on a system stack, it
-	// should resume tracing at the user stack when the system stack is
-	// exhausted.
+	// unwindJumpStack 指示如果回溯在系统堆栈上，它
+	// 应该在系统堆栈耗尽时在用户堆栈处恢复跟踪。
 	unwindJumpStack
 )
 
-// An unwinder iterates the physical stack frames of a Go sack.
+// unwinder 迭代 Go 堆栈的物理堆栈帧。
 //
-// Typical use of an unwinder looks like:
+// unwinder 的典型用法如下所示：
 //
 //	var u unwinder
 //	for u.init(gp, 0); u.valid(); u.next() {
-//		// ... use frame info in u ...
+//		// ... 在 u 中使用帧信息 ...
 //	}
 //
-// Implementation note: This is carefully structured to be pointer-free because
-// tracebacks happen in places that disallow write barriers (e.g., signals).
-// Even if this is stack-allocated, its pointer-receiver methods don't know that
-// their receiver is on the stack, so they still emit write barriers. Here we
-// address that by carefully avoiding any pointers in this type. Another
-// approach would be to split this into a mutable part that's passed by pointer
-// but contains no pointers itself and an immutable part that's passed and
-// returned by value and can contain pointers. We could potentially hide that
-// we're doing that in trivial methods that are inlined into the caller that has
-// the stack allocation, but that's fragile.
+// 实现注意：这经过仔细结构化以避免指针，因为
+// 回溯发生在禁止写入屏障的地方（例如，信号）。
+// 即使这是堆栈分配的，其指针接收器方法也不知道
+// 它们的接收器在堆栈上，所以它们仍然发出写入屏障。我们在这里
+// 通过仔细避免此类型中的任何指针来解决这个问题。另一个
+// 方法是将其分成一个通过指针传递的可变部分
+// 但本身不包含指针，以及一个通过值传递和传递的不可变部分
+// 返回并可以包含指针。我们可能能够隐藏
+// 我们在被内联到具有的调用者的平凡方法中所做的事情
+// 堆栈分配，但那很脆弱。
 type unwinder struct {
-	// frame is the current physical stack frame, or all 0s if
-	// there is no frame.
+	// frame 是当前物理堆栈帧，如果
+	// 没有帧则为全 0。
 	frame stkframe
 
-	// g is the G who's stack is being unwound. If the
-	// unwindJumpStack flag is set and the unwinder jumps stacks,
-	// this will be different from the initial G.
+	// g 是其堆栈正在展开的 G。如果
+	// 设置了 unwindJumpStack 标志并且展开器跳转堆栈，
+	// 这将不同于初始 G。
 	g guintptr
 
-	// cgoCtxt is the index into g.cgoCtxt of the next frame on the cgo stack.
-	// The cgo stack is unwound in tandem with the Go stack as we find marker frames.
+	// cgoCtxt 是到 g.cgoCtxt 中 cgo 堆栈上下一帧索引。
+	// 当我们找到标记帧时，cgo 堆栈与 Go 堆栈并行展开。
 	cgoCtxt int
 
-	// calleeFuncID is the function ID of the caller of the current
-	// frame.
+	// calleeFuncID 是当前的调用者的函数 ID
+	// 帧。
 	calleeFuncID abi.FuncID
 
-	// flags are the flags to this unwind. Some of these are updated as we
-	// unwind (see the flags documentation).
+	// flags 是此展开的标志。其中一些在我们
+	// 展开时更新（参见标志文档）。
 	flags unwindFlags
 }
 
-// init initializes u to start unwinding gp's stack and positions the
-// iterator on gp's innermost frame. gp must not be the current G.
+// init 初始化 u 以开始展开 gp 的堆栈并在 gp 的最内层帧上定位
+// 迭代器。gp 不能是当前 G。
 //
-// A single unwinder can be reused for multiple unwinds.
+// 单个展开器可以重复用于多次展开。
 func (u *unwinder) init(gp *g, flags unwindFlags) {
-	// Implementation note: This starts the iterator on the first frame and we
-	// provide a "valid" method. Alternatively, this could start in a "before
-	// the first frame" state and "next" could return whether it was able to
-	// move to the next frame, but that's both more awkward to use in a "for"
-	// loop and is harder to implement because we have to do things differently
-	// for the first frame.
+	// 实现注意：这在第一帧上启动迭代器，我们
+	// 提供一个"有效"方法。或者，这可以在"之前
+	// 第一帧"状态下启动，"next"可以返回它是否能够
+	// 移动到下一帧，但这在"for"中使用起来更尴尬
+	// 循环并且更难实现，因为我们必须做不同的事情
+	// 用于第一帧。
 	u.initAt(^uintptr(0), ^uintptr(0), ^uintptr(0), gp, flags)
 }
 
 func (u *unwinder) initAt(pc0, sp0, lr0 uintptr, gp *g, flags unwindFlags) {
-	// Don't call this "g"; it's too easy get "g" and "gp" confused.
+	// 不要称此为"g"；太容易混淆"g"和"gp"了。
 	if ourg := getg(); ourg == gp && ourg == ourg.m.curg {
-		// The starting sp has been passed in as a uintptr, and the caller may
-		// have other uintptr-typed stack references as well.
-		// If during one of the calls that got us here or during one of the
-		// callbacks below the stack must be grown, all these uintptr references
-		// to the stack will not be updated, and traceback will continue
-		// to inspect the old stack memory, which may no longer be valid.
-		// Even if all the variables were updated correctly, it is not clear that
-		// we want to expose a traceback that begins on one stack and ends
-		// on another stack. That could confuse callers quite a bit.
-		// Instead, we require that initAt and any other function that
-		// accepts an sp for the current goroutine (typically obtained by
-		// calling GetCallerSP) must not run on that goroutine's stack but
-		// instead on the g0 stack.
+		// 起始 sp 已作为 uintptr 传入，调用者可能
+		// 也有其他 uintptr 类型的堆栈引用。
+		// 如果在我们到达此处的调用之一或其中任何一个期间
+		// 下面的回调堆栈必须扩展，所有这些 uintptr 引用
+		// 到堆栈将不会被更新，回溯将继续
+		// 检查旧堆栈内存，这可能不再有效。
+		// 即使所有变量都正确更新，也不清楚是否
+		// 我们想要暴露一个在一个堆栈上开始并在
+		// 另一个堆栈上结束的回溯。这可能会让调用者相当困惑。
+		// 相反，我们要求 initAt 和任何其他接受
+		// 当前 goroutine 的 sp（通常通过
+		// 调用 GetCallerSP 获得）的函数不能在该 goroutine 的堆栈上运行，而是
+		// 在 g0 堆栈上运行。
 		throw("cannot trace user goroutine on its own stack")
 	}
 

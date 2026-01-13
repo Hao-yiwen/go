@@ -63,24 +63,24 @@ func AppendEncode(dst, src []byte) []byte {
 // 基于流的 Decoder 返回 [io.ErrUnexpectedEOF] 而不是 ErrLength。
 var ErrLength = errors.New("encoding/hex: odd length hex string")
 
-// InvalidByteError values describe errors resulting from an invalid byte in a hex string.
+// InvalidByteError 值描述由十六进制字符串中的无效字节导致的错误。
 type InvalidByteError byte
 
 func (e InvalidByteError) Error() string {
 	return fmt.Sprintf("encoding/hex: invalid byte: %#U", rune(e))
 }
 
-// DecodedLen 返回the length of a decoding of x source bytes.
-// Specifically, it returns x / 2.
+// DecodedLen 返回 x 个源字节解码的长度。
+// 具体来说，它返回 x / 2。
 func DecodedLen(x int) int { return x / 2 }
 
-// Decode decodes src into [DecodedLen](len(src)) bytes,
-// returning the actual number of bytes written to dst.
+// Decode 将 src 解码为 [DecodedLen](len(src)) 字节，
+// 返回写入 dst 的实际字节数。
 //
-// Decode expects that src 包含 only hexadecimal
-// characters and that src has even length.
-// If the input is malformed, Decode 返回 number
-// of bytes decoded before the error.
+// Decode 期望 src 仅包含十六进制
+// 字符，并且 src 的长度为偶数。
+// 如果输入格式不正确，Decode 返回
+// 错误前解码的字节数。
 func Decode(dst, src []byte) (int, error) {
 	i, j := 0, 1
 	for ; j < len(src); j += 2 {
@@ -99,8 +99,8 @@ func Decode(dst, src []byte) (int, error) {
 		i++
 	}
 	if len(src)%2 == 1 {
-		// Check for invalid char before reporting bad length,
-		// since the invalid char (if present) 是一个n earlier problem.
+		// 在报告长度不良之前检查无效字符，
+		// 因为无效字符（如果存在）是一个更早的问题。
 		if reverseHexTable[src[j-1]] > 0x0f {
 			return i, InvalidByteError(src[j-1])
 		}
@@ -109,9 +109,9 @@ func Decode(dst, src []byte) (int, error) {
 	return i, nil
 }
 
-// AppendDecode appends the hexadecimally decoded src to dst
-// and 返回the extended buffer.
-// If the input is malformed, it 返回 partially decoded src and an error.
+// AppendDecode 将十六进制解码的 src 追加到 dst
+// 并返回扩展后的缓冲区。
+// 如果输入格式不正确，它返回部分解码的 src 和错误。
 func AppendDecode(dst, src []byte) ([]byte, error) {
 	n := DecodedLen(len(src))
 	dst = slices.Grow(dst, n)
@@ -119,36 +119,36 @@ func AppendDecode(dst, src []byte) ([]byte, error) {
 	return dst[:len(dst)+n], err
 }
 
-// EncodeToString 返回the hexadecimal encoding of src.
+// EncodeToString 返回 src 的十六进制编码。
 func EncodeToString(src []byte) string {
 	dst := make([]byte, EncodedLen(len(src)))
 	Encode(dst, src)
 	return string(dst)
 }
 
-// DecodeString 返回the bytes represented by the hexadecimal string s.
+// DecodeString 返回由十六进制字符串 s 表示的字节。
 //
-// DecodeString expects that src 包含 only hexadecimal
-// characters and that src has even length.
-// If the input is malformed, DecodeString returns
-// the bytes decoded before the error.
+// DecodeString 期望 src 仅包含十六进制
+// 字符，并且 src 的长度为偶数。
+// 如果输入格式不正确，DecodeString 返回
+// 错误前解码的字节。
 func DecodeString(s string) ([]byte, error) {
 	dst := make([]byte, DecodedLen(len(s)))
 	n, err := Decode(dst, []byte(s))
 	return dst[:n], err
 }
 
-// Dump 返回a string that 包含 a hex dump of the given data. The format
-// of the hex dump matches the output of `hexdump -C` on the command line.
+// Dump 返回一个包含给定数据的十六进制转储的字符串。十六进制
+// 转储的格式与命令行上 `hexdump -C` 的输出匹配。
 func Dump(data []byte) string {
 	if len(data) == 0 {
 		return ""
 	}
 
 	var buf strings.Builder
-	// Dumper will write 79 bytes per complete 16 byte chunk, and at least
-	// 64 bytes for whatever remains. Round the allocation up, since only a
-	// maximum of 15 bytes 将是 wasted.
+	// Dumper 将为每个完整的 16 字节块写入 79 字节，至少
+	// 为剩余的字节写入 64 字节。向上舍入分配，因为最多只有
+	// 15 个字节将被浪费。
 	buf.Grow((1 + ((len(data) - 1) / 16)) * 79)
 
 	dumper := Dumper(&buf)

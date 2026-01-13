@@ -26,9 +26,9 @@ type (
 )
 
 type conversionTest struct {
-	s, d any // source and destination
+	s, d any // 源和目的地
 
-	// following are used if they're non-zero
+	// 以下是如果它们非零则使用
 	wantint    int64
 	wantuint   uint64
 	wantstr    string
@@ -37,16 +37,16 @@ type conversionTest struct {
 	wantf32    float32
 	wantf64    float64
 	wanttime   time.Time
-	wantbool   bool // used if d is of type *bool
+	wantbool   bool // 如果 d 是类型 *bool 时使用
 	wanterr    string
 	wantiface  any
-	wantptr    *int64 // if non-nil, *d's pointed value must be equal to *wantptr
-	wantnil    bool   // if true, *d must be *int64(nil)
+	wantptr    *int64 // 如果非 nil，*d 的指向值必须等于 *wantptr
+	wantnil    bool   // 如果为 true，*d 必须是 *int64(nil)
 	wantusrdef userDefined
 	wantusrstr userDefinedString
 }
 
-// Target variables for scanning into.
+// 扫描到的目标变量。
 var (
 	scanstr    string
 	scanbytes  []byte
@@ -63,14 +63,14 @@ var (
 )
 
 func conversionTests() []conversionTest {
-	// Return a fresh instance to test so "go test -count 2" works correctly.
+	// 返回一个新的实例进行测试，以便 "go test -count 2" 正常工作。
 	return []conversionTest{
-		// Exact conversions (destination pointer type matches source type)
+		// 精确转换（目标指针类型与源类型匹配）
 		{s: "foo", d: &scanstr, wantstr: "foo"},
 		{s: 123, d: &scanint, wantint: 123},
 		{s: someTime, d: &scantime, wanttime: someTime},
 
-		// To strings
+		// 转换为字符串
 		{s: "string", d: &scanstr, wantstr: "string"},
 		{s: []byte("byteslice"), d: &scanstr, wantstr: "byteslice"},
 		{s: 123, d: &scanstr, wantstr: "123"},
@@ -82,7 +82,7 @@ func conversionTests() []conversionTest {
 		{s: uint64(123), d: &scanstr, wantstr: "123"},
 		{s: 1.5, d: &scanstr, wantstr: "1.5"},
 
-		// From time.Time:
+		// 从 time.Time：
 		{s: time.Unix(1, 0).UTC(), d: &scanstr, wantstr: "1970-01-01T00:00:01Z"},
 		{s: time.Unix(1453874597, 0).In(time.FixedZone("here", -3600*8)), d: &scanstr, wantstr: "2016-01-26T22:03:17-08:00"},
 		{s: time.Unix(1, 2).UTC(), d: &scanstr, wantstr: "1970-01-01T00:00:01.000000002Z"},
@@ -90,7 +90,7 @@ func conversionTests() []conversionTest {
 		{s: time.Unix(1, 2).UTC(), d: &scanbytes, wantbytes: []byte("1970-01-01T00:00:01.000000002Z")},
 		{s: time.Unix(1, 2).UTC(), d: &scaniface, wantiface: time.Unix(1, 2).UTC()},
 
-		// To []byte
+		// 转换为 []byte
 		{s: nil, d: &scanbytes, wantbytes: nil},
 		{s: "string", d: &scanbytes, wantbytes: []byte("string")},
 		{s: []byte("byteslice"), d: &scanbytes, wantbytes: []byte("byteslice")},
@@ -103,7 +103,7 @@ func conversionTests() []conversionTest {
 		{s: uint64(123), d: &scanbytes, wantbytes: []byte("123")},
 		{s: 1.5, d: &scanbytes, wantbytes: []byte("1.5")},
 
-		// To RawBytes
+		// 转换为 RawBytes
 		{s: nil, d: &scanraw, wantraw: nil},
 		{s: []byte("byteslice"), d: &scanraw, wantraw: RawBytes("byteslice")},
 		{s: "string", d: &scanraw, wantraw: RawBytes("string")},
@@ -115,24 +115,24 @@ func conversionTests() []conversionTest {
 		{s: uint32(123), d: &scanraw, wantraw: RawBytes("123")},
 		{s: uint64(123), d: &scanraw, wantraw: RawBytes("123")},
 		{s: 1.5, d: &scanraw, wantraw: RawBytes("1.5")},
-		// time.Time has been placed here to check that the RawBytes slice gets
-		// correctly reset when calling time.Time.AppendFormat.
+		// time.Time 已放在此处以检查 RawBytes 切片
+		// 在调用 time.Time.AppendFormat 时是否被正确重置。
 		{s: time.Unix(2, 5).UTC(), d: &scanraw, wantraw: RawBytes("1970-01-01T00:00:02.000000005Z")},
 
-		// Strings to integers
+		// 字符串转整数
 		{s: "255", d: &scanuint8, wantuint: 255},
 		{s: "256", d: &scanuint8, wanterr: "converting driver.Value type string (\"256\") to a uint8: value out of range"},
 		{s: "256", d: &scanuint16, wantuint: 256},
 		{s: "-1", d: &scanint, wantint: -1},
 		{s: "foo", d: &scanint, wanterr: "converting driver.Value type string (\"foo\") to a int: invalid syntax"},
 
-		// int64 to smaller integers
+		// int64 转为较小的整数
 		{s: int64(5), d: &scanuint8, wantuint: 5},
 		{s: int64(256), d: &scanuint8, wanterr: "converting driver.Value type int64 (\"256\") to a uint8: value out of range"},
 		{s: int64(256), d: &scanuint16, wantuint: 256},
 		{s: int64(65536), d: &scanuint16, wanterr: "converting driver.Value type int64 (\"65536\") to a uint16: value out of range"},
 
-		// True bools
+		// 真布尔值
 		{s: true, d: &scanbool, wantbool: true},
 		{s: "True", d: &scanbool, wantbool: true},
 		{s: "TRUE", d: &scanbool, wantbool: true},
@@ -141,7 +141,7 @@ func conversionTests() []conversionTest {
 		{s: int64(1), d: &scanbool, wantbool: true},
 		{s: uint16(1), d: &scanbool, wantbool: true},
 
-		// False bools
+		// 假布尔值
 		{s: false, d: &scanbool, wantbool: false},
 		{s: "false", d: &scanbool, wantbool: false},
 		{s: "FALSE", d: &scanbool, wantbool: false},
@@ -150,22 +150,22 @@ func conversionTests() []conversionTest {
 		{s: int64(0), d: &scanbool, wantbool: false},
 		{s: uint16(0), d: &scanbool, wantbool: false},
 
-		// Not bools
+		// 非布尔值
 		{s: "yup", d: &scanbool, wanterr: `sql/driver: couldn't convert "yup" into type bool`},
 		{s: 2, d: &scanbool, wanterr: `sql/driver: couldn't convert 2 into type bool`},
 
-		// Floats
+		// 浮点数
 		{s: float64(1.5), d: &scanf64, wantf64: float64(1.5)},
 		{s: int64(1), d: &scanf64, wantf64: float64(1)},
 		{s: float64(1.5), d: &scanf32, wantf32: float32(1.5)},
 		{s: "1.5", d: &scanf32, wantf32: float32(1.5)},
 		{s: "1.5", d: &scanf64, wantf64: float64(1.5)},
 
-		// Pointers
+		// 指针
 		{s: any(nil), d: &scanptr, wantnil: true},
 		{s: int64(42), d: &scanptr, wantptr: &answer},
 
-		// To interface{}
+		// 转换为 interface{}
 		{s: float64(1.5), d: &scaniface, wantiface: float64(1.5)},
 		{s: int64(1), d: &scaniface, wantiface: int64(1)},
 		{s: "str", d: &scaniface, wantiface: "str"},
@@ -174,14 +174,14 @@ func conversionTests() []conversionTest {
 		{s: nil, d: &scaniface},
 		{s: []byte(nil), d: &scaniface, wantiface: []byte(nil)},
 
-		// To a user-defined type
+		// 转换为用户定义类型
 		{s: 1.5, d: new(userDefined), wantusrdef: 1.5},
 		{s: int64(123), d: new(userDefined), wantusrdef: 123},
 		{s: "1.5", d: new(userDefined), wantusrdef: 1.5},
 		{s: []byte{1, 2, 3}, d: new(userDefinedSlice), wanterr: `unsupported Scan, storing driver.Value type []uint8 into type *sql.userDefinedSlice`},
 		{s: "str", d: new(userDefinedString), wantusrstr: "str"},
 
-		// Other errors
+		// 其他错误
 		{s: complex(1, 2), d: &scanstr, wanterr: `unsupported Scan, storing driver.Value type complex128 into type *string`},
 	}
 }
@@ -385,10 +385,10 @@ func TestRawBytesAllocs(t *testing.T) {
 		}
 	})
 
-	// The numbers below are only valid for 64-bit interface word sizes,
-	// and gc. With 32-bit words there are more convT2E allocs, and
-	// with gccgo, only pointers currently go in interface data.
-	// So only care on amd64 gc for now.
+	// 下面的数字仅对 64 位接口字大小有效，
+	// 和 gc。对于 32 位字，有更多的 convT2E allocs，
+	// 对于 gccgo，目前只有指针进入接口数据。
+	// 所以目前只关心 amd64 gc。
 	measureAllocs := false
 	switch runtime.GOARCH {
 	case "amd64", "arm64":
@@ -399,7 +399,7 @@ func TestRawBytesAllocs(t *testing.T) {
 		t.Fatalf("allocs = %v; want 0", n)
 	}
 
-	// This one involves a convT2E allocation, string -> interface{}
+	// 这个涉及 convT2E 分配，string -> interface{}
 	n = testing.AllocsPerRun(100, func() {
 		test("string", "foo", "foo")
 	})
@@ -416,7 +416,7 @@ func TestUserDefinedBytes(t *testing.T) {
 
 	convertAssign(&u, v)
 	if &u[0] == &v[0] {
-		t.Fatal("userDefinedBytes got potentially dirty driver memory")
+		t.Fatal("userDefinedBytes 可能获得脏驱动程序内存")
 	}
 }
 
@@ -581,7 +581,7 @@ func TestDecimal(t *testing.T) {
 	}{
 		{name: "same", in: dec{exponent: -6}, out: dec{exponent: -6}},
 
-		// Ensure reflection is not used to assign the value by using different types.
+		// 通过使用不同的类型来确保反射不用于分配值。
 		{name: "diff", in: decFinite{exponent: -6}, out: dec{exponent: -6}},
 
 		{name: "bad-form", in: dec{form: 200}, err: true},

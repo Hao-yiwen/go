@@ -14,8 +14,8 @@ import (
 	"unicode/utf8"
 )
 
-// Strings for use with buffer.WriteString.
-// This is less overhead than using buffer.Write with byte arrays.
+// 用于 buffer.WriteString 的字符串。
+// 这比使用 buffer.Write 和字节数组开销更少。
 const (
 	commaSpaceString  = ", "
 	nilAngleString    = "<nil>"
@@ -33,56 +33,54 @@ const (
 	invReflectString  = "<invalid reflect.Value>"
 )
 
-// State represents the printer state passed to custom formatters.
-// It provides access to the [io.Writer] interface plus information about
-// the flags and options for the operand's format specifier.
+// State 代表传递给自定义格式化程序的打印机状态。
+// 它提供对 [io.Writer] 接口的访问，以及关于
+// 操作数格式说明符的标志和选项的信息。
 type State interface {
-	// Write is the function to call to emit formatted output to be printed.
+	// Write 是要调用的函数，以发出要打印的格式化输出。
 	Write(b []byte) (n int, err error)
-	// Width returns the value of the width option and whether it has been set.
+	// Width 返回宽度选项的值以及它是否已设置。
 	Width() (wid int, ok bool)
-	// Precision returns the value of the precision option and whether it has been set.
+	// Precision 返回精度选项的值以及它是否已设置。
 	Precision() (prec int, ok bool)
 
-	// Flag reports whether the flag c, a character, has been set.
+	// Flag 报告标志 c（一个字符）是否已设置。
 	Flag(c int) bool
 }
 
-// Formatter is implemented by any value that has a Format method.
-// The implementation controls how [State] and rune are interpreted,
-// and may call [Sprint] or [Fprint](f) etc. to generate its output.
+// Formatter 由任何具有 Format 方法的值实现。
+// 实现控制如何解释 [State] 和 rune，
+// 并且可能会调用 [Sprint] 或 [Fprint](f) 等来生成其输出。
 type Formatter interface {
 	Format(f State, verb rune)
 }
 
-// Stringer is implemented by any value that has a String method,
-// which defines the “native” format for that value.
-// The String method is used to print values passed as an operand
-// to any format that accepts a string or to an unformatted printer
-// such as [Print].
+// Stringer 由任何具有 String 方法的值实现，
+// 该方法定义该值的"本地"格式。
+// String 方法用于打印作为操作数传递的值
+// 到任何接受字符串的格式或无格式打印机，
+// 例如 [Print]。
 type Stringer interface {
 	String() string
 }
 
-// GoStringer is implemented by any value that has a GoString method,
-// which defines the Go syntax for that value.
-// The GoString method is used to print values passed as an operand
-// to a %#v format.
+// GoStringer 由任何具有 GoString 方法的值实现，
+// 该方法定义该值的 Go 语法。
+// GoString 方法用于打印作为操作数传递的值
+// 到 %#v 格式。
 type GoStringer interface {
 	GoString() string
 }
 
-// FormatString returns a string representing the fully qualified formatting
-// directive captured by the [State], followed by the argument verb. ([State] does not
-// itself contain the verb.) The result has a leading percent sign followed by any
-// flags, the width, and the precision. Missing flags, width, and precision are
-// omitted. This function allows a [Formatter] to reconstruct the original
-// directive triggering the call to Format.
+// FormatString 返回一个字符串，表示由 [State] 捕获的完全合格的格式化
+// 指令，后跟参数动词。（[State] 本身不包含动词。）结果有一个前导百分号，
+// 后跟任何标志、宽度和精度。缺失的标志、宽度和精度被省略。
+// 此函数允许 [Formatter] 重构触发 Format 调用的原始指令。
 func FormatString(state State, verb rune) string {
-	var tmp [16]byte // Use a local buffer.
+	var tmp [16]byte // 使用本地缓冲区。
 	b := append(tmp[:0], '%')
-	for _, c := range " +-#0" { // All known flags
-		if state.Flag(int(c)) { // The argument is an int for historical reasons.
+	for _, c := range " +-#0" { // 所有已知的标志
+		if state.Flag(int(c)) { // 参数是 int（出于历史原因）。
 			b = append(b, byte(c))
 		}
 	}
@@ -97,7 +95,7 @@ func FormatString(state State, verb rune) string {
 	return string(b)
 }
 
-// Use simple []byte instead of bytes.Buffer to avoid large dependency.
+// 使用简单的 []byte 而不是 bytes.Buffer 以避免大型依赖。
 type buffer []byte
 
 func (b *buffer) write(p []byte) {
@@ -116,30 +114,30 @@ func (b *buffer) writeRune(r rune) {
 	*b = utf8.AppendRune(*b, r)
 }
 
-// pp is used to store a printer's state and is reused with sync.Pool to avoid allocations.
+// pp 用于存储打印机的状态，并与 sync.Pool 一起重用以避免分配。
 type pp struct {
 	buf buffer
 
-	// arg holds the current item, as an interface{}.
+	// arg 以 interface{} 的形式保持当前项。
 	arg any
 
-	// value is used instead of arg for reflect values.
+	// value 用于代替 arg 来处理反射值。
 	value reflect.Value
 
-	// fmt is used to format basic items such as integers or strings.
+	// fmt 用于格式化基本项，如整数或字符串。
 	fmt fmt
 
-	// reordered records whether the format string used argument reordering.
+	// reordered 记录格式字符串是否使用了参数重新排序。
 	reordered bool
-	// goodArgNum records whether the most recent reordering directive was valid.
+	// goodArgNum 记录最近的重新排序指令是否有效。
 	goodArgNum bool
-	// panicking is set by catchPanic to avoid infinite panic, recover, panic, ... recursion.
+	// panicking 由 catchPanic 设置以避免无限的恐慌、恢复、恐慌、... 递归。
 	panicking bool
-	// erroring is set when printing an error string to guard against calling handleMethods.
+	// erroring 在打印错误字符串时设置，以防止调用 handleMethods。
 	erroring bool
-	// wrapErrs is set when the format string may contain a %w verb.
+	// wrapErrs 在格式字符串可能包含 %w 动词时设置。
 	wrapErrs bool
-	// wrappedErrs records the targets of the %w verb.
+	// wrappedErrs 记录 %w 动词的目标。
 	wrappedErrs []int
 }
 
@@ -147,7 +145,7 @@ var ppFree = sync.Pool{
 	New: func() any { return new(pp) },
 }
 
-// newPrinter allocates a new pp struct or grabs a cached one.
+// newPrinter 分配一个新的 pp 结构或获取一个缓存的。
 func newPrinter() *pp {
 	p := ppFree.Get().(*pp)
 	p.panicking = false
@@ -157,15 +155,14 @@ func newPrinter() *pp {
 	return p
 }
 
-// free saves used pp structs in ppFree; avoids an allocation per invocation.
+// free 将使用过的 pp 结构保存在 ppFree 中；避免每次调用分配。
 func (p *pp) free() {
-	// Proper usage of a sync.Pool requires each entry to have approximately
-	// the same memory cost. To obtain this property when the stored type
-	// contains a variably-sized buffer, we add a hard limit on the maximum
-	// buffer to place back in the pool. If the buffer is larger than the
-	// limit, we drop the buffer and recycle just the printer.
+	// sync.Pool 的正确使用需要每个条目具有大约相同的内存成本。
+	// 要在存储的类型包含可变大小的缓冲区时获得此属性，
+	// 我们对要放回池中的最大缓冲区添加了硬限制。
+	// 如果缓冲区大于限制，我们丢弃缓冲区并回收打印机。
 	//
-	// See https://golang.org/issue/23199.
+	// 详见 https://golang.org/issue/23199。
 	if cap(p.buf) > 64*1024 {
 		p.buf = nil
 	} else {
@@ -215,10 +212,10 @@ func (p *pp) WriteString(s string) (ret int, err error) {
 	return len(s), nil
 }
 
-// These routines end in 'f' and take a format string.
+// 这些例程以 'f' 结尾并取一个格式字符串。
 
-// Fprintf formats according to a format specifier and writes to w.
-// It returns the number of bytes written and any write error encountered.
+// Fprintf 根据格式说明符进行格式化并写入 w。
+// 返回写入的字节数和任何遇到的写入错误。
 func Fprintf(w io.Writer, format string, a ...any) (n int, err error) {
 	p := newPrinter()
 	p.doPrintf(format, a)
@@ -227,13 +224,13 @@ func Fprintf(w io.Writer, format string, a ...any) (n int, err error) {
 	return
 }
 
-// Printf formats according to a format specifier and writes to standard output.
-// It returns the number of bytes written and any write error encountered.
+// Printf 根据格式说明符进行格式化并写入标准输出。
+// 返回写入的字节数和任何遇到的写入错误。
 func Printf(format string, a ...any) (n int, err error) {
 	return Fprintf(os.Stdout, format, a...)
 }
 
-// Sprintf formats according to a format specifier and returns the resulting string.
+// Sprintf 根据格式说明符进行格式化并返回生成的字符串。
 func Sprintf(format string, a ...any) string {
 	p := newPrinter()
 	p.doPrintf(format, a)
@@ -242,8 +239,8 @@ func Sprintf(format string, a ...any) string {
 	return s
 }
 
-// Appendf formats according to a format specifier, appends the result to the byte
-// slice, and returns the updated slice.
+// Appendf 根据格式说明符进行格式化，将结果追加到字节
+// 切片，并返回更新的切片。
 func Appendf(b []byte, format string, a ...any) []byte {
 	p := newPrinter()
 	p.doPrintf(format, a)
@@ -252,11 +249,11 @@ func Appendf(b []byte, format string, a ...any) []byte {
 	return b
 }
 
-// These routines do not take a format string
+// 这些例程不取格式字符串
 
-// Fprint formats using the default formats for its operands and writes to w.
-// Spaces are added between operands when neither is a string.
-// It returns the number of bytes written and any write error encountered.
+// Fprint 使用其操作数的默认格式进行格式化并写入 w。
+// 当都不是字符串时，在操作数之间添加空格。
+// 返回写入的字节数和任何遇到的写入错误。
 func Fprint(w io.Writer, a ...any) (n int, err error) {
 	p := newPrinter()
 	p.doPrint(a)
@@ -265,15 +262,15 @@ func Fprint(w io.Writer, a ...any) (n int, err error) {
 	return
 }
 
-// Print formats using the default formats for its operands and writes to standard output.
-// Spaces are added between operands when neither is a string.
-// It returns the number of bytes written and any write error encountered.
+// Print 使用其操作数的默认格式进行格式化并写入标准输出。
+// 当都不是字符串时，在操作数之间添加空格。
+// 返回写入的字节数和任何遇到的写入错误。
 func Print(a ...any) (n int, err error) {
 	return Fprint(os.Stdout, a...)
 }
 
-// Sprint formats using the default formats for its operands and returns the resulting string.
-// Spaces are added between operands when neither is a string.
+// Sprint 使用其操作数的默认格式进行格式化并返回生成的字符串。
+// 当都不是字符串时，在操作数之间添加空格。
 func Sprint(a ...any) string {
 	p := newPrinter()
 	p.doPrint(a)
@@ -282,9 +279,9 @@ func Sprint(a ...any) string {
 	return s
 }
 
-// Append formats using the default formats for its operands, appends the result to
-// the byte slice, and returns the updated slice.
-// Spaces are added between operands when neither is a string.
+// Append 使用其操作数的默认格式进行格式化，将结果追加到
+// 字节切片，并返回更新的切片。
+// 当都不是字符串时，在操作数之间添加空格。
 func Append(b []byte, a ...any) []byte {
 	p := newPrinter()
 	p.doPrint(a)
@@ -293,13 +290,13 @@ func Append(b []byte, a ...any) []byte {
 	return b
 }
 
-// These routines end in 'ln', do not take a format string,
-// always add spaces between operands, and add a newline
-// after the last operand.
+// 这些例程以 'ln' 结尾，不取格式字符串，
+// 总是在操作数之间添加空格，并在最后一个
+// 操作数后添加换行符。
 
-// Fprintln formats using the default formats for its operands and writes to w.
-// Spaces are always added between operands and a newline is appended.
-// It returns the number of bytes written and any write error encountered.
+// Fprintln 使用其操作数的默认格式进行格式化并写入 w。
+// 总是在操作数之间添加空格并追加换行符。
+// 返回写入的字节数和任何遇到的写入错误。
 func Fprintln(w io.Writer, a ...any) (n int, err error) {
 	p := newPrinter()
 	p.doPrintln(a)
@@ -308,15 +305,15 @@ func Fprintln(w io.Writer, a ...any) (n int, err error) {
 	return
 }
 
-// Println formats using the default formats for its operands and writes to standard output.
-// Spaces are always added between operands and a newline is appended.
-// It returns the number of bytes written and any write error encountered.
+// Println 使用其操作数的默认格式进行格式化并写入标准输出。
+// 总是在操作数之间添加空格并追加换行符。
+// 返回写入的字节数和任何遇到的写入错误。
 func Println(a ...any) (n int, err error) {
 	return Fprintln(os.Stdout, a...)
 }
 
-// Sprintln formats using the default formats for its operands and returns the resulting string.
-// Spaces are always added between operands and a newline is appended.
+// Sprintln 使用其操作数的默认格式进行格式化并返回生成的字符串。
+// 总是在操作数之间添加空格并追加换行符。
 func Sprintln(a ...any) string {
 	p := newPrinter()
 	p.doPrintln(a)
@@ -325,9 +322,9 @@ func Sprintln(a ...any) string {
 	return s
 }
 
-// Appendln formats using the default formats for its operands, appends the result
-// to the byte slice, and returns the updated slice. Spaces are always added
-// between operands and a newline is appended.
+// Appendln 使用其操作数的默认格式进行格式化，将结果追加
+// 到字节切片，并返回更新的切片。总是在
+// 操作数之间添加空格并追加换行符。
 func Appendln(b []byte, a ...any) []byte {
 	p := newPrinter()
 	p.doPrintln(a)

@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// This file implements signed multi-precision integers.
+// 此文件实现有符号多精度整数。
 
 package big
 
@@ -13,38 +13,38 @@ import (
 	"strings"
 )
 
-// An Int represents a signed multi-precision integer.
-// The zero value for an Int represents the value 0.
+// Int 表示一个有符号的多精度整数。
+// Int 的零值表示值 0。
 //
-// Operations always take pointer arguments (*Int) rather
-// than Int values, and each unique Int value requires
-// its own unique *Int pointer. To "copy" an Int value,
-// an existing (or newly allocated) Int must be set to
-// a new value using the [Int.Set] method; shallow copies
-// of Ints are not supported and may lead to errors.
+// 操作总是采用指针参数 (*Int) 而不是
+// Int 值，每个唯一的 Int 值都需要
+// 它自己独有的 *Int 指针。要"复制" Int 值，
+// 现有的（或新分配的）Int 必须使用
+// [Int.Set] 方法设置为新值；不支持浅复制
+// Int，这可能导致错误。
 //
-// Note that methods may leak the Int's value through timing side-channels.
-// Because of this and because of the scope and complexity of the
-// implementation, Int is not well-suited to implement cryptographic operations.
-// The standard library avoids exposing non-trivial Int methods to
-// attacker-controlled inputs and the determination of whether a bug in math/big
-// is considered a security vulnerability might depend on the impact on the
-// standard library.
+// 注意方法可能会通过时间侧通道泄漏 Int 的值。
+// 由于这个原因以及实现的范围和复杂性，
+// Int 不太适合实现密码学操作。
+// 标准库避免向
+// 攻击者控制的输入公开非平凡的 Int 方法，
+// 确定 math/big 中的错误是否被视为
+// 安全漏洞可能取决于对标准库的影响。
 type Int struct {
-	neg bool // sign
-	abs nat  // absolute value of the integer
+	neg bool // 符号
+	abs nat  // 整数的绝对值
 }
 
 var intOne = &Int{false, natOne}
 
-// Sign returns:
-//   - -1 if x < 0;
-//   - 0 if x == 0;
-//   - +1 if x > 0.
+// Sign 返回：
+//   - 如果 x < 0，返回 -1;
+//   - 如果 x == 0，返回 0;
+//   - 如果 x > 0，返回 +1。
 func (x *Int) Sign() int {
-	// This function is used in cryptographic operations. It must not leak
-	// anything but the Int's sign and bit size through side-channels. Any
-	// changes must be reviewed by a security expert.
+	// 此函数用于密码学操作。它不能通过
+	// 侧通道泄漏 Int 的符号和位大小之外的任何信息。任何
+	// 更改都必须由安全专家审查。
 	if len(x.abs) == 0 {
 		return 0
 	}
@@ -54,7 +54,7 @@ func (x *Int) Sign() int {
 	return 1
 }
 
-// SetInt64 sets z to x and returns z.
+// SetInt64 将 z 设置为 x 并返回 z。
 func (z *Int) SetInt64(x int64) *Int {
 	neg := false
 	if x < 0 {
@@ -66,17 +66,17 @@ func (z *Int) SetInt64(x int64) *Int {
 	return z
 }
 
-// SetUint64 sets z to x and returns z.
+// SetUint64 将 z 设置为 x 并返回 z。
 func (z *Int) SetUint64(x uint64) *Int {
 	z.abs = z.abs.setUint64(x)
 	z.neg = false
 	return z
 }
 
-// NewInt allocates and returns a new [Int] set to x.
+// NewInt 分配并返回一个新的 [Int]，设置为 x。
 func NewInt(x int64) *Int {
-	// This code is arranged to be inlineable and produce
-	// zero allocations when inlined. See issue 29951.
+	// 此代码的排列方式使其内联后可内联化
+	// 并在内联时产生零分配。参见 issue 29951。
 	u := uint64(x)
 	if x < 0 {
 		u = -u
@@ -91,7 +91,7 @@ func NewInt(x int64) *Int {
 	return &Int{neg: x < 0, abs: abs}
 }
 
-// Set sets z to x and returns z.
+// Set 将 z 设置为 x 并返回 z。
 func (z *Int) Set(x *Int) *Int {
 	if z != x {
 		z.abs = z.abs.set(x.abs)
@@ -100,44 +100,44 @@ func (z *Int) Set(x *Int) *Int {
 	return z
 }
 
-// Bits provides raw (unchecked but fast) access to x by returning its
-// absolute value as a little-endian [Word] slice. The result and x share
-// the same underlying array.
-// Bits is intended to support implementation of missing low-level [Int]
-// functionality outside this package; it should be avoided otherwise.
+// Bits 通过以小端 [Word] 切片的形式返回其
+// 绝对值来提供对 x 的原始（未检查但快速）访问。结果和 x 共享
+// 相同的底层数组。
+// Bits 旨在支持在此包之外实现缺失的低级 [Int]
+// 功能；否则应避免使用。
 func (x *Int) Bits() []Word {
-	// This function is used in cryptographic operations. It must not leak
-	// anything but the Int's sign and bit size through side-channels. Any
-	// changes must be reviewed by a security expert.
+	// 此函数用于密码学操作。它不能通过
+	// 侧通道泄漏 Int 的符号和位大小之外的任何信息。任何
+	// 更改都必须由安全专家审查。
 	return x.abs
 }
 
-// SetBits provides raw (unchecked but fast) access to z by setting its
-// value to abs, interpreted as a little-endian [Word] slice, and returning
-// z. The result and abs share the same underlying array.
-// SetBits is intended to support implementation of missing low-level [Int]
-// functionality outside this package; it should be avoided otherwise.
+// SetBits 通过将其值设置为 abs（解释为小端 [Word] 切片）
+// 并返回 z 来提供对 z 的原始（未检查但快速）访问。结果和 abs 共享
+// 相同的底层数组。
+// SetBits 旨在支持在此包之外实现缺失的低级 [Int]
+// 功能；否则应避免使用。
 func (z *Int) SetBits(abs []Word) *Int {
 	z.abs = nat(abs).norm()
 	z.neg = false
 	return z
 }
 
-// Abs sets z to |x| (the absolute value of x) and returns z.
+// Abs 将 z 设置为 |x|（x 的绝对值）并返回 z。
 func (z *Int) Abs(x *Int) *Int {
 	z.Set(x)
 	z.neg = false
 	return z
 }
 
-// Neg sets z to -x and returns z.
+// Neg 将 z 设置为 -x 并返回 z。
 func (z *Int) Neg(x *Int) *Int {
 	z.Set(x)
 	z.neg = len(z.abs) > 0 && !z.neg // 0 has no sign
 	return z
 }
 
-// Add sets z to the sum x+y and returns z.
+// Add 将 z 设置为和 x+y 并返回 z。
 func (z *Int) Add(x, y *Int) *Int {
 	neg := x.neg
 	if x.neg == y.neg {
@@ -158,7 +158,7 @@ func (z *Int) Add(x, y *Int) *Int {
 	return z
 }
 
-// Sub sets z to the difference x-y and returns z.
+// Sub 将 z 设置为差 x-y 并返回 z。
 func (z *Int) Sub(x, y *Int) *Int {
 	neg := x.neg
 	if x.neg != y.neg {
@@ -179,15 +179,15 @@ func (z *Int) Sub(x, y *Int) *Int {
 	return z
 }
 
-// Mul sets z to the product x*y and returns z.
+// Mul 将 z 设置为乘积 x*y 并返回 z。
 func (z *Int) Mul(x, y *Int) *Int {
 	z.mul(nil, x, y)
 	return z
 }
 
-// mul is like Mul but takes an explicit stack to use, for internal use.
-// It does not return a *Int because doing so makes the stack-allocated Ints
-// used in natmul.go escape to the heap (even though the result is unused).
+// mul 类似于 Mul 但需要一个明确的栈来使用，供内部使用。
+// 它不返回 *Int，因为这样做会导致在 natmul.go 中使用的
+// 栈分配的 Int 逃逸到堆（即使结果未被使用）。
 func (z *Int) mul(stk *stack, x, y *Int) {
 	// x * y == x * y
 	// x * (-y) == -(x * y)
@@ -202,15 +202,15 @@ func (z *Int) mul(stk *stack, x, y *Int) {
 	z.neg = len(z.abs) > 0 && x.neg != y.neg // 0 has no sign
 }
 
-// MulRange sets z to the product of all integers
-// in the range [a, b] inclusively and returns z.
-// If a > b (empty range), the result is 1.
+// MulRange 将 z 设置为范围 [a, b] 中所有整数的乘积
+// （包括两端）并返回 z。
+// 如果 a > b（空范围），结果是 1。
 func (z *Int) MulRange(a, b int64) *Int {
 	switch {
 	case a > b:
-		return z.SetInt64(1) // empty range
+		return z.SetInt64(1) // 空范围
 	case a <= 0 && b >= 0:
-		return z.SetInt64(0) // range includes 0
+		return z.SetInt64(0) // 范围包括 0
 	}
 	// a <= b && (b < 0 || a > 0)
 
@@ -225,20 +225,20 @@ func (z *Int) MulRange(a, b int64) *Int {
 	return z
 }
 
-// Binomial sets z to the binomial coefficient C(n, k) and returns z.
+// Binomial 将 z 设置为二项式系数 C(n, k) 并返回 z。
 func (z *Int) Binomial(n, k int64) *Int {
 	if k > n {
 		return z.SetInt64(0)
 	}
-	// reduce the number of multiplications by reducing k
+	// 通过减少 k 来减少乘法次数
 	if k > n-k {
 		k = n - k // C(n, k) == C(n, n-k)
 	}
 	// C(n, k) == n * (n-1) * ... * (n-k+1) / k * (k-1) * ... * 1
 	//         == n * (n-1) * ... * (n-k+1) / 1 * (1+1) * ... * k
 	//
-	// Using the multiplicative formula produces smaller values
-	// at each step, requiring fewer allocations and computations:
+	// 使用乘法公式在每一步产生更小的值，
+	// 需要更少的分配和计算：
 	//
 	// z = 1
 	// for i := 0; i < k; i = i+1 {
@@ -246,7 +246,7 @@ func (z *Int) Binomial(n, k int64) *Int {
 	//     z /= i+1
 	// }
 	//
-	// finally to avoid computing i+1 twice per loop:
+	// 最后为了避免每个循环中计算 i+1 两次：
 	//
 	// z = 1
 	// i := 0
@@ -267,44 +267,44 @@ func (z *Int) Binomial(n, k int64) *Int {
 	return z
 }
 
-// Quo sets z to the quotient x/y for y != 0 and returns z.
-// If y == 0, a division-by-zero run-time panic occurs.
-// Quo implements truncated division (like Go); see [Int.QuoRem] for more details.
+// Quo 将 z 设置为商 x/y（y != 0）并返回 z。
+// 如果 y == 0，将发生除以零的运行时错误。
+// Quo 实现截断除法（如 Go）；有关更多详细信息，请参见 [Int.QuoRem]。
 func (z *Int) Quo(x, y *Int) *Int {
 	z.abs, _ = z.abs.div(nil, nil, x.abs, y.abs)
 	z.neg = len(z.abs) > 0 && x.neg != y.neg // 0 has no sign
 	return z
 }
 
-// Rem sets z to the remainder x%y for y != 0 and returns z.
-// If y == 0, a division-by-zero run-time panic occurs.
-// Rem implements truncated modulus (like Go); see [Int.QuoRem] for more details.
+// Rem 将 z 设置为余数 x%y（y != 0）并返回 z。
+// 如果 y == 0，将发生除以零的运行时错误。
+// Rem 实现截断模（如 Go）；有关更多详细信息，请参见 [Int.QuoRem]。
 func (z *Int) Rem(x, y *Int) *Int {
 	_, z.abs = nat(nil).div(nil, z.abs, x.abs, y.abs)
 	z.neg = len(z.abs) > 0 && x.neg // 0 has no sign
 	return z
 }
 
-// QuoRem sets z to the quotient x/y and r to the remainder x%y
-// and returns the pair (z, r) for y != 0.
-// If y == 0, a division-by-zero run-time panic occurs.
+// QuoRem 将 z 设置为商 x/y，将 r 设置为余数 x%y
+// 并为 y != 0 返回对 (z, r)。
+// 如果 y == 0，将发生除以零的运行时错误。
 //
-// QuoRem implements T-division and modulus (like Go):
+// QuoRem 实现 T-除法和模（如 Go）：
 //
-//	q = x/y      with the result truncated to zero
+//	q = x/y      其中结果被截断为零
 //	r = x - y*q
 //
-// (See Daan Leijen, “Division and Modulus for Computer Scientists”.)
-// See [Int.DivMod] for Euclidean division and modulus (unlike Go).
+// （参见 Daan Leijen 的"计算机科学家的除法和模"。）
+// 有关欧几里得除法和模（不同于 Go），请参见 [Int.DivMod]。
 func (z *Int) QuoRem(x, y, r *Int) (*Int, *Int) {
 	z.abs, r.abs = z.abs.div(nil, r.abs, x.abs, y.abs)
 	z.neg, r.neg = len(z.abs) > 0 && x.neg != y.neg, len(r.abs) > 0 && x.neg // 0 has no sign
 	return z, r
 }
 
-// Div sets z to the quotient x/y for y != 0 and returns z.
-// If y == 0, a division-by-zero run-time panic occurs.
-// Div implements Euclidean division (unlike Go); see [Int.DivMod] for more details.
+// Div 将 z 设置为商 x/y（y != 0）并返回 z。
+// 如果 y == 0，将发生除以零的运行时错误。
+// Div 实现欧几里得除法（不同于 Go）；有关更多详细信息，请参见 [Int.DivMod]。
 func (z *Int) Div(x, y *Int) *Int {
 	y_neg := y.neg // z may be an alias for y
 	var r Int
@@ -319,11 +319,11 @@ func (z *Int) Div(x, y *Int) *Int {
 	return z
 }
 
-// Mod sets z to the modulus x%y for y != 0 and returns z.
-// If y == 0, a division-by-zero run-time panic occurs.
-// Mod implements Euclidean modulus (unlike Go); see [Int.DivMod] for more details.
+// Mod 将 z 设置为模 x%y（y != 0）并返回 z。
+// 如果 y == 0，将发生除以零的运行时错误。
+// Mod 实现欧几里得模（不同于 Go）；有关更多详细信息，请参见 [Int.DivMod]。
 func (z *Int) Mod(x, y *Int) *Int {
-	y0 := y // save y
+	y0 := y // 保存 y
 	if z == y || alias(z.abs, y.abs) {
 		y0 = new(Int).Set(y)
 	}
@@ -339,22 +339,22 @@ func (z *Int) Mod(x, y *Int) *Int {
 	return z
 }
 
-// DivMod sets z to the quotient x div y and m to the modulus x mod y
-// and returns the pair (z, m) for y != 0.
-// If y == 0, a division-by-zero run-time panic occurs.
+// DivMod 将 z 设置为商 x div y，将 m 设置为模 x mod y
+// 并为 y != 0 返回对 (z, m)。
+// 如果 y == 0，将发生除以零的运行时错误。
 //
-// DivMod implements Euclidean division and modulus (unlike Go):
+// DivMod 实现欧几里得除法和模（不同于 Go）：
 //
-//	q = x div y  such that
-//	m = x - y*q  with 0 <= m < |y|
+//	q = x div y  使得
+//	m = x - y*q  其中 0 <= m < |y|
 //
-// (See Raymond T. Boute, “The Euclidean definition of the functions
-// div and mod”. ACM Transactions on Programming Languages and
+// （参见 Raymond T. Boute 的"函数 div 和 mod 的欧几里得定义"。
+// ACM Transactions on Programming Languages and
 // Systems (TOPLAS), 14(2):127-144, New York, NY, USA, 4/1992.
-// ACM press.)
-// See [Int.QuoRem] for T-division and modulus (like Go).
+// ACM press.）
+// 有关 T-除法和模（如 Go），请参见 [Int.QuoRem]。
 func (z *Int) DivMod(x, y, m *Int) (*Int, *Int) {
-	y0 := y // save y
+	y0 := y // 保存 y
 	if z == y || alias(z.abs, y.abs) {
 		y0 = new(Int).Set(y)
 	}
@@ -371,10 +371,10 @@ func (z *Int) DivMod(x, y, m *Int) (*Int, *Int) {
 	return z, m
 }
 
-// Cmp compares x and y and returns:
-//   - -1 if x < y;
-//   - 0 if x == y;
-//   - +1 if x > y.
+// Cmp 比较 x 和 y 并返回：
+//   - 如果 x < y，返回 -1；
+//   - 如果 x == y，返回 0；
+//   - 如果 x > y，返回 +1。
 func (x *Int) Cmp(y *Int) (r int) {
 	// x cmp y == x cmp y
 	// x cmp (-y) == x
@@ -382,7 +382,7 @@ func (x *Int) Cmp(y *Int) (r int) {
 	// (-x) cmp (-y) == -(x cmp y)
 	switch {
 	case x == y:
-		// nothing to do
+		// 无需做任何事情
 	case x.neg == y.neg:
 		r = x.abs.cmp(y.abs)
 		if x.neg {
@@ -396,15 +396,15 @@ func (x *Int) Cmp(y *Int) (r int) {
 	return
 }
 
-// CmpAbs compares the absolute values of x and y and returns:
-//   - -1 if |x| < |y|;
-//   - 0 if |x| == |y|;
-//   - +1 if |x| > |y|.
+// CmpAbs 比较 x 和 y 的绝对值并返回：
+//   - 如果 |x| < |y|，返回 -1；
+//   - 如果 |x| == |y|，返回 0；
+//   - 如果 |x| > |y|，返回 +1。
 func (x *Int) CmpAbs(y *Int) int {
 	return x.abs.cmp(y.abs)
 }
 
-// low32 returns the least significant 32 bits of x.
+// low32 返回 x 的最低有效 32 位。
 func low32(x nat) uint32 {
 	if len(x) == 0 {
 		return 0

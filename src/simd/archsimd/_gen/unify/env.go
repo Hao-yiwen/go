@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package unify
 
@@ -11,35 +11,34 @@ import (
 	"strings"
 )
 
-// An envSet is an immutable set of environments, where each environment is a
-// mapping from [ident]s to [Value]s.
+// An envSet 是环境的不可变集合，其中每个环境是
+// 从 [ident] 到 [Value] 的映射。
 //
-// To keep this compact, we use an algebraic representation similar to
-// relational algebra. The atoms are zero, unit, or a singular binding:
+// 为了保持紧凑，我们使用类似于
+// 关系代数的代数表示。原子是零、单位或单个绑定：
 //
-// - A singular binding {x: v} is an environment set consisting of a single
-// environment that binds a single ident x to a single value v.
+// - 单个绑定 {x: v} 是一个环境集，由单个
+// 环境组成，将单个 ident x 绑定到单个值 v。
 //
-// - Zero (0) is the empty set.
+// - Zero (0) 是空集。
 //
-// - Unit (1) is an environment set consisting of a single, empty environment
-// (no bindings).
+// - Unit (1) 是一个环境集，由单个空环境
+// （无绑定）组成。
 //
-// From these, we build up more complex sets of environments using sums and
-// cross products:
+// 从这些，我们使用和与叉积构建更复杂的环境集：
 //
-// - A sum, E + F, is simply the union of the two environment sets: E ∪ F
+// - 和，E + F，只是两个环境集的并集：E ∪ F
 //
-// - A cross product, E ⨯ F, is the Cartesian product of the two environment
-// sets, followed by joining each pair of environments: {e ⊕ f | (e, f) ∊ E ⨯ F}
+// - 叉积，E ⨯ F，是两个环境的笛卡尔积
+// 集，接着连接每对环境：{e ⊕ f | (e, f) ∊ E ⨯ F}
 //
-// The join of two environments, e ⊕ f, is an environment that contains all of
-// the bindings in either e or f. To detect bugs, it is an error if an
-// identifier is bound in both e and f (however, see below for what we could do
-// differently).
+// 两个环境的连接，e ⊕ f，是包含所有的环境
+// e 或 f 中的绑定。为了检测错误，如果
+// 标识符在 e 和 f 中都绑定是错误的（但是，
+// 请参见下面我们可以做什么不同的地方）。
 //
-// Environment sets form a commutative semiring and thus obey the usual
-// commutative semiring rules:
+// 环境集形成可交换的半环，因此遵守通常的
+// 可交换半环规则：
 //
 //	e + 0 = e
 //	e ⨯ 0 = 0
@@ -47,60 +46,60 @@ import (
 //	e + f = f + e
 //	e ⨯ f = f ⨯ e
 //
-// Furthermore, environments sets are additively and multiplicatively idempotent
-// because + and ⨯ are themselves defined in terms of sets:
+// 此外，环境集加法和乘法幂等
+// 因为 + 和 ⨯ 本身定义为集的术语：
 //
 //	e + e = e
 //	e ⨯ e = e
 //
-// # Examples
+// # 示例
 //
-// To represent {{x: 1, y: 1}, {x: 2, y: 2}}, we build the two environments and
-// sum them:
+// 为了表示 {{x: 1, y: 1}, {x: 2, y: 2}}，我们构建两个环境并
+// 将它们求和：
 //
 //	({x: 1} ⨯ {y: 1}) + ({x: 2} ⨯ {y: 2})
 //
-// If we add a third variable z that can be 1 or 2, independent of x and y, we
-// get four logical environments:
+// 如果我们添加第三个变量 z，可以是 1 或 2，独立于 x 和 y，我们
+// 得到四个逻辑环境：
 //
 //	{x: 1, y: 1, z: 1}
 //	{x: 2, y: 2, z: 1}
 //	{x: 1, y: 1, z: 2}
 //	{x: 2, y: 2, z: 2}
 //
-// This could be represented as a sum of all four environments, but because z is
-// independent, we can use a more compact representation:
+// 这可以表示为所有四个环境的和，但因为 z 是
+// 独立的，我们可以使用更紧凑的表示：
 //
 //	(({x: 1} ⨯ {y: 1}) + ({x: 2} ⨯ {y: 2})) ⨯ ({z: 1} + {z: 2})
 //
-// # Generalized cross product
+// # 广义叉积
 //
-// While cross-product is currently restricted to disjoint environments, we
-// could generalize the definition of joining two environments to:
+// 虽然叉积当前仅限于不相交的环境，但我们
+// 可以将连接两个环境的定义推广为：
 //
-//	{xₖ: vₖ} ⊕ {xₖ: wₖ} = {xₖ: vₖ ∩ wₖ} (where unbound idents are bound to the [Top] value, ⟙)
+//	{xₖ: vₖ} ⊕ {xₖ: wₖ} = {xₖ: vₖ ∩ wₖ}（其中未绑定的 ident 绑定到 [Top] 值，⟙）
 //
-// where v ∩ w is the unification of v and w. This itself could be coarsened to
+// 其中 v ∩ w 是 v 和 w 的统一。这本身可以粗化为
 //
 //	v ∩ w = v if w = ⟙
 //	      = w if v = ⟙
 //	      = v if v = w
 //	      = 0 otherwise
 //
-// We could use this rule to implement substitution. For example, E ⨯ {x: 1}
-// narrows environment set E to only environments in which x is bound to 1. But
-// we currently don't do this.
+// 我们可以使用此规则来实现替换。例如，E ⨯ {x: 1}
+// 将环境集 E 缩小到仅 x 绑定到 1 的环境。但
+// 我们目前不这样做。
 type envSet struct {
 	root *envExpr
 }
 
 type envExpr struct {
-	// TODO: A tree-based data structure for this may not be ideal, since it
-	// involves a lot of walking to find things and we often have to do deep
-	// rewrites anyway for partitioning. Would some flattened array-style
-	// representation be better, possibly combined with an index of ident uses?
-	// We could even combine that with an immutable array abstraction (ala
-	// Clojure) that could enable more efficient construction operations.
+	// TODO: 这个树形数据结构可能不理想，因为它
+	// 涉及大量的遍历来查找事物，我们通常必须进行深度
+	// 重写以分区。一些扁平化数组风格的
+	// 表示会更好吗，可能与 ident 使用索引结合？
+	// 我们甚至可以将其与不可变数组抽象（ala
+	// Clojure）相结合，可以实现更高效的构造操作。
 
 	kind envExprKind
 
@@ -108,8 +107,8 @@ type envExpr struct {
 	id  *ident
 	val *Value
 
-	// For sum or product. Len must be >= 2 and none of the elements can have
-	// the same kind as this node.
+	// 对于和或积。Len 必须 >= 2，没有元素可以
+	// 与此节点具有相同的类型。
 	operands []*envExpr
 }
 
@@ -124,42 +123,42 @@ const (
 )
 
 var (
-	// topEnv is the unit value (multiplicative identity) of a [envSet].
+	// topEnv 是 [envSet] 的单位值（乘法恒等式）。
 	topEnv = envSet{envExprUnit}
-	// bottomEnv is the zero value (additive identity) of a [envSet].
+	// bottomEnv 是 [envSet] 的零值（加法恒等式）。
 	bottomEnv = envSet{envExprZero}
 
 	envExprZero = &envExpr{kind: envZero}
 	envExprUnit = &envExpr{kind: envUnit}
 )
 
-// bind binds id to each of vals in e.
+// bind 将 id 绑定到 e 中的每个 vals。
 //
-// Its panics if id is already bound in e.
+// 如果 id 已在 e 中绑定，则会崩溃。
 //
-// Environments are typically initially constructed by starting with [topEnv]
-// and calling bind one or more times.
+// 环境通常初始化时通过从 [topEnv] 开始
+// 并一次或多次调用 bind 构造。
 func (e envSet) bind(id *ident, vals ...*Value) envSet {
 	if e.isEmpty() {
 		return bottomEnv
 	}
 
-	// TODO: If any of vals are _, should we just drop that val? We're kind of
-	// inconsistent about whether an id missing from e means id is invalid or
-	// means id is _.
+	// TODO: 如果任何 vals 是 _，我们应该删除该 val 吗？我们
+	// 对于 id 缺失于 e 是否意味着 id 无效或
+	// 意味着 id 是 _ 有些不一致。
 
-	// Check that id isn't present in e.
+	// 检查 id 不在 e 中。
 	for range e.root.bindings(id) {
 		panic("id " + id.name + " already present in environment")
 	}
 
-	// Create a sum of all the values.
+	// 创建所有值的和。
 	bindings := make([]*envExpr, 0, 1)
 	for _, val := range vals {
 		bindings = append(bindings, &envExpr{kind: envBinding, id: id, val: val})
 	}
 
-	// Multiply it in.
+	// 将其乘入。
 	return envSet{newEnvExprProduct(e.root, newEnvExprSum(bindings...))}
 }
 
@@ -167,11 +166,11 @@ func (e envSet) isEmpty() bool {
 	return e.root.kind == envZero
 }
 
-// bindings yields all [envBinding] nodes in e with the given id. If id is nil,
-// it yields all binding nodes.
+// bindings 产生 e 中具有给定 id 的所有 [envBinding] 节点。如果 id 为 nil，
+// 则产生所有绑定节点。
 func (e *envExpr) bindings(id *ident) iter.Seq[*envExpr] {
-	// This is just a pre-order walk and it happens this is the only thing we
-	// need a pre-order walk for.
+	// 这只是一个前序遍历，碰巧这是我们唯一需要的
+	// 前序遍历。
 	return func(yield func(*envExpr) bool) {
 		var rec func(e *envExpr) bool
 		rec = func(e *envExpr) bool {
@@ -191,8 +190,8 @@ func (e *envExpr) bindings(id *ident) iter.Seq[*envExpr] {
 	}
 }
 
-// newEnvExprProduct constructs a product node from exprs, performing
-// simplifications. It does NOT check that bindings are disjoint.
+// newEnvExprProduct 从 exprs 构造一个积节点，进行
+// 简化。它不检查绑定是否不相交。
 func newEnvExprProduct(exprs ...*envExpr) *envExpr {
 	factors := make([]*envExpr, 0, 2)
 	for _, expr := range exprs {
@@ -200,7 +199,7 @@ func newEnvExprProduct(exprs ...*envExpr) *envExpr {
 		case envZero:
 			return envExprZero
 		case envUnit:
-			// No effect on product
+			// 对积无影响
 		case envProduct:
 			factors = append(factors, expr.operands...)
 		default:
@@ -216,18 +215,18 @@ func newEnvExprProduct(exprs ...*envExpr) *envExpr {
 	return &envExpr{kind: envProduct, operands: factors}
 }
 
-// newEnvExprSum constructs a sum node from exprs, performing simplifications.
+// newEnvExprSum 从 exprs 构造一个和节点，进行简化。
 func newEnvExprSum(exprs ...*envExpr) *envExpr {
-	// TODO: If all of envs are products (or bindings), factor any common terms.
-	// E.g., x * y + x * z ==> x * (y + z). This is easy to do for binding
-	// terms, but harder to do for more general terms.
+	// TODO: 如果所有 envs 都是积（或绑定），对任何公共项进行因式分解。
+	// 例如，x * y + x * z ==> x * (y + z)。对于绑定
+	// 项很容易做到，但对于更一般的项更难。
 
 	var have smallSet[*envExpr]
 	terms := make([]*envExpr, 0, 2)
 	for _, expr := range exprs {
 		switch expr.kind {
 		case envZero:
-			// No effect on sum
+			// 对和无影响
 		case envSum:
 			for _, expr1 := range expr.operands {
 				if have.Add(expr1) {
@@ -250,7 +249,7 @@ func newEnvExprSum(exprs ...*envExpr) *envExpr {
 }
 
 func crossEnvs(env1, env2 envSet) envSet {
-	// Confirm that envs have disjoint idents.
+	// 确认 envs 有不相交的 ident。
 	var ids1 smallSet[*ident]
 	for e := range env1.root.bindings(nil) {
 		ids1.Add(e.id)

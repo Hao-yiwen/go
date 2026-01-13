@@ -163,7 +163,7 @@ func TestSortedStableFunc(t *testing.T) {
 		t.Errorf("SortedStableFunc wasn't stable on %d ints", n)
 	}
 
-	// iterVal converts a Seq2 to a Seq.
+	// iterVal 将 Seq2 转换为 Seq。
 	iterVal := func(seq iter.Seq2[int, intPair]) iter.Seq[intPair] {
 		return func(yield func(intPair) bool) {
 			for _, v := range seq {
@@ -273,11 +273,11 @@ func TestChunkPanics(t *testing.T) {
 }
 
 func TestChunkRange(t *testing.T) {
-	// Verify Chunk iteration can be stopped.
+	// 验证 Chunk 迭代可以停止。
 	var got [][]int
 	for c := range Chunk([]int{1, 2, 3, 4, -100}, 2) {
 		if len(got) == 2 {
-			// Found enough values, break early.
+			// 找到足够的值，提前中断。
 			break
 		}
 

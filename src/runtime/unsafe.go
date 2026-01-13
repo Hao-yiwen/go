@@ -23,7 +23,7 @@ func unsafestring(ptr unsafe.Pointer, len int) {
 	}
 }
 
-// Keep this code in sync with cmd/compile/internal/walk/builtin.go:walkUnsafeString
+// 保持此代码与 cmd/compile/internal/walk/builtin.go:walkUnsafeString 同步
 func unsafestring64(ptr unsafe.Pointer, len64 int64) {
 	len := int(len64)
 	if int64(len) != len64 {
@@ -35,8 +35,8 @@ func unsafestring64(ptr unsafe.Pointer, len64 int64) {
 func unsafestringcheckptr(ptr unsafe.Pointer, len64 int64) {
 	unsafestring64(ptr, len64)
 
-	// Check that underlying array doesn't straddle multiple heap objects.
-	// unsafestring64 has already checked for overflow.
+	// 检查底层数组是否跨越多个堆对象。
+	// unsafestring64 已经检查过溢出。
 	if checkptrStraddles(ptr, uintptr(len64)) {
 		throw("checkptr: unsafe.String result straddles multiple allocations")
 	}
@@ -50,7 +50,7 @@ func panicunsafestringnilptr() {
 	panic(errorString("unsafe.String: ptr is nil and len is not zero"))
 }
 
-// Keep this code in sync with cmd/compile/internal/walk/builtin.go:walkUnsafeSlice
+// 保持此代码与 cmd/compile/internal/walk/builtin.go:walkUnsafeSlice 同步
 func unsafeslice(et *_type, ptr unsafe.Pointer, len int) {
 	if len < 0 {
 		panicunsafeslicelen1(sys.GetCallerPC())
@@ -71,7 +71,7 @@ func unsafeslice(et *_type, ptr unsafe.Pointer, len int) {
 	}
 }
 
-// Keep this code in sync with cmd/compile/internal/walk/builtin.go:walkUnsafeSlice
+// 保持此代码与 cmd/compile/internal/walk/builtin.go:walkUnsafeSlice 同步
 func unsafeslice64(et *_type, ptr unsafe.Pointer, len64 int64) {
 	len := int(len64)
 	if int64(len) != len64 {
@@ -83,16 +83,16 @@ func unsafeslice64(et *_type, ptr unsafe.Pointer, len64 int64) {
 func unsafeslicecheckptr(et *_type, ptr unsafe.Pointer, len64 int64) {
 	unsafeslice64(et, ptr, len64)
 
-	// Check that underlying array doesn't straddle multiple heap objects.
-	// unsafeslice64 has already checked for overflow.
+	// 检查底层数组是否跨越多个堆对象。
+	// unsafeslice64 已经检查过溢出。
 	if checkptrStraddles(ptr, uintptr(len64)*et.Size_) {
 		throw("checkptr: unsafe.Slice result straddles multiple allocations")
 	}
 }
 
 func panicunsafeslicelen() {
-	// This is called only from compiler-generated code, so we can get the
-	// source of the panic.
+	// 这只从编译器生成的代码中调用，所以我们可以获取
+	// 恐慌的源代码。
 	panicunsafeslicelen1(sys.GetCallerPC())
 }
 
@@ -103,8 +103,8 @@ func panicunsafeslicelen1(pc uintptr) {
 }
 
 func panicunsafeslicenilptr() {
-	// This is called only from compiler-generated code, so we can get the
-	// source of the panic.
+	// 这只从编译器生成的代码中调用，所以我们可以获取
+	// 恐慌的源代码。
 	panicunsafeslicenilptr1(sys.GetCallerPC())
 }
 

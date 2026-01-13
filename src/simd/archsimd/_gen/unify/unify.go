@@ -1,55 +1,50 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package unify implements unification of structured values.
+// Package unify 实现结构化值的统一。
 //
-// A [Value] represents a possibly infinite set of concrete values, where a
-// value is either a string ([String]), a tuple of values ([Tuple]), or a
-// string-keyed map of values called a "def" ([Def]). These sets can be further
-// constrained by variables ([Var]). A [Value] combined with bindings of
-// variables is a [Closure].
+// A [Value] 代表可能无限的具体值集合，其中值可以是字符串 ([String])、
+// 值的元组 ([Tuple]) 或字符串键映射值称为"def"([Def])。这些集合可以进一步
+// 由变量 ([Var]) 约束。[Value] 与变量的绑定组合是 [Closure]。
 //
-// [Unify] finds a [Closure] that satisfies two or more other [Closure]s. This
-// can be thought of as intersecting the sets represented by these Closures'
-// values, or as the greatest lower bound/infimum of these Closures. If no such
-// Closure exists, the result of unification is "bottom", or the empty set.
+// [Unify] 找到满足两个或多个其他 [Closure] 的 [Closure]。这可以被认为是
+// 这些 Closure 的值所代表的集合的交集，或这些 Closure 的最大下界/下确界。
+// 如果不存在这样的 Closure，统一的结果是"底"或空集。
 //
-// # Examples
+// # 示例
 //
-// The regular expression "a*" is the infinite set of strings of zero or more
-// "a"s. "a*" can be unified with "a" or "aa" or "aaa", and the result is just
-// "a", "aa", or "aaa", respectively. However, unifying "a*" with "b" fails
-// because there are no values that satisfy both.
+// 正则表达式"a*"是零个或多个"a"的字符串的无限集合。"a*"可以与"a"或"aa"或"aaa"统一，
+// 结果分别为"a"、"aa"或"aaa"。但是，尝试将"a*"与"b"统一失败
+// 因为没有满足两者的值。
 //
-// Sums express sets directly. For example, !sum [a, b] is the set consisting of
-// "a" and "b". Unifying this with !sum [b, c] results in just "b". This also
-// makes it easy to demonstrate that unification isn't necessarily a single
-// concrete value. For example, unifying !sum [a, b, c] with !sum [b, c, d]
-// results in two concrete values: "b" and "c".
+// Sums 直接表达集合。例如，!sum [a, b] 是包含"a"和"b"的集合。
+// 将其与 !sum [b, c] 统一会得到"b"。这也使得
+// 很容易演示统一不一定是单个具体值。例如，
+// 统一 !sum [a, b, c] 与 !sum [b, c, d] 会得到两个具体值："b"和"c"。
 //
-// The special value _ or "top" represents all possible values. Unifying _ with
-// any value x results in x.
+// 特殊值 _ 或"top"表示所有可能的值。将 _ 与
+// 任何值 x 统一的结果是 x。
 //
-// Unifying composite values—tuples and defs—unifies their elements.
+// 统一复合值——元组和 def——会统一它们的元素。
 //
-// The value [a*, aa] is an infinite set of tuples. If we unify that with the
-// value [aaa, a*], the only possible value that satisfies both is [aaa, aa].
-// Likewise, this is the intersection of the sets described by these two values.
+// 值 [a*, aa] 是一个无限的元组集合。如果我们将其与
+// 值 [aaa, a*] 统一，满足两者的唯一可能值是 [aaa, aa]。
+// 同样，这是由这两个值描述的集合的交集。
 //
-// Defs are similar to tuples, but they are indexed by strings and don't have a
-// fixed length. For example, {x: a, y: b} is a def with two fields. Any field
-// not mentioned in a def is implicitly top. Thus, unifying this with {y: b, z:
-// c} results in {x: a, y: b, z: c}.
+// Def 类似于元组，但它们由字符串索引且没有
+// 固定长度。例如，{x: a, y: b} 是一个有两个字段的 def。任何字段
+// 如果在 def 中未提及，则隐式为 top。因此，将其与 {y: b, z:
+// c} 统一会得到 {x: a, y: b, z: c}。
 //
-// Variables constrain values. For example, the value [$x, $x] represents all
-// tuples whose first and second values are the same, but doesn't otherwise
-// constrain that value. Thus, this set includes [a, a] as well as [[b, c, d],
-// [b, c, d]], but it doesn't include [a, b].
+// 变量约束值。例如，值 [$x, $x] 代表所有
+// 第一个和第二个值相同的元组，但不会以其他方式
+// 约束该值。因此，此集合包括 [a, a] 以及 [[b, c, d],
+// [b, c, d]]，但不包括 [a, b]。
 //
-// Sums are internally implemented as fresh variables that are simultaneously
-// bound to all values of the sum. That is !sum [a, b] is actually $var (where
-// var is some fresh name), closed under the environment $var=a | $var=b.
+// Sums 在内部实现为同时绑定到
+// sum 的所有值的新鲜变量。即 !sum [a, b] 实际上是 $var（其中
+// var 是某个新鲜名称），在环境 $var=a | $var=b 下关闭。
 package unify
 
 import (
@@ -58,8 +53,8 @@ import (
 	"slices"
 )
 
-// Unify computes a Closure that satisfies each input Closure. If no such
-// Closure exists, it returns bottom.
+// Unify 计算满足每个输入 Closure 的 Closure。如果不存在这样的
+// Closure，则返回底。
 func Unify(closures ...Closure) (Closure, error) {
 	if len(closures) == 0 {
 		return Closure{topValue, topEnv}, nil
@@ -99,14 +94,14 @@ func newUnifier() *unifier {
 	return &unifier{}
 }
 
-// errDomains is a sentinel error used between unify and unify1 to indicate that
-// unify1 could not unify the domains of the two values.
+// errDomains 是在 unify 和 unify1 之间使用的哨兵错误，表示
+// unify1 无法统一两个值的域。
 var errDomains = errors.New("cannot unify domains")
 
 func (v *Value) unify(w *Value, e envSet, swap bool, uf *unifier) (*Value, envSet, error) {
 	if swap {
-		// Put the values in order. This just happens to be a handy choke-point
-		// to do this at.
+		// 将值按顺序排列。这恰好是一个方便的控制点
+		// 来执行此操作。
 		v, w = w, v
 	}
 
@@ -114,10 +109,10 @@ func (v *Value) unify(w *Value, e envSet, swap bool, uf *unifier) (*Value, envSe
 
 	d, e2, err := v.unify1(w, e, false, uf)
 	if err == errDomains {
-		// Try the other order.
+		// 尝试另一个顺序。
 		d, e2, err = w.unify1(v, e, true, uf)
 		if err == errDomains {
-			// Okay, we really can't unify these.
+			// 好的，我们真的不能统一这些。
 			err = fmt.Errorf("cannot unify %T (%s) and %T (%s): kind mismatch", v.Domain, v.PosString(), w.Domain, w.PosString())
 		}
 	}
@@ -128,7 +123,7 @@ func (v *Value) unify(w *Value, e envSet, swap bool, uf *unifier) (*Value, envSe
 	res := unified(d, v, w)
 	uf.traceDone(res, e2, nil)
 	if d == nil {
-		// Double check that a bottom Value also has a bottom env.
+		// 双重检查底值是否也有底环境。
 		if !e2.isEmpty() {
 			panic("bottom Value has non-bottom environment")
 		}
@@ -138,26 +133,26 @@ func (v *Value) unify(w *Value, e envSet, swap bool, uf *unifier) (*Value, envSe
 }
 
 func (v *Value) unify1(w *Value, e envSet, swap bool, uf *unifier) (Domain, envSet, error) {
-	// TODO: If there's an error, attach position information to it.
+	// TODO: 如果出错，请将位置信息附加到它。
 
 	vd, wd := v.Domain, w.Domain
 
-	// Bottom returns bottom, and eliminates all possible environments.
+	// 底返回底，并消除所有可能的环境。
 	if vd == nil || wd == nil {
 		return nil, bottomEnv, nil
 	}
 
-	// Top always returns the other.
+	// Top 总是返回另一个。
 	if _, ok := vd.(Top); ok {
 		return wd, e, nil
 	}
 
-	// Variables
+	// 变量
 	if vd, ok := vd.(Var); ok {
 		return vd.unify(w, e, swap, uf)
 	}
 
-	// Composite values
+	// 复合值
 	if vd, ok := vd.(Def); ok {
 		if wd, ok := wd.(Def); ok {
 			return vd.unify(wd, e, swap, uf)
@@ -169,7 +164,7 @@ func (v *Value) unify1(w *Value, e envSet, swap bool, uf *unifier) (Domain, envS
 		}
 	}
 
-	// Scalar values
+	// 标量值
 	if vd, ok := vd.(String); ok {
 		if wd, ok := wd.(String); ok {
 			res := vd.unify(wd)
@@ -186,11 +181,11 @@ func (v *Value) unify1(w *Value, e envSet, swap bool, uf *unifier) (Domain, envS
 func (d Def) unify(o Def, e envSet, swap bool, uf *unifier) (Domain, envSet, error) {
 	out := Def{fields: make(map[string]*Value)}
 
-	// Check keys of d against o.
+	// 检查 d 的键与 o 的键。
 	for key, dv := range d.All() {
 		ov, ok := o.fields[key]
 		if !ok {
-			// ov is implicitly Top. Bypass unification.
+			// ov 隐式为 Top。绕过统一。
 			out.fields[key] = dv
 			continue
 		}
@@ -200,14 +195,14 @@ func (d Def) unify(o Def, e envSet, swap bool, uf *unifier) (Domain, envSet, err
 		if err != nil {
 			return nil, envSet{}, err
 		} else if res.Domain == nil {
-			// No match.
+			// 不匹配。
 			return nil, bottomEnv, nil
 		}
 		out.fields[key] = res
 		e = e2
 	}
-	// Check keys of o that we didn't already check. These all implicitly match
-	// because we know the corresponding fields in d are all Top.
+	// 检查我们还没有检查过的 o 的键。这些都隐式匹配
+	// 因为我们知道 d 中对应的字段都是 Top。
 	for key, dv := range o.All() {
 		if _, ok := d.fields[key]; !ok {
 			out.fields[key] = dv
@@ -218,12 +213,12 @@ func (d Def) unify(o Def, e envSet, swap bool, uf *unifier) (Domain, envSet, err
 
 func (v Tuple) unify(w Tuple, e envSet, swap bool, uf *unifier) (Domain, envSet, error) {
 	if v.repeat != nil && w.repeat != nil {
-		// Since we generate the content of these lazily, there's not much we
-		// can do but just stick them on a list to unify later.
+		// 由于我们延迟生成这些的内容，没有太多我们
+		// 可以做的，只是将它们放在列表上稍后统一。
 		return Tuple{repeat: concat(v.repeat, w.repeat)}, e, nil
 	}
 
-	// Expand any repeated tuples.
+	// 展开任何重复的元组。
 	tuples := make([]Tuple, 0, 2)
 	if v.repeat == nil {
 		tuples = append(tuples, v)
@@ -240,7 +235,7 @@ func (v Tuple) unify(w Tuple, e envSet, swap bool, uf *unifier) (Domain, envSet,
 		e = e2
 	}
 
-	// Now unify all of the tuples (usually this will be just 2 tuples)
+	// 现在统一所有元组（通常这将只是 2 个元组）
 	out := tuples[0]
 	for _, t := range tuples[1:] {
 		if len(out.vs) != len(t.vs) {
@@ -266,8 +261,8 @@ func (v Tuple) unify(w Tuple, e envSet, swap bool, uf *unifier) (Domain, envSet,
 	return out, e, nil
 }
 
-// doRepeat creates a fixed-length tuple from a repeated tuple. The caller is
-// expected to unify the returned tuples.
+// doRepeat 从重复的元组创建固定长度的元组。调用者应该
+// 统一返回的元组。
 func (v Tuple) doRepeat(e envSet, n int) ([]Tuple, envSet) {
 	res := make([]Tuple, len(v.repeat))
 	for i, gen := range v.repeat {
@@ -279,13 +274,13 @@ func (v Tuple) doRepeat(e envSet, n int) ([]Tuple, envSet) {
 	return res, e
 }
 
-// unify intersects the domains of two [String]s. If it can prove that this
-// domain is empty, it returns nil (bottom).
+// unify 与两个 [String] 的域相交。如果它可以证明这个
+// 域是空的，它返回 nil（底）。
 //
-// TODO: Consider splitting literals and regexps into two domains.
+// TODO: 考虑将文字和正则表达式分割为两个域。
 func (v String) unify(w String) Domain {
-	// Unification is symmetric, so put them in order of string kind so we only
-	// have to deal with half the cases.
+	// 统一是对称的，所以按字符串类型的顺序排列它们，以便我们只需
+	// 处理一半的情况。
 	if v.kind > w.kind {
 		v, w = w, v
 	}
@@ -294,7 +289,7 @@ func (v String) unify(w String) Domain {
 	case stringRegex:
 		switch w.kind {
 		case stringRegex:
-			// Construct a match against all of the regexps
+			// 构造对所有正则表达式的匹配
 			return String{kind: stringRegex, re: slices.Concat(v.re, w.re)}
 		case stringExact:
 			for _, re := range v.re {
@@ -314,7 +309,7 @@ func (v String) unify(w String) Domain {
 }
 
 func concat[T any](s1, s2 []T) []T {
-	// Reuse s1 or s2 if possible.
+	// 如果可能，重用 s1 或 s2。
 	if len(s1) == 0 {
 		return s2
 	}

@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package textproto
 
@@ -10,14 +10,14 @@ import (
 	"io"
 )
 
-// A Writer implements convenience methods for writing
-// requests or responses to a text protocol network connection.
+// Writer 实现了便捷方法，用于向文本协议网络连接
+// 写入请求或响应。
 type Writer struct {
 	W   *bufio.Writer
 	dot *dotWriter
 }
 
-// NewWriter returns a new [Writer] writing to w.
+// NewWriter 返回一个新的 [Writer]，写入 w。
 func NewWriter(w *bufio.Writer) *Writer {
 	return &Writer{W: w}
 }
@@ -25,7 +25,7 @@ func NewWriter(w *bufio.Writer) *Writer {
 var crnl = []byte{'\r', '\n'}
 var dotcrnl = []byte{'.', '\r', '\n'}
 
-// PrintfLine writes the formatted output followed by \r\n.
+// PrintfLine 写入格式化的输出，后跟 \r\n。
 func (w *Writer) PrintfLine(format string, args ...any) error {
 	w.closeDot()
 	fmt.Fprintf(w.W, format, args...)
@@ -33,13 +33,13 @@ func (w *Writer) PrintfLine(format string, args ...any) error {
 	return w.W.Flush()
 }
 
-// DotWriter returns a writer that can be used to write a dot-encoding to w.
-// It takes care of inserting leading dots when necessary,
-// translating line-ending \n into \r\n, and adding the final .\r\n line
-// when the DotWriter is closed. The caller should close the
-// DotWriter before the next call to a method on w.
+// DotWriter 返回一个可用于向 w 写入点编码的写入器。
+// 它负责在必要时插入前导点，
+// 将行结束 \n 转换为 \r\n，并在关闭
+// DotWriter 时添加最终的 .\r\n 行。调用者应在下一次
+// 调用 w 上的方法之前关闭 DotWriter。
 //
-// See the documentation for the [Reader.DotReader] method for details about dot-encoding.
+// 有关点编码的详细信息，请参阅 [Reader.DotReader] 方法的文档。
 func (w *Writer) DotWriter() io.WriteCloser {
 	w.closeDot()
 	w.dot = &dotWriter{w: w}
@@ -48,7 +48,7 @@ func (w *Writer) DotWriter() io.WriteCloser {
 
 func (w *Writer) closeDot() {
 	if w.dot != nil {
-		w.dot.Close() // sets w.dot = nil
+		w.dot.Close() // 设置 w.dot = nil
 	}
 }
 
@@ -58,10 +58,10 @@ type dotWriter struct {
 }
 
 const (
-	wstateBegin     = iota // initial state; must be zero
-	wstateBeginLine        // beginning of line
-	wstateCR               // wrote \r (possibly at end of line)
-	wstateData             // writing data in middle of line
+	wstateBegin     = iota // 初始状态；必须为零
+	wstateBeginLine        // 行首
+	wstateCR               // 写入 \r（可能在行尾）
+	wstateData             // 在行中间写入数据
 )
 
 func (d *dotWriter) Write(b []byte) (n int, err error) {
@@ -72,7 +72,7 @@ func (d *dotWriter) Write(b []byte) (n int, err error) {
 		case wstateBegin, wstateBeginLine:
 			d.state = wstateData
 			if c == '.' {
-				// escape leading dot
+				// 转义前导点
 				bw.WriteByte('.')
 			}
 			fallthrough

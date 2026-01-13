@@ -4,9 +4,8 @@
 
 //go:build ignore
 
-// Gen generates sais2.go by duplicating functions in sais.go
-// using different input types.
-// See the comment at the top of sais.go for details.
+// Gen 通过复制 sais.go 中的函数并使用不同的输入类型来生成 sais2.go。
+// 详见 sais.go 顶部的注释。
 package main
 
 import (
@@ -27,7 +26,7 @@ func main() {
 
 	x := bytes.Index(data, []byte("\n\n"))
 	if x < 0 {
-		log.Fatal("cannot find blank line after copyright comment")
+		log.Fatal("找不到版权注释后的空白行")
 	}
 
 	var buf bytes.Buffer
@@ -48,7 +47,7 @@ func main() {
 
 		x = bytes.Index(data, []byte("\n}\n"))
 		if x < 0 {
-			log.Fatalf("cannot find end of func %s", name)
+			log.Fatalf("找不到函数 %s 的结尾", name)
 		}
 		fn := string(data[:x+len("\n}\n")])
 		data = data[x+len("\n}"):]
@@ -57,7 +56,7 @@ func main() {
 			buf.WriteString(fix32.Replace(fn))
 		}
 		if strings.HasSuffix(name, "_8_32") {
-			// x_8_32 -> x_8_64 done above
+			// x_8_32 -> x_8_64 已在上面完成
 			fn = fix8_32.Replace(stripByteOnly(fn))
 			buf.WriteString(fn)
 			buf.WriteString(fix32.Replace(fn))

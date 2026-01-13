@@ -3,82 +3,81 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package flag implements command-line flag parsing.
+Package flag 实现命令行标志解析。
 
-# Usage
+# 用法
 
-Define flags using [flag.String], [Bool], [Int], etc.
+使用 [flag.String]、[Bool]、[Int] 等定义标志。
 
-This declares an integer flag, -n, stored in the pointer nFlag, with type *int:
+这声明一个整数标志 -n，存储在指针 nFlag 中，类型为 *int：
 
 	import "flag"
 	var nFlag = flag.Int("n", 1234, "help message for flag n")
 
-If you like, you can bind the flag to a variable using the Var() functions.
+如果需要，您可以使用 Var() 函数将标志绑定到变量。
 
 	var flagvar int
 	func init() {
 		flag.IntVar(&flagvar, "flagname", 1234, "help message for flagname")
 	}
 
-Or you can create custom flags that satisfy the Value interface (with
-pointer receivers) and couple them to flag parsing by
+或者您可以创建满足 Value 接口的自定义标志（使用
+指针接收器），并通过以下方式将其与标志解析耦合：
 
 	flag.Var(&flagVal, "name", "help message for flagname")
 
-For such flags, the default value is just the initial value of the variable.
+对于此类标志，默认值只是变量的初始值。
 
-After all flags are defined, call
+定义所有标志后，调用
 
 	flag.Parse()
 
-to parse the command line into the defined flags.
+将命令行解析为已定义的标志。
 
-Flags may then be used directly. If you're using the flags themselves,
-they are all pointers; if you bind to variables, they're values.
+然后可以直接使用标志。如果您使用标志本身，
+它们都是指针；如果绑定到变量，它们就是值。
 
 	fmt.Println("ip has value ", *ip)
 	fmt.Println("flagvar has value ", flagvar)
 
-After parsing, the arguments following the flags are available as the
-slice [flag.Args] or individually as [flag.Arg](i).
-The arguments are indexed from 0 through [flag.NArg]-1.
+解析后，标志后面的参数可用作
+切片 [flag.Args] 或单独使用 [flag.Arg](i)。
+参数从 0 到 [flag.NArg]-1 进行索引。
 
-# Command line flag syntax
+# 命令行标志语法
 
-The following forms are permitted:
+允许以下形式：
 
 	-flag
-	--flag   // double dashes are also permitted
+	--flag   // 也允许双破折号
 	-flag=x
-	-flag x  // non-boolean flags only
+	-flag x  // 仅用于非布尔标志
 
-One or two dashes may be used; they are equivalent.
-The last form is not permitted for boolean flags because the
-meaning of the command
+可以使用一条或两条破折号；它们是等价的。
+最后一种形式不允许用于布尔标志，因为
+命令的含义
 
 	cmd -x *
 
-where * is a Unix shell wildcard, will change if there is a file
-called 0, false, etc. You must use the -flag=false form to turn
-off a boolean flag.
+其中 * 是 Unix shell 通配符，如果存在名为 0、false 等的文件，则会更改。
+您必须使用 -flag=false 形式来关闭
+布尔标志。
 
-Flag parsing stops just before the first non-flag argument
-("-" is a non-flag argument) or after the terminator "--".
+标志解析在第一个非标志参数之前停止
+（"-" 是非标志参数）或在终止符 "--" 之后停止。
 
-Integer flags accept 1234, 0664, 0x1234 and may be negative.
-Boolean flags may be:
+整数标志接受 1234、0664、0x1234 并且可能是负数。
+布尔标志可能是：
 
 	1, 0, t, f, T, F, true, false, TRUE, FALSE, True, False
 
-Duration flags accept any input valid for time.ParseDuration.
+持续时间标志接受对 time.ParseDuration 有效的任何输入。
 
-The default set of command-line flags is controlled by
-top-level functions.  The [FlagSet] type allows one to define
-independent sets of flags, such as to implement subcommands
-in a command-line interface. The methods of [FlagSet] are
-analogous to the top-level functions for the command-line
-flag set.
+命令行标志的默认集由
+顶级函数控制。[FlagSet] 类型允许定义
+独立的标志集，例如在命令行界面中
+实现子命令。[FlagSet] 的方法与
+命令行标志集的顶级函数类似。
 */
 package flag
 
@@ -96,16 +95,16 @@ import (
 	"time"
 )
 
-// ErrHelp is the error returned if the -help or -h flag is invoked
-// but no such flag is defined.
+// ErrHelp 是在调用 -help 或 -h 标志时返回的错误
+// 但未定义此类标志。
 var ErrHelp = errors.New("flag: help requested")
 
-// errParse is returned by Set if a flag's value fails to parse, such as with an invalid integer for Int.
-// It then gets wrapped through failf to provide more information.
+// errParse 是在 Set 标志值解析失败时返回的，例如为 Int 提供了无效的整数。
+// 然后它通过 failf 进行包装以提供更多信息。
 var errParse = errors.New("parse error")
 
-// errRange is returned by Set if a flag's value is out of range.
-// It then gets wrapped through failf to provide more information.
+// errRange 是在 Set 标志值超出范围时返回的。
+// 然后它通过 failf 进行包装以提供更多信息。
 var errRange = errors.New("value out of range")
 
 func numError(err error) error {
@@ -122,7 +121,7 @@ func numError(err error) error {
 	return err
 }
 
-// -- bool Value
+// -- bool 值
 type boolValue bool
 
 func newBoolValue(val bool, p *bool) *boolValue {
@@ -145,14 +144,14 @@ func (b *boolValue) String() string { return strconv.FormatBool(bool(*b)) }
 
 func (b *boolValue) IsBoolFlag() bool { return true }
 
-// optional interface to indicate boolean flags that can be
-// supplied without "=value" text
+// 可选接口，用于指示可以在不
+// 提供 "=value" 文本的情况下提供的布尔标志
 type boolFlag interface {
 	Value
 	IsBoolFlag() bool
 }
 
-// -- int Value
+// -- int 值
 type intValue int
 
 func newIntValue(val int, p *int) *intValue {
@@ -173,7 +172,7 @@ func (i *intValue) Get() any { return int(*i) }
 
 func (i *intValue) String() string { return strconv.Itoa(int(*i)) }
 
-// -- int64 Value
+// -- int64 值
 type int64Value int64
 
 func newInt64Value(val int64, p *int64) *int64Value {
@@ -194,7 +193,7 @@ func (i *int64Value) Get() any { return int64(*i) }
 
 func (i *int64Value) String() string { return strconv.FormatInt(int64(*i), 10) }
 
-// -- uint Value
+// -- uint 值
 type uintValue uint
 
 func newUintValue(val uint, p *uint) *uintValue {
@@ -215,7 +214,7 @@ func (i *uintValue) Get() any { return uint(*i) }
 
 func (i *uintValue) String() string { return strconv.FormatUint(uint64(*i), 10) }
 
-// -- uint64 Value
+// -- uint64 值
 type uint64Value uint64
 
 func newUint64Value(val uint64, p *uint64) *uint64Value {
@@ -236,7 +235,7 @@ func (i *uint64Value) Get() any { return uint64(*i) }
 
 func (i *uint64Value) String() string { return strconv.FormatUint(uint64(*i), 10) }
 
-// -- string Value
+// -- string 值
 type stringValue string
 
 func newStringValue(val string, p *string) *stringValue {
@@ -253,7 +252,7 @@ func (s *stringValue) Get() any { return string(*s) }
 
 func (s *stringValue) String() string { return string(*s) }
 
-// -- float64 Value
+// -- float64 值
 type float64Value float64
 
 func newFloat64Value(val float64, p *float64) *float64Value {
@@ -274,7 +273,7 @@ func (f *float64Value) Get() any { return float64(*f) }
 
 func (f *float64Value) String() string { return strconv.FormatFloat(float64(*f), 'g', -1, 64) }
 
-// -- time.Duration Value
+// -- time.Duration 值
 type durationValue time.Duration
 
 func newDurationValue(val time.Duration, p *time.Duration) *durationValue {
@@ -295,7 +294,7 @@ func (d *durationValue) Get() any { return time.Duration(*d) }
 
 func (d *durationValue) String() string { return (*time.Duration)(d).String() }
 
-// -- encoding.TextUnmarshaler Value
+// -- encoding.TextUnmarshaler 值
 type textValue struct{ p encoding.TextUnmarshaler }
 
 func newTextValue(val encoding.TextMarshaler, p encoding.TextUnmarshaler) textValue {
@@ -331,14 +330,14 @@ func (v textValue) String() string {
 	return ""
 }
 
-// -- func Value
+// -- func 值
 type funcValue func(string) error
 
 func (f funcValue) Set(s string) error { return f(s) }
 
 func (f funcValue) String() string { return "" }
 
-// -- boolFunc Value
+// -- boolFunc 值
 type boolFuncValue func(string) error
 
 func (f boolFuncValue) Set(s string) error { return f(s) }
@@ -347,72 +346,72 @@ func (f boolFuncValue) String() string { return "" }
 
 func (f boolFuncValue) IsBoolFlag() bool { return true }
 
-// Value is the interface to the dynamic value stored in a flag.
-// (The default value is represented as a string.)
+// Value 是存储在标志中的动态值的接口。
+// （默认值表示为字符串。）
 //
-// If a Value has an IsBoolFlag() bool method returning true,
-// the command-line parser makes -name equivalent to -name=true
-// rather than using the next command-line argument.
+// 如果 Value 有一个返回 true 的 IsBoolFlag() bool 方法，
+// 命令行解析器将 -name 等同于 -name=true
+// 而不是使用下一个命令行参数。
 //
-// Set is called once, in command line order, for each flag present.
-// The flag package may call the [String] method with a zero-valued receiver,
-// such as a nil pointer.
+// Set 为每个存在的标志调用一次，按命令行顺序调用。
+// flag 包可以使用零值接收器调用 [String] 方法，
+// 例如 nil 指针。
 type Value interface {
 	String() string
 	Set(string) error
 }
 
-// Getter is an interface that allows the contents of a [Value] to be retrieved.
-// It wraps the [Value] interface, rather than being part of it, because it
-// appeared after Go 1 and its compatibility rules. All [Value] types provided
-// by this package satisfy the [Getter] interface, except the type used by [Func].
+// Getter 是一个接口，允许检索 [Value] 的内容。
+// 它包装了 [Value] 接口，而不是它的一部分，因为它
+// 在 Go 1 之后出现，需要兼容性规则。该包提供的所有 [Value] 类型
+// 都满足 [Getter] 接口，除了 [Func] 使用的类型。
 type Getter interface {
 	Value
 	Get() any
 }
 
-// ErrorHandling defines how [FlagSet.Parse] behaves if the parse fails.
+// ErrorHandling 定义了当解析失败时 [FlagSet.Parse] 的行为。
 type ErrorHandling int
 
-// These constants cause [FlagSet.Parse] to behave as described if the parse fails.
+// 这些常量在解析失败时导致 [FlagSet.Parse] 表现如下所述。
 const (
-	ContinueOnError ErrorHandling = iota // Return a descriptive error.
-	ExitOnError                          // Call os.Exit(2) or for -h/-help Exit(0).
-	PanicOnError                         // Call panic with a descriptive error.
+	ContinueOnError ErrorHandling = iota // 返回描述性错误。
+	ExitOnError                          // 调用 os.Exit(2) 或对于 -h/-help 调用 Exit(0)。
+	PanicOnError                         // 使用描述性错误调用 panic。
 )
 
-// A FlagSet represents a set of defined flags. The zero value of a FlagSet
-// has no name and has [ContinueOnError] error handling.
+// FlagSet 代表一组已定义的标志。FlagSet 的零值
+// 没有名字，有 [ContinueOnError] 错误处理。
 //
-// [Flag] names must be unique within a FlagSet. An attempt to define a flag whose
-// name is already in use will cause a panic.
+// [Flag] 名称必须在 FlagSet 内唯一。尝试定义一个名称
+// 已经在使用中的标志会导致 panic。
 type FlagSet struct {
-	// Usage is the function called when an error occurs while parsing flags.
-	// The field is a function (not a method) that may be changed to point to
-	// a custom error handler. What happens after Usage is called depends
-	// on the ErrorHandling setting; for the command line, this defaults
-	// to ExitOnError, which exits the program after calling Usage.
+	// Usage 是在解析标志时发生错误时调用的函数。
+	// 该字段是一个函数（不是方法），可以更改为指向
+	// 自定义错误处理器。Usage 被调用后发生的事情取决于
+	// ErrorHandling 设置；对于命令行，这默认为
+	// ExitOnError，它在调用 Usage 后退出程序。
 	Usage func()
 
 	name          string
 	parsed        bool
 	actual        map[string]*Flag
 	formal        map[string]*Flag
-	args          []string // arguments after flags
+	args          []string // 标志后的参数
 	errorHandling ErrorHandling
-	output        io.Writer         // nil means stderr; use Output() accessor
-	undef         map[string]string // flags which didn't exist at the time of Set
+	output        io.Writer         // nil 表示 stderr；使用 Output() 访问器
+	undef         map[string]string // Set 时不存在的标志
 }
 
-// A Flag represents the state of a flag.
+// Flag 代表标志的状态。
 type Flag struct {
-	Name     string // name as it appears on command line
-	Usage    string // help message
-	Value    Value  // value as set
-	DefValue string // default value (as text); for usage message
+	Name     string // 如命令行中出现的名称
+	Usage    string // 帮助消息
+	Value    Value  // 设置的值
+	DefValue string // 默认值（作为文本）；用于用法消息
 }
 
-// sortFlags returns the flags as a slice in lexicographical sorted order.
+// sortFlags 按字典序排序顺序将标志作为切片返回。
 func sortFlags(flags map[string]*Flag) []*Flag {
 	result := make([]*Flag, len(flags))
 	i := 0
@@ -426,8 +425,8 @@ func sortFlags(flags map[string]*Flag) []*Flag {
 	return result
 }
 
-// Output returns the destination for usage and error messages. [os.Stderr] is returned if
-// output was not set or was set to nil.
+// Output 返回用法和错误消息的目标。如果
+// 输出未设置或设置为 nil，则返回 [os.Stderr]。
 func (f *FlagSet) Output() io.Writer {
 	if f.output == nil {
 		return os.Stderr
@@ -435,76 +434,76 @@ func (f *FlagSet) Output() io.Writer {
 	return f.output
 }
 
-// Name returns the name of the flag set.
+// Name 返回标志集的名称。
 func (f *FlagSet) Name() string {
 	return f.name
 }
 
-// ErrorHandling returns the error handling behavior of the flag set.
+// ErrorHandling 返回标志集的错误处理行为。
 func (f *FlagSet) ErrorHandling() ErrorHandling {
 	return f.errorHandling
 }
 
-// SetOutput sets the destination for usage and error messages.
-// If output is nil, [os.Stderr] is used.
+// SetOutput 设置用法和错误消息的目标。
+// 如果输出为 nil，则使用 [os.Stderr]。
 func (f *FlagSet) SetOutput(output io.Writer) {
 	f.output = output
 }
 
-// VisitAll visits the flags in lexicographical order, calling fn for each.
-// It visits all flags, even those not set.
+// VisitAll 按字典序顺序访问标志，为每个标志调用 fn。
+// 它访问所有标志，包括未设置的标志。
 func (f *FlagSet) VisitAll(fn func(*Flag)) {
 	for _, flag := range sortFlags(f.formal) {
 		fn(flag)
 	}
 }
 
-// VisitAll visits the command-line flags in lexicographical order, calling
-// fn for each. It visits all flags, even those not set.
+// VisitAll 按字典序顺序访问命令行标志，为每个标志调用
+// fn。它访问所有标志，包括未设置的标志。
 func VisitAll(fn func(*Flag)) {
 	CommandLine.VisitAll(fn)
 }
 
-// Visit visits the flags in lexicographical order, calling fn for each.
-// It visits only those flags that have been set.
+// Visit 按字典序顺序访问标志，为每个标志调用 fn。
+// 它仅访问已设置的标志。
 func (f *FlagSet) Visit(fn func(*Flag)) {
 	for _, flag := range sortFlags(f.actual) {
 		fn(flag)
 	}
 }
 
-// Visit visits the command-line flags in lexicographical order, calling fn
-// for each. It visits only those flags that have been set.
+// Visit 按字典序顺序访问命令行标志，为每个标志调用 fn。
+// 它仅访问已设置的标志。
 func Visit(fn func(*Flag)) {
 	CommandLine.Visit(fn)
 }
 
-// Lookup returns the [Flag] structure of the named flag, returning nil if none exists.
+// Lookup 返回指定标志的 [Flag] 结构，如果不存在则返回 nil。
 func (f *FlagSet) Lookup(name string) *Flag {
 	return f.formal[name]
 }
 
-// Lookup returns the [Flag] structure of the named command-line flag,
-// returning nil if none exists.
+// Lookup 返回指定命令行标志的 [Flag] 结构，
+// 如果不存在则返回 nil。
 func Lookup(name string) *Flag {
 	return CommandLine.formal[name]
 }
 
-// Set sets the value of the named flag.
+// Set 设置指定标志的值。
 func (f *FlagSet) Set(name, value string) error {
 	return f.set(name, value)
 }
 func (f *FlagSet) set(name, value string) error {
 	flag, ok := f.formal[name]
 	if !ok {
-		// Remember that a flag that isn't defined is being set.
-		// We return an error in this case, but in addition if
-		// subsequently that flag is defined, we want to panic
-		// at the definition point.
-		// This is a problem which occurs if both the definition
-		// and the Set call are in init code and for whatever
-		// reason the init code changes evaluation order.
-		// See issue 57411.
+		// 记住一个未定义的标志正在被设置。
+		// 在这种情况下我们返回一个错误，但此外如果
+		// 随后定义了该标志，我们想在
+		// 定义点 panic。
+		// 这是一个问题，当定义和
+		// Set 调用都在 init 代码中，并且无论什么
+		// 原因 init 代码改变求值顺序时发生。
+		// 参见 issue 57411。
 		_, file, line, ok := runtime.Caller(2)
 		if !ok {
 			file = "?"
@@ -528,17 +527,17 @@ func (f *FlagSet) set(name, value string) error {
 	return nil
 }
 
-// Set sets the value of the named command-line flag.
+// Set 设置指定命令行标志的值。
 func Set(name, value string) error {
 	return CommandLine.set(name, value)
 }
 
-// isZeroValue determines whether the string represents the zero
-// value for a flag.
+// isZeroValue 确定字符串是否代表标志的零
+// 值。
 func isZeroValue(flag *Flag, value string) (ok bool, err error) {
-	// Build a zero value of the flag's Value type, and see if the
-	// result of calling its String method equals the value passed in.
-	// This works unless the Value type is itself an interface type.
+	// 构建标志的 Value 类型的零值，并查看是否
+	// 调用其 String 方法的结果等于传入的值。
+	// 这有效，除非 Value 类型本身是接口类型。
 	typ := reflect.TypeOf(flag.Value)
 	var z reflect.Value
 	if typ.Kind() == reflect.Pointer {
@@ -546,9 +545,9 @@ func isZeroValue(flag *Flag, value string) (ok bool, err error) {
 	} else {
 		z = reflect.Zero(typ)
 	}
-	// Catch panics calling the String method, which shouldn't prevent the
-	// usage message from being printed, but that we should report to the
-	// user so that they know to fix their code.
+	// 捕获调用 String 方法时的 panic，这不应该阻止
+	// 用法消息被打印，但我们应该向
+	// 用户报告，以便他们知道修复他们的代码。
 	defer func() {
 		if e := recover(); e != nil {
 			if typ.Kind() == reflect.Pointer {
@@ -560,13 +559,13 @@ func isZeroValue(flag *Flag, value string) (ok bool, err error) {
 	return value == z.Interface().(Value).String(), nil
 }
 
-// UnquoteUsage extracts a back-quoted name from the usage
-// string for a flag and returns it and the un-quoted usage.
-// Given "a `name` to show" it returns ("name", "a name to show").
-// If there are no back quotes, the name is an educated guess of the
-// type of the flag's value, or the empty string if the flag is boolean.
+// UnquoteUsage 从标志的用法
+// 字符串中提取反引号括起的名称并返回它和未引用的用法。
+// 给定 "a `name` to show" 它返回 ("name", "a name to show")。
+// 如果没有反引号，该名称是标志值类型的有根据的猜测，
+// 或者如果标志是布尔的则为空字符串。
 func UnquoteUsage(flag *Flag) (name string, usage string) {
-	// Look for a back-quoted name, but avoid the strings package.
+	// 查找反引号括起的名称，但避免 strings 包。
 	usage = flag.Usage
 	for i := 0; i < len(usage); i++ {
 		if usage[i] == '`' {
@@ -577,10 +576,10 @@ func UnquoteUsage(flag *Flag) (name string, usage string) {
 					return name, usage
 				}
 			}
-			break // Only one back quote; use type name.
+			break // 只有一个反引号；使用类型名称。
 		}
 	}
-	// No explicit name, so use type if we can find one.
+	// 没有显式名称，因此使用类型（如果我们能找到的话）。
 	name = "value"
 	switch fv := flag.Value.(type) {
 	case boolFlag:
@@ -601,37 +600,36 @@ func UnquoteUsage(flag *Flag) (name string, usage string) {
 	return
 }
 
-// PrintDefaults prints, to standard error unless configured otherwise, the
-// default values of all defined command-line flags in the set. See the
-// documentation for the global function PrintDefaults for more information.
+// PrintDefaults 将所有已定义的命令行标志的默认值打印到
+// 标准错误（除非另有配置）。查看
+// 全局函数 PrintDefaults 的文档以获取更多信息。
 func (f *FlagSet) PrintDefaults() {
 	var isZeroValueErrs []error
 	f.VisitAll(func(flag *Flag) {
 		var b strings.Builder
-		fmt.Fprintf(&b, "  -%s", flag.Name) // Two spaces before -; see next two comments.
+		fmt.Fprintf(&b, "  -%s", flag.Name) // - 前两个空格；参见接下来的两个注释。
 		name, usage := UnquoteUsage(flag)
 		if len(name) > 0 {
 			b.WriteString(" ")
 			b.WriteString(name)
 		}
-		// Boolean flags of one ASCII letter are so common we
-		// treat them specially, putting their usage on the same line.
+		// 单个 ASCII 字母的布尔标志非常常见，我们
+		// 特别对待它们，将其用法放在同一行上。
 		if b.Len() <= 4 { // space, space, '-', 'x'.
 			b.WriteString("\t")
 		} else {
-			// Four spaces before the tab triggers good alignment
-			// for both 4- and 8-space tab stops.
+			// tab 前四个空格可以触发良好的对齐
+			// 用于 4 空格和 8 空格制表位。
 			b.WriteString("\n    \t")
 		}
 		b.WriteString(strings.ReplaceAll(usage, "\n", "\n    \t"))
 
-		// Print the default value only if it differs to the zero value
-		// for this flag type.
+		// 仅当默认值与该标志类型的零值不同时打印默认值。
 		if isZero, err := isZeroValue(flag, flag.DefValue); err != nil {
 			isZeroValueErrs = append(isZeroValueErrs, err)
 		} else if !isZero {
 			if _, ok := flag.Value.(*stringValue); ok {
-				// put quotes on the value
+				// 在值上加引号
 				fmt.Fprintf(&b, " (default %q)", flag.DefValue)
 			} else {
 				fmt.Fprintf(&b, " (default %v)", flag.DefValue)
@@ -639,9 +637,9 @@ func (f *FlagSet) PrintDefaults() {
 		}
 		fmt.Fprint(f.Output(), b.String(), "\n")
 	})
-	// If calling String on any zero flag.Values triggered a panic, print
-	// the messages after the full set of defaults so that the programmer
-	// knows to fix the panic.
+	// 如果在任何零 flag.Values 上调用 String 触发了 panic，打印
+	// 完整默认值集之后的消息，以便程序员
+	// 知道修复 panic。
 	if errs := isZeroValueErrs; len(errs) > 0 {
 		fmt.Fprintln(f.Output())
 		for _, err := range errs {
@@ -650,37 +648,37 @@ func (f *FlagSet) PrintDefaults() {
 	}
 }
 
-// PrintDefaults prints, to standard error unless configured otherwise,
-// a usage message showing the default settings of all defined
-// command-line flags.
-// For an integer valued flag x, the default output has the form
+// PrintDefaults 将一条用法消息打印到标准错误（除非另有配置），
+// 显示所有已定义的
+// 命令行标志的默认设置。
+// 对于整数值标志 x，默认输出的形式为
 //
 //	-x int
 //		usage-message-for-x (default 7)
 //
-// The usage message will appear on a separate line for anything but
-// a bool flag with a one-byte name. For bool flags, the type is
-// omitted and if the flag name is one byte the usage message appears
-// on the same line. The parenthetical default is omitted if the
-// default is the zero value for the type. The listed type, here int,
-// can be changed by placing a back-quoted name in the flag's usage
-// string; the first such item in the message is taken to be a parameter
-// name to show in the message and the back quotes are stripped from
-// the message when displayed. For instance, given
+// 对除了单字节名称的布尔标志外的任何标志，用法消息将
+// 出现在单独的行上。对于布尔标志，类型被
+// 省略，如果标志名称是一个字节，用法消息
+// 出现在同一行上。如果
+// 默认值是该类型的零值，则省略括号内的默认值。列出的类型（这里是 int）
+// 可以通过在标志的用法
+// 字符串中放置反引号括起的名称来更改；消息中的第一项
+// 被视为要在消息中显示的参数名称，反引号
+// 在显示时从消息中剥离。例如，给定
 //
 //	flag.String("I", "", "search `directory` for include files")
 //
-// the output will be
+// 输出将为
 //
 //	-I directory
 //		search directory for include files.
 //
-// To change the destination for flag messages, call [CommandLine].SetOutput.
+// 要更改标志消息的目标，请调用 [CommandLine].SetOutput。
 func PrintDefaults() {
 	CommandLine.PrintDefaults()
 }
 
-// defaultUsage is the default function to print a usage message.
+// defaultUsage 是打印用法消息的默认函数。
 func (f *FlagSet) defaultUsage() {
 	if f.name == "" {
 		fmt.Fprintf(f.Output(), "Usage:\n")
@@ -690,33 +688,32 @@ func (f *FlagSet) defaultUsage() {
 	f.PrintDefaults()
 }
 
-// NOTE: Usage is not just defaultUsage(CommandLine)
-// because it serves (via godoc flag Usage) as the example
-// for how to write your own usage function.
+// 注意：Usage 不仅仅是 defaultUsage(CommandLine)
+// 因为它通过 godoc flag Usage 作为
+// 示例，说明如何编写自己的用法函数。
 
-// Usage prints a usage message documenting all defined command-line flags
-// to [CommandLine]'s output, which by default is [os.Stderr].
-// It is called when an error occurs while parsing flags.
-// The function is a variable that may be changed to point to a custom function.
-// By default it prints a simple header and calls [PrintDefaults]; for details about the
-// format of the output and how to control it, see the documentation for [PrintDefaults].
-// Custom usage functions may choose to exit the program; by default exiting
-// happens anyway as the command line's error handling strategy is set to
-// [ExitOnError].
+// Usage 打印一条记录所有已定义的命令行标志的用法消息
+// 到 [CommandLine] 的输出，默认情况下是 [os.Stderr]。
+// 当解析标志时发生错误时调用。
+// 该函数是一个变量，可以更改为指向自定义函数。
+// 默认情况下，它打印一个简单的标头并调用 [PrintDefaults]；有关详细信息，请参阅
+// 输出格式和控制方法，请参见 [PrintDefaults] 的文档。
+// 自定义用法函数可以选择退出程序；默认情况下，
+// 由于命令行的错误处理策略设置为
+// [ExitOnError]，退出也会发生。
 var Usage = func() {
 	fmt.Fprintf(CommandLine.Output(), "Usage of %s:\n", os.Args[0])
 	PrintDefaults()
 }
 
-// NFlag returns the number of flags that have been set.
+// NFlag 返回已设置的标志数。
 func (f *FlagSet) NFlag() int { return len(f.actual) }
 
-// NFlag returns the number of command-line flags that have been set.
+// NFlag 返回已设置的命令行标志数。
 func NFlag() int { return len(CommandLine.actual) }
 
-// Arg returns the i'th argument. Arg(0) is the first remaining argument
-// after flags have been processed. Arg returns an empty string if the
-// requested element does not exist.
+// Arg 返回第 i 个参数。Arg(0) 是处理标志后的第一个剩余参数。
+// 如果请求的元素不存在，Arg 返回空字符串。
 func (f *FlagSet) Arg(i int) string {
 	if i < 0 || i >= len(f.args) {
 		return ""
@@ -724,99 +721,98 @@ func (f *FlagSet) Arg(i int) string {
 	return f.args[i]
 }
 
-// Arg returns the i'th command-line argument. Arg(0) is the first remaining argument
-// after flags have been processed. Arg returns an empty string if the
-// requested element does not exist.
+// Arg 返回第 i 个命令行参数。Arg(0) 是处理标志后的第一个剩余参数。
+// 如果请求的元素不存在，Arg 返回空字符串。
 func Arg(i int) string {
 	return CommandLine.Arg(i)
 }
 
-// NArg is the number of arguments remaining after flags have been processed.
+// NArg 是处理标志后剩余的参数数量。
 func (f *FlagSet) NArg() int { return len(f.args) }
 
-// NArg is the number of arguments remaining after flags have been processed.
+// NArg 是处理标志后剩余的参数数量。
 func NArg() int { return len(CommandLine.args) }
 
-// Args returns the non-flag arguments.
+// Args 返回非标志参数。
 func (f *FlagSet) Args() []string { return f.args }
 
-// Args returns the non-flag command-line arguments.
+// Args 返回非标志命令行参数。
 func Args() []string { return CommandLine.args }
 
-// BoolVar defines a bool flag with specified name, default value, and usage string.
-// The argument p points to a bool variable in which to store the value of the flag.
+// BoolVar 用指定的名称、默认值和用法字符串定义一个布尔标志。
+// 参数 p 指向一个布尔变量，用于存储标志的值。
 func (f *FlagSet) BoolVar(p *bool, name string, value bool, usage string) {
 	f.Var(newBoolValue(value, p), name, usage)
 }
 
-// BoolVar defines a bool flag with specified name, default value, and usage string.
-// The argument p points to a bool variable in which to store the value of the flag.
+// BoolVar 用指定的名称、默认值和用法字符串定义一个布尔标志。
+// 参数 p 指向一个布尔变量，用于存储标志的值。
 func BoolVar(p *bool, name string, value bool, usage string) {
 	CommandLine.Var(newBoolValue(value, p), name, usage)
 }
 
-// Bool defines a bool flag with specified name, default value, and usage string.
-// The return value is the address of a bool variable that stores the value of the flag.
+// Bool 用指定的名称、默认值和用法字符串定义一个布尔标志。
+// 返回值是一个布尔变量的地址，该变量存储标志的值。
 func (f *FlagSet) Bool(name string, value bool, usage string) *bool {
 	p := new(bool)
 	f.BoolVar(p, name, value, usage)
 	return p
 }
 
-// Bool defines a bool flag with specified name, default value, and usage string.
-// The return value is the address of a bool variable that stores the value of the flag.
+// Bool 用指定的名称、默认值和用法字符串定义一个布尔标志。
+// 返回值是一个布尔变量的地址，该变量存储标志的值。
 func Bool(name string, value bool, usage string) *bool {
 	return CommandLine.Bool(name, value, usage)
 }
 
-// IntVar defines an int flag with specified name, default value, and usage string.
-// The argument p points to an int variable in which to store the value of the flag.
+// IntVar 用指定的名称、默认值和用法字符串定义一个 int 标志。
+// 参数 p 指向一个 int 变量，用于存储标志的值。
 func (f *FlagSet) IntVar(p *int, name string, value int, usage string) {
 	f.Var(newIntValue(value, p), name, usage)
 }
 
-// IntVar defines an int flag with specified name, default value, and usage string.
-// The argument p points to an int variable in which to store the value of the flag.
+// IntVar 用指定的名称、默认值和用法字符串定义一个 int 标志。
+// 参数 p 指向一个 int 变量，用于存储标志的值。
 func IntVar(p *int, name string, value int, usage string) {
 	CommandLine.Var(newIntValue(value, p), name, usage)
 }
 
-// Int defines an int flag with specified name, default value, and usage string.
-// The return value is the address of an int variable that stores the value of the flag.
+// Int 用指定的名称、默认值和用法字符串定义一个 int 标志。
+// 返回值是一个 int 变量的地址，该变量存储标志的值。
 func (f *FlagSet) Int(name string, value int, usage string) *int {
 	p := new(int)
 	f.IntVar(p, name, value, usage)
 	return p
 }
 
-// Int defines an int flag with specified name, default value, and usage string.
-// The return value is the address of an int variable that stores the value of the flag.
+// Int 用指定的名称、默认值和用法字符串定义一个 int 标志。
+// 返回值是一个 int 变量的地址，该变量存储标志的值。
 func Int(name string, value int, usage string) *int {
 	return CommandLine.Int(name, value, usage)
 }
 
-// Int64Var defines an int64 flag with specified name, default value, and usage string.
-// The argument p points to an int64 variable in which to store the value of the flag.
+// Int64Var 用指定的名称、默认值和用法字符串定义一个 int64 标志。
+// 参数 p 指向一个 int64 变量，用于存储标志的值。
 func (f *FlagSet) Int64Var(p *int64, name string, value int64, usage string) {
 	f.Var(newInt64Value(value, p), name, usage)
 }
 
-// Int64Var defines an int64 flag with specified name, default value, and usage string.
-// The argument p points to an int64 variable in which to store the value of the flag.
+// Int64Var 用指定的名称、默认值和用法字符串定义一个 int64 标志。
+// 参数 p 指向一个 int64 变量，用于存储标志的值。
 func Int64Var(p *int64, name string, value int64, usage string) {
 	CommandLine.Var(newInt64Value(value, p), name, usage)
 }
 
-// Int64 defines an int64 flag with specified name, default value, and usage string.
-// The return value is the address of an int64 variable that stores the value of the flag.
+// Int64 用指定的名称、默认值和用法字符串定义一个 int64 标志。
+// 返回值是一个 int64 变量的地址，该变量存储标志的值。
 func (f *FlagSet) Int64(name string, value int64, usage string) *int64 {
 	p := new(int64)
 	f.Int64Var(p, name, value, usage)
 	return p
 }
 
-// Int64 defines an int64 flag with specified name, default value, and usage string.
-// The return value is the address of an int64 variable that stores the value of the flag.
+// Int64 用指定的名称、默认值和用法字符串定义一个 int64 标志。
+// 返回值是一个 int64 变量的地址，该变量存储标志的值。
 func Int64(name string, value int64, usage string) *int64 {
 	return CommandLine.Int64(name, value, usage)
 }

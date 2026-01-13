@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package flate
 
@@ -15,8 +15,8 @@ const (
 	matchType   = 1 << 30
 )
 
-// The length code for length X (MIN_MATCH_LENGTH <= X <= MAX_MATCH_LENGTH)
-// is lengthCodes[length - MIN_MATCH_LENGTH]
+// 长度码，用于长度 X (MIN_MATCH_LENGTH <= X <= MAX_MATCH_LENGTH)
+// 是 lengthCodes[length - MIN_MATCH_LENGTH]
 var lengthCodes = [...]uint32{
 	0, 1, 2, 3, 4, 5, 6, 7, 8, 8,
 	9, 9, 10, 10, 11, 11, 12, 12, 12, 12,
@@ -67,25 +67,25 @@ var offsetCodes = [...]uint32{
 
 type token uint32
 
-// Convert a literal into a literal token.
+// 将字面量转换为字面量令牌。
 func literalToken(literal uint32) token { return token(literalType + literal) }
 
-// Convert a < xlength, xoffset > pair into a match token.
+// 将 < xlength, xoffset > 对转换为匹配令牌。
 func matchToken(xlength uint32, xoffset uint32) token {
 	return token(matchType + xlength<<lengthShift + xoffset)
 }
 
-// Returns the literal of a literal token.
+// 返回字面量令牌的字面量。
 func (t token) literal() uint32 { return uint32(t - literalType) }
 
-// Returns the extra offset of a match token.
+// 返回匹配令牌的额外偏移。
 func (t token) offset() uint32 { return uint32(t) & offsetMask }
 
 func (t token) length() uint32 { return uint32((t - matchType) >> lengthShift) }
 
 func lengthCode(len uint32) uint32 { return lengthCodes[len] }
 
-// Returns the offset code corresponding to a specific offset.
+// 返回对应于特定偏移的偏移码。
 func offsetCode(off uint32) uint32 {
 	if off < uint32(len(offsetCodes)) {
 		return offsetCodes[off]

@@ -11,22 +11,22 @@ import (
 	"text/template/parse"
 )
 
-// common holds the information shared by related templates.
+// common 保存了相关模板共享的信息。
 type common struct {
-	tmpl   map[string]*Template // Map from name to defined templates.
-	muTmpl sync.RWMutex         // protects tmpl
+	tmpl   map[string]*Template // 从名称到已定义模板的映射
+	muTmpl sync.RWMutex         // 保护 tmpl
 	option option
-	// We use two maps, one for parsing and one for execution.
-	// This separation makes the API cleaner since it doesn't
-	// expose reflection to the client.
-	muFuncs    sync.RWMutex // protects parseFuncs and execFuncs
+	// 我们使用两个映射，一个用于解析，一个用于执行。
+	// 这种分离使 API 更清洁，因为它不会
+	// 暴露反射给客户端。
+	muFuncs    sync.RWMutex // 保护 parseFuncs 和 execFuncs
 	parseFuncs FuncMap
 	execFuncs  map[string]reflect.Value
 }
 
-// Template is the representation of a parsed template. The *parse.Tree
-// field is exported only for use by [html/template] and should be treated
-// as unexported by all other clients.
+// Template 是已解析模板的表示。*parse.Tree
+// 字段仅导出以供 [html/template] 使用，应该被
+// 所有其他客户端视为未导出。
 type Template struct {
 	name string
 	*parse.Tree
@@ -35,7 +35,7 @@ type Template struct {
 	rightDelim string
 }
 
-// New allocates a new, undefined template with the given name.
+// New 分配一个具有给定名称的新的、未定义的模板。
 func New(name string) *Template {
 	t := &Template{
 		name: name,
@@ -44,18 +44,18 @@ func New(name string) *Template {
 	return t
 }
 
-// Name returns the name of the template.
+// Name 返回模板的名称。
 func (t *Template) Name() string {
 	return t.name
 }
 
-// New allocates a new, undefined template associated with the given one and with the same
-// delimiters. The association, which is transitive, allows one template to
-// invoke another with a {{template}} action.
+// New 分配一个新的、未定义的模板，与给定的模板相关联，且具有相同的
+// 分隔符。这种关联是传递的，允许一个模板
+// 通过 {{template}} 动作调用另一个。
 //
-// Because associated templates share underlying data, template construction
-// cannot be done safely in parallel. Once the templates are constructed, they
-// can be executed in parallel.
+// 因为相关的模板共享底层数据，模板构造
+// 无法安全地并行进行。一旦模板被构造，
+// 就可以并行执行。
 func (t *Template) New(name string) *Template {
 	t.init()
 	nt := &Template{
@@ -67,7 +67,7 @@ func (t *Template) New(name string) *Template {
 	return nt
 }
 
-// init guarantees that t has a valid common structure.
+// init 保证 t 有一个有效的 common 结构。
 func (t *Template) init() {
 	if t.common == nil {
 		c := new(common)
@@ -78,12 +78,12 @@ func (t *Template) init() {
 	}
 }
 
-// Clone returns a duplicate of the template, including all associated
-// templates. The actual representation is not copied, but the name space of
-// associated templates is, so further calls to [Template.Parse] in the copy will add
-// templates to the copy but not to the original. Clone can be used to prepare
-// common templates and use them with variant definitions for other templates
-// by adding the variants after the clone is made.
+// Clone 返回模板的副本，包括所有相关的
+// 模板。实际表示不被复制，但相关模板的命名空间
+// 被复制，所以对副本中 [Template.Parse] 的进一步调用会添加
+// 模板到副本而不是原始。Clone 可用于准备
+// 公共模板并通过为其他模板添加变体定义
+// 来在克隆后使用它们。
 func (t *Template) Clone() (*Template, error) {
 	nt := t.copy(nil)
 	nt.init()
@@ -98,7 +98,7 @@ func (t *Template) Clone() (*Template, error) {
 			nt.tmpl[t.name] = nt
 			continue
 		}
-		// The associated templates share nt's common structure.
+		// 相关的模板共享 nt 的 common 结构。
 		tmpl := v.copy(nt.common)
 		nt.tmpl[k] = tmpl
 	}
@@ -109,7 +109,7 @@ func (t *Template) Clone() (*Template, error) {
 	return nt, nil
 }
 
-// copy returns a shallow copy of t, with common set to the argument.
+// copy 返回 t 的浅拷贝，common 设置为参数。
 func (t *Template) copy(c *common) *Template {
 	return &Template{
 		name:       t.name,
@@ -120,10 +120,10 @@ func (t *Template) copy(c *common) *Template {
 	}
 }
 
-// AddParseTree associates the argument parse tree with the template t, giving
-// it the specified name. If the template has not been defined, this tree becomes
-// its definition. If it has been defined and already has that name, the existing
-// definition is replaced; otherwise a new template is created, defined, and returned.
+// AddParseTree 将参数解析树与模板 t 相关联，给
+// 它指定的名称。如果模板尚未定义，此树会变成
+// 其定义。如果已定义且已有该名称，现有
+// 定义被替换；否则创建、定义并返回新模板。
 func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error) {
 	t.init()
 	t.muTmpl.Lock()
@@ -132,19 +132,19 @@ func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error
 	if name != t.name {
 		nt = t.New(name)
 	}
-	// Even if nt == t, we need to install it in the common.tmpl map.
+	// 即使 nt == t，我们也需要在 common.tmpl 映射中安装它。
 	if t.associate(nt, tree) || nt.Tree == nil {
 		nt.Tree = tree
 	}
 	return nt, nil
 }
 
-// Templates returns a slice of defined templates associated with t.
+// Templates 返回与 t 相关的已定义模板的切片。
 func (t *Template) Templates() []*Template {
 	if t.common == nil {
 		return nil
 	}
-	// Return a slice so we don't expose the map.
+	// 返回一个切片，以便我们不暴露该映射。
 	t.muTmpl.RLock()
 	defer t.muTmpl.RUnlock()
 	m := make([]*Template, 0, len(t.tmpl))
@@ -154,11 +154,11 @@ func (t *Template) Templates() []*Template {
 	return m
 }
 
-// Delims sets the action delimiters to the specified strings, to be used in
-// subsequent calls to [Template.Parse], [Template.ParseFiles], or [Template.ParseGlob]. Nested template
-// definitions will inherit the settings. An empty delimiter stands for the
-// corresponding default: {{ or }}.
-// The return value is the template, so calls can be chained.
+// Delims 将动作分隔符设置为指定的字符串，用于
+// [Template.Parse]、[Template.ParseFiles] 或 [Template.ParseGlob] 的后续调用。嵌套模板
+// 定义将继承这些设置。空分隔符表示
+// 对应的默认值：{{ 或 }}。
+// 返回值是模板，所以调用可以链接。
 func (t *Template) Delims(left, right string) *Template {
 	t.init()
 	t.leftDelim = left
@@ -166,12 +166,13 @@ func (t *Template) Delims(left, right string) *Template {
 	return t
 }
 
-// Funcs adds the elements of the argument map to the template's function map.
-// It must be called before the template is parsed.
-// It panics if a value in the map is not a function with appropriate return
-// type or if the name cannot be used syntactically as a function in a template.
-// It is legal to overwrite elements of the map. The return value is the template,
-// so calls can be chained.
+// Funcs 将参数映射的元素添加到模板的函数映射中。
+// 必须在模板解析之前调用。
+// 如果映射中的值不是具有适当返回
+// 类型的函数，或者如果名称不能在模板中
+// 语法上用作函数，则会 panic。
+// 可以合法地覆盖映射的元素。返回值是模板，
+// 所以调用可以链接。
 func (t *Template) Funcs(funcMap FuncMap) *Template {
 	t.init()
 	t.muFuncs.Lock()
@@ -181,8 +182,8 @@ func (t *Template) Funcs(funcMap FuncMap) *Template {
 	return t
 }
 
-// Lookup returns the template with the given name that is associated with t.
-// It returns nil if there is no such template or the template has no definition.
+// Lookup 返回与 t 相关联的、具有给定名称的模板。
+// 如果没有这样的模板或模板没有定义，则返回 nil。
 func (t *Template) Lookup(name string) *Template {
 	if t.common == nil {
 		return nil
@@ -192,16 +193,16 @@ func (t *Template) Lookup(name string) *Template {
 	return t.tmpl[name]
 }
 
-// Parse parses text as a template body for t.
-// Named template definitions ({{define ...}} or {{block ...}} statements) in text
-// define additional templates associated with t and are removed from the
-// definition of t itself.
+// Parse 将文本作为 t 的模板体进行解析。
+// 文本中的命名模板定义（{{define ...}} 或 {{block ...}} 语句）
+// 定义与 t 相关的其他模板，并从
+// t 本身的定义中移除。
 //
-// Templates can be redefined in successive calls to Parse.
-// A template definition with a body containing only white space and comments
-// is considered empty and will not replace an existing template's body.
-// This allows using Parse to add new named template definitions without
-// overwriting the main template body.
+// 可以在 Parse 的后续调用中重新定义模板。
+// 模板定义的体仅包含空白和注释
+// 被视为空，不会替换现有模板的体。
+// 这允许使用 Parse 添加新的命名模板定义而无需
+// 覆盖主模板体。
 func (t *Template) Parse(text string) (*Template, error) {
 	t.init()
 	t.muFuncs.RLock()
@@ -210,7 +211,7 @@ func (t *Template) Parse(text string) (*Template, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Add the newly parsed trees, including the one for t, into our common structure.
+	// 将新解析的树（包括 t 的树）添加到我们的 common 结构中。
 	for name, tree := range trees {
 		if _, err := t.AddParseTree(name, tree); err != nil {
 			return nil, err
@@ -219,16 +220,16 @@ func (t *Template) Parse(text string) (*Template, error) {
 	return t, nil
 }
 
-// associate installs the new template into the group of templates associated
-// with t. The two are already known to share the common structure.
-// The boolean return value reports whether to store this tree as t.Tree.
+// associate 将新模板安装到与 t 相关的模板组中。
+// 已知两者共享 common 结构。
+// 布尔返回值报告是否将此树存储为 t.Tree。
 func (t *Template) associate(new *Template, tree *parse.Tree) bool {
 	if new.common != t.common {
 		panic("internal error: associate not common")
 	}
 	if old := t.tmpl[new.name]; old != nil && parse.IsEmptyTree(tree.Root) && old.Tree != nil {
-		// If a template by that name exists,
-		// don't replace it with an empty template.
+		// 如果存在该名称的模板，
+		// 不要用空模板替换它。
 		return false
 	}
 	t.tmpl[new.name] = new

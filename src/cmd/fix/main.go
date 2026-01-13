@@ -3,19 +3,16 @@
 // license that can be found in the LICENSE file.
 
 /*
-Fix is a tool executed by "go fix" to update Go programs that use old
-features of the language and library and rewrite them to use newer
-ones. After you update to a new Go release, fix helps make the
-necessary changes to your programs.
+Fix 是由 "go fix" 执行的工具，用于更新使用旧语言和库特性的 Go 程序，
+并将它们重写为使用较新的特性。更新到新的 Go 版本后，fix 可以帮助进行
+必要的更改。
 
-See the documentation for "go fix" for how to run this command.
-You can provide an alternative tool using "go fix -fixtool=..."
+有关如何运行此命令的文档，请参见 "go fix"。
+您可以使用 "go fix -fixtool=..." 提供替代工具。
 
-Run "go tool fix help" to see the list of analyzers supported by this
-program.
+运行 "go tool fix help" 以查看此程序支持的分析器列表。
 
-See [golang.org/x/tools/go/analysis] for information on how to write
-an analyzer that can suggest fixes.
+有关如何编写可以建议修复的分析器的信息，请参见 [golang.org/x/tools/go/analysis]。
 */
 package main
 
@@ -33,16 +30,16 @@ import (
 )
 
 func main() {
-	// Keep consistent with cmd/vet/main.go!
+	// 与 cmd/vet/main.go 保持一致！
 	counter.Open()
 	objabi.AddVersionFlag()
 	counter.Inc("fix/invocations")
 
-	unitchecker.Main(suite...) // (never returns)
+	unitchecker.Main(suite...) // （永远不会返回）
 }
 
-// The fix suite analyzers produce fixes are unambiguously safe to apply,
-// even if the diagnostics might not describe actual problems.
+// fix 套件分析器产生的修复可以明确安全地应用，
+// 即使诊断可能不描述实际问题。
 var suite = slices.Concat(
 	[]*analysis.Analyzer{
 		buildtag.Analyzer,
@@ -50,14 +47,14 @@ var suite = slices.Concat(
 		inline.Analyzer,
 	},
 	modernize.Suite,
-	// TODO(adonovan): add any other vet analyzers whose fixes are always safe.
-	// Candidates to audit: sigchanyzer, printf, assign, unreachable.
-	// Many of staticcheck's analyzers would make good candidates
-	//   (e.g. rewriting WriteString(fmt.Sprintf()) to Fprintf.)
-	// Rejected:
-	// - composites: some types (e.g. PointXY{1,2}) don't want field names.
-	// - timeformat: flipping MM/DD is a behavior change, but the code
-	//    could potentially be a workaround for another bug.
-	// - stringintconv: offers two fixes, user input required to choose.
-	// - fieldalignment: poor signal/noise; fix could be a regression.
+	// TODO(adonovan): 添加任何其他 vet 分析器，其修复始终是安全的。
+	// 审计候选：sigchanyzer、printf、assign、unreachable。
+	// staticcheck 的许多分析器将是很好的候选
+	//   （例如将 WriteString(fmt.Sprintf()) 重写为 Fprintf。）
+	// 被拒绝的：
+	// - composites: 某些类型（例如 PointXY{1,2}）不需要字段名。
+	// - timeformat: 翻转 MM/DD 是行为改变，但代码
+	//    可能是另一个错误的解决方法。
+	// - stringintconv: 提供两个修复，需要用户输入选择。
+	// - fieldalignment: 信号/噪声很差; 修复可能是回归。
 )

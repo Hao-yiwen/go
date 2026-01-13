@@ -15,68 +15,69 @@ import (
 	"unicode/utf8"
 )
 
-// ScanState represents the scanner state passed to custom scanners.
-// Scanners may do rune-at-a-time scanning or ask the ScanState
-// to discover the next space-delimited token.
+// ScanState 代表传递给自定义扫描器的扫描器状态。
+// 扫描器可以一次一个符文地扫描或要求 ScanState
+// 发现下一个空格分隔的令牌。
 type ScanState interface {
-	// ReadRune reads the next rune (Unicode code point) from the input.
-	// If invoked during Scanln, Fscanln, or Sscanln, ReadRune() will
-	// return EOF after returning the first '\n' or when reading beyond
-	// the specified width.
+	// ReadRune 从输入读取下一个符文（Unicode 码点）。
+	// 如果在 Scanln、Fscanln 或 Sscanln 期间调用，ReadRune() 将
+	// 在返回第一个 '\n' 或读取超过
+	// 指定宽度时返回 EOF。
 	ReadRune() (r rune, size int, err error)
-	// UnreadRune causes the next call to ReadRune to return the same rune.
+	// UnreadRune 导致对 ReadRune 的下一个调用返回相同的符文。
 	UnreadRune() error
-	// SkipSpace skips space in the input. Newlines are treated appropriately
-	// for the operation being performed; see the package documentation
-	// for more information.
+	// SkipSpace 跳过输入中的空格。根据
+	// 正在执行的操作适当处理换行符；详见包文档
+	// 了解更多信息。
 	SkipSpace()
-	// Token skips space in the input if skipSpace is true, then returns the
-	// run of Unicode code points c satisfying f(c).  If f is nil,
-	// !unicode.IsSpace(c) is used; that is, the token will hold non-space
-	// characters. Newlines are treated appropriately for the operation being
-	// performed; see the package documentation for more information.
-	// The returned slice points to shared data that may be overwritten
-	// by the next call to Token, a call to a Scan function using the ScanState
-	// as input, or when the calling Scan method returns.
+	// Token 如果 skipSpace 为 true 则跳过输入中的空格，然后返回
+	// 满足 f(c) 的 Unicode 码点 c 的运行。如果 f 为 nil，
+	// 则使用 !unicode.IsSpace(c)；即令牌将保持非空格
+	// 字符。根据正在执行的操作适当处理换行符；
+	// 详见包文档了解更多信息。
+	// 返回的切片指向可能被覆盖的共享数据
+	// 通过对 Token 的下一个调用、使用 ScanState 作为输入的
+	// Scan 函数调用，或当调用的 Scan 方法返回时。
 	Token(skipSpace bool, f func(rune) bool) (token []byte, err error)
-	// Width returns the value of the width option and whether it has been set.
-	// The unit is Unicode code points.
+	// Width 返回宽度选项的值以及它是否已设置。
+	// 单位是 Unicode 码点。
 	Width() (wid int, ok bool)
-	// Because ReadRune is implemented by the interface, Read should never be
-	// called by the scanning routines and a valid implementation of
-	// ScanState may choose always to return an error from Read.
+	// 因为 ReadRune 由接口实现，Read 不应该被
+	// 扫描例程调用，ScanState 的有效实现
+	// 可能会选择总是从 Read 返回错误。
 	Read(buf []byte) (n int, err error)
 }
 
-// Scanner is implemented by any value that has a Scan method, which scans
-// the input for the representation of a value and stores the result in the
-// receiver, which must be a pointer to be useful. The Scan method is called
-// for any argument to [Scan], [Scanf], or [Scanln] that implements it.
+// Scanner 由任何具有 Scan 方法的值实现，该方法扫描
+// 输入以查找值的表示并将结果存储在
+// 接收者中，接收者必须是指针才有用。对于
+// [Scan]、[Scanf] 或 [Scanln] 的任何实现此接口的参数，
+// Scan 方法被调用。
 type Scanner interface {
 	Scan(state ScanState, verb rune) error
 }
 
-// Scan scans text read from standard input, storing successive
-// space-separated values into successive arguments. Newlines count
-// as space. It returns the number of items successfully scanned.
-// If that is less than the number of arguments, err will report why.
+// Scan 扫描从标准输入读取的文本，将连续的
+// 空格分隔的值存储到连续的参数中。换行符计算为
+// 空格。返回成功扫描的项数。
+// 如果少于参数数，err 将说明原因。
 func Scan(a ...any) (n int, err error) {
 	return Fscan(os.Stdin, a...)
 }
 
-// Scanln is similar to [Scan], but stops scanning at a newline and
-// after the final item there must be a newline or EOF.
+// Scanln 类似于 [Scan]，但在换行符处停止扫描，
+// 最后一项之后必须有换行符或 EOF。
 func Scanln(a ...any) (n int, err error) {
 	return Fscanln(os.Stdin, a...)
 }
 
-// Scanf scans text read from standard input, storing successive
-// space-separated values into successive arguments as determined by
-// the format. It returns the number of items successfully scanned.
-// If that is less than the number of arguments, err will report why.
-// Newlines in the input must match newlines in the format.
-// The one exception: the verb %c always scans the next rune in the
-// input, even if it is a space (or tab etc.) or newline.
+// Scanf 扫描从标准输入读取的文本，将连续的
+// 空格分隔的值存储到连续的参数中，由
+// 格式确定。返回成功扫描的项数。
+// 如果少于参数数，err 将说明原因。
+// 输入中的换行符必须与格式中的换行符匹配。
+// 一个例外：动词 %c 总是扫描输入中的下一个符文，
+// 即使它是空格（或制表符等）或换行符。
 func Scanf(format string, a ...any) (n int, err error) {
 	return Fscanf(os.Stdin, format, a...)
 }
@@ -92,32 +93,32 @@ func (r *stringReader) Read(b []byte) (n int, err error) {
 	return
 }
 
-// Sscan scans the argument string, storing successive space-separated
-// values into successive arguments. Newlines count as space. It
-// returns the number of items successfully scanned. If that is less
-// than the number of arguments, err will report why.
+// Sscan 扫描参数字符串，将连续的空格分隔的
+// 值存储到连续的参数中。换行符计为空格。它
+// 返回成功扫描的项数。如果少于
+// 参数数，err 将说明原因。
 func Sscan(str string, a ...any) (n int, err error) {
 	return Fscan((*stringReader)(&str), a...)
 }
 
-// Sscanln is similar to [Sscan], but stops scanning at a newline and
-// after the final item there must be a newline or EOF.
+// Sscanln 类似于 [Sscan]，但在换行符处停止扫描，
+// 最后一项之后必须有换行符或 EOF。
 func Sscanln(str string, a ...any) (n int, err error) {
 	return Fscanln((*stringReader)(&str), a...)
 }
 
-// Sscanf scans the argument string, storing successive space-separated
-// values into successive arguments as determined by the format. It
-// returns the number of items successfully parsed.
-// Newlines in the input must match newlines in the format.
+// Sscanf 扫描参数字符串，将连续的空格分隔的
+// 值存储到连续的参数中，由格式确定。它
+// 返回成功解析的项数。
+// 输入中的换行符必须与格式中的换行符匹配。
 func Sscanf(str string, format string, a ...any) (n int, err error) {
 	return Fscanf((*stringReader)(&str), format, a...)
 }
 
-// Fscan scans text read from r, storing successive space-separated
-// values into successive arguments. Newlines count as space. It
-// returns the number of items successfully scanned. If that is less
-// than the number of arguments, err will report why.
+// Fscan 扫描从 r 读取的文本，将连续的空格分隔的
+// 值存储到连续的参数中。换行符计为空格。它
+// 返回成功扫描的项数。如果少于
+// 参数数，err 将说明原因。
 func Fscan(r io.Reader, a ...any) (n int, err error) {
 	s, old := newScanState(r, true, false)
 	n, err = s.doScan(a)
@@ -125,8 +126,8 @@ func Fscan(r io.Reader, a ...any) (n int, err error) {
 	return
 }
 
-// Fscanln is similar to [Fscan], but stops scanning at a newline and
-// after the final item there must be a newline or EOF.
+// Fscanln 类似于 [Fscan]，但在换行符处停止扫描，
+// 最后一项之后必须有换行符或 EOF。
 func Fscanln(r io.Reader, a ...any) (n int, err error) {
 	s, old := newScanState(r, false, true)
 	n, err = s.doScan(a)
@@ -134,10 +135,10 @@ func Fscanln(r io.Reader, a ...any) (n int, err error) {
 	return
 }
 
-// Fscanf scans text read from r, storing successive space-separated
-// values into successive arguments as determined by the format. It
-// returns the number of items successfully parsed.
-// Newlines in the input must match newlines in the format.
+// Fscanf 扫描从 r 读取的文本，将连续的空格分隔的
+// 值存储到连续的参数中，由格式确定。它
+// 返回成功解析的项数。
+// 输入中的换行符必须与格式中的换行符匹配。
 func Fscanf(r io.Reader, format string, a ...any) (n int, err error) {
 	s, old := newScanState(r, false, false)
 	n, err = s.doScanf(format, a)
@@ -145,37 +146,37 @@ func Fscanf(r io.Reader, format string, a ...any) (n int, err error) {
 	return
 }
 
-// scanError represents an error generated by the scanning software.
-// It's used as a unique signature to identify such errors when recovering.
+// scanError 代表由扫描软件生成的错误。
+// 它被用作唯一的签名来识别恢复时的这类错误。
 type scanError struct {
 	err error
 }
 
 const eof = -1
 
-// ss is the internal implementation of ScanState.
+// ss 是 ScanState 的内部实现。
 type ss struct {
-	rs    io.RuneScanner // where to read input
-	buf   buffer         // token accumulator
-	count int            // runes consumed so far.
-	atEOF bool           // already read EOF
+	rs    io.RuneScanner // 从哪里读取输入
+	buf   buffer         // 令牌累加器
+	count int            // 迄今为止消耗的符文。
+	atEOF bool           // 已读取 EOF
 	ssave
 }
 
-// ssave holds the parts of ss that need to be
-// saved and restored on recursive scans.
+// ssave 保持 ss 的需要被保存和恢复的部分
+// 在递归扫描中。
 type ssave struct {
-	validSave bool // is or was a part of an actual ss.
-	nlIsEnd   bool // whether newline terminates scan
-	nlIsSpace bool // whether newline counts as white space
-	argLimit  int  // max value of ss.count for this arg; argLimit <= limit
-	limit     int  // max value of ss.count.
-	maxWid    int  // width of this arg.
+	validSave bool // 是或曾是实际 ss 的一部分。
+	nlIsEnd   bool // 换行符是否终止扫描
+	nlIsSpace bool // 换行符是否计为空白
+	argLimit  int  // ss.count 对此参数的最大值；argLimit <= limit
+	limit     int  // ss.count 的最大值。
+	maxWid    int  // 此参数的宽度。
 }
 
-// The Read method is only in ScanState so that ScanState
-// satisfies io.Reader. It will never be called when used as
-// intended, so there is no need to make it actually work.
+// Read 方法仅在 ScanState 中，以便 ScanState
+// 满足 io.Reader。它在按预期使用时不会被调用，
+// 所以不需要使其实际工作。
 func (s *ss) Read(buf []byte) (n int, err error) {
 	return 0, errors.New("ScanState's Read should not be called. Use ReadRune")
 }
@@ -205,8 +206,8 @@ func (s *ss) Width() (wid int, ok bool) {
 	return s.maxWid, true
 }
 
-// The public method returns an error; this private one panics.
-// If getRune reaches EOF, the return value is EOF (-1).
+// 公共方法返回错误；此私有方法恐慌。
+// 如果 getRune 到达 EOF，返回值是 EOF (-1)。
 func (s *ss) getRune() (r rune) {
 	r, _, err := s.ReadRune()
 	if err != nil {
@@ -218,9 +219,9 @@ func (s *ss) getRune() (r rune) {
 	return
 }
 
-// mustReadRune turns io.EOF into a panic(io.ErrUnexpectedEOF).
-// It is called in cases such as string scanning where an EOF is a
-// syntax error.
+// mustReadRune 将 io.EOF 转换为 panic(io.ErrUnexpectedEOF)。
+// 它在诸如字符串扫描之类的情况下调用，其中 EOF 是
+// 语法错误。
 func (s *ss) mustReadRune() (r rune) {
 	r = s.getRune()
 	if r == eof {
@@ -262,8 +263,8 @@ func (s *ss) Token(skipSpace bool, f func(rune) bool) (tok []byte, err error) {
 	return
 }
 
-// space is a copy of the unicode.White_Space ranges,
-// to avoid depending on package unicode.
+// space 是 unicode.White_Space 范围的副本，
+// 以避免依赖包 unicode。
 var space = [][2]uint16{
 	{0x0009, 0x000d},
 	{0x0020, 0x0020},
@@ -293,24 +294,24 @@ func isSpace(r rune) bool {
 	return false
 }
 
-// notSpace is the default scanning function used in Token.
+// notSpace 是 Token 中使用的默认扫描函数。
 func notSpace(r rune) bool {
 	return !isSpace(r)
 }
 
-// readRune is a structure to enable reading UTF-8 encoded code points
-// from an io.Reader. It is used if the Reader given to the scanner does
-// not already implement io.RuneScanner.
+// readRune 是一个结构，用于从 io.Reader 读取
+// UTF-8 编码的码点。如果给扫描器的 Reader
+// 还未实现 io.RuneScanner，则使用此结构。
 type readRune struct {
 	reader   io.Reader
-	buf      [utf8.UTFMax]byte // used only inside ReadRune
-	pending  int               // number of bytes in pendBuf; only >0 for bad UTF-8
-	pendBuf  [utf8.UTFMax]byte // bytes left over
-	peekRune rune              // if >=0 next rune; when <0 is ^(previous Rune)
+	buf      [utf8.UTFMax]byte // 仅在 ReadRune 内部使用
+	pending  int               // pendBuf 中的字节数；仅对坏 UTF-8 >0
+	pendBuf  [utf8.UTFMax]byte // 剩余字节
+	peekRune rune              // 如果 >=0 下一个符文；当 <0 时是 ^(previous Rune)
 }
 
-// readByte returns the next byte from the input, which may be
-// left over from a previous read if the UTF-8 was ill-formed.
+// readByte 从输入返回下一个字节，可能
+// 来自前一个读取的剩余部分（如果 UTF-8 格式不正确）。
 func (r *readRune) readByte() (b byte, err error) {
 	if r.pending > 0 {
 		b = r.pendBuf[0]
@@ -325,8 +326,7 @@ func (r *readRune) readByte() (b byte, err error) {
 	return r.pendBuf[0], err
 }
 
-// ReadRune returns the next UTF-8 encoded code point from the
-// io.Reader inside r.
+// ReadRune 从 r 内的 io.Reader 返回下一个 UTF-8 编码的码点。
 func (r *readRune) ReadRune() (rr rune, size int, err error) {
 	if r.peekRune >= 0 {
 		rr = r.peekRune
@@ -338,10 +338,10 @@ func (r *readRune) ReadRune() (rr rune, size int, err error) {
 	if err != nil {
 		return
 	}
-	if r.buf[0] < utf8.RuneSelf { // fast check for common ASCII case
+	if r.buf[0] < utf8.RuneSelf { // 常见 ASCII 情况的快速检查
 		rr = rune(r.buf[0])
-		size = 1 // Known to be 1.
-		// Flip the bits of the rune so it's available to UnreadRune.
+		size = 1 // 已知为 1。
+		// 翻转符文的位，以便 UnreadRune 可用。
 		r.peekRune = ^rr
 		return
 	}
@@ -357,11 +357,11 @@ func (r *readRune) ReadRune() (rr rune, size int, err error) {
 		}
 	}
 	rr, size = utf8.DecodeRune(r.buf[:n])
-	if size < n { // an error, save the bytes for the next read
+	if size < n { // 一个错误，为下一个读取保存字节
 		copy(r.pendBuf[r.pending:], r.buf[size:n])
 		r.pending += n - size
 	}
-	// Flip the bits of the rune so it's available to UnreadRune.
+	// 翻转符文的位，以便 UnreadRune 可用。
 	r.peekRune = ^rr
 	return
 }
@@ -379,7 +379,7 @@ var ssFree = sync.Pool{
 	New: func() any { return new(ss) },
 }
 
-// newScanState allocates a new ss struct or grab a cached one.
+// newScanState 分配一个新的 ss 结构或获取一个缓存的。
 func newScanState(r io.Reader, nlIsSpace, nlIsEnd bool) (s *ss, old ssave) {
 	s = ssFree.Get().(*ss)
 	if rs, ok := r.(io.RuneScanner); ok {
@@ -398,14 +398,14 @@ func newScanState(r io.Reader, nlIsSpace, nlIsEnd bool) (s *ss, old ssave) {
 	return
 }
 
-// free saves used ss structs in ssFree; avoid an allocation per invocation.
+// free 在 ssFree 中保存使用过的 ss 结构；避免每次调用分配。
 func (s *ss) free(old ssave) {
-	// If it was used recursively, just restore the old state.
+	// 如果它被递归使用，只需恢复旧状态。
 	if old.validSave {
 		s.ssave = old
 		return
 	}
-	// Don't hold on to ss structs with large buffers.
+	// 不要保留具有大缓冲区的 ss 结构。
 	if cap(s.buf) > 1024 {
 		return
 	}
@@ -414,9 +414,9 @@ func (s *ss) free(old ssave) {
 	ssFree.Put(s)
 }
 
-// SkipSpace provides Scan methods the ability to skip space and newline
-// characters in keeping with the current scanning mode set by format strings
-// and [Scan]/[Scanln].
+// SkipSpace 为 Scan 方法提供了跳过空格和换行符
+// 字符的能力，与由格式字符串和
+// [Scan]/[Scanln] 设置的当前扫描模式保持一致。
 func (s *ss) SkipSpace() {
 	for {
 		r := s.getRune()
@@ -440,14 +440,14 @@ func (s *ss) SkipSpace() {
 	}
 }
 
-// token returns the next space-delimited string from the input. It
-// skips white space. For Scanln, it stops at newlines. For Scan,
-// newlines are treated as spaces.
+// token 返回输入中的下一个空格分隔的字符串。它
+// 跳过空白。对于 Scanln，它在换行符处停止。对于 Scan，
+// 换行符被视为空格。
 func (s *ss) token(skipSpace bool, f func(rune) bool) []byte {
 	if skipSpace {
 		s.SkipSpace()
 	}
-	// read until white space or newline
+	// 读取直到空白或换行符
 	for {
 		r := s.getRune()
 		if r == eof {
@@ -474,8 +474,8 @@ func indexRune(s string, r rune) int {
 	return -1
 }
 
-// consume reads the next rune in the input and reports whether it is in the ok string.
-// If accept is true, it puts the character into the input token.
+// consume 读取输入中的下一个符文并报告它是否在 ok 字符串中。
+// 如果 accept 为 true，它将字符放入输入令牌中。
 func (s *ss) consume(ok string, accept bool) bool {
 	r := s.getRune()
 	if r == eof {
@@ -493,7 +493,7 @@ func (s *ss) consume(ok string, accept bool) bool {
 	return false
 }
 
-// peek reports whether the next character is in the ok string, without consuming it.
+// peek 报告下一个字符是否在 ok 字符串中，而不消耗它。
 func (s *ss) peek(ok string) bool {
 	r := s.getRune()
 	if r != eof {
@@ -503,20 +503,20 @@ func (s *ss) peek(ok string) bool {
 }
 
 func (s *ss) notEOF() {
-	// Guarantee there is data to be read.
+	// 保证有数据可读。
 	if r := s.getRune(); r == eof {
 		panic(io.EOF)
 	}
 	s.UnreadRune()
 }
 
-// accept checks the next rune in the input. If it's a byte (sic) in the string, it puts it in the
-// buffer and returns true. Otherwise it return false.
+// accept 检查输入中的下一个符文。如果它在字符串中，
+// 它将其放入缓冲区并返回 true。否则返回 false。
 func (s *ss) accept(ok string) bool {
 	return s.consume(ok, true)
 }
 
-// okVerb verifies that the verb is present in the list, setting s.err appropriately if not.
+// okVerb 验证动词是否在列表中，如果不在则适当设置 s.err。
 func (s *ss) okVerb(verb rune, okVerbs, typ string) bool {
 	for _, v := range okVerbs {
 		if v == verb {

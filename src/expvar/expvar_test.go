@@ -19,8 +19,8 @@ import (
 	"testing"
 )
 
-// RemoveAll removes all exported variables.
-// This is for tests only.
+// RemoveAll 删除所有导出的变量。
+// 这仅用于测试。
 func RemoveAll() {
 	vars.keysMu.Lock()
 	defer vars.keysMu.Unlock()
@@ -145,7 +145,7 @@ func TestString(t *testing.T) {
 		t.Errorf(`after name.Set("Mike"), name.Value() = %q, want %q`, s, want)
 	}
 
-	// Make sure we produce safe JSON output.
+	// 确保我们生成安全的 JSON 输出。
 	name.Set("<")
 	if s, want := name.String(), "\"\\u003c\""; s != want {
 		t.Errorf(`after name.Set("<"), name.String() = %q, want %q`, s, want)
@@ -245,8 +245,8 @@ func TestMapCounter(t *testing.T) {
 		t.Errorf("colors.m[`green \"midori\"] = %v, want 4.125", x)
 	}
 
-	// colors.String() should be '{"red":3, "blue":4}',
-	// though the order of red and blue could vary.
+	// colors.String() 应该是 '{"red":3, "blue":4}'，
+	// 尽管 red 和 blue 的顺序可能会有所不同。
 	s := colors.String()
 	var j any
 	err := json.Unmarshal([]byte(s), &j)
@@ -329,9 +329,9 @@ func BenchmarkMapSetDifferent(b *testing.B) {
 	})
 }
 
-// BenchmarkMapSetDifferentRandom simulates such a case where the concerned
-// keys of Map.Set are generated dynamically and as a result insertion is
-// out of order and the number of the keys may be large.
+// BenchmarkMapSetDifferentRandom 模拟这样一种情况，其中关心的
+// Map.Set 键是动态生成的，因此插入是
+// 无序的，键的数量可能很大。
 func BenchmarkMapSetDifferentRandom(b *testing.B) {
 	keys := make([]string, 100)
 	for i := range keys {
@@ -400,9 +400,9 @@ func BenchmarkMapAddDifferent(b *testing.B) {
 	})
 }
 
-// BenchmarkMapAddDifferentRandom simulates such a case where that the concerned
-// keys of Map.Add are generated dynamically and as a result insertion is out of
-// order and the number of the keys may be large.
+// BenchmarkMapAddDifferentRandom 模拟这样一种情况，其中关心的
+// Map.Add 键是动态生成的，因此插入是无序的
+// 且键的数量可能很大。
 func BenchmarkMapAddDifferentRandom(b *testing.B) {
 	keys := make([]string, 100)
 	for i := range keys {
@@ -521,10 +521,10 @@ func BenchmarkRealworldExpvarUsage(b *testing.B) {
 		bytesRead Int
 	)
 
-	// The benchmark creates GOMAXPROCS client/server pairs.
-	// Each pair creates 4 goroutines: client reader/writer and server reader/writer.
-	// The benchmark stresses concurrent reading and writing to the same connection.
-	// Such pattern is used in net/http and net/rpc.
+	// 基准创建 GOMAXPROCS 客户端/服务器对。
+	// 每对创建 4 个 goroutine：客户端读写器和服务器读写器。
+	// 基准强调对同一连接的并发读写。
+	// 此模式用于 net/http 和 net/rpc。
 
 	b.StopTimer()
 
@@ -532,7 +532,7 @@ func BenchmarkRealworldExpvarUsage(b *testing.B) {
 	N := b.N / P
 	W := 1000
 
-	// Setup P client/server connections.
+	// 设置 P 客户端/服务器连接。
 	clients := make([]net.Conn, P)
 	servers := make([]net.Conn, P)
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
@@ -570,7 +570,7 @@ func BenchmarkRealworldExpvarUsage(b *testing.B) {
 	var wg sync.WaitGroup
 	wg.Add(4 * P)
 	for p := 0; p < P; p++ {
-		// Client writer.
+		// 客户端写入器。
 		go func(c net.Conn) {
 			defer wg.Done()
 			var buf [1]byte
@@ -590,10 +590,10 @@ func BenchmarkRealworldExpvarUsage(b *testing.B) {
 			}
 		}(clients[p])
 
-		// Pipe between server reader and server writer.
+		// 服务器读取器和服务器写入器之间的管道。
 		pipe := make(chan byte, 128)
 
-		// Server reader.
+		// 服务器读取器。
 		go func(s net.Conn) {
 			defer wg.Done()
 			var buf [1]byte
@@ -610,7 +610,7 @@ func BenchmarkRealworldExpvarUsage(b *testing.B) {
 			}
 		}(servers[p])
 
-		// Server writer.
+		// 服务器写入器。
 		go func(s net.Conn) {
 			defer wg.Done()
 			var buf [1]byte
@@ -631,7 +631,7 @@ func BenchmarkRealworldExpvarUsage(b *testing.B) {
 			s.Close()
 		}(servers[p])
 
-		// Client reader.
+		// 客户端读取器。
 		go func(c net.Conn) {
 			defer wg.Done()
 			var buf [1]byte

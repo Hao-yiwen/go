@@ -15,10 +15,9 @@ import (
 	"text/template/parse"
 )
 
-// maxExecDepth specifies the maximum stack depth of templates within
-// templates. This limit is only practically reached by accidentally
-// recursive template invocations. This limit allows us to return
-// an error instead of triggering a stack overflow.
+// maxExecDepth 指定模板内模板的最大栈深度。
+// 这个限制只有在意外的递归模板调用时才会实际到达。
+// 这个限制允许我们返回一个错误而不是触发栈溢出。
 var maxExecDepth = initMaxExecDepth()
 
 func initMaxExecDepth() int {
@@ -28,40 +27,39 @@ func initMaxExecDepth() int {
 	return 100000
 }
 
-// state represents the state of an execution. It's not part of the
-// template so that multiple executions of the same template
-// can execute in parallel.
+// state 表示执行的状态。它不是模板的一部分，
+// 这样同一模板的多个执行可以并行执行。
 type state struct {
 	tmpl  *Template
 	wr    io.Writer
-	node  parse.Node // current node, for errors
-	vars  []variable // push-down stack of variable values.
-	depth int        // the height of the stack of executing templates.
+	node  parse.Node // 当前节点，用于错误
+	vars  []variable // 变量值的下推栈
+	depth int        // 执行模板栈的高度
 }
 
-// variable holds the dynamic value of a variable such as $, $x etc.
+// variable 保存变量（如 $、$x 等）的动态值。
 type variable struct {
 	name  string
 	value reflect.Value
 }
 
-// push pushes a new variable on the stack.
+// push 将新变量压入栈。
 func (s *state) push(name string, value reflect.Value) {
 	s.vars = append(s.vars, variable{name, value})
 }
 
-// mark returns the length of the variable stack.
+// mark 返回变量栈的长度。
 func (s *state) mark() int {
 	return len(s.vars)
 }
 
-// pop pops the variable stack up to the mark.
+// pop 弹出变量栈至标记位置。
 func (s *state) pop(mark int) {
 	s.vars = s.vars[0:mark]
 }
 
-// setVar overwrites the last declared variable with the given name.
-// Used by variable assignments.
+// setVar 用给定名称覆盖最后声明的变量。
+// 由变量赋值使用。
 func (s *state) setVar(name string, value reflect.Value) {
 	for i := s.mark() - 1; i >= 0; i-- {
 		if s.vars[i].name == name {
@@ -72,12 +70,12 @@ func (s *state) setVar(name string, value reflect.Value) {
 	s.errorf("undefined variable: %s", name)
 }
 
-// setTopVar overwrites the top-nth variable on the stack. Used by range iterations.
+// setTopVar 覆盖栈上第 n 个顶部变量。由范围迭代使用。
 func (s *state) setTopVar(n int, value reflect.Value) {
 	s.vars[len(s.vars)-n].value = value
 }
 
-// varValue returns the value of the named variable.
+// varValue 返回命名变量的值。
 func (s *state) varValue(name string) reflect.Value {
 	for i := s.mark() - 1; i >= 0; i-- {
 		if s.vars[i].name == name {
@@ -100,27 +98,26 @@ func isMissing(v reflect.Value) bool {
 	return v.IsValid() && v.Type() == missingValReflectType
 }
 
-// at marks the state to be on node n, for error reporting.
+// at 标记状态在节点 n 上，用于错误报告。
 func (s *state) at(node parse.Node) {
 	s.node = node
 }
 
-// doublePercent returns the string with %'s replaced by %%, if necessary,
-// so it can be used safely inside a Printf format string.
+// doublePercent 返回将 % 替换为 %% 的字符串（如果必要），
+// 这样它可以安全地在 Printf 格式字符串中使用。
 func doublePercent(str string) string {
 	return strings.ReplaceAll(str, "%", "%%")
 }
 
-// TODO: It would be nice if ExecError was more broken down, but
-// the way ErrorContext embeds the template name makes the
-// processing too clumsy.
+// TODO: 如果 ExecError 能分解得更细会很好，但
+// ErrorContext 嵌入模板名称的方式使得
+// 处理太复杂了。
 
-// ExecError is the custom error type returned when Execute has an
-// error evaluating its template. (If a write error occurs, the actual
-// error is returned; it will not be of type ExecError.)
+// ExecError 是 Execute 在评估其模板时遇到错误时返回的自定义错误类型。
+// （如果发生写入错误，将返回实际的错误；它不会是 ExecError 类型。）
 type ExecError struct {
-	Name string // Name of template.
-	Err  error  // Pre-formatted error.
+	Name string // 模板的名称。
+	Err  error  // 预格式化的错误。
 }
 
 func (e ExecError) Error() string {
@@ -131,7 +128,7 @@ func (e ExecError) Unwrap() error {
 	return e.Err
 }
 
-// errorf records an ExecError and terminates processing.
+// errorf 记录一个 ExecError 并终止处理。
 func (s *state) errorf(format string, args ...any) {
 	name := doublePercent(s.tmpl.Name())
 	if s.node == nil {
@@ -146,12 +143,12 @@ func (s *state) errorf(format string, args ...any) {
 	})
 }
 
-// writeError is the wrapper type used internally when Execute has an
-// error writing to its output. We strip the wrapper in errRecover.
-// Note that this is not an implementation of error, so it cannot escape
-// from the package as an error value.
+// writeError 是当 Execute 在写入输出时发生错误时在内部使用的包装器类型。
+// 我们在 errRecover 中剥离包装器。
+// 注意，这不是 error 的实现，所以它无法作为错误值
+// 从包中逸出。
 type writeError struct {
-	Err error // Original error.
+	Err error // 原始错误。
 }
 
 func (s *state) writeError(err error) {
@@ -160,8 +157,7 @@ func (s *state) writeError(err error) {
 	})
 }
 
-// errRecover is the handler that turns panics into returns from the top
-// level of Parse.
+// errRecover 是将 panic 转换为从 Parse 的顶层返回的处理器。
 func errRecover(errp *error) {
 	e := recover()
 	if e != nil {
@@ -169,22 +165,21 @@ func errRecover(errp *error) {
 		case runtime.Error:
 			panic(e)
 		case writeError:
-			*errp = err.Err // Strip the wrapper.
+			*errp = err.Err // 剥离包装器。
 		case ExecError:
-			*errp = err // Keep the wrapper.
+			*errp = err // 保留包装器。
 		default:
 			panic(e)
 		}
 	}
 }
 
-// ExecuteTemplate applies the template associated with t that has the given name
-// to the specified data object and writes the output to wr.
-// If an error occurs executing the template or writing its output,
-// execution stops, but partial results may already have been written to
-// the output writer.
-// A template may be executed safely in parallel, although if parallel
-// executions share a Writer the output may be interleaved.
+// ExecuteTemplate 将与 t 相关的、具有给定名称的模板应用
+// 到指定的数据对象，并将输出写入 wr。
+// 如果在执行模板或写入其输出时发生错误，
+// 执行停止，但部分结果可能已被写入输出编写器。
+// 模板可以安全地并行执行，尽管如果并行执行
+// 共享一个 Writer，输出可能会交错。
 func (t *Template) ExecuteTemplate(wr io.Writer, name string, data any) error {
 	tmpl := t.Lookup(name)
 	if tmpl == nil {

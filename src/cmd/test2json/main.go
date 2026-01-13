@@ -2,96 +2,96 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Test2json converts go test output to a machine-readable JSON stream.
+// Test2json 将 go test 输出转换为机器可读的 JSON 流。
 //
-// Usage:
+// 用法：
 //
 //	go tool test2json [-p pkg] [-t] [./pkg.test -test.v=test2json]
 //
-// Test2json runs the given test command and converts its output to JSON;
-// with no command specified, test2json expects test output on standard input.
-// It writes a corresponding stream of JSON events to standard output.
-// There is no unnecessary input or output buffering, so that
-// the JSON stream can be read for “live updates” of test status.
+// Test2json 运行给定的测试命令并将其输出转换为 JSON；
+// 如果未指定命令，test2json 期望从标准输入读取测试输出。
+// 它将相应的 JSON 事件流写入标准输出。
+// 没有不必要的输入或输出缓冲，以便
+// JSON 流可以被读取以获得测试状态的"实时更新"。
 //
-// The -p flag sets the package reported in each test event.
+// -p 标志设置在每个测试事件中报告的包。
 //
-// The -t flag requests that time stamps be added to each test event.
+// -t 标志请求将时间戳添加到每个测试事件中。
 //
-// The test should be invoked with -test.v=test2json. Using only -test.v
-// (or -test.v=true) is permissible but produces lower fidelity results.
+// 应使用 -test.v=test2json 调用测试。仅使用 -test.v
+// （或 -test.v=true）是可接受的，但产生较低保真度结果。
 //
-// Note that "go test -json" takes care of invoking test2json correctly,
-// so "go tool test2json" is only needed when a test binary is being run
-// separately from "go test". Use "go test -json" whenever possible.
+// 注意 "go test -json" 会正确调用 test2json，
+// 所以 "go tool test2json" 仅在测试二进制文件被运行
+// 时才需要 与 "go test" 分开。尽可能使用 "go test -json"。
 //
-// Note also that test2json is only intended for converting a single test
-// binary's output. To convert the output of a "go test" command that
-// runs multiple packages, again use "go test -json".
+// 另请注意，test2json 仅用于转换单个测试
+// 二进制文件的输出。要转换 "go test" 命令的输出
+// 运行多个包，请再次使用 "go test -json"。
 //
-// # Output Format
+// # 输出格式
 //
-// The JSON stream is a newline-separated sequence of TestEvent objects
-// corresponding to the Go struct:
+// JSON 流是 TestEvent 对象的换行符分隔序列，
+// 对应于 Go 结构：
 //
 //	type TestEvent struct {
-//		Time        time.Time // encodes as an RFC3339-format string
+//		Time        time.Time // 编码为 RFC3339 格式字符串
 //		Action      string
 //		Package     string
 //		Test        string
-//		Elapsed     float64 // seconds
+//		Elapsed     float64 // 秒数
 //		Output      string
 //		FailedBuild string
 //	}
 //
-// The Time field holds the time the event happened.
-// It is conventionally omitted for cached test results.
+// Time 字段保持事件发生的时间。
+// 对于缓存的测试结果，通常会省略。
 //
-// The Action field is one of a fixed set of action descriptions:
+// Action 字段是一个固定的动作描述集合之一：
 //
-//	start  - the test binary is about to be executed
-//	run    - the test has started running
-//	pause  - the test has been paused
-//	cont   - the test has continued running
-//	pass   - the test passed
-//	bench  - the benchmark printed log output but did not fail
-//	fail   - the test or benchmark failed
-//	output - the test printed output
-//	skip   - the test was skipped or the package contained no tests
+//	start  - 测试二进制文件即将执行
+//	run    - 测试已开始运行
+//	pause  - 测试已暂停
+//	cont   - 测试已继续运行
+//	pass   - 测试通过
+//	bench  - 基准打印日志输出但没有失败
+//	fail   - 测试或基准失败
+//	output - 测试打印输出
+//	skip   - 测试被跳过或包不包含测试
 //
-// Every JSON stream begins with a "start" event.
+// 每个 JSON 流都以 "start" 事件开始。
 //
-// The Package field, if present, specifies the package being tested.
-// When the go command runs parallel tests in -json mode, events from
-// different tests are interlaced; the Package field allows readers to
-// separate them.
+// Package 字段（如果存在）指定被测试的包。
+// 当 go 命令以 -json 模式运行并行测试时，来自
+// 不同测试的事件是交错的；Package 字段允许读取器
+// 分离它们。
 //
-// The Test field, if present, specifies the test, example, or benchmark
-// function that caused the event. Events for the overall package test
-// do not set Test.
+// Test 字段（如果存在）指定导致事件的测试、示例或基准
+// 函数。整体包测试的事件
+// 不设置 Test。
 //
-// The Elapsed field is set for "pass" and "fail" events. It gives the time
-// elapsed for the specific test or the overall package test that passed or failed.
+// Elapsed 字段为 "pass" 和 "fail" 事件设置。它给出
+// 特定测试或整体包测试通过或失败的已用时间。
 //
-// The Output field is set for Action == "output" and is a portion of the test's output
-// (standard output and standard error merged together). The output is
-// unmodified except that invalid UTF-8 output from a test is coerced
-// into valid UTF-8 by use of replacement characters. With that one exception,
-// the concatenation of the Output fields of all output events is the exact
-// output of the test execution.
+// Output 字段为 Action == "output" 时设置，是测试输出的一部分
+// （标准输出和标准错误合并在一起）。输出是
+// 未修改的，除了来自测试的无效 UTF-8 输出被强制
+// 成为有效的 UTF-8，通过使用替换字符。除了那个例外，
+// 所有输出事件的 Output 字段的连接是准确的
+// 测试执行的输出。
 //
-// The FailedBuild field is set for Action == "fail" if the test failure was
-// caused by a build failure. It contains the package ID of the package that
-// failed to build. This matches the ImportPath field of the "go list" output,
-// as well as the BuildEvent.ImportPath field as emitted by "go build -json".
+// FailedBuild 字段在 Action == "fail" 时设置，如果测试失败是
+// 由构建失败引起的。它包含包的包 ID
+// 未能构建。这与 "go list" 输出的 ImportPath 字段匹配，
+// 以及由 "go build -json" 发出的 BuildEvent.ImportPath 字段。
 //
-// When a benchmark runs, it typically produces a single line of output
-// giving timing results. That line is reported in an event with Action == "output"
-// and no Test field. If a benchmark logs output or reports a failure
-// (for example, by using b.Log or b.Error), that extra output is reported
-// as a sequence of events with Test set to the benchmark name, terminated
-// by a final event with Action == "bench" or "fail".
-// Benchmarks have no events with Action == "pause".
+// 当基准运行时，通常会产生单行输出
+// 给出计时结果。该行在 Action == "output" 的事件中报告
+// 且没有 Test 字段。如果基准记录输出或报告失败
+// （例如，通过使用 b.Log 或 b.Error），该额外输出被报告
+// 为具有设置为基准名称的 Test 的事件序列，以
+// 最终事件（Action == "bench" 或 "fail"）终止。
+// 基准没有 Action == "pause" 的事件。
 package main
 
 import (
@@ -116,7 +116,7 @@ func usage() {
 	os.Exit(2)
 }
 
-// ignoreSignals ignore the interrupt signals.
+// ignoreSignals 忽略中断信号。
 func ignoreSignals() {
 	signal.Ignore(signalsToIgnore...)
 }
@@ -148,7 +148,7 @@ func main() {
 		err := cmd.Run()
 		if err != nil {
 			if w.n > 0 {
-				// Assume command printed why it failed.
+				// 假设命令打印了失败的原因。
 			} else {
 				fmt.Fprintf(c, "test2json: %v\n", err)
 			}

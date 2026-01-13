@@ -111,8 +111,7 @@ func ExampleDelete() {
 func ExampleDeleteFunc() {
 	seq := []int{0, 1, 1, 2, 3, 5, 8}
 	seq = slices.DeleteFunc(seq, func(n int) bool {
-		return n%2 != 0 // delete the odd numbers
-		// 删除奇数
+		return n%2 != 0 // 删除奇数
 	})
 	fmt.Println(seq)
 	// Output:
@@ -292,7 +291,7 @@ func ExampleSortFunc_multiField() {
 		if n := strings.Compare(a.Name, b.Name); n != 0 {
 			return n
 		}
-		// If names are equal, order by age
+		// 如果名字相等，按年龄排序
 		return cmp.Compare(a.Age, b.Age)
 	})
 	fmt.Println(people)
@@ -311,7 +310,7 @@ func ExampleSortStableFunc() {
 		{"Bob", 24},
 		{"Alice", 55},
 	}
-	// Stable sort by name, keeping age ordering of Alice intact
+	// 按名字进行稳定排序，保持 Alice 的年龄顺序不变
 	slices.SortStableFunc(people, func(a, b Person) int {
 		return strings.Compare(a.Name, b.Name)
 	})

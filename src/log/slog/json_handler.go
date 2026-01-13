@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package slog
 
@@ -18,15 +18,13 @@ import (
 	"unicode/utf8"
 )
 
-// JSONHandler is a [Handler] that writes Records to an [io.Writer] as
-// line-delimited JSON objects.
+// JSONHandler 是一个 [Handler]，它将 Record 写入 [io.Writer] 作为行分隔的 JSON 对象。
 type JSONHandler struct {
 	*commonHandler
 }
 
-// NewJSONHandler creates a [JSONHandler] that writes to w,
-// using the given options.
-// If opts is nil, the default options are used.
+// NewJSONHandler 创建一个 [JSONHandler]，它写入 w，使用给定的选项。
+// 如果 opts 为 nil，则使用默认选项。
 func NewJSONHandler(w io.Writer, opts *HandlerOptions) *JSONHandler {
 	if opts == nil {
 		opts = &HandlerOptions{}
@@ -41,14 +39,13 @@ func NewJSONHandler(w io.Writer, opts *HandlerOptions) *JSONHandler {
 	}
 }
 
-// Enabled reports whether the handler handles records at the given level.
-// The handler ignores records whose level is lower.
+// Enabled 报告处理程序是否处理给定级别的记录。
+// 处理程序忽略级别较低的记录。
 func (h *JSONHandler) Enabled(_ context.Context, level Level) bool {
 	return h.commonHandler.enabled(level)
 }
 
-// WithAttrs returns a new [JSONHandler] whose attributes consists
-// of h's attributes followed by attrs.
+// WithAttrs 返回一个新的 [JSONHandler]，其属性由 h 的属性后跟 attrs 组成。
 func (h *JSONHandler) WithAttrs(attrs []Attr) Handler {
 	return &JSONHandler{commonHandler: h.commonHandler.withAttrs(attrs)}
 }
@@ -57,43 +54,38 @@ func (h *JSONHandler) WithGroup(name string) Handler {
 	return &JSONHandler{commonHandler: h.commonHandler.withGroup(name)}
 }
 
-// Handle formats its argument [Record] as a JSON object on a single line.
+// Handle 将其参数 [Record] 格式化为单行上的 JSON 对象。
 //
-// If the Record's time is zero, the time is omitted.
-// Otherwise, the key is "time"
-// and the value is output as with json.Marshal.
+// 如果 Record 的时间为零，则省略时间。
+// 否则，键是 "time"，值按 json.Marshal 的方式输出。
 //
-// The level's key is "level" and its value is the result of calling [Level.String].
+// 级别的键是 "level"，其值是调用 [Level.String] 的结果。
 //
-// If the AddSource option is set and source information is available,
-// the key is "source", and the value is a record of type [Source].
+// 如果设置了 AddSource 选项且可用源信息，键是 "source"，
+// 值是 [Source] 类型的记录。
 //
-// The message's key is "msg".
+// 消息的键是 "msg"。
 //
-// To modify these or other attributes, or remove them from the output, use
-// [HandlerOptions.ReplaceAttr].
+// 要修改这些或其他属性，或从输出中删除它们，请使用 [HandlerOptions.ReplaceAttr]。
 //
-// Values are formatted as with an [encoding/json.Encoder] with SetEscapeHTML(false),
-// with two exceptions.
+// 值的格式与 [encoding/json.Encoder]（SetEscapeHTML(false) 除外）一样，但有两个例外。
 //
-// First, an Attr whose Value is of type error is formatted as a string, by
-// calling its Error method. Only errors in Attrs receive this special treatment,
-// not errors embedded in structs, slices, maps or other data structures that
-// are processed by the [encoding/json] package.
+// 首先，其值为 error 类型的 Attr 被格式化为字符串，通过调用其 Error 方法。
+// 只有 Attr 中的错误获得此特殊处理，
+// 不是嵌入在结构体、切片、映射或其他由 [encoding/json] 包处理的数据结构中的错误。
 //
-// Second, an encoding failure does not cause Handle to return an error.
-// Instead, the error message is formatted as a string.
+// 其次，编码失败不会导致 Handle 返回错误。相反，错误消息被格式化为字符串。
 //
-// Each call to Handle results in a single serialized call to io.Writer.Write.
+// 对 Handle 的每次调用都会导致对 io.Writer.Write 的单一序列化调用。
 func (h *JSONHandler) Handle(_ context.Context, r Record) error {
 	return h.commonHandler.handle(r)
 }
 
-// Adapted from time.Time.MarshalJSON to avoid allocation.
+// 根据 time.Time.MarshalJSON 改编以避免分配。
 func appendJSONTime(s *handleState, t time.Time) {
 	if y := t.Year(); y < 0 || y >= 10000 {
-		// RFC 3339 is clear that years are 4 digits exactly.
-		// See golang.org/issue/4556#c15 for more discussion.
+		// RFC 3339 明确说明年份恰好是 4 位数字。
+		// 参见 golang.org/issue/4556#c15 了解更多讨论。
 		s.appendError(errors.New("time.Time year outside of range [0,9999]"))
 	}
 	s.buf.WriteByte('"')
@@ -110,16 +102,16 @@ func appendJSONValue(s *handleState, v Value) error {
 	case KindUint64:
 		*s.buf = strconv.AppendUint(*s.buf, v.Uint64(), 10)
 	case KindFloat64:
-		// json.Marshal is funny about floats; it doesn't
-		// always match strconv.AppendFloat. So just call it.
-		// That's expensive, but floats are rare.
+		// json.Marshal 对浮点数的处理很有趣；它不总是匹配
+		// strconv.AppendFloat。所以直接调用它。
+		// 这很昂贵，但浮点数很少见。
 		if err := appendJSONMarshal(s.buf, v.Float64()); err != nil {
 			return err
 		}
 	case KindBool:
 		*s.buf = strconv.AppendBool(*s.buf, v.Bool())
 	case KindDuration:
-		// Do what json.Marshal does.
+		// 执行 json.Marshal 所做的操作。
 		*s.buf = strconv.AppendInt(*s.buf, int64(v.Duration()), 10)
 	case KindTime:
 		s.appendTime(v.Time())
@@ -139,7 +131,7 @@ func appendJSONValue(s *handleState, v Value) error {
 
 type jsonEncoder struct {
 	buf *bytes.Buffer
-	// Use a json.Encoder to avoid escaping HTML.
+	// 使用 json.Encoder 以避免转义 HTML。
 	json *json.Encoder
 }
 
@@ -157,7 +149,7 @@ var jsonEncoderPool = &sync.Pool{
 func appendJSONMarshal(buf *buffer.Buffer, v any) error {
 	j := jsonEncoderPool.Get().(*jsonEncoder)
 	defer func() {
-		// To reduce peak allocation, return only smaller buffers to the pool.
+		// 为了减少峰值分配，仅将较小的缓冲区返回到池中。
 		const maxBufferSize = 16 << 10
 		if j.buf.Cap() > maxBufferSize {
 			return
@@ -171,15 +163,15 @@ func appendJSONMarshal(buf *buffer.Buffer, v any) error {
 	}
 
 	bs := j.buf.Bytes()
-	buf.Write(bs[:len(bs)-1]) // remove final newline
+	buf.Write(bs[:len(bs)-1]) // 删除最后的换行符
 	return nil
 }
 
-// appendEscapedJSONString escapes s for JSON and appends it to buf.
-// It does not surround the string in quotation marks.
+// appendEscapedJSONString 为 JSON 转义 s 并将其附加到 buf。
+// 它不用引号将字符串括起来。
 //
-// Modified from encoding/json/encode.go:encodeState.string,
-// with escapeHTML set to false.
+// 根据 encoding/json/encode.go:encodeState.string 修改，
+// escapeHTML 设置为 false。
 func appendEscapedJSONString(buf []byte, s string) []byte {
 	char := func(b byte) { buf = append(buf, b) }
 	str := func(s string) { buf = append(buf, s...) }
@@ -205,7 +197,7 @@ func appendEscapedJSONString(buf []byte, s string) []byte {
 			case '\t':
 				char('t')
 			default:
-				// This encodes bytes < 0x20 except for \t, \n and \r.
+				// 这对 < 0x20 的字节进行编码，除了 \t、\n 和 \r。
 				str(`u00`)
 				char(hex[b>>4])
 				char(hex[b&0xF])
@@ -224,13 +216,12 @@ func appendEscapedJSONString(buf []byte, s string) []byte {
 			start = i
 			continue
 		}
-		// U+2028 is LINE SEPARATOR.
-		// U+2029 is PARAGRAPH SEPARATOR.
-		// They are both technically valid characters in JSON strings,
-		// but don't work in JSONP, which has to be evaluated as JavaScript,
-		// and can lead to security holes there. It is valid JSON to
-		// escape them, so we do so unconditionally.
-		// See http://timelessrepo.com/json-isnt-a-javascript-subset for discussion.
+		// U+2028 是行分隔符。
+		// U+2029 是段落分隔符。
+		// 它们在技术上都是 JSON 字符串中的有效字符，
+		// 但在 JSONP 中不起作用，JSONP 必须作为 JavaScript 进行评估，
+		// 并且可能在那里导致安全漏洞。转义它们在 JSON 中是有效的，所以我们无条件地这样做。
+		// 参见 http://timelessrepo.com/json-isnt-a-javascript-subset 了解讨论。
 		if c == '\u2028' || c == '\u2029' {
 			if start < i {
 				str(s[start:i])
@@ -251,14 +242,12 @@ func appendEscapedJSONString(buf []byte, s string) []byte {
 
 const hex = "0123456789abcdef"
 
-// Copied from encoding/json/tables.go.
+// 从 encoding/json/tables.go 复制。
 //
-// safeSet holds the value true if the ASCII character with the given array
-// position can be represented inside a JSON string without any further
-// escaping.
+// safeSet 保存值 true，如果具有给定数组位置的 ASCII 字符
+// 可以在 JSON 字符串内部表示而无需任何进一步的转义。
 //
-// All values are true except for the ASCII control characters (0-31), the
-// double quote ("), and the backslash character ("\").
+// 除了 ASCII 控制字符 (0-31)、双引号 (") 和反斜杠字符 ("\") 之外，所有值都为 true。
 var safeSet = [utf8.RuneSelf]bool{
 	' ':      true,
 	'!':      true,

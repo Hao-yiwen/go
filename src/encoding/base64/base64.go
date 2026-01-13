@@ -13,24 +13,24 @@ import (
 )
 
 /*
- * Encodings
+ * 编码方案
  */
 
-// 一个Encoding 是一个 radix 64 encoding/decoding scheme, defined by a
-// 64-character alphabet. The most common encoding 是 "base64"
-// encoding defined in RFC 4648 and used in MIME (RFC 2045) and PEM
-// (RFC 1421).  RFC 4648 also 定义 an alternate encoding, which is
-// the standard encoding with - and _ substituted for + and /.
+// Encoding 是一个 radix 64 编码/解码方案，由一个
+// 64 字符的字母表定义。最常见的编码是 "base64"
+// 编码，在 RFC 4648 中定义，用于 MIME (RFC 2045) 和 PEM
+// (RFC 1421)。RFC 4648 还定义了一种替代编码，
+// 即标准编码，用 - 和 _ 代替 + 和 /。
 type Encoding struct {
-	encode    [64]byte   // mapping of symbol index to symbol byte value
-	decodeMap [256]uint8 // mapping of symbol byte value to symbol index
+	encode    [64]byte   // 符号索引到符号字节值的映射
+	decodeMap [256]uint8 // 符号字节值到符号索引的映射
 	padChar   rune
 	strict    bool
 }
 
 const (
-	StdPadding rune = '=' // Standard padding character
-	NoPadding  rune = -1  // No padding
+	StdPadding rune = '=' // 标准填充字符
+	NoPadding  rune = -1  // 无填充
 )
 
 const (
@@ -54,13 +54,13 @@ const (
 	invalidIndex = '\xff'
 )
 
-// NewEncoding 返回a new padded Encoding defined by the given alphabet,
-// which 必须是 a 64-byte string that 包含 unique byte values and
-// does not contain the padding character or CR / LF ('\r', '\n').
-// The alphabet is treated as a sequence of byte values
-// without any special treatment for multi-byte UTF-8.
-// The resulting Encoding uses the default padding character ('='),
-// which 可能是 changed or disabled via [Encoding.WithPadding].
+// NewEncoding 返回一个新的填充 Encoding，由给定的字母表定义，
+// 该字母表必须是一个包含唯一字节值的 64 字节字符串，
+// 并且不包含填充字符或 CR / LF ('\r', '\n')。
+// 字母表被视为一个字节值序列，
+// 对多字节 UTF-8 没有特殊处理。
+// 生成的 Encoding 使用默认的填充字符 ('=')，
+// 可以通过 [Encoding.WithPadding] 更改或禁用。
 func NewEncoding(encoder string) *Encoding {
 	if len(encoder) != 64 {
 		panic("encoding alphabet is not 64-bytes long")
@@ -72,9 +72,9 @@ func NewEncoding(encoder string) *Encoding {
 	copy(e.decodeMap[:], decodeMapInitialize)
 
 	for i := 0; i < len(encoder); i++ {
-		// Note: While we document that the alphabet cannot contain
-		// the padding character, we do not enforce it since we do not know
-		// 如果 caller intends to switch the padding from StdPadding later.
+		// 注意：虽然我们记录了字母表不能包含
+		// 填充字符，但我们不强制执行，因为我们不知道
+		// 调用者是否打算稍后从 StdPadding 切换填充。
 		switch {
 		case encoder[i] == '\n' || encoder[i] == '\r':
 			panic("encoding alphabet 包含 newline character")
@@ -86,13 +86,13 @@ func NewEncoding(encoder string) *Encoding {
 	return e
 }
 
-// WithPadding 创建 a new encoding identical to enc except
-// with a specified padding character, or [NoPadding] to disable padding.
-// The padding character must not be '\r' or '\n',
-// must not be contained in the encoding's alphabet,
-// must not be negative, and 必须是 a rune equal or below '\xff'.
-// Padding characters above '\x7f' are 编码为 their exact byte value
-// rather than using the UTF-8 representation of the codepoint.
+// WithPadding 创建一个与 enc 相同的新编码，除了
+// 使用指定的填充字符，或 [NoPadding] 来禁用填充。
+// 填充字符不能是 '\r' 或 '\n'，
+// 不能包含在编码的字母表中，
+// 不能是负数，并且必须是等于或小于 '\xff' 的 rune。
+// 高于 '\x7f' 的填充字符编码为它们的确切字节值，
+// 而不是使用码点的 UTF-8 表示。
 func (enc Encoding) WithPadding(padding rune) *Encoding {
 	switch {
 	case padding < NoPadding || padding == '\r' || padding == '\n' || padding > 0xff:
@@ -104,57 +104,57 @@ func (enc Encoding) WithPadding(padding rune) *Encoding {
 	return &enc
 }
 
-// Strict 创建 a new encoding identical to enc except with
-// strict decoding enabled. In this mode, the decoder requires that
-// trailing padding bits are zero, as described in RFC 4648 section 3.5.
+// Strict 创建一个与 enc 相同的新编码，除了
+// 启用严格解码。在这种模式下，解码器要求
+// 尾部填充位为零，如 RFC 4648 第 3.5 节所述。
 //
-// Note that the input is still malleable, as new line characters
-// (CR and LF) are still ignored.
+// 注意输入仍然可以改变，因为新行字符
+// (CR 和 LF) 仍然被忽略。
 func (enc Encoding) Strict() *Encoding {
 	enc.strict = true
 	return &enc
 }
 
-// StdEncoding 是 standard base64 encoding, as defined in RFC 4648.
+// StdEncoding 是标准的 base64 编码，如 RFC 4648 中定义。
 var StdEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
 
-// URLEncoding 是 alternate base64 encoding defined in RFC 4648.
-// It is typically used in URLs and file names.
+// URLEncoding 是 RFC 4648 中定义的替代 base64 编码。
+// 它通常用于 URL 和文件名。
 var URLEncoding = NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
 
-// RawStdEncoding 是 standard raw, unpadded base64 encoding,
-// as defined in RFC 4648 section 3.2.
-// This 是 same as [StdEncoding] but omits padding characters.
+// RawStdEncoding 是标准的原始，无填充的 base64 编码，
+// 如 RFC 4648 第 3.2 节中定义。
+// 这与 [StdEncoding] 相同，但省略了填充字符。
 var RawStdEncoding = StdEncoding.WithPadding(NoPadding)
 
-// RawURLEncoding 是 unpadded alternate base64 encoding defined in RFC 4648.
-// It is typically used in URLs and file names.
-// This 是 same as [URLEncoding] but omits padding characters.
+// RawURLEncoding 是 RFC 4648 中定义的无填充替代 base64 编码。
+// 它通常用于 URL 和文件名。
+// 这与 [URLEncoding] 相同，但省略了填充字符。
 var RawURLEncoding = URLEncoding.WithPadding(NoPadding)
 
 /*
- * Encoder
+ * 编码器
  */
 
-// Encode encodes src using the encoding enc,
-// writing [Encoding.EncodedLen](len(src)) bytes to dst.
+// Encode 使用编码 enc 编码 src，
+// 将 [Encoding.EncodedLen](len(src)) 字节写入 dst。
 //
-// The encoding pads the output to a multiple of 4 bytes,
-// so Encode is not appropriate for use on individual blocks
-// of a large data stream. Use [NewEncoder] instead.
+// 编码将输出填充为 4 字节的倍数，
+// 所以 Encode 不适合用于大数据流的单个块。
+// 改用 [NewEncoder]。
 func (enc *Encoding) Encode(dst, src []byte) {
 	if len(src) == 0 {
 		return
 	}
-	// enc 是一个 pointer receiver, so the use of enc.encode within the hot
-	// loop below means a nil check at every operation. Lift that nil check
-	// outside of the loop to speed up the encoder.
+	// enc 是一个指针接收者，所以在下面的热
+	// 循环中使用 enc.encode 意味着在每个操作上都有 nil 检查。
+	// 将该 nil 检查提升到循环外以加快编码器速度。
 	_ = enc.encode
 
 	di, si := 0, 0
 	n := (len(src) / 3) * 3
 	for si < n {
-		// Convert 3x 8bit source bytes into 4 bytes
+		// 将 3 个 8 位源字节转换为 4 个字节
 		val := uint(src[si+0])<<16 | uint(src[si+1])<<8 | uint(src[si+2])
 
 		dst[di+0] = enc.encode[val>>18&0x3F]
@@ -170,7 +170,7 @@ func (enc *Encoding) Encode(dst, src []byte) {
 	if remain == 0 {
 		return
 	}
-	// Add the remaining small block
+	// 添加剩余的小块
 	val := uint(src[si+0]) << 16
 	if remain == 2 {
 		val |= uint(src[si+1]) << 8
@@ -193,8 +193,8 @@ func (enc *Encoding) Encode(dst, src []byte) {
 	}
 }
 
-// AppendEncode appends the base64 encoded src to dst
-// and 返回the extended buffer.
+// AppendEncode 将 base64 编码的 src 追加到 dst
+// 并返回扩展后的缓冲区。
 func (enc *Encoding) AppendEncode(dst, src []byte) []byte {
 	n := enc.EncodedLen(len(src))
 	dst = slices.Grow(dst, n)
@@ -202,7 +202,7 @@ func (enc *Encoding) AppendEncode(dst, src []byte) []byte {
 	return dst[:len(dst)+n]
 }
 
-// EncodeToString 返回the base64 encoding of src.
+// EncodeToString 返回 src 的 base64 编码。
 func (enc *Encoding) EncodeToString(src []byte) string {
 	buf := make([]byte, enc.EncodedLen(len(src)))
 	enc.Encode(buf, src)
@@ -213,9 +213,9 @@ type encoder struct {
 	err  error
 	enc  *Encoding
 	w    io.Writer
-	buf  [3]byte    // buffered data waiting to be encoded
-	nbuf int        // number of bytes in buf
-	out  [1024]byte // output buffer
+	buf  [3]byte    // 等待编码的缓冲数据
+	nbuf int        // buf 中的字节数
+	out  [1024]byte // 输出缓冲区
 }
 
 func (e *encoder) Write(p []byte) (n int, err error) {
@@ -223,7 +223,7 @@ func (e *encoder) Write(p []byte) (n int, err error) {
 		return 0, e.err
 	}
 
-	// Leading fringe.
+	// 开头的边缘部分。
 	if e.nbuf > 0 {
 		var i int
 		for i = 0; i < len(p) && e.nbuf < 3; i++ {
@@ -242,7 +242,7 @@ func (e *encoder) Write(p []byte) (n int, err error) {
 		e.nbuf = 0
 	}
 
-	// Large interior chunks.
+	// 大的内部块。
 	for len(p) >= 3 {
 		nn := len(e.out) / 4 * 3
 		if nn > len(p) {
@@ -257,17 +257,17 @@ func (e *encoder) Write(p []byte) (n int, err error) {
 		p = p[nn:]
 	}
 
-	// Trailing fringe.
+	// 尾部的边缘部分。
 	copy(e.buf[:], p)
 	e.nbuf = len(p)
 	n += len(p)
 	return
 }
 
-// Close flushes any pending output from the encoder.
-// It 是一个n error to call Write after calling Close.
+// Close 刷新编码器中任何待处理的输出。
+// 在调用 Close 后调用 Write 是一个错误。
 func (e *encoder) Close() error {
-	// If there's anything left in the buffer, flush it out
+	// 如果缓冲区中还有任何内容，将其刷出
 	if e.err == nil && e.nbuf > 0 {
 		e.enc.Encode(e.out[:], e.buf[:e.nbuf])
 		_, e.err = e.w.Write(e.out[:e.enc.EncodedLen(e.nbuf)])
@@ -276,26 +276,26 @@ func (e *encoder) Close() error {
 	return e.err
 }
 
-// NewEncoder 返回a new base64 stream encoder. Data written to
-// the returned writer 将是 encoded using enc and then written to w.
-// Base64 encodings operate in 4-byte blocks; when finished
-// writing, the caller must Close the returned encoder to flush any
-// partially written blocks.
+// NewEncoder 返回一个新的 base64 流编码器。写入
+// 返回的 writer 的数据将使用 enc 编码，然后写入 w。
+// Base64 编码以 4 字节块操作；完成
+// 写入后，调用者必须 Close 返回的编码器以刷新任何
+// 部分写入的块。
 func NewEncoder(enc *Encoding, w io.Writer) io.WriteCloser {
 	return &encoder{enc: enc, w: w}
 }
 
-// EncodedLen 返回the length in bytes of the base64 encoding
-// of an input buffer of length n.
+// EncodedLen 返回长度为 n 的输入缓冲区的 base64 编码
+// 的字节长度。
 func (enc *Encoding) EncodedLen(n int) int {
 	if enc.padChar == NoPadding {
-		return n/3*4 + (n%3*8+5)/6 // minimum # chars at 6 bits per char
+		return n/3*4 + (n%3*8+5)/6 // 每个字符 6 位的最小字符数
 	}
-	return (n + 2) / 3 * 4 // minimum # 4-char quanta, 3 bytes each
+	return (n + 2) / 3 * 4 // 最少的 4 字符，每个 3 字节
 }
 
 /*
- * Decoder
+ * 解码器
  */
 
 type CorruptInputError int64
@@ -304,17 +304,16 @@ func (e CorruptInputError) Error() string {
 	return "illegal base64 data at input byte " + strconv.FormatInt(int64(e), 10)
 }
 
-// decodeQuantum decodes up to 4 base64 bytes. The received parameters are
-// the destination buffer dst, the source buffer src and an index in the
-// source buffer si.
-// It 返回the number of bytes read from src, the number of bytes written
-// to dst, and an error, if any.
+// decodeQuantum 解码最多 4 个 base64 字节。接收的参数是
+// 目标缓冲区 dst、源缓冲区 src 和源缓冲区中的索引 si。
+// 它返回从 src 读取的字节数、
+// 写入 dst 的字节数和错误（如果有）。
 func (enc *Encoding) decodeQuantum(dst, src []byte, si int) (nsi, n int, err error) {
-	// Decode quantum using the base64 alphabet
+	// 使用 base64 字母表解码量子
 	var dbuf [4]byte
 	dlen := 4
 
-	// Lift the nil check outside of the loop.
+	// 将 nil 检查提升到循环外。
 	_ = enc.decodeMap
 
 	for j := 0; j < len(dbuf); j++ {
@@ -346,42 +345,42 @@ func (enc *Encoding) decodeQuantum(dst, src []byte, si int) (nsi, n int, err err
 			return si, 0, CorruptInputError(si - 1)
 		}
 
-		// We've reached the end and there's padding
+		// 我们已到达末尾并且有填充
 		switch j {
 		case 0, 1:
-			// incorrect padding
+			// 不正确的填充
 			return si, 0, CorruptInputError(si - 1)
 		case 2:
-			// "==" is expected, the first "=" 是一个lready consumed.
-			// skip over newlines
+			// 期望 "=="，第一个 "=" 已经被消费。
+			// 跳过换行符
 			for si < len(src) && (src[si] == '\n' || src[si] == '\r') {
 				si++
 			}
 			if si == len(src) {
-				// not enough padding
+				// 填充不足
 				return si, 0, CorruptInputError(len(src))
 			}
 			if rune(src[si]) != enc.padChar {
-				// incorrect padding
+				// 不正确的填充
 				return si, 0, CorruptInputError(si - 1)
 			}
 
 			si++
 		}
 
-		// skip over newlines
+		// 跳过换行符
 		for si < len(src) && (src[si] == '\n' || src[si] == '\r') {
 			si++
 		}
 		if si < len(src) {
-			// trailing garbage
+			// 尾部垃圾
 			err = CorruptInputError(si)
 		}
 		dlen = j
 		break
 	}
 
-	// Convert 4x 6bit source bytes into 3 bytes
+	// 将 4 个 6 位源字节转换为 3 个字节
 	val := uint(dbuf[0])<<18 | uint(dbuf[1])<<12 | uint(dbuf[2])<<6 | uint(dbuf[3])
 	dbuf[2], dbuf[1], dbuf[0] = byte(val>>0), byte(val>>8), byte(val>>16)
 	switch dlen {
@@ -406,12 +405,12 @@ func (enc *Encoding) decodeQuantum(dst, src []byte, si int) (nsi, n int, err err
 	return si, dlen - 1, err
 }
 
-// AppendDecode appends the base64 decoded src to dst
-// and 返回the extended buffer.
-// If the input is malformed, it 返回 partially decoded src and an error.
-// New line characters (\r and \n) are ignored.
+// AppendDecode 将 base64 解码的 src 追加到 dst
+// 并返回扩展后的缓冲区。
+// 如果输入格式不正确，它返回部分解码的 src 和错误。
+// 新行字符 (\r 和 \n) 被忽略。
 func (enc *Encoding) AppendDecode(dst, src []byte) ([]byte, error) {
-	// Compute the output size without padding to avoid over allocating.
+	// 计算不带填充的输出大小以避免过度分配。
 	n := len(src)
 	for n > 0 && rune(src[n-1]) == enc.padChar {
 		n--
@@ -423,9 +422,9 @@ func (enc *Encoding) AppendDecode(dst, src []byte) ([]byte, error) {
 	return dst[:len(dst)+n], err
 }
 
-// DecodeString 返回the bytes represented by the base64 string s.
-// If the input is malformed, it 返回 partially decoded data and
-// [CorruptInputError]. New line characters (\r and \n) are ignored.
+// DecodeString 返回由 base64 字符串 s 表示的字节。
+// 如果输入格式不正确，它返回部分解码的数据和
+// [CorruptInputError]。新行字符 (\r 和 \n) 被忽略。
 func (enc *Encoding) DecodeString(s string) ([]byte, error) {
 	dbuf := make([]byte, enc.DecodedLen(len(s)))
 	n, err := enc.Decode(dbuf, []byte(s))
@@ -434,17 +433,17 @@ func (enc *Encoding) DecodeString(s string) ([]byte, error) {
 
 type decoder struct {
 	err     error
-	readErr error // error from r.Read
+	readErr error // 来自 r.Read 的错误
 	enc     *Encoding
 	r       io.Reader
-	buf     [1024]byte // leftover input
+	buf     [1024]byte // 剩余输入
 	nbuf    int
-	out     []byte // leftover decoded output
+	out     []byte // 剩余解码输出
 	outbuf  [1024 / 4 * 3]byte
 }
 
 func (d *decoder) Read(p []byte) (n int, err error) {
-	// Use leftover decoded output from last read.
+	// 使用上次读取的剩余解码输出。
 	if len(d.out) > 0 {
 		n = copy(p, d.out)
 		d.out = d.out[n:]
@@ -455,9 +454,9 @@ func (d *decoder) Read(p []byte) (n int, err error) {
 		return 0, d.err
 	}
 
-	// This code assumes that d.r strips supported whitespace ('\r' and '\n').
+	// 此代码假定 d.r 剥离了支持的空白 ('\r' 和 '\n')。
 
-	// Refill buffer.
+	// 重新填充缓冲区。
 	for d.nbuf < 4 && d.readErr == nil {
 		nn := len(p) / 3 * 4
 		if nn < 4 {
@@ -472,7 +471,7 @@ func (d *decoder) Read(p []byte) (n int, err error) {
 
 	if d.nbuf < 4 {
 		if d.enc.padChar == NoPadding && d.nbuf > 0 {
-			// Decode final fragment, without padding.
+			// 解码最后的片段，不带填充。
 			var nw int
 			nw, d.err = d.enc.Decode(d.outbuf[:], d.buf[:d.nbuf])
 			d.nbuf = 0
@@ -493,7 +492,7 @@ func (d *decoder) Read(p []byte) (n int, err error) {
 		return 0, d.err
 	}
 
-	// Decode chunk into p, or d.out and then p if p is too small.
+	// 解码块到 p，或解码到 d.out 然后到 p（如果 p 太小）。
 	nr := d.nbuf / 4 * 4
 	nw := d.nbuf / 4 * 3
 	if nw > len(p) {
@@ -509,20 +508,20 @@ func (d *decoder) Read(p []byte) (n int, err error) {
 	return n, d.err
 }
 
-// Decode decodes src using the encoding enc. It writes at most
-// [Encoding.DecodedLen](len(src)) bytes to dst and 返回 number of bytes
-// written. The caller must ensure that dst is large enough to hold all
-// the decoded data. If src 包含 invalid base64 data, it 将返回 the
-// number of bytes successfully written and [CorruptInputError].
-// New line characters (\r and \n) are ignored.
+// Decode 使用编码 enc 解码 src。它最多向 dst 写入
+// [Encoding.DecodedLen](len(src)) 字节并返回写入的字节数。
+// 调用者必须确保 dst 足够大以容纳所有
+// 解码的数据。如果 src 包含无效的 base64 数据，它将返回
+// 成功写入的字节数和 [CorruptInputError]。
+// 新行字符 (\r 和 \n) 被忽略。
 func (enc *Encoding) Decode(dst, src []byte) (n int, err error) {
 	if len(src) == 0 {
 		return 0, nil
 	}
 
-	// Lift the nil check outside of the loop. enc.decodeMap is directly
-	// used later in this function, to let the compiler know that the
-	// receiver can't be nil.
+	// 将 nil 检查提升到循环外。enc.decodeMap 稍后在此函数中
+	// 直接使用，以让编译器知道
+	// 接收者不能为 nil。
 	_ = enc.decodeMap
 
 	si := 0
@@ -583,12 +582,11 @@ func (enc *Encoding) Decode(dst, src []byte) (n int, err error) {
 	return n, err
 }
 
-// assemble32 assembles 4 base64 digits into 3 bytes.
-// Each digit comes from the decode map, and 将是 0xff
-// if it came from an invalid character.
+// assemble32 将 4 个 base64 数字组装成 3 个字节。
+// 每个数字来自解码映射，如果来自无效字符则为 0xff。
 func assemble32(n1, n2, n3, n4 byte) (dn uint32, ok bool) {
-	// Check that all the digits are valid. If any of them was 0xff, their
-	// bitwise OR 将是 0xff.
+	// 检查所有数字是否有效。如果其中任何一个是 0xff，它们的
+	// 按位或将是 0xff。
 	if n1|n2|n3|n4 == 0xff {
 		return 0, false
 	}
@@ -599,12 +597,11 @@ func assemble32(n1, n2, n3, n4 byte) (dn uint32, ok bool) {
 		true
 }
 
-// assemble64 assembles 8 base64 digits into 6 bytes.
-// Each digit comes from the decode map, and 将是 0xff
-// if it came from an invalid character.
+// assemble64 将 8 个 base64 数字组装成 6 个字节。
+// 每个数字来自解码映射，如果来自无效字符则为 0xff。
 func assemble64(n1, n2, n3, n4, n5, n6, n7, n8 byte) (dn uint64, ok bool) {
-	// Check that all the digits are valid. If any of them was 0xff, their
-	// bitwise OR 将是 0xff.
+	// 检查所有数字是否有效。如果其中任何一个是 0xff，它们的
+	// 按位或将是 0xff。
 	if n1|n2|n3|n4|n5|n6|n7|n8 == 0xff {
 		return 0, false
 	}
@@ -638,28 +635,28 @@ func (r *newlineFilteringReader) Read(p []byte) (int, error) {
 		if offset > 0 {
 			return offset, err
 		}
-		// Previous buffer entirely whitespace, read again
+		// 前一个缓冲区完全是空白，再读一遍
 		n, err = r.wrapped.Read(p)
 	}
 	return n, err
 }
 
-// NewDecoder constructs a new base64 stream decoder.
+// NewDecoder 构造一个新的 base64 流解码器。
 func NewDecoder(enc *Encoding, r io.Reader) io.Reader {
 	return &decoder{enc: enc, r: &newlineFilteringReader{r}}
 }
 
-// DecodedLen 返回the maximum length in bytes of the decoded data
-// corresponding to n bytes of base64-encoded data.
+// DecodedLen 返回对应于 n 字节 base64 编码数据的解码数据
+// 的最大字节长度。
 func (enc *Encoding) DecodedLen(n int) int {
 	return decodedLen(n, enc.padChar)
 }
 
 func decodedLen(n int, padChar rune) int {
 	if padChar == NoPadding {
-		// Unpadded data may end with partial block of 2-3 characters.
+		// 无填充数据可能以 2-3 个字符的部分块结尾。
 		return n/4*3 + n%4*6/8
 	}
-	// Padded base64 should always be a multiple of 4 characters in length.
+	// 填充的 base64 长度应始终是 4 个字符的倍数。
 	return n / 4 * 3
 }

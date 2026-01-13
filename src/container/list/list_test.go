@@ -21,7 +21,7 @@ func checkListPointers(t *testing.T, l *List, es []*Element) {
 		return
 	}
 
-	// zero length lists must be the zero value or properly initialized (sentinel circle)
+	// 零长度列表必须是零值或正确初始化（哨兵圆形）
 	if len(es) == 0 {
 		if l.root.next != nil && l.root.next != root || l.root.prev != nil && l.root.prev != root {
 			t.Errorf("l.root.next = %p, l.root.prev = %p; both should both be nil or %p", l.root.next, l.root.prev, root)
@@ -30,7 +30,7 @@ func checkListPointers(t *testing.T, l *List, es []*Element) {
 	}
 	// len(es) > 0
 
-	// check internal and external prev/next connections
+	// 检查内部和外部的前驱/后继连接
 	for i, e := range es {
 		prev := root
 		Prev := (*Element)(nil)
@@ -64,7 +64,7 @@ func TestList(t *testing.T) {
 	l := New()
 	checkListPointers(t, l, []*Element{})
 
-	// Single element list
+	// 单个元素列表
 	e := l.PushFront("a")
 	checkListPointers(t, l, []*Element{e})
 	l.MoveToFront(e)
@@ -74,7 +74,7 @@ func TestList(t *testing.T) {
 	l.Remove(e)
 	checkListPointers(t, l, []*Element{})
 
-	// Bigger list
+	// 更大的列表
 	e2 := l.PushFront(2)
 	e1 := l.PushFront(1)
 	e3 := l.PushBack(3)
@@ -84,44 +84,44 @@ func TestList(t *testing.T) {
 	l.Remove(e2)
 	checkListPointers(t, l, []*Element{e1, e3, e4})
 
-	l.MoveToFront(e3) // move from middle
+	l.MoveToFront(e3) // 从中间移动
 	checkListPointers(t, l, []*Element{e3, e1, e4})
 
 	l.MoveToFront(e1)
-	l.MoveToBack(e3) // move from middle
+	l.MoveToBack(e3) // 从中间移动
 	checkListPointers(t, l, []*Element{e1, e4, e3})
 
-	l.MoveToFront(e3) // move from back
+	l.MoveToFront(e3) // 从后面移动
 	checkListPointers(t, l, []*Element{e3, e1, e4})
-	l.MoveToFront(e3) // should be no-op
+	l.MoveToFront(e3) // 应该是空操作
 	checkListPointers(t, l, []*Element{e3, e1, e4})
 
-	l.MoveToBack(e3) // move from front
+	l.MoveToBack(e3) // 从前面移动
 	checkListPointers(t, l, []*Element{e1, e4, e3})
-	l.MoveToBack(e3) // should be no-op
+	l.MoveToBack(e3) // 应该是空操作
 	checkListPointers(t, l, []*Element{e1, e4, e3})
 
-	e2 = l.InsertBefore(2, e1) // insert before front
+	e2 = l.InsertBefore(2, e1) // 在前面之前插入
 	checkListPointers(t, l, []*Element{e2, e1, e4, e3})
 	l.Remove(e2)
-	e2 = l.InsertBefore(2, e4) // insert before middle
+	e2 = l.InsertBefore(2, e4) // 在中间之前插入
 	checkListPointers(t, l, []*Element{e1, e2, e4, e3})
 	l.Remove(e2)
-	e2 = l.InsertBefore(2, e3) // insert before back
+	e2 = l.InsertBefore(2, e3) // 在后面之前插入
 	checkListPointers(t, l, []*Element{e1, e4, e2, e3})
 	l.Remove(e2)
 
-	e2 = l.InsertAfter(2, e1) // insert after front
+	e2 = l.InsertAfter(2, e1) // 在前面之后插入
 	checkListPointers(t, l, []*Element{e1, e2, e4, e3})
 	l.Remove(e2)
-	e2 = l.InsertAfter(2, e4) // insert after middle
+	e2 = l.InsertAfter(2, e4) // 在中间之后插入
 	checkListPointers(t, l, []*Element{e1, e4, e2, e3})
 	l.Remove(e2)
-	e2 = l.InsertAfter(2, e3) // insert after back
+	e2 = l.InsertAfter(2, e3) // 在后面之后插入
 	checkListPointers(t, l, []*Element{e1, e4, e3, e2})
 	l.Remove(e2)
 
-	// Check standard iteration.
+	// 检查标准迭代。
 	sum := 0
 	for e := l.Front(); e != nil; e = e.Next() {
 		if i, ok := e.Value.(int); ok {
@@ -132,7 +132,7 @@ func TestList(t *testing.T) {
 		t.Errorf("sum over l = %d, want 4", sum)
 	}
 
-	// Clear all elements by iterating
+	// 通过迭代清除所有元素
 	var next *Element
 	for e := l.Front(); e != nil; e = next {
 		next = e.Next()
@@ -285,7 +285,7 @@ func TestMove(t *testing.T) {
 	checkListPointers(t, l, []*Element{e1, e3, e2, e4})
 }
 
-// Test PushFront, PushBack, PushFrontList, PushBackList with uninitialized List
+// 使用未初始化的 List 测试 PushFront、PushBack、PushFrontList、PushBackList
 func TestZeroList(t *testing.T) {
 	var l1 = new(List)
 	l1.PushFront(1)
@@ -304,7 +304,7 @@ func TestZeroList(t *testing.T) {
 	checkList(t, l4, []any{1})
 }
 
-// Test that a list l is not modified when calling InsertBefore with a mark that is not an element of l.
+// 测试当使用不是 l 的元素的 mark 调用 InsertBefore 时，列表 l 不被修改。
 func TestInsertBeforeUnknownMark(t *testing.T) {
 	var l List
 	l.PushBack(1)
@@ -314,7 +314,7 @@ func TestInsertBeforeUnknownMark(t *testing.T) {
 	checkList(t, &l, []any{1, 2, 3})
 }
 
-// Test that a list l is not modified when calling InsertAfter with a mark that is not an element of l.
+// 测试当使用不是 l 的元素的 mark 调用 InsertAfter 时，列表 l 不被修改。
 func TestInsertAfterUnknownMark(t *testing.T) {
 	var l List
 	l.PushBack(1)
@@ -324,7 +324,7 @@ func TestInsertAfterUnknownMark(t *testing.T) {
 	checkList(t, &l, []any{1, 2, 3})
 }
 
-// Test that a list l is not modified when calling MoveAfter or MoveBefore with a mark that is not an element of l.
+// 测试当使用不是 l 的元素的 mark 调用 MoveAfter 或 MoveBefore 时，列表 l 不被修改。
 func TestMoveUnknownMark(t *testing.T) {
 	var l1 List
 	e1 := l1.PushBack(1)

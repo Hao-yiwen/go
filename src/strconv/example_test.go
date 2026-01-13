@@ -230,7 +230,7 @@ func ExampleParseFloat() {
 	if s, err := strconv.ParseFloat("NaN", 32); err == nil {
 		fmt.Printf("%T, %v\n", s, s)
 	}
-	// ParseFloat is case insensitive
+	// ParseFloat 不区分大小写
 	if s, err := strconv.ParseFloat("nan", 32); err == nil {
 		fmt.Printf("%T, %v\n", s, s)
 	}
@@ -299,7 +299,7 @@ func ExampleParseUint() {
 }
 
 func ExampleQuote() {
-	// This string literal contains a tab character.
+	// 此字符串字面量包含制表符。
 	s := strconv.Quote(`"Fran & Freddie's Diner	☺"`)
 	fmt.Println(s)
 
@@ -333,7 +333,7 @@ func ExampleQuoteRuneToGraphic() {
 	s = strconv.QuoteRuneToGraphic('\u000a')
 	fmt.Println(s)
 
-	s = strconv.QuoteRuneToGraphic('	') // tab character
+	s = strconv.QuoteRuneToGraphic('	') // 制表符
 	fmt.Println(s)
 
 	// Output:
@@ -344,7 +344,7 @@ func ExampleQuoteRuneToGraphic() {
 }
 
 func ExampleQuoteToASCII() {
-	// This string literal contains a tab character.
+	// 此字符串字面量包含制表符。
 	s := strconv.QuoteToASCII(`"Fran & Freddie's Diner	☺"`)
 	fmt.Println(s)
 
@@ -356,7 +356,7 @@ func ExampleQuoteToGraphic() {
 	s := strconv.QuoteToGraphic("☺")
 	fmt.Println(s)
 
-	// This string literal contains a tab character.
+	// 此字符串字面量包含制表符。
 	s = strconv.QuoteToGraphic("This is a \u263a	\u000a")
 	fmt.Println(s)
 

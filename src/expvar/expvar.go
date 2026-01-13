@@ -104,19 +104,19 @@ func (v *Float) Add(delta float64) {
 	}
 }
 
-// Set sets v to value.
+// Set 将 v 设置为 value。
 func (v *Float) Set(value float64) {
 	v.f.Store(math.Float64bits(value))
 }
 
-// Map is a string-to-Var map variable that satisfies the [Var] interface.
+// Map 是一个字符串到 Var 的映射变量，满足 [Var] 接口。
 type Map struct {
 	m      sync.Map // map[string]Var
 	keysMu sync.RWMutex
-	keys   []string // sorted
+	keys   []string // 已排序
 }
 
-// KeyValue represents a single entry in a [Map].
+// KeyValue 表示 [Map] 中的单个条目。
 type KeyValue struct {
 	Key   string
 	Value Var
@@ -163,7 +163,7 @@ func (v *Map) appendJSONMayExpand(b []byte, expand bool) []byte {
 	return b
 }
 
-// Init removes all keys from the map.
+// Init 从映射中删除所有键。
 func (v *Map) Init() *Map {
 	v.keysMu.Lock()
 	defer v.keysMu.Unlock()
@@ -172,11 +172,11 @@ func (v *Map) Init() *Map {
 	return v
 }
 
-// addKey updates the sorted list of keys in v.keys.
+// addKey 更新 v.keys 中的排序键列表。
 func (v *Map) addKey(key string) {
 	v.keysMu.Lock()
 	defer v.keysMu.Unlock()
-	// Using insertion sort to place key into the already-sorted v.keys.
+	// 使用插入排序将键放入已排序的 v.keys。
 	i, found := slices.BinarySearch(v.keys, key)
 	if found {
 		return
@@ -191,9 +191,8 @@ func (v *Map) Get(key string) Var {
 }
 
 func (v *Map) Set(key string, av Var) {
-	// Before we store the value, check to see whether the key is new. Try a Load
-	// before LoadOrStore: LoadOrStore causes the key interface to escape even on
-	// the Load path.
+	// 在存储值之前，检查键是否为新的。在 LoadOrStore 之前尝试 Load：
+	// LoadOrStore 即使在 Load 路径上也会导致键接口逃逸。
 	if _, ok := v.m.Load(key); !ok {
 		if _, dup := v.m.LoadOrStore(key, av); !dup {
 			v.addKey(key)
@@ -204,7 +203,7 @@ func (v *Map) Set(key string, av Var) {
 	v.m.Store(key, av)
 }
 
-// Add adds delta to the *[Int] value stored under the given map key.
+// Add 向存储在给定映射键下的 *[Int] 值添加 delta。
 func (v *Map) Add(key string, delta int64) {
 	i, ok := v.m.Load(key)
 	if !ok {
@@ -215,13 +214,13 @@ func (v *Map) Add(key string, delta int64) {
 		}
 	}
 
-	// Add to Int; ignore otherwise.
+	// 添加到 Int；否则忽略。
 	if iv, ok := i.(*Int); ok {
 		iv.Add(delta)
 	}
 }
 
-// AddFloat adds delta to the *[Float] value stored under the given map key.
+// AddFloat 向存储在给定映射键下的 *[Float] 值添加 delta。
 func (v *Map) AddFloat(key string, delta float64) {
 	i, ok := v.m.Load(key)
 	if !ok {
@@ -232,13 +231,13 @@ func (v *Map) AddFloat(key string, delta float64) {
 		}
 	}
 
-	// Add to Float; ignore otherwise.
+	// 添加到 Float；否则忽略。
 	if iv, ok := i.(*Float); ok {
 		iv.Add(delta)
 	}
 }
 
-// Delete deletes the given key from the map.
+// Delete 从映射中删除给定的键。
 func (v *Map) Delete(key string) {
 	v.keysMu.Lock()
 	defer v.keysMu.Unlock()
@@ -249,9 +248,9 @@ func (v *Map) Delete(key string) {
 	}
 }
 
-// Do calls f for each entry in the map.
-// The map is locked during the iteration,
-// but existing entries may be concurrently updated.
+// Do 为映射中的每个条目调用 f。
+// 在迭代期间映射被锁定，
+// 但现有条目可能被并发更新。
 func (v *Map) Do(f func(KeyValue)) {
 	v.keysMu.RLock()
 	defer v.keysMu.RUnlock()
@@ -262,7 +261,7 @@ func (v *Map) Do(f func(KeyValue)) {
 	}
 }
 
-// String is a string variable, and satisfies the [Var] interface.
+// String 是一个字符串变量，满足 [Var] 接口。
 type String struct {
 	s atomic.Value // string
 }
@@ -272,8 +271,8 @@ func (v *String) Value() string {
 	return p
 }
 
-// String implements the [Var] interface. To get the unquoted string
-// use [String.Value].
+// String 实现 [Var] 接口。要获取未引用的字符串，
+// 使用 [String.Value]。
 func (v *String) String() string {
 	return string(v.appendJSON(nil))
 }
@@ -286,8 +285,7 @@ func (v *String) Set(value string) {
 	v.s.Store(value)
 }
 
-// Func implements [Var] by calling the function
-// and formatting the returned value using JSON.
+// Func 通过调用函数并使用 JSON 格式化返回值来实现 [Var]。
 type Func func() any
 
 func (f Func) Value() any {
@@ -299,12 +297,12 @@ func (f Func) String() string {
 	return string(v)
 }
 
-// All published variables.
+// 所有已发布的变量。
 var vars Map
 
-// Publish declares a named exported variable. This should be called from a
-// package's init function when it creates its Vars. If the name is already
-// registered then this will log.Panic.
+// Publish 声明一个命名的导出变量。这应该在包的 init 函数中调用
+// 当它创建其 Vars 时。如果名称已经
+// 注册，那么这会调用 log.Panic。
 func Publish(name string, v Var) {
 	if _, dup := vars.m.LoadOrStore(name, v); dup {
 		log.Panicln("Reuse of exported var name:", name)
@@ -315,13 +313,13 @@ func Publish(name string, v Var) {
 	slices.Sort(vars.keys)
 }
 
-// Get retrieves a named exported variable. It returns nil if the name has
-// not been registered.
+// Get 检索一个命名的导出变量。如果名称尚未
+// 注册，则返回 nil。
 func Get(name string) Var {
 	return vars.Get(name)
 }
 
-// Convenience functions for creating new exported variables.
+// 用于创建新的导出变量的便利函数。
 
 func NewInt(name string) *Int {
 	v := new(Int)
@@ -347,9 +345,9 @@ func NewString(name string) *String {
 	return v
 }
 
-// Do calls f for each exported variable.
-// The global variable map is locked during the iteration,
-// but existing entries may be concurrently updated.
+// Do 为每个导出的变量调用 f。
+// 在迭代期间全局变量映射被锁定，
+// 但现有条目可能被并发更新。
 func Do(f func(KeyValue)) {
 	vars.Do(f)
 }
@@ -359,9 +357,9 @@ func expvarHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(vars.appendJSONMayExpand(nil, true))
 }
 
-// Handler returns the expvar HTTP Handler.
+// Handler 返回 expvar HTTP 处理程序。
 //
-// This is only needed to install the handler in a non-standard location.
+// 仅当需要在非标准位置安装处理程序时才需要。
 func Handler() http.Handler {
 	return http.HandlerFunc(expvarHandler)
 }
@@ -386,7 +384,7 @@ func init() {
 	Publish("memstats", Func(memstats))
 }
 
-// TODO: Use json.appendString instead.
+// TODO: 改为使用 json.appendString。
 func appendJSONQuote(b []byte, s string) []byte {
 	const hex = "0123456789abcdef"
 	b = append(b, '"')

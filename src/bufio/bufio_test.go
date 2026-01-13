@@ -20,7 +20,7 @@ import (
 	"unicode/utf8"
 )
 
-// Reads from a reader and rot13s the result.
+// 从读取器读取并对结果进行 rot13 处理。
 type rot13Reader struct {
 	r io.Reader
 }
@@ -34,7 +34,7 @@ func newRot13Reader(r io.Reader) *rot13Reader {
 func (r13 *rot13Reader) Read(p []byte) (int, error) {
 	n, err := r13.r.Read(p)
 	for i := 0; i < n; i++ {
-		c := p[i] | 0x20 // lowercase byte
+		c := p[i] | 0x20 // 小写字节
 		if 'a' <= c && c <= 'm' {
 			p[i] += 13
 		} else if 'n' <= c && c <= 'z' {
@@ -44,7 +44,7 @@ func (r13 *rot13Reader) Read(p []byte) (int, error) {
 	return n, err
 }
 
-// Call ReadByte to accumulate the text of a file
+// 调用 ReadByte 来累积文件的文本
 func readBytes(buf *Reader) string {
 	var b [1000]byte
 	nb := 0
@@ -89,8 +89,8 @@ var readMakers = []readMaker{
 	{"timeout", iotest.TimeoutReader},
 }
 
-// Call ReadString (which ends up calling everything else)
-// to accumulate the text of a file.
+// 调用 ReadString（最终会调用其他所有函数）
+// 来累积文件的文本。
 func readLines(b *Reader) string {
 	s := ""
 	for {
@@ -106,7 +106,7 @@ func readLines(b *Reader) string {
 	return s
 }
 
-// Call Read to accumulate the text of a file
+// 调用 Read 来累积文件的文本
 func reads(buf *Reader, m int) string {
 	var b [1000]byte
 	nb := 0
@@ -202,7 +202,7 @@ func TestZeroReader(t *testing.T) {
 	}
 }
 
-// A StringReader delivers its data one string segment at a time via Read.
+// StringReader 通过 Read 一次传送一个字符串段的数据。
 type StringReader struct {
 	data []string
 	step int
@@ -260,7 +260,7 @@ func TestUnreadRune(t *testing.T) {
 	r := NewReader(&StringReader{data: segments})
 	got := ""
 	want := strings.Join(segments, "")
-	// Normal execution.
+	// 正常执行。
 	for {
 		r1, _, err := r.ReadRune()
 		if err != nil {
@@ -270,7 +270,7 @@ func TestUnreadRune(t *testing.T) {
 			break
 		}
 		got += string(r1)
-		// Put it back and read it again.
+		// 将其放回并再次读取。
 		if err = r.UnreadRune(); err != nil {
 			t.Fatal("unexpected error on UnreadRune:", err)
 		}
@@ -344,7 +344,7 @@ func TestUnreadByte(t *testing.T) {
 	r := NewReader(&StringReader{data: segments})
 	got := ""
 	want := strings.Join(segments, "")
-	// Normal execution.
+	// 正常执行。
 	for {
 		b1, err := r.ReadByte()
 		if err != nil {
@@ -354,7 +354,7 @@ func TestUnreadByte(t *testing.T) {
 			break
 		}
 		got += string(b1)
-		// Put it back and read it again.
+		// 将其放回并再次读取。
 		if err = r.UnreadByte(); err != nil {
 			t.Fatal("unexpected error on UnreadByte:", err)
 		}
@@ -376,7 +376,7 @@ func TestUnreadByteMultiple(t *testing.T) {
 	data := strings.Join(segments, "")
 	for n := 0; n <= len(data); n++ {
 		r := NewReader(&StringReader{data: segments})
-		// Read n bytes.
+		// 读取 n 个字节。
 		for i := 0; i < n; i++ {
 			b, err := r.ReadByte()
 			if err != nil {
@@ -386,13 +386,13 @@ func TestUnreadByteMultiple(t *testing.T) {
 				t.Fatalf("n = %d: incorrect byte returned from ReadByte: got %q, want %q", n, b, data[i])
 			}
 		}
-		// Unread one byte if there is one.
+		// 如果有字节，则取消读取一个字节。
 		if n > 0 {
 			if err := r.UnreadByte(); err != nil {
 				t.Errorf("n = %d: unexpected error on UnreadByte: %v", n, err)
 			}
 		}
-		// Test that we cannot unread any further.
+		// 测试我们不能进一步取消读取。
 		if err := r.UnreadByte(); err == nil {
 			t.Errorf("n = %d: expected error on UnreadByte", n)
 		}
@@ -400,7 +400,7 @@ func TestUnreadByteMultiple(t *testing.T) {
 }
 
 func TestUnreadByteOthers(t *testing.T) {
-	// A list of readers to use in conjunction with UnreadByte.
+	// 与 UnreadByte 一起使用的读取器列表。
 	var readers = []func(*Reader, byte) ([]byte, error){
 		(*Reader).ReadBytes,
 		(*Reader).ReadSlice,
@@ -408,16 +408,16 @@ func TestUnreadByteOthers(t *testing.T) {
 			data, err := r.ReadString(delim)
 			return []byte(data), err
 		},
-		// ReadLine doesn't fit the data/pattern easily
-		// so we leave it out. It should be covered via
-		// the ReadSlice test since ReadLine simply calls
-		// ReadSlice, and it's that function that handles
-		// the last byte.
+		// ReadLine 不太适合数据/模式
+		// 所以我们把它留出来。通过
+		// ReadSlice 测试应该能覆盖它，因为 ReadLine 只是调用
+		// ReadSlice，也是那个函数处理
+		// 最后一个字节。
 	}
 
-	// Try all readers with UnreadByte.
+	// 尝试所有带有 UnreadByte 的读取器。
 	for rno, read := range readers {
-		// Some input data that is longer than the minimum reader buffer size.
+		// 一些长于最小读取器缓冲区大小的输入数据。
 		const n = 10
 		var buf bytes.Buffer
 		for i := 0; i < n; i++ {

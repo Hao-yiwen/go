@@ -27,10 +27,10 @@ func TestCanonMapBadHash(t *testing.T) {
 
 func TestCanonMapTruncHash(t *testing.T) {
 	testCanonMap(t, func() *canonMap[string] {
-		// Stub out the good hash function with a different terrible one
-		// (truncated hash). Everything should still work as expected.
-		// This is useful to test independently to catch issues with
-		// near collisions, where only the last few bits of the hash differ.
+		// 用一个不同的糟糕哈希函数替换良好的哈希函数
+		// （截断的哈希）。一切应该仍然按预期工作。
+		// 这对于独立测试很有用以捕获
+		// 近似冲突的问题，其中只有哈希的最后几位不同。
 		return newTruncCanonMap[string]()
 	})
 }
@@ -72,8 +72,8 @@ func testCanonMap(t *testing.T, newMap func() *canonMap[string]) {
 				return s + "-" + strconv.Itoa(id)
 			}
 
-			// Expand and shrink the map multiple times to try to get
-			// insertions and cleanups to overlap.
+			// 多次扩展和收缩映射以尝试让
+			// 插入和清理重叠。
 			m := newMap()
 			gmp := runtime.GOMAXPROCS(-1)
 			for try := range 3 {
@@ -100,37 +100,37 @@ func testCanonMap(t *testing.T, newMap func() *canonMap[string]) {
 								t.Errorf("canonical entry %p did not match ref %p", got, want)
 							}
 						}
-						// N.B. We avoid trying to test entry cleanup here
-						// because it's going to be very flaky, especially
-						// in the bad hash cases.
+						// 注：我们避免在这里测试条目清理
+						// 因为它会非常不稳定，特别是
+						// 在坏哈希的情况下。
 					}(i)
 				}
 				wg.Wait()
 			}
 
-			// Run an extra GC cycle to de-flake. Sometimes the cleanups
-			// fail to run in time, despite drainCleanupQueue.
+			// 运行额外的 GC 周期来去除不稳定。有时候清理
+			// 会失败，尽管 drainCleanupQueue。
 			//
-			// TODO(mknyszek): Figure out why the extra GC is necessary,
-			// and what is transiently keeping the cleanups live.
-			// * I have confirmed that they are not completely stuck, and
-			//   they always eventually run.
-			// * I have also confirmed it's not asynchronous preemption
-			//   keeping them around (though that is a possibility).
-			// * I have confirmed that they are not simply sitting on
-			//   the queue, and that drainCleanupQueue is just failing
-			//   to actually empty the queue.
-			// * I have confirmed that it's not a write barrier that's
-			//   keeping it alive, nor is it a weak pointer dereference
-			//   (which shades the object during the GC).
-			// The corresponding objects do seem to be transiently truly
-			// reachable, but I have no idea by what path.
+			// TODO(mknyszek)：找出为什么额外的 GC 是必要的，
+			// 以及什么在瞬间保持清理活跃。
+			// * 我已确认它们没有完全卡住，并且
+			//   它们最终总是会运行。
+			// * 我也已确认这不是异步抢占
+			//   保持它们（尽管这是一种可能性）。
+			// * 我已确认它们不是简单地坐在
+			//   队列上，而是 drainCleanupQueue 只是失败了
+			//   来实际清空队列。
+			// * 我已确认这不是保持它活跃的写屏障，
+			//   也不是弱指针解引用
+			//   （它在 GC 期间对对象进行着色）。
+			// 相应的对象确实似乎瞬间是真正
+			// 可达的，但我不知道是什么路径。
 			runtime.GC()
 
-			// Drain cleanups so everything is deleted.
+			// 清空清理以删除所有内容。
 			drainCleanupQueue(t)
 
-			// Double-check that it's all gone.
+			// 再次检查一下它是否都消失了。
 			for id := range gmp {
 				makeKey := func(s string) string {
 					return s + "-" + strconv.Itoa(id)
@@ -170,11 +170,11 @@ func expectPresent[T comparable](t *testing.T, key T) func(got *T) *T {
 	}
 }
 
-// newBadCanonMap creates a new canonMap for the provided key type
-// but with an intentionally bad hash function.
+// newBadCanonMap 为提供的键类型创建一个新的 canonMap
+// 但使用一个故意的坏哈希函数。
 func newBadCanonMap[T comparable]() *canonMap[T] {
-	// Stub out the good hash function with a terrible one.
-	// Everything should still work as expected.
+	// 用一个糟糕的哈希函数替换良好的哈希函数。
+	// 一切应该仍然按预期工作。
 	m := newCanonMap[T]()
 	m.hash = func(_ unsafe.Pointer, _ uintptr) uintptr {
 		return 0
@@ -182,11 +182,11 @@ func newBadCanonMap[T comparable]() *canonMap[T] {
 	return m
 }
 
-// newTruncCanonMap creates a new canonMap for the provided key type
-// but with an intentionally bad hash function.
+// newTruncCanonMap 为提供的键类型创建一个新的 canonMap
+// 但使用一个故意的坏哈希函数。
 func newTruncCanonMap[T comparable]() *canonMap[T] {
-	// Stub out the good hash function with a terrible one.
-	// Everything should still work as expected.
+	// 用一个糟糕的哈希函数替换良好的哈希函数。
+	// 一切应该仍然按预期工作。
 	m := newCanonMap[T]()
 	var mx map[string]int
 	mapType := abi.TypeOf(mx).MapType()

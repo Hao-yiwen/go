@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package syntax
 
@@ -12,8 +12,8 @@ import (
 	"unicode/utf8"
 )
 
-// An Error describes a failure to parse a regular expression
-// and gives the offending expression.
+// Error 描述了正则表达式解析失败
+// 并提供了导致失败的表达式。
 type Error struct {
 	Code ErrorCode
 	Expr string
@@ -23,14 +23,14 @@ func (e *Error) Error() string {
 	return "error parsing regexp: " + e.Code.String() + ": `" + e.Expr + "`"
 }
 
-// An ErrorCode describes a failure to parse a regular expression.
+// ErrorCode 描述了正则表达式解析失败的原因。
 type ErrorCode string
 
 const (
-	// Unexpected error
+	// 意外错误
 	ErrInternalError ErrorCode = "regexp/syntax: internal error"
 
-	// Parse errors
+	// 解析错误
 	ErrInvalidCharClass      ErrorCode = "invalid character class"
 	ErrInvalidCharRange      ErrorCode = "invalid character class range"
 	ErrInvalidEscape         ErrorCode = "invalid escape sequence"
@@ -52,76 +52,76 @@ func (e ErrorCode) String() string {
 	return string(e)
 }
 
-// Flags control the behavior of the parser and record information about regexp context.
+// Flags 控制解析器的行为并记录关于正则表达式上下文的信息。
 type Flags uint16
 
 const (
-	FoldCase      Flags = 1 << iota // case-insensitive match
-	Literal                         // treat pattern as literal string
-	ClassNL                         // allow character classes like [^a-z] and [[:space:]] to match newline
-	DotNL                           // allow . to match newline
-	OneLine                         // treat ^ and $ as only matching at beginning and end of text
-	NonGreedy                       // make repetition operators default to non-greedy
-	PerlX                           // allow Perl extensions
-	UnicodeGroups                   // allow \p{Han}, \P{Han} for Unicode group and negation
-	WasDollar                       // regexp OpEndText was $, not \z
-	Simple                          // regexp contains no counted repetition
+	FoldCase      Flags = 1 << iota // 不区分大小写的匹配
+	Literal                         // 将模式视为字面字符串
+	ClassNL                         // 允许字符类（如 [^a-z] 和 [[:space:]]）匹配换行符
+	DotNL                           // 允许 . 匹配换行符
+	OneLine                         // 将 ^ 和 $ 视为仅在文本开头和结尾匹配
+	NonGreedy                       // 使重复操作符默认为非贪婪
+	PerlX                           // 允许 Perl 扩展
+	UnicodeGroups                   // 允许 \p{Han}、\P{Han} 用于 Unicode 组和取反
+	WasDollar                       // 正则表达式 OpEndText 是 $，不是 \z
+	Simple                          // 正则表达式不包含计数重复
 
 	MatchNL = ClassNL | DotNL
 
-	Perl        = ClassNL | OneLine | PerlX | UnicodeGroups // as close to Perl as possible
-	POSIX Flags = 0                                         // POSIX syntax
+	Perl        = ClassNL | OneLine | PerlX | UnicodeGroups // 尽可能接近 Perl
+	POSIX Flags = 0                                         // POSIX 语法
 )
 
-// Pseudo-ops for parsing stack.
+// 解析栈的伪操作。
 const (
 	opLeftParen = opPseudo + iota
 	opVerticalBar
 )
 
-// maxHeight is the maximum height of a regexp parse tree.
-// It is somewhat arbitrarily chosen, but the idea is to be large enough
-// that no one will actually hit in real use but at the same time small enough
-// that recursion on the Regexp tree will not hit the 1GB Go stack limit.
-// The maximum amount of stack for a single recursive frame is probably
-// closer to 1kB, so this could potentially be raised, but it seems unlikely
-// that people have regexps nested even this deeply.
-// We ran a test on Google's C++ code base and turned up only
-// a single use case with depth > 100; it had depth 128.
-// Using depth 1000 should be plenty of margin.
-// As an optimization, we don't even bother calculating heights
-// until we've allocated at least maxHeight Regexp structures.
+// maxHeight 是正则表达式解析树的最大高度。
+// 它的选择有点武断，但想法是足够大，
+// 以至于在实际使用中没有人会遇到，但同时足够小，
+// 以至于 Regexp 树的递归不会超过 1GB 的 Go 栈限制。
+// 单个递归框架的最大栈量可能
+// 接近 1kB，所以这可能会被提高，但似乎不太可能
+// 人们有正则表达式嵌套得这么深。
+// 我们在谷歌的 C++ 代码库上进行了测试，发现
+// 只有一个深度 > 100 的用例；它的深度为 128。
+// 使用深度 1000 应该有足够的余地。
+// 作为优化，我们甚至不费力计算高度
+// 直到我们分配了至少 maxHeight 个 Regexp 结构。
 const maxHeight = 1000
 
-// maxSize is the maximum size of a compiled regexp in Insts.
-// It too is somewhat arbitrarily chosen, but the idea is to be large enough
-// to allow significant regexps while at the same time small enough that
-// the compiled form will not take up too much memory.
-// 128 MB is enough for a 3.3 million Inst structures, which roughly
-// corresponds to a 3.3 MB regexp.
+// maxSize 是编译的正则表达式中 Insts 的最大大小。
+// 它也被武断地选择，但想法是足够大
+// 以允许重要的正则表达式，同时足够小，
+// 编译形式不会占用太多内存。
+// 128 MB 足以容纳 330 万个 Inst 结构，大致
+// 对应于 3.3 MB 的正则表达式。
 const (
 	maxSize  = 128 << 20 / instSize
-	instSize = 5 * 8 // byte, 2 uint32, slice is 5 64-bit words
+	instSize = 5 * 8 // byte、2 个 uint32、slice 是 5 个 64 位字
 )
 
-// maxRunes is the maximum number of runes allowed in a regexp tree
-// counting the runes in all the nodes.
-// Ignoring character classes p.numRunes is always less than the length of the regexp.
-// Character classes can make it much larger: each \pL adds 1292 runes.
-// 128 MB is enough for 32M runes, which is over 26k \pL instances.
-// Note that repetitions do not make copies of the rune slices,
-// so \pL{1000} is only one rune slice, not 1000.
-// We could keep a cache of character classes we've seen,
-// so that all the \pL we see use the same rune list,
-// but that doesn't remove the problem entirely:
-// consider something like [\pL01234][\pL01235][\pL01236]...[\pL^&*()].
-// And because the Rune slice is exposed directly in the Regexp,
-// there is not an opportunity to change the representation to allow
-// partial sharing between different character classes.
-// So the limit is the best we can do.
+// maxRunes 是正则表达式树中允许的最大 rune 数
+// 计算所有节点中的 runes。
+// 忽略字符类，p.numRunes 总是小于正则表达式的长度。
+// 字符类可以使其大得多：每个 \pL 添加 1292 个 runes。
+// 128 MB 足以容纳 32M 个 runes，这超过 26k 个 \pL 实例。
+// 请注意，重复不会复制 rune 切片，
+// 所以 \pL{1000} 只是一个 rune 切片，而不是 1000 个。
+// 我们可以保留我们看过的字符类的缓存，
+// 使我们看到的所有 \pL 使用同一个 rune 列表，
+// 但这并不能完全消除问题：
+// 考虑类似 [\pL01234][\pL01235][\pL01236]...[\pL^&*()]。
+// 而且因为 Rune 切片在 Regexp 中直接暴露，
+// 没有机会改变表示形式以允许
+// 不同字符类之间的部分共享。
+// 所以限制是我们能做的最好的。
 const (
 	maxRunes = 128 << 20 / runeSize
-	runeSize = 4 // rune is int32
+	runeSize = 4 // rune 是 int32
 )
 
 type parser struct {
@@ -287,9 +287,9 @@ func (p *parser) calcHeight(re *Regexp, force bool) int {
 	return h
 }
 
-// Parse stack manipulation.
+// 解析栈操作。
 
-// push pushes the regexp re onto the parse stack and returns the regexp.
+// push 将正则表达式 re 推送到解析栈上并返回该正则表达式。
 func (p *parser) push(re *Regexp) *Regexp {
 	p.numRunes += len(re.Rune)
 	if re.Op == OpCharClass && len(re.Rune) == 2 && re.Rune[0] == re.Rune[1] {
@@ -327,15 +327,15 @@ func (p *parser) push(re *Regexp) *Regexp {
 	return re
 }
 
-// maybeConcat implements incremental concatenation
-// of literal runes into string nodes. The parser calls this
-// before each push, so only the top fragment of the stack
-// might need processing. Since this is called before a push,
-// the topmost literal is no longer subject to operators like *
-// (Otherwise ab* would turn into (ab)*.)
-// If r >= 0 and there's a node left over, maybeConcat uses it
-// to push r with the given flags.
-// maybeConcat reports whether r was pushed.
+// maybeConcat 实现了字面 runes 到字符串节点的增量连接。
+// 解析器在每次 push 之前调用此方法，
+// 因此只有栈的顶部片段
+// 可能需要处理。由于这是在 push 之前调用的，
+// 最顶层的字面将不再受 * 等操作符的约束
+// （否则 ab* 会变成 (ab)*。）
+// 如果 r >= 0 且有剩余节点，maybeConcat 使用它
+// 用给定的标志推送 r。
+// maybeConcat 报告 r 是否被推送。
 func (p *parser) maybeConcat(r rune, flags Flags) bool {
 	n := len(p.stack)
 	if n < 2 {
@@ -364,7 +364,7 @@ func (p *parser) maybeConcat(r rune, flags Flags) bool {
 	return false // did not push r
 }
 
-// literal pushes a literal regexp for the rune r on the stack.
+// literal 为栈上的 rune r 推送一个字面正则表达式。
 func (p *parser) literal(r rune) {
 	re := p.newRegexp(OpLiteral)
 	re.Flags = p.flags
@@ -376,7 +376,7 @@ func (p *parser) literal(r rune) {
 	p.push(re)
 }
 
-// minFoldRune returns the minimum rune fold-equivalent to r.
+// minFoldRune 返回与 r 等价的最小 rune 折叠。
 func minFoldRune(r rune) rune {
 	if r < minFold || r > maxFold {
 		return r
@@ -389,18 +389,18 @@ func minFoldRune(r rune) rune {
 	return m
 }
 
-// op pushes a regexp with the given op onto the stack
-// and returns that regexp.
+// op 将具有给定 op 的正则表达式推送到栈上
+// 并返回该正则表达式。
 func (p *parser) op(op Op) *Regexp {
 	re := p.newRegexp(op)
 	re.Flags = p.flags
 	return p.push(re)
 }
 
-// repeat replaces the top stack element with itself repeated according to op, min, max.
-// before is the regexp suffix starting at the repetition operator.
-// after is the regexp suffix following after the repetition operator.
-// repeat returns an updated 'after' and an error, if any.
+// repeat 根据 op、min、max 用自身重复替换栈的顶部元素。
+// before 是从重复操作符开始的正则表达式后缀。
+// after 是重复操作符之后的正则表达式后缀。
+// repeat 返回更新的"after"和错误（如果有）。
 func (p *parser) repeat(op Op, min, max int, before, after, lastRepeat string) (string, error) {
 	flags := p.flags
 	if p.flags&PerlX != 0 {
@@ -440,15 +440,14 @@ func (p *parser) repeat(op Op, min, max int, before, after, lastRepeat string) (
 	return after, nil
 }
 
-// repeatIsValid reports whether the repetition re is valid.
-// Valid means that the combination of the top-level repetition
-// and any inner repetitions does not exceed n copies of the
-// innermost thing.
-// This function rewalks the regexp tree and is called for every repetition,
-// so we have to worry about inducing quadratic behavior in the parser.
-// We avoid this by only calling repeatIsValid when min or max >= 2.
-// In that case the depth of any >= 2 nesting can only get to 9 without
-// triggering a parse error, so each subtree can only be rewalked 9 times.
+// repeatIsValid 报告重复 re 是否有效。
+// 有效意味着顶层重复和任何内部重复的组合
+// 不超过最内层事物的 n 个副本。
+// 此函数重新遍历正则表达式树，并为每个重复调用，
+// 所以我们必须担心在解析器中引入二次行为。
+// 我们通过仅在 min 或 max >= 2 时调用 repeatIsValid 来避免这种情况。
+// 在这种情况下，任何 >= 2 嵌套的深度只能达到 9 而不会
+// 触发解析错误，所以每个子树只能被重新遍历 9 次。
 func repeatIsValid(re *Regexp, n int) bool {
 	if re.Op == OpRepeat {
 		m := re.Max
@@ -473,7 +472,7 @@ func repeatIsValid(re *Regexp, n int) bool {
 	return true
 }
 
-// concat replaces the top of the stack (above the topmost '|' or '(') with its concatenation.
+// concat 用其连接替换栈的顶部（最顶层 '|' 或 '(' 上方）。
 func (p *parser) concat() *Regexp {
 	p.maybeConcat(-1, 0)
 
@@ -493,7 +492,7 @@ func (p *parser) concat() *Regexp {
 	return p.push(p.collapse(subs, OpConcat))
 }
 
-// alternate replaces the top of the stack (above the topmost '(') with its alternation.
+// alternate 用其交替替换栈的顶部（最顶层 '(' 上方）。
 func (p *parser) alternate() *Regexp {
 	// Scan down to find pseudo-operator (.
 	// There are no | above (.
@@ -519,7 +518,7 @@ func (p *parser) alternate() *Regexp {
 	return p.push(p.collapse(subs, OpAlternate))
 }
 
-// cleanAlt cleans re for eventual inclusion in an alternation.
+// cleanAlt 清理 re 以便最终包含在交替中。
 func cleanAlt(re *Regexp) {
 	switch re.Op {
 	case OpCharClass:
@@ -542,10 +541,10 @@ func cleanAlt(re *Regexp) {
 	}
 }
 
-// collapse returns the result of applying op to sub.
-// If sub contains op nodes, they all get hoisted up
-// so that there is never a concat of a concat or an
-// alternate of an alternate.
+// collapse 返回对 sub 应用 op 的结果。
+// 如果 sub 包含 op 节点，它们都会被提升
+// 使得永远不会有 concat 的 concat 或
+// alternate 的 alternate。
 func (p *parser) collapse(subs []*Regexp, op Op) *Regexp {
 	if len(subs) == 1 {
 		return subs[0]
@@ -571,19 +570,19 @@ func (p *parser) collapse(subs []*Regexp, op Op) *Regexp {
 	return re
 }
 
-// factor factors common prefixes from the alternation list sub.
-// It returns a replacement list that reuses the same storage and
-// frees (passes to p.reuse) any removed *Regexps.
+// factor 从交替列表 sub 中分解公共前缀。
+// 它返回重用相同存储的替换列表，
+// 并释放（传递给 p.reuse）任何移除的 *Regexps。
 //
-// For example,
+// 例如，
 //
 //	ABC|ABD|AEF|BCX|BCY
 //
-// simplifies by literal prefix extraction to
+// 通过字面前缀提取简化为
 //
 //	A(B(C|D)|EF)|BC(X|Y)
 //
-// which simplifies by character class introduction to
+// 这通过字符类引入简化为
 //
 //	A(B[CD]|EF)|BC[XY]
 func (p *parser) factor(sub []*Regexp) []*Regexp {
@@ -773,8 +772,8 @@ func (p *parser) factor(sub []*Regexp) []*Regexp {
 	return sub
 }
 
-// leadingString returns the leading literal string that re begins with.
-// The string refers to storage in re or its children.
+// leadingString 返回 re 开头的前导字面字符串。
+// 该字符串引用 re 或其子元素中的存储。
 func (p *parser) leadingString(re *Regexp) ([]rune, Flags) {
 	if re.Op == OpConcat && len(re.Sub) > 0 {
 		re = re.Sub[0]
@@ -785,8 +784,8 @@ func (p *parser) leadingString(re *Regexp) ([]rune, Flags) {
 	return re.Rune, re.Flags & FoldCase
 }
 
-// removeLeadingString removes the first n leading runes
-// from the beginning of re. It returns the replacement for re.
+// removeLeadingString 从 re 的开头移除前 n 个前导 runes。
+// 它返回 re 的替换。
 func (p *parser) removeLeadingString(re *Regexp, n int) *Regexp {
 	if re.Op == OpConcat && len(re.Sub) > 0 {
 		// Removing a leading string in a concatenation
@@ -822,8 +821,8 @@ func (p *parser) removeLeadingString(re *Regexp, n int) *Regexp {
 	return re
 }
 
-// leadingRegexp returns the leading regexp that re begins with.
-// The regexp refers to storage in re or its children.
+// leadingRegexp 返回 re 开头的前导正则表达式。
+// 该正则表达式引用 re 或其子元素中的存储。
 func (p *parser) leadingRegexp(re *Regexp) *Regexp {
 	if re.Op == OpEmptyMatch {
 		return nil
@@ -838,9 +837,9 @@ func (p *parser) leadingRegexp(re *Regexp) *Regexp {
 	return re
 }
 
-// removeLeadingRegexp removes the leading regexp in re.
-// It returns the replacement for re.
-// If reuse is true, it passes the removed regexp (if no longer needed) to p.reuse.
+// removeLeadingRegexp 移除 re 中的前导正则表达式。
+// 它返回 re 的替换。
+// 如果 reuse 为 true，它将移除的正则表达式（如果不再需要）传递给 p.reuse。
 func (p *parser) removeLeadingRegexp(re *Regexp, reuse bool) *Regexp {
 	if re.Op == OpConcat && len(re.Sub) > 0 {
 		if reuse {
@@ -879,11 +878,11 @@ func literalRegexp(s string, flags Flags) *Regexp {
 	return re
 }
 
-// Parsing.
+// 解析。
 
-// Parse parses a regular expression string s, controlled by the specified
-// Flags, and returns a regular expression parse tree. The syntax is
-// described in the top-level comment.
+// Parse 解析由指定 Flags 控制的正则表达式字符串 s，
+// 并返回正则表达式解析树。语法在
+// 顶层注释中描述。
 func Parse(s string, flags Flags) (*Regexp, error) {
 	return parse(s, flags)
 }
@@ -1096,9 +1095,9 @@ func parse(s string, flags Flags) (_ *Regexp, err error) {
 	return p.stack[0], nil
 }
 
-// parseRepeat parses {min} (max=min) or {min,} (max=-1) or {min,max}.
-// If s is not of that form, it returns ok == false.
-// If s has the right form but the values are too big, it returns min == -1, ok == true.
+// parseRepeat 解析 {min}（max=min）或 {min,}（max=-1）或 {min,max}。
+// 如果 s 不是那种形式，它返回 ok == false。
+// 如果 s 形式正确但值太大，它返回 min == -1、ok == true。
 func (p *parser) parseRepeat(s string) (min, max int, rest string, ok bool) {
 	if s == "" || s[0] != '{' {
 		return
@@ -1135,27 +1134,27 @@ func (p *parser) parseRepeat(s string) (min, max int, rest string, ok bool) {
 	return
 }
 
-// parsePerlFlags parses a Perl flag setting or non-capturing group or both,
-// like (?i) or (?: or (?i:.  It removes the prefix from s and updates the parse state.
-// The caller must have ensured that s begins with "(?".
+// parsePerlFlags 解析 Perl 标志设置或非捕获组或两者，
+// 如 (?i) 或 (?: 或 (?i:。它从 s 中移除前缀并更新解析状态。
+// 调用者必须确保 s 以 "(?" 开头。
 func (p *parser) parsePerlFlags(s string) (rest string, err error) {
 	t := s
 
-	// Check for named captures, first introduced in Python's regexp library.
-	// As usual, there are three slightly different syntaxes:
+	// 检查命名捕获，最初在 Python 的正则表达式库中引入。
+	// 如往常一样，有三种略微不同的语法：
 	//
-	//   (?P<name>expr)   the original, introduced by Python
-	//   (?<name>expr)    the .NET alteration, adopted by Perl 5.10
-	//   (?'name'expr)    another .NET alteration, adopted by Perl 5.10
+	//   (?P<name>expr)   原始形式，由 Python 引入
+	//   (?<name>expr)    .NET 变体，由 Perl 5.10 采用
+	//   (?'name'expr)    另一个 .NET 变体，由 Perl 5.10 采用
 	//
-	// Perl 5.10 gave in and implemented the Python version too,
-	// but they claim that the last two are the preferred forms.
-	// PCRE and languages based on it (specifically, PHP and Ruby)
-	// support all three as well. EcmaScript 4 uses only the Python form.
+	// Perl 5.10 让步并也实现了 Python 版本，
+	// 但他们声称后两者是首选形式。
+	// PCRE 及其基础的语言（特别是 PHP 和 Ruby）
+	// 也支持全部三种。EcmaScript 4 仅使用 Python 形式。
 	//
-	// In both the open source world (via Code Search) and the
-	// Google source tree, (?P<expr>name) and (?<expr>name) are the
-	// dominant forms of named captures and both are supported.
+	// 在开源世界（通过代码搜索）和
+	// Google 源树中，(?P<expr>name) 和 (?<expr>name) 是
+	// 命名捕获的主导形式，两者都支持。
 	startsWithP := len(t) > 4 && t[2] == 'P' && t[3] == '<'
 	startsWithName := len(t) > 3 && t[2] == '<'
 

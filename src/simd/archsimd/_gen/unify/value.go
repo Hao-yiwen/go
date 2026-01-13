@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package unify
 
@@ -10,17 +10,16 @@ import (
 	"reflect"
 )
 
-// A Value represents a structured, non-deterministic value consisting of
-// strings, tuples of Values, and string-keyed maps of Values. A
-// non-deterministic Value will also contain variables, which are resolved via
-// an environment as part of a [Closure].
+// A Value 代表由字符串、Values 的元组和字符串键映射的 Values 组成的
+// 结构化的非确定性值。非确定性 Value 也会包含变量，这些变量通过
+// 环境作为 [Closure] 的一部分来解析。
 //
-// For debugging, a Value can also track the source position it was read from in
-// an input file, and its provenance from other Values.
+// 对于调试，Value 还可以跟踪它从输入文件中读取的源位置，
+// 以及它来自其他 Values 的出处。
 type Value struct {
 	Domain Domain
 
-	// A Value has either a pos or parents (or neither).
+	// A Value 有 pos 或 parents（或两者都没有）。
 	pos     *Pos
 	parents *[2]*Value
 }
@@ -30,19 +29,19 @@ var (
 	bottomValue = &Value{Domain: nil}
 )
 
-// NewValue returns a new [Value] with the given domain and no position
-// information.
+// NewValue 返回一个具有给定域且没有位置的新 [Value]。
+// 信息。
 func NewValue(d Domain) *Value {
 	return &Value{Domain: d}
 }
 
-// NewValuePos returns a new [Value] with the given domain at position p.
+// NewValuePos 返回一个位置为 p 的给定域的新 [Value]。
 func NewValuePos(d Domain, p Pos) *Value {
 	return &Value{Domain: d, pos: &p}
 }
 
-// newValueFrom returns a new [Value] with the given domain that copies the
-// position information of p.
+// newValueFrom 返回一个具有给定域的新 [Value]，该域复制
+// p 的位置信息。
 func newValueFrom(d Domain, p *Value) *Value {
 	return &Value{Domain: d, pos: p.pos, parents: p.parents}
 }
@@ -83,16 +82,16 @@ func (v *Value) Exact() bool {
 	return v.Domain.Exact()
 }
 
-// Decode decodes v into a Go value.
+// Decode 将 v 解码为 Go 值。
 //
-// v must be exact, except that it can include Top. into must be a pointer.
-// [Def]s are decoded into structs. [Tuple]s are decoded into slices. [String]s
-// are decoded into strings or ints. Any field can itself be a pointer to one of
-// these types. Top can be decoded into a pointer-typed field and will set the
-// field to nil. Anything else will allocate a value if necessary.
+// v 必须是精确的，除了它可以包括 Top。into 必须是指针。
+// [Def] 被解码为结构体。[Tuple] 被解码为切片。[String]
+// 被解码为字符串或整数。任何字段本身可以是指向其中之一的指针
+// 这些类型。Top 可以被解码为指针类型的字段并会将
+// 字段设置为 nil。其他任何内容都会在必要时分配一个值。
 //
-// Any type may implement [Decoder], in which case its DecodeUnified method will
-// be called instead of using the default decoding scheme.
+// 任何类型都可以实现 [Decoder]，在这种情况下，它的 DecodeUnified 方法将
+// 被调用，而不是使用默认解码方案。
 func (v *Value) Decode(into any) error {
 	rv := reflect.ValueOf(into)
 	if rv.Kind() != reflect.Pointer {
@@ -105,14 +104,14 @@ func decodeReflect(v *Value, rv reflect.Value) error {
 	var ptr reflect.Value
 	if rv.Kind() == reflect.Pointer {
 		if rv.IsNil() {
-			// Transparently allocate through pointers, *except* for Top, which
-			// wants to set the pointer to nil.
+			// 透明地通过指针分配，*除了* Top，它
+			// 想要将指针设置为 nil。
 			//
-			// TODO: Drop this condition if I switch to an explicit Optional[T]
-			// or move the Top logic into Def.
+			// TODO: 如果我切换到显式 Optional[T]，请删除此条件
+			// 或将 Top 逻辑移到 Def。
 			if _, ok := v.Domain.(Top); !ok {
-				// Allocate the value to fill in, but don't actually store it in
-				// the pointer until we successfully decode.
+				// 分配要填写的值，但不要实际存储它
+				// 指针，直到我们成功解码。
 				ptr = rv
 				rv = reflect.New(rv.Type().Elem()).Elem()
 			}
@@ -123,7 +122,7 @@ func decodeReflect(v *Value, rv reflect.Value) error {
 
 	var err error
 	if reflect.PointerTo(rv.Type()).Implements(decoderType) {
-		// Use the custom decoder.
+		// 使用自定义解码器。
 		err = rv.Addr().Interface().(Decoder).DecodeUnified(v)
 	} else {
 		err = v.Domain.decode(rv)
@@ -134,16 +133,15 @@ func decodeReflect(v *Value, rv reflect.Value) error {
 	return err
 }
 
-// Decoder can be implemented by types as a custom implementation of [Decode]
-// for that type.
+// Decoder 可以由类型实现作为 [Decode] 的自定义实现
+// 对于该类型。
 type Decoder interface {
 	DecodeUnified(v *Value) error
 }
 
 var decoderType = reflect.TypeOf((*Decoder)(nil)).Elem()
 
-// Provenance iterates over all of the source Values that have contributed to
-// this Value.
+// Provenance 遍历所有贡献于这个 Value 的源 Values。
 func (v *Value) Provenance() iter.Seq[*Value] {
 	return func(yield func(*Value) bool) {
 		var rec func(d *Value) bool

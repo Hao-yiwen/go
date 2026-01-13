@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package slog
 
@@ -16,15 +16,13 @@ import (
 	"unicode/utf8"
 )
 
-// TextHandler is a [Handler] that writes Records to an [io.Writer] as a
-// sequence of key=value pairs separated by spaces and followed by a newline.
+// TextHandler 是一个 [Handler]，它将 Record 写入 [io.Writer]，作为由空格分隔且后跟换行符的 key=value 对序列。
 type TextHandler struct {
 	*commonHandler
 }
 
-// NewTextHandler creates a [TextHandler] that writes to w,
-// using the given options.
-// If opts is nil, the default options are used.
+// NewTextHandler 创建一个 [TextHandler]，它写入 w，使用给定的选项。
+// 如果 opts 为 nil，则使用默认选项。
 func NewTextHandler(w io.Writer, opts *HandlerOptions) *TextHandler {
 	if opts == nil {
 		opts = &HandlerOptions{}
@@ -39,14 +37,13 @@ func NewTextHandler(w io.Writer, opts *HandlerOptions) *TextHandler {
 	}
 }
 
-// Enabled reports whether the handler handles records at the given level.
-// The handler ignores records whose level is lower.
+// Enabled 报告处理程序是否处理给定级别的记录。
+// 处理程序忽略级别较低的记录。
 func (h *TextHandler) Enabled(_ context.Context, level Level) bool {
 	return h.commonHandler.enabled(level)
 }
 
-// WithAttrs returns a new [TextHandler] whose attributes consists
-// of h's attributes followed by attrs.
+// WithAttrs 返回一个新的 [TextHandler]，其属性由 h 的属性后跟 attrs 组成。
 func (h *TextHandler) WithAttrs(attrs []Attr) Handler {
 	return &TextHandler{commonHandler: h.commonHandler.withAttrs(attrs)}
 }
@@ -55,40 +52,30 @@ func (h *TextHandler) WithGroup(name string) Handler {
 	return &TextHandler{commonHandler: h.commonHandler.withGroup(name)}
 }
 
-// Handle formats its argument [Record] as a single line of space-separated
-// key=value items.
+// Handle 将其参数 [Record] 格式化为由空格分隔的 key=value 项的单行。
 //
-// If the Record's time is zero, the time is omitted.
-// Otherwise, the key is "time"
-// and the value is output in RFC3339 format with millisecond precision.
+// 如果 Record 的时间为零，则省略时间。否则，键是 "time"，值以 RFC3339 格式（毫秒精度）输出。
 //
-// The level's key is "level" and its value is the result of calling [Level.String].
+// 级别的键是 "level"，其值是调用 [Level.String] 的结果。
 //
-// If the AddSource option is set and source information is available,
-// the key is "source" and the value is output as FILE:LINE.
+// 如果设置了 AddSource 选项且可用源信息，键是 "source"，值作为 FILE:LINE 输出。
 //
-// The message's key is "msg".
+// 消息的键是 "msg"。
 //
-// To modify these or other attributes, or remove them from the output, use
-// [HandlerOptions.ReplaceAttr].
+// 要修改这些或其他属性，或从输出中删除它们，请使用 [HandlerOptions.ReplaceAttr]。
 //
-// If a value implements [encoding.TextMarshaler], the result of MarshalText is
-// written. Otherwise, the result of [fmt.Sprint] is written.
+// 如果值实现了 [encoding.TextMarshaler]，则写入 MarshalText 的结果。
+// 否则，写入 [fmt.Sprint] 的结果。
 //
-// Keys and values are quoted with [strconv.Quote] if they contain Unicode space
-// characters, non-printing characters, '"' or '='.
+// 如果键和值包含 Unicode 空格字符、非打印字符、'"' 或 '='，则使用 [strconv.Quote] 引用它们。
 //
-// Keys inside groups consist of components (keys or group names) separated by
-// dots. No further escaping is performed.
-// Thus there is no way to determine from the key "a.b.c" whether there
-// are two groups "a" and "b" and a key "c", or a single group "a.b" and a key "c",
-// or single group "a" and a key "b.c".
-// If it is necessary to reconstruct the group structure of a key
-// even in the presence of dots inside components, use
-// [HandlerOptions.ReplaceAttr] to encode that information in the key.
+// 组内的键由由点分隔的组件 (键或组名) 组成。不执行进一步的转义。
+// 因此，无法从键 "a.b.c" 确定是否有两个组 "a" 和 "b" 及一个键 "c"，
+// 或单个组 "a.b" 和键 "c"，或单个组 "a" 和键 "b.c"。
+// 如果需要重构键的组结构，即使在组件内的点存在的情况下，
+// 使用 [HandlerOptions.ReplaceAttr] 在键中编码该信息。
 //
-// Each call to Handle results in a single serialized call to
-// io.Writer.Write.
+// 对 Handle 的每次调用都会导致对 io.Writer.Write 的单一序列化调用。
 func (h *TextHandler) Handle(_ context.Context, r Record) error {
 	return h.commonHandler.handle(r)
 }

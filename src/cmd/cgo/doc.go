@@ -3,40 +3,39 @@
 // 该许可证可在 LICENSE 文件中找到。
 
 /*
-Cgo enables the creation of Go packages that call C code.
+Cgo 支持创建调用 C 代码的 Go 包。
 
-# Using cgo with the go command
+# 与 go 命令一起使用 cgo
 
-To use cgo write normal Go code that imports a pseudo-package "C".
-The Go code can then refer to types such as C.size_t, variables such
-as C.stdout, or functions such as C.putchar.
+要使用 cgo，请编写导入伪包 "C" 的普通 Go 代码。
+Go 代码随后可以引用类型（如 C.size_t）、变量（如
+C.stdout）或函数（如 C.putchar）。
 
-If the import of "C" is immediately preceded by a comment, that
-comment, called the preamble, is used as a header when compiling
-the C parts of the package. For example:
+如果 "C" 的导入立即前面有注释，该
+注释称为前言，在编译该包的 C 部分时用作头文件。
+例如：
 
 	// #include <stdio.h>
 	// #include <errno.h>
 	import "C"
 
-The preamble may contain any C code, including function and variable
-declarations and definitions. These may then be referred to from Go
-code as though they were defined in the package "C". All names
-declared in the preamble may be used, even if they start with a
-lower-case letter. Exception: static variables in the preamble may
-not be referenced from Go code; static functions are permitted.
+前言可能包含任何 C 代码，包括函数和变量
+声明和定义。这些随后可以从 Go 代码中引用，
+就像它们在包 "C" 中定义一样。所有在
+前言中声明的名称都可以使用，即使它们以
+小写字母开头。例外：前言中的静态变量可能
+无法从 Go 代码中引用；允许使用静态函数。
 
-See $GOROOT/cmd/cgo/internal/teststdio and $GOROOT/misc/cgo/gmp for examples. See
-"C? Go? Cgo!" for an introduction to using cgo:
-https://golang.org/doc/articles/c_go_cgo.html.
+参见 $GOROOT/cmd/cgo/internal/teststdio 和 $GOROOT/misc/cgo/gmp 了解示例。有关使用 cgo 的介绍，请参见
+"C? Go? Cgo!"：
+https://golang.org/doc/articles/c_go_cgo.html。
 
-CFLAGS, CPPFLAGS, CXXFLAGS, FFLAGS and LDFLAGS may be defined with pseudo
-#cgo directives within these comments to tweak the behavior of the C, C++
-or Fortran compiler. Values defined in multiple directives are concatenated
-together. The directive can include a list of build constraints limiting its
-effect to systems satisfying one of the constraints
-(see https://golang.org/pkg/go/build/#hdr-Build_Constraints for details about the constraint syntax).
-For example:
+可以使用伪 #cgo 指令在这些注释中定义 CFLAGS、CPPFLAGS、CXXFLAGS、FFLAGS 和 LDFLAGS
+来调整 C、C++ 或 Fortran 编译器的行为。在多个指令中定义的值是连接的。
+该指令可以包含构建约束列表，限制其
+对满足约束之一的系统的影响
+（有关约束语法的详细信息，请参见 https://golang.org/pkg/go/build/#hdr-Build_Constraints）。
+例如：
 
 	// #cgo CFLAGS: -DPNG_DEBUG=1
 	// #cgo amd64 386 CFLAGS: -DX86=1

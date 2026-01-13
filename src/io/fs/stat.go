@@ -1,22 +1,22 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package fs
 
-// A StatFS is a file system with a Stat method.
+// StatFS 是具有 Stat 方法的文件系统。
 type StatFS interface {
 	FS
 
-	// Stat returns a FileInfo describing the file.
-	// If there is an error, it should be of type *PathError.
+	// Stat 返回描述文件的 FileInfo。
+	// 如果发生错误，它应该是 *PathError 类型。
 	Stat(name string) (FileInfo, error)
 }
 
-// Stat returns a [FileInfo] describing the named file from the file system.
+// Stat 从文件系统返回描述指定文件的 [FileInfo]。
 //
-// If fs implements [StatFS], Stat calls fs.Stat.
-// Otherwise, Stat opens the [File] to stat it.
+// 如果 fs 实现了 [StatFS]，Stat 将调用 fs.Stat。
+// 否则，Stat 打开 [File] 以对其进行 stat。
 func Stat(fsys FS, name string) (FileInfo, error) {
 	if fsys, ok := fsys.(StatFS); ok {
 		return fsys.Stat(name)

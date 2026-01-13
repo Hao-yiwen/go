@@ -4,7 +4,7 @@
 
 //go:generate go run gen_sort_variants.go
 
-// Package sort provides primitives for sorting slices and user-defined collections.
+// Package sort 为排序切片和用户定义的集合提供原始操作。
 package sort
 
 import (
@@ -12,41 +12,39 @@ import (
 	"slices"
 )
 
-// An implementation of Interface can be sorted by the routines in this package.
-// The methods refer to elements of the underlying collection by integer index.
+// 实现 Interface 的类型可以通过此包中的例程进行排序。
+// 这些方法通过整数索引引用底层集合的元素。
 type Interface interface {
-	// Len is the number of elements in the collection.
+	// Len 是集合中元素的数量。
 	Len() int
 
-	// Less reports whether the element with index i
-	// must sort before the element with index j.
+	// Less 报告索引为 i 的元素是否必须排在索引为 j 的元素之前。
 	//
-	// If both Less(i, j) and Less(j, i) are false,
-	// then the elements at index i and j are considered equal.
-	// Sort may place equal elements in any order in the final result,
-	// while Stable preserves the original input order of equal elements.
+	// 如果 Less(i, j) 和 Less(j, i) 都为 false，
+	// 那么索引 i 和 j 处的元素被认为相等。
+	// Sort 可能会在最终结果中以任何顺序放置相等的元素，
+	// 而 Stable 会保留相等元素的原始输入顺序。
 	//
-	// Less must describe a [Strict Weak Ordering]. For example:
-	//  - if both Less(i, j) and Less(j, k) are true, then Less(i, k) must be true as well.
-	//  - if both Less(i, j) and Less(j, k) are false, then Less(i, k) must be false as well.
+	// Less 必须描述一个[严格弱序]。例如：
+	//  - 如果 Less(i, j) 和 Less(j, k) 都为 true，那么 Less(i, k) 也必须为 true。
+	//  - 如果 Less(i, j) 和 Less(j, k) 都为 false，那么 Less(i, k) 也必须为 false。
 	//
-	// Note that floating-point comparison (the < operator on float32 or float64 values)
-	// is not a strict weak ordering when not-a-number (NaN) values are involved.
-	// See Float64Slice.Less for a correct implementation for floating-point values.
+	// 注意，浮点比较（float32 或 float64 值上的 < 运算符）
+	// 当涉及非数字 (NaN) 值时不是严格弱序。
+	// 有关浮点值的正确实现，请参见 Float64Slice.Less。
 	//
-	// [Strict Weak Ordering]: https://en.wikipedia.org/wiki/Weak_ordering#Strict_weak_orderings
+	// [严格弱序]: https://en.wikipedia.org/wiki/Weak_ordering#Strict_weak_orderings
 	Less(i, j int) bool
 
-	// Swap swaps the elements with indexes i and j.
+	// Swap 交换索引为 i 和 j 的元素。
 	Swap(i, j int)
 }
 
-// Sort sorts data in ascending order as determined by the Less method.
-// It makes one call to data.Len to determine n and O(n*log(n)) calls to
-// data.Less and data.Swap. The sort is not guaranteed to be stable.
+// Sort 根据 Less 方法确定的顺序按升序排序数据。
+// 它对 data.Len 进行一次调用以确定 n，对 data.Less 和 data.Swap 进行 O(n*log(n)) 次调用。
+// 该排序不保证稳定。
 //
-// Note: in many situations, the newer [slices.SortFunc] function is more
-// ergonomic and runs faster.
+// 注意：在许多情况下，较新的 [slices.SortFunc] 函数更人性化且运行速度更快。
 func Sort(data Interface) {
 	n := data.Len()
 	if n <= 1 {
@@ -56,7 +54,7 @@ func Sort(data Interface) {
 	pdqsort(data, 0, n, limit)
 }
 
-type sortedHint int // hint for pdqsort when choosing the pivot
+type sortedHint int // 当选择枢轴时给 pdqsort 的提示
 
 const (
 	unknownHint sortedHint = iota
@@ -64,7 +62,7 @@ const (
 	decreasingHint
 )
 
-// xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
+// xorshift 论文: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
 type xorshift uint64
 
 func (r *xorshift) Next() uint64 {
@@ -79,34 +77,31 @@ func nextPowerOfTwo(length int) uint {
 	return uint(1 << shift)
 }
 
-// lessSwap is a pair of Less and Swap function for use with the
-// auto-generated func-optimized variant of sort.go in
-// zfuncversion.go.
+// lessSwap 是一对 Less 和 Swap 函数，用于 zfuncversion.go 中
+// 自动生成的 sort.go 的函数优化变体。
 type lessSwap struct {
 	Less func(i, j int) bool
 	Swap func(i, j int)
 }
 
 type reverse struct {
-	// This embedded Interface permits Reverse to use the methods of
-	// another Interface implementation.
+	// 这个嵌入的 Interface 允许 Reverse 使用另一个 Interface 实现的方法。
 	Interface
 }
 
-// Less returns the opposite of the embedded implementation's Less method.
+// Less 返回嵌入式实现的 Less 方法的相反结果。
 func (r reverse) Less(i, j int) bool {
 	return r.Interface.Less(j, i)
 }
 
-// Reverse returns the reverse order for data.
+// Reverse 返回数据的反向顺序。
 func Reverse(data Interface) Interface {
 	return &reverse{data}
 }
 
-// IsSorted reports whether data is sorted.
+// IsSorted 报告数据是否已排序。
 //
-// Note: in many situations, the newer [slices.IsSortedFunc] function is more
-// ergonomic and runs faster.
+// 注意：在许多情况下，较新的 [slices.IsSortedFunc] 函数更人性化且运行速度更快。
 func IsSorted(data Interface) bool {
 	n := data.Len()
 	for i := n - 1; i > 0; i-- {
@@ -117,172 +112,165 @@ func IsSorted(data Interface) bool {
 	return true
 }
 
-// Convenience types for common cases
+// 常见情况的便利类型
 
-// IntSlice attaches the methods of Interface to []int, sorting in increasing order.
+// IntSlice 将 Interface 的方法附加到 []int，按升序排序。
 type IntSlice []int
 
 func (x IntSlice) Len() int           { return len(x) }
 func (x IntSlice) Less(i, j int) bool { return x[i] < x[j] }
 func (x IntSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
-// Sort is a convenience method: x.Sort() calls Sort(x).
+// Sort 是一个便利方法：x.Sort() 调用 Sort(x)。
 func (x IntSlice) Sort() { Sort(x) }
 
-// Float64Slice implements Interface for a []float64, sorting in increasing order,
-// with not-a-number (NaN) values ordered before other values.
+// Float64Slice 为 []float64 实现 Interface，按升序排序，
+// 其中非数字 (NaN) 值排在其他值之前。
 type Float64Slice []float64
 
 func (x Float64Slice) Len() int { return len(x) }
 
-// Less reports whether x[i] should be ordered before x[j], as required by the sort Interface.
-// Note that floating-point comparison by itself is not a transitive relation: it does not
-// report a consistent ordering for not-a-number (NaN) values.
-// This implementation of Less places NaN values before any others, by using:
+// Less 报告 x[i] 是否应该排在 x[j] 之前，如 sort Interface 所需。
+// 注意，浮点比较本身不是一个传递关系：它不会为非数字 (NaN) 值报告一致的顺序。
+// Less 的此实现使用以下方式将 NaN 值放在任何其他值之前：
 //
 //	x[i] < x[j] || (math.IsNaN(x[i]) && !math.IsNaN(x[j]))
 func (x Float64Slice) Less(i, j int) bool { return x[i] < x[j] || (isNaN(x[i]) && !isNaN(x[j])) }
 func (x Float64Slice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
-// isNaN is a copy of math.IsNaN to avoid a dependency on the math package.
+// isNaN 是 math.IsNaN 的副本，以避免对 math 包的依赖。
 func isNaN(f float64) bool {
 	return f != f
 }
 
-// Sort is a convenience method: x.Sort() calls Sort(x).
+// Sort 是一个便利方法：x.Sort() 调用 Sort(x)。
 func (x Float64Slice) Sort() { Sort(x) }
 
-// StringSlice attaches the methods of Interface to []string, sorting in increasing order.
+// StringSlice 将 Interface 的方法附加到 []string，按升序排序。
 type StringSlice []string
 
 func (x StringSlice) Len() int           { return len(x) }
 func (x StringSlice) Less(i, j int) bool { return x[i] < x[j] }
 func (x StringSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
-// Sort is a convenience method: x.Sort() calls Sort(x).
+// Sort 是一个便利方法：x.Sort() 调用 Sort(x)。
 func (x StringSlice) Sort() { Sort(x) }
 
-// Convenience wrappers for common cases
+// 常见情况的便利包装函数
 
-// Ints sorts a slice of ints in increasing order.
+// Ints 按升序对整数切片进行排序。
 //
-// Note: as of Go 1.22, this function simply calls [slices.Sort].
+// 注意：从 Go 1.22 开始，此函数只是调用 [slices.Sort]。
 func Ints(x []int) { slices.Sort(x) }
 
-// Float64s sorts a slice of float64s in increasing order.
-// Not-a-number (NaN) values are ordered before other values.
+// Float64s 按升序对 float64 切片进行排序。
+// 非数字 (NaN) 值排在其他值之前。
 //
-// Note: as of Go 1.22, this function simply calls [slices.Sort].
+// 注意：从 Go 1.22 开始，此函数只是调用 [slices.Sort]。
 func Float64s(x []float64) { slices.Sort(x) }
 
-// Strings sorts a slice of strings in increasing order.
+// Strings 按升序对字符串切片进行排序。
 //
-// Note: as of Go 1.22, this function simply calls [slices.Sort].
+// 注意：从 Go 1.22 开始，此函数只是调用 [slices.Sort]。
 func Strings(x []string) { slices.Sort(x) }
 
-// IntsAreSorted reports whether the slice x is sorted in increasing order.
+// IntsAreSorted 报告切片 x 是否按升序排序。
 //
-// Note: as of Go 1.22, this function simply calls [slices.IsSorted].
+// 注意：从 Go 1.22 开始，此函数只是调用 [slices.IsSorted]。
 func IntsAreSorted(x []int) bool { return slices.IsSorted(x) }
 
-// Float64sAreSorted reports whether the slice x is sorted in increasing order,
-// with not-a-number (NaN) values before any other values.
+// Float64sAreSorted 报告切片 x 是否按升序排序，
+// 其中非数字 (NaN) 值排在任何其他值之前。
 //
-// Note: as of Go 1.22, this function simply calls [slices.IsSorted].
+// 注意：从 Go 1.22 开始，此函数只是调用 [slices.IsSorted]。
 func Float64sAreSorted(x []float64) bool { return slices.IsSorted(x) }
 
-// StringsAreSorted reports whether the slice x is sorted in increasing order.
+// StringsAreSorted 报告切片 x 是否按升序排序。
 //
-// Note: as of Go 1.22, this function simply calls [slices.IsSorted].
+// 注意：从 Go 1.22 开始，此函数只是调用 [slices.IsSorted]。
 func StringsAreSorted(x []string) bool { return slices.IsSorted(x) }
 
-// Notes on stable sorting:
-// The used algorithms are simple and provable correct on all input and use
-// only logarithmic additional stack space. They perform well if compared
-// experimentally to other stable in-place sorting algorithms.
+// 关于稳定排序的注释：
+// 所使用的算法很简单，可在所有输入上证明正确，并且仅使用对数级额外栈空间。
+// 与其他原地稳定排序算法相比，它们的性能良好。
 //
-// Remarks on other algorithms evaluated:
-//  - GCC's 4.6.3 stable_sort with merge_without_buffer from libstdc++:
-//    Not faster.
-//  - GCC's __rotate for block rotations: Not faster.
-//  - "Practical in-place mergesort" from  Jyrki Katajainen, Tomi A. Pasanen
-//    and Jukka Teuhola; Nordic Journal of Computing 3,1 (1996), 27-40:
-//    The given algorithms are in-place, number of Swap and Assignments
-//    grow as n log n but the algorithm is not stable.
-//  - "Fast Stable In-Place Sorting with O(n) Data Moves" J.I. Munro and
-//    V. Raman in Algorithmica (1996) 16, 115-160:
-//    This algorithm either needs additional 2n bits or works only if there
-//    are enough different elements available to encode some permutations
-//    which have to be undone later (so not stable on any input).
-//  - All the optimal in-place sorting/merging algorithms I found are either
-//    unstable or rely on enough different elements in each step to encode the
-//    performed block rearrangements. See also "In-Place Merging Algorithms",
-//    Denham Coates-Evely, Department of Computer Science, Kings College,
-//    January 2004 and the references in there.
-//  - Often "optimal" algorithms are optimal in the number of assignments
-//    but Interface has only Swap as operation.
+// 对其他已评估的算法的评论：
+//  - GCC 4.6.3 stable_sort 与来自 libstdc++ 的 merge_without_buffer：
+//    速度不快。
+//  - GCC 的 __rotate 用于块旋转：速度不快。
+//  - Jyrki Katajainen、Tomi A. Pasanen 和 Jukka Teuhola 的
+//    "Practical in-place mergesort"；Nordic Journal of Computing 3,1 (1996)，27-40：
+//    给定的算法是原地的，Swap 和赋值的数量随 n log n 增长，但算法不稳定。
+//  - J.I. Munro 和 V. Raman 在 Algorithmica (1996) 16, 115-160 中的
+//    "Fast Stable In-Place Sorting with O(n) Data Moves"：
+//    此算法要么需要额外的 2n 比特，要么只在有足够不同元素时工作
+//    以对某些必须稍后撤销的排列进行编码（因此在任何输入上都不稳定）。
+//  - 我找到的所有最优原地排序/合并算法要么不稳定，要么依赖于
+//    每一步中有足够的不同元素来编码执行的块重排。
+//    另请参阅"In-Place Merging Algorithms"，
+//    Denham Coates-Evely，计算机科学部门，国王学院，
+//    2004 年 1 月及其中的参考资料。
+//  - "最优"算法通常在赋值数量上是最优的，但 Interface 只有 Swap 作为操作。
 
-// Stable sorts data in ascending order as determined by the Less method,
-// while keeping the original order of equal elements.
+// Stable 根据 Less 方法确定的顺序按升序排序数据，
+// 同时保持相等元素的原始顺序。
 //
-// It makes one call to data.Len to determine n, O(n*log(n)) calls to
-// data.Less and O(n*log(n)*log(n)) calls to data.Swap.
+// 它对 data.Len 进行一次调用以确定 n，对 data.Less 进行 O(n*log(n)) 次调用，
+// 对 data.Swap 进行 O(n*log(n)*log(n)) 次调用。
 //
-// Note: in many situations, the newer slices.SortStableFunc function is more
-// ergonomic and runs faster.
+// 注意：在许多情况下，较新的 slices.SortStableFunc 函数更人性化且运行速度更快。
 func Stable(data Interface) {
 	stable(data, data.Len())
 }
 
 /*
-Complexity of Stable Sorting
+稳定排序的复杂性
 
 
-Complexity of block swapping rotation
+块交换旋转的复杂性
 
-Each Swap puts one new element into its correct, final position.
-Elements which reach their final position are no longer moved.
-Thus block swapping rotation needs |u|+|v| calls to Swaps.
-This is best possible as each element might need a move.
+每个 Swap 将一个新元素放入其正确的最终位置。
+到达最终位置的元素不再被移动。
+因此块交换旋转需要 |u|+|v| 次 Swap 调用。
+这是最优的，因为每个元素可能需要移动。
 
-Pay attention when comparing to other optimal algorithms which
-typically count the number of assignments instead of swaps:
-E.g. the optimal algorithm of Dudzinski and Dydek for in-place
-rotations uses O(u + v + gcd(u,v)) assignments which is
-better than our O(3 * (u+v)) as gcd(u,v) <= u.
+与其他通常计算赋值数量而不是交换的最优算法进行比较时要小心：
+例如，Dudzinski 和 Dydek 用于原地旋转的最优算法使用
+O(u + v + gcd(u,v)) 赋值，这比我们的 O(3 * (u+v)) 更好，
+因为 gcd(u,v) <= u。
 
 
-Stable sorting by SymMerge and BlockSwap rotations
+通过 SymMerge 和 BlockSwap 旋转进行稳定排序
 
-SymMerg complexity for same size input M = N:
-Calls to Less:  O(M*log(N/M+1)) = O(N*log(2)) = O(N)
-Calls to Swap:  O((M+N)*log(M)) = O(2*N*log(N)) = O(N*log(N))
+SymMerg 对相同大小输入 M = N 的复杂性：
+Less 调用：O(M*log(N/M+1)) = O(N*log(2)) = O(N)
+Swap 调用：O((M+N)*log(M)) = O(2*N*log(N)) = O(N*log(N))
 
-(The following argument does not fuzz over a missing -1 or
-other stuff which does not impact the final result).
+（以下论证不会对缺少的 -1 或其他不影响最终结果的内容产生歧义）。
 
-Let n = data.Len(). Assume n = 2^k.
+设 n = data.Len()。假设 n = 2^k。
 
-Plain merge sort performs log(n) = k iterations.
-On iteration i the algorithm merges 2^(k-i) blocks, each of size 2^i.
+普通合并排序执行 log(n) = k 次迭代。
+在第 i 次迭代中，算法合并 2^(k-i) 个块，每个大小为 2^i。
 
-Thus iteration i of merge sort performs:
-Calls to Less  O(2^(k-i) * 2^i) = O(2^k) = O(2^log(n)) = O(n)
-Calls to Swap  O(2^(k-i) * 2^i * log(2^i)) = O(2^k * i) = O(n*i)
+因此合并排序的第 i 次迭代执行：
+Less 调用  O(2^(k-i) * 2^i) = O(2^k) = O(2^log(n)) = O(n)
+Swap 调用  O(2^(k-i) * 2^i * log(2^i)) = O(2^k * i) = O(n*i)
 
-In total k = log(n) iterations are performed; so in total:
-Calls to Less O(log(n) * n)
-Calls to Swap O(n + 2*n + 3*n + ... + (k-1)*n + k*n)
+总共执行 k = log(n) 次迭代；所以总共：
+Less 调用 O(log(n) * n)
+Swap 调用 O(n + 2*n + 3*n + ... + (k-1)*n + k*n)
    = O((k/2) * k * n) = O(n * k^2) = O(n * log^2(n))
 
 
-Above results should generalize to arbitrary n = 2^k + p
-and should not be influenced by the initial insertion sort phase:
-Insertion sort is O(n^2) on Swap and Less, thus O(bs^2) per block of
-size bs at n/bs blocks:  O(bs*n) Swaps and Less during insertion sort.
-Merge sort iterations start at i = log(bs). With t = log(bs) constant:
-Calls to Less O((log(n)-t) * n + bs*n) = O(log(n)*n + (bs-t)*n)
+上述结果应该推广到任意 n = 2^k + p，
+并且不应受到初始插入排序阶段的影响：
+在 Swap 和 Less 上，插入排序为 O(n^2)，
+因此在 n/bs 个块的大小为 bs 的块上为 O(bs^2)：
+插入排序期间 O(bs*n) Swap 和 Less。
+合并排序迭代从 i = log(bs) 开始。以 t = log(bs) 常数：
+Less 调用 O((log(n)-t) * n + bs*n) = O(log(n)*n + (bs-t)*n)
    = O(n * log(n))
-Calls to Swap O(n * log^2(n) - (t^2+t)/2*n) = O(n * log^2(n))
+Swap 调用 O(n * log^2(n) - (t^2+t)/2*n) = O(n * log^2(n))
 
 */

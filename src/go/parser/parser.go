@@ -2,26 +2,19 @@
 // 本源代码的使用受 BSD 风格许可证约束，
 // 该许可证可在 LICENSE 文件中找到。
 
-// parser 包实现了 a parser for Go source files.
+// parser 包为 Go 源文件实现了一个解析器。
 //
-// The [ParseFile] function reads file input from a string, []byte, or
-// io.Reader, and produces an [ast.File] representing the complete
-// abstract syntax tree of the file.
+// [ParseFile] 函数从字符串、[]byte 或 io.Reader 读取文件输入，
+// 并生成表示文件完整抽象语法树的 [ast.File]。
 //
-// The [ParseExprFrom] function reads a single source-level expression and
-// produces an [ast.Expr], the syntax tree of the expression.
+// [ParseExprFrom] 函数读取单个源级表达式，并生成表达式的语法树 [ast.Expr]。
 //
-// The parser accepts a larger language than is syntactically permitted by
-// the Go spec, for simplicity, and for improved robustness in the presence
-// of syntax errors. For instance, in method declarations, the receiver is
-// treated like an ordinary parameter list and thus may contain multiple
-// entries where the spec permits exactly one. Consequently, the corresponding
-// field in the AST (ast.FuncDecl.Recv) field is not restricted to one entry.
+// 解析器接受比 Go 规范语法上允许的更大的语言，以简化和提高在语法错误存在时的健壮性。
+// 例如，在方法声明中，接收器被视为普通参数列表，因此可能包含多个条目，
+// 而规范只允许一个。因此，AST 中的对应字段 (ast.FuncDecl.Recv) 不限于一个条目。
 //
-// Applications that need to parse one or more complete packages of Go
-// source code may find it more convenient not to interact directly
-// with the parser but instead to use the Load function in package
-// [golang.org/x/tools/go/packages].
+// 需要解析一个或多个完整 Go 源代码包的应用程序可能会发现不直接与解析器交互，
+// 而是使用包 [golang.org/x/tools/go/packages] 中的 Load 函数更方便。
 package parser
 
 import (
@@ -34,45 +27,44 @@ import (
 	"strings"
 )
 
-// The parser structure 保存 parser's internal state.
+// 解析器结构保存解析器的内部状态。
 type parser struct {
 	file    *token.File
 	errors  scanner.ErrorList
 	scanner scanner.Scanner
 
-	// Tracing/debugging
-	mode   Mode // parsing mode
+	// 追踪/调试
+	mode   Mode // 解析模式
 	trace  bool // == (mode&Trace != 0)
-	indent int  // indentation used for tracing output
+	indent int  // 用于追踪输出的缩进
 
-	// Comments
+	// 注释
 	comments    []*ast.CommentGroup
-	leadComment *ast.CommentGroup // last lead comment
-	lineComment *ast.CommentGroup // last line comment
-	top         bool              // in top of file (before package clause)
-	goVersion   string            // minimum Go version found in //go:build comment
+	leadComment *ast.CommentGroup // 最后一个前置注释
+	lineComment *ast.CommentGroup // 最后一个行注释
+	top         bool              // 在文件顶部（包子句前）
+	goVersion   string            // 在 //go:build 注释中找到的最小 Go 版本
 
-	// Next token
-	pos       token.Pos   // token position
-	tok       token.Token // one token look-ahead
-	lit       string      // token literal
-	stringEnd token.Pos   // position immediately after token; STRING only
+	// 下一个标记
+	pos       token.Pos   // 标记位置
+	tok       token.Token // 一个标记前看
+	lit       string      // 标记字面值
+	stringEnd token.Pos   // 标记后立即的位置；仅用于 STRING
 
-	// Error recovery
-	// (used to limit the number of calls to parser.advance
-	// w/o making scanning progress - avoids potential endless
-	// loops across multiple parser functions during error recovery)
-	syncPos token.Pos // last synchronization position
-	syncCnt int       // number of parser.advance calls without progress
+	// 错误恢复
+	// (用于限制对 parser.advance 的调用次数，
+	// 在没有进行扫描进展的情况下 - 避免在错误恢复期间
+	// 跨多个解析器函数的可能无限循环)
+	syncPos token.Pos // 最后同步位置
+	syncCnt int       // parser.advance 调用次数但无进展
 
-	// Non-syntactic parser control
-	exprLev int  // < 0: in control clause, >= 0: in expression
-	inRhs   bool // if set, the parser is parsing a rhs expression
+	// 非语法解析器控制
+	exprLev int  // < 0: 在控制子句中, >= 0: 在表达式中
+	inRhs   bool // 如果设置，解析器正在解析右手边表达式
 
-	imports []*ast.ImportSpec // list of imports
+	imports []*ast.ImportSpec // 导入列表
 
-	// nestLev is used to track and limit the recursion depth
-	// during parsing.
+	// nestLev 用于在解析期间跟踪和限制递归深度。
 	nestLev int
 }
 

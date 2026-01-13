@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package zip
 
@@ -11,18 +11,16 @@ import (
 	"sync"
 )
 
-// A Compressor returns a new compressing writer, writing to w.
-// The WriteCloser's Close method must be used to flush pending data to w.
-// The Compressor itself must be safe to invoke from multiple goroutines
-// simultaneously, but each returned writer will be used only by
-// one goroutine at a time.
+// Compressor 返回一个新的压缩写入器，写入到 w。
+// WriteCloser 的 Close 方法必须用于将待处理数据刷新到 w。
+// Compressor 本身必须可以安全地从多个 goroutine 同时调用，
+// 但每个返回的写入器一次只会被一个 goroutine 使用。
 type Compressor func(w io.Writer) (io.WriteCloser, error)
 
-// A Decompressor returns a new decompressing reader, reading from r.
-// The [io.ReadCloser]'s Close method must be used to release associated resources.
-// The Decompressor itself must be safe to invoke from multiple goroutines
-// simultaneously, but each returned reader will be used only by
-// one goroutine at a time.
+// Decompressor 返回一个新的解压缩读取器，从 r 读取。
+// [io.ReadCloser] 的 Close 方法必须用于释放关联的资源。
+// Decompressor 本身必须可以安全地从多个 goroutine 同时调用，
+// 但每个返回的读取器一次只会被一个 goroutine 使用。
 type Decompressor func(r io.Reader) io.ReadCloser
 
 var flateWriterPool sync.Pool
@@ -38,7 +36,7 @@ func newFlateWriter(w io.Writer) io.WriteCloser {
 }
 
 type pooledFlateWriter struct {
-	mu sync.Mutex // guards Close and Write
+	mu sync.Mutex // 保护 Close 和 Write
 	fw *flate.Writer
 }
 
@@ -76,7 +74,7 @@ func newFlateReader(r io.Reader) io.ReadCloser {
 }
 
 type pooledFlateReader struct {
-	mu sync.Mutex // guards Close and Read
+	mu sync.Mutex // 保护 Close 和 Read
 	fr io.ReadCloser
 }
 
@@ -114,16 +112,16 @@ func init() {
 	decompressors.Store(Deflate, Decompressor(newFlateReader))
 }
 
-// RegisterDecompressor allows custom decompressors for a specified method ID.
-// The common methods [Store] and [Deflate] are built in.
+// RegisterDecompressor 允许为指定的方法 ID 注册自定义解压器。
+// 通用方法 [Store] 和 [Deflate] 是内置的。
 func RegisterDecompressor(method uint16, dcomp Decompressor) {
 	if _, dup := decompressors.LoadOrStore(method, dcomp); dup {
 		panic("decompressor already registered")
 	}
 }
 
-// RegisterCompressor registers custom compressors for a specified method ID.
-// The common methods [Store] and [Deflate] are built in.
+// RegisterCompressor 为指定的方法 ID 注册自定义压缩器。
+// 通用方法 [Store] 和 [Deflate] 是内置的。
 func RegisterCompressor(method uint16, comp Compressor) {
 	if _, dup := compressors.LoadOrStore(method, comp); dup {
 		panic("compressor already registered")

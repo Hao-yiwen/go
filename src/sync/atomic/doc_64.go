@@ -1,107 +1,107 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build !(386 || arm || mips || mipsle)
 
 package atomic
 
-// SwapInt64 atomically stores new into *addr and returns the previous *addr value.
-// Consider using the more ergonomic and less error-prone [Int64.Swap] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// SwapInt64 原子地将 new 存储到 *addr 中并返回之前的 *addr 值。
+// 改用更符合人体工学且不易出错的 [Int64.Swap]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func SwapInt64(addr *int64, new int64) (old int64)
 
-// SwapUint64 atomically stores new into *addr and returns the previous *addr value.
-// Consider using the more ergonomic and less error-prone [Uint64.Swap] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// SwapUint64 原子地将 new 存储到 *addr 中并返回之前的 *addr 值。
+// 改用更符合人体工学且不易出错的 [Uint64.Swap]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func SwapUint64(addr *uint64, new uint64) (old uint64)
 
-// CompareAndSwapInt64 executes the compare-and-swap operation for an int64 value.
-// Consider using the more ergonomic and less error-prone [Int64.CompareAndSwap] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// CompareAndSwapInt64 对 int64 值执行比较并交换操作。
+// 改用更符合人体工学且不易出错的 [Int64.CompareAndSwap]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func CompareAndSwapInt64(addr *int64, old, new int64) (swapped bool)
 
-// CompareAndSwapUint64 executes the compare-and-swap operation for a uint64 value.
-// Consider using the more ergonomic and less error-prone [Uint64.CompareAndSwap] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// CompareAndSwapUint64 对 uint64 值执行比较并交换操作。
+// 改用更符合人体工学且不易出错的 [Uint64.CompareAndSwap]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func CompareAndSwapUint64(addr *uint64, old, new uint64) (swapped bool)
 
-// AddInt64 atomically adds delta to *addr and returns the new value.
-// Consider using the more ergonomic and less error-prone [Int64.Add] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// AddInt64 原子地将 delta 加到 *addr 中并返回新值。
+// 改用更符合人体工学且不易出错的 [Int64.Add]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func AddInt64(addr *int64, delta int64) (new int64)
 
-// AddUint64 atomically adds delta to *addr and returns the new value.
-// To subtract a signed positive constant value c from x, do AddUint64(&x, ^uint64(c-1)).
-// In particular, to decrement x, do AddUint64(&x, ^uint64(0)).
-// Consider using the more ergonomic and less error-prone [Uint64.Add] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// AddUint64 原子地将 delta 加到 *addr 中并返回新值。
+// 要从 x 减去有符号正常量值 c，请执行 AddUint64(&x, ^uint64(c-1))。
+// 特别是，要递减 x，请执行 AddUint64(&x, ^uint64(0))。
+// 改用更符合人体工学且不易出错的 [Uint64.Add]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func AddUint64(addr *uint64, delta uint64) (new uint64)
 
-// AndInt64 atomically performs a bitwise AND operation on *addr using the bitmask provided as mask
-// and returns the old value.
-// Consider using the more ergonomic and less error-prone [Int64.And] instead.
+// AndInt64 使用提供的位掩码对 *addr 执行原子按位 AND 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Int64.And]。
 //
 //go:noescape
 func AndInt64(addr *int64, mask int64) (old int64)
 
-// AndUint64 atomically performs a bitwise AND operation on *addr using the bitmask provided as mask
-// and returns the old.
-// Consider using the more ergonomic and less error-prone [Uint64.And] instead.
+// AndUint64 使用提供的位掩码对 *addr 执行原子按位 AND 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Uint64.And]。
 //
 //go:noescape
 func AndUint64(addr *uint64, mask uint64) (old uint64)
 
-// OrInt64 atomically performs a bitwise OR operation on *addr using the bitmask provided as mask
-// and returns the old value.
-// Consider using the more ergonomic and less error-prone [Int64.Or] instead.
+// OrInt64 使用提供的位掩码对 *addr 执行原子按位 OR 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Int64.Or]。
 //
 //go:noescape
 func OrInt64(addr *int64, mask int64) (old int64)
 
-// OrUint64 atomically performs a bitwise OR operation on *addr using the bitmask provided as mask
-// and returns the old value.
-// Consider using the more ergonomic and less error-prone [Uint64.Or] instead.
+// OrUint64 使用提供的位掩码对 *addr 执行原子按位 OR 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Uint64.Or]。
 //
 //go:noescape
 func OrUint64(addr *uint64, mask uint64) (old uint64)
 
-// LoadInt64 atomically loads *addr.
-// Consider using the more ergonomic and less error-prone [Int64.Load] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// LoadInt64 原子地加载 *addr。
+// 改用更符合人体工学且不易出错的 [Int64.Load]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func LoadInt64(addr *int64) (val int64)
 
-// LoadUint64 atomically loads *addr.
-// Consider using the more ergonomic and less error-prone [Uint64.Load] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// LoadUint64 原子地加载 *addr。
+// 改用更符合人体工学且不易出错的 [Uint64.Load]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func LoadUint64(addr *uint64) (val uint64)
 
-// StoreInt64 atomically stores val into *addr.
-// Consider using the more ergonomic and less error-prone [Int64.Store] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// StoreInt64 原子地将 val 存储到 *addr 中。
+// 改用更符合人体工学且不易出错的 [Int64.Store]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func StoreInt64(addr *int64, val int64)
 
-// StoreUint64 atomically stores val into *addr.
-// Consider using the more ergonomic and less error-prone [Uint64.Store] instead
-// (particularly if you target 32-bit platforms; see the bugs section).
+// StoreUint64 原子地将 val 存储到 *addr 中。
+// 改用更符合人体工学且不易出错的 [Uint64.Store]
+// （特别是如果你针对 32 位平台；请参见 bugs 部分）。
 //
 //go:noescape
 func StoreUint64(addr *uint64, val uint64)

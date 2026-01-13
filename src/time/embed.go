@@ -1,9 +1,9 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// This file is used with build tag timetzdata to embed tzdata into
-// the binary.
+// 此文件与 build 标签 timetzdata 一起使用，以将 tzdata 嵌入到
+// 二进制文件中。
 
 //go:build timetzdata
 

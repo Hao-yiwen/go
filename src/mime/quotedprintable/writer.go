@@ -1,6 +1,6 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2015 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package quotedprintable
 
@@ -8,10 +8,9 @@ import "io"
 
 const lineMaxLen = 76
 
-// A Writer is a quoted-printable writer that implements [io.WriteCloser].
+// Writer 是实现 [io.WriteCloser] 的 quoted-printable 写入器。
 type Writer struct {
-	// Binary mode treats the writer's input as pure binary and processes end of
-	// line bytes as binary data.
+	// Binary 模式将写入器的输入视为纯二进制数据，并将行尾字节作为二进制数据处理。
 	Binary bool
 
 	w    io.Writer
@@ -20,18 +19,17 @@ type Writer struct {
 	cr   bool
 }
 
-// NewWriter returns a new [Writer] that writes to w.
+// NewWriter 返回一个写入 w 的新 [Writer]。
 func NewWriter(w io.Writer) *Writer {
 	return &Writer{w: w}
 }
 
-// Write encodes p using quoted-printable encoding and writes it to the
-// underlying [io.Writer]. It limits line length to 76 characters. The encoded
-// bytes are not necessarily flushed until the [Writer] is closed.
+// Write 使用 quoted-printable 编码对 p 进行编码并将其写入底层 [io.Writer]。
+// 它将行长度限制为 76 个字符。编码后的字节在 [Writer] 关闭前不一定被刷新。
 func (w *Writer) Write(p []byte) (n int, err error) {
 	for i, b := range p {
 		switch {
-		// Simple writes are done in batch.
+		// 简单的写入操作成批进行。
 		case b >= '!' && b <= '~' && b != '=':
 			continue
 		case isWhitespace(b) || !w.Binary && (b == '\n' || b == '\r'):
@@ -62,8 +60,8 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-// Close closes the [Writer], flushing any unwritten data to the underlying
-// [io.Writer], but does not close the underlying io.Writer.
+// Close 关闭 [Writer]，将任何未写入的数据刷新到底层 [io.Writer]，
+// 但不关闭底层的 io.Writer。
 func (w *Writer) Close() error {
 	if err := w.checkLastByte(); err != nil {
 		return err
@@ -72,11 +70,11 @@ func (w *Writer) Close() error {
 	return w.flush()
 }
 
-// write limits text encoded in quoted-printable to 76 characters per line.
+// write 将 quoted-printable 编码的文本限制为每行 76 个字符。
 func (w *Writer) write(p []byte) error {
 	for _, b := range p {
 		if b == '\n' || b == '\r' {
-			// If the previous byte was \r, the CRLF has already been inserted.
+			// 如果前一个字节是 \r，则 CRLF 已经被插入。
 			if w.cr && b == '\n' {
 				w.cr = false
 				continue
@@ -126,7 +124,7 @@ func (w *Writer) encode(b byte) error {
 
 const upperhex = "0123456789ABCDEF"
 
-// checkLastByte encodes the last buffered byte if it is a space or a tab.
+// checkLastByte 如果最后缓冲的字节是空格或制表符，则对其进行编码。
 func (w *Writer) checkLastByte() error {
 	if w.i == 0 {
 		return nil

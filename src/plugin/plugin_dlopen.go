@@ -1,6 +1,6 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2016 The Go 作者。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证管制，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build (linux && cgo) || (darwin && cgo) || (freebsd && cgo)
 
@@ -66,8 +66,8 @@ func open(name string) (*Plugin, error) {
 		pluginsMu.Unlock()
 		return nil, errors.New(`plugin.Open("` + name + `"): ` + C.GoString(cErr))
 	}
-	// TODO(crawshaw): look for plugin note, confirm it is a Go plugin
-	// and it was built with the correct toolchain.
+	// TODO(crawshaw): 查找插件笔记，确认它是一个 Go 插件
+	// 并且它是用正确的工具链构建的。
 	if len(name) > 3 && name[len(name)-3:] == ".so" {
 		name = name[:len(name)-3]
 	}
@@ -83,8 +83,8 @@ func open(name string) (*Plugin, error) {
 		pluginsMu.Unlock()
 		return nil, errors.New(`plugin.Open("` + name + `"): ` + errstr)
 	}
-	// This function can be called from the init function of a plugin.
-	// Drop a placeholder in the map so subsequent opens can wait on it.
+	// 这个函数可以从插件的 init 函数调用。
+	// 在映射中放置一个占位符，以便后续的打开操作可以等待它。
 	p := &Plugin{
 		pluginpath: pluginpath,
 		loaded:     make(chan struct{}),
@@ -94,7 +94,7 @@ func open(name string) (*Plugin, error) {
 
 	doInit(initTasks)
 
-	// Fill out the value of each plugin symbol.
+	// 填充每个插件符号的值。
 	updatedSyms := map[string]any{}
 	for symName, sym := range syms {
 		isFunc := symName[0] == '.'
@@ -117,8 +117,8 @@ func open(name string) (*Plugin, error) {
 		} else {
 			(*valp)[1] = p
 		}
-		// we can't add to syms during iteration as we'll end up processing
-		// some symbols twice with the inability to tell if the symbol is a function
+		// 我们不能在迭代期间添加到 syms，因为我们会处理
+		// 某些符号两次，无法判断符号是否是函数
 		updatedSyms[symName] = sym
 	}
 	p.syms = updatedSyms
@@ -139,15 +139,16 @@ var (
 	plugins   map[string]*Plugin
 )
 
-// lastmoduleinit is defined in package runtime.
+// lastmoduleinit 在 runtime 包中定义。
 func lastmoduleinit() (pluginpath string, syms map[string]any, inittasks []*initTask, errstr string)
 
-// doInit is defined in package runtime.
+// doInit 在 runtime 包中定义。
 //
 //go:linkname doInit runtime.doInit
 func doInit(t []*initTask)
 
 type initTask struct {
-	// fields defined in runtime.initTask. We only handle pointers to an initTask
-	// in this package, so the contents are irrelevant.
+	// 在 runtime.initTask 中定义的字段。我们在
+	// 这个包中只处理指向 initTask 的指针，
+	// 所以内容无关。
 }

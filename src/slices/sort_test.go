@@ -242,8 +242,8 @@ func TestMinMaxNaNs(t *testing.T) {
 		t.Errorf("got max %v, want 999.9", Max(fs))
 	}
 
-	// No matter which element of fs is replaced with a NaN, both Min and Max
-	// should propagate the NaN to their output.
+	// 无论 fs 的哪个元素被替换为 NaN，Min 和 Max 都
+	// 应该将 NaN 传播到它们的输出。
 	for i := 0; i < len(fs); i++ {
 		testfs := Clone(fs)
 		testfs[i] = math.NaN()
@@ -287,10 +287,10 @@ func TestBinarySearch(t *testing.T) {
 	str3 := []string{"mo", "qo", "vo"}
 	str4 := []string{"ab", "ad", "ca", "xy"}
 
-	// slice with repeating elements
+	// 包含重复元素的切片
 	strRepeats := []string{"ba", "ca", "da", "da", "da", "ka", "ma", "ma", "ta"}
 
-	// slice with all element equal
+	// 所有元素相等的切片
 	strSame := []string{"xx", "xx", "xx"}
 
 	tests := []struct {

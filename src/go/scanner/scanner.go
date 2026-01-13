@@ -3,8 +3,7 @@
 // 该许可证可在 LICENSE 文件中找到。
 
 // scanner 包实现了 Go 源代码的扫描器。
-// It takes a []byte as source which can then be tokenized
-// through repeated calls to the Scan method.
+// 它将 []byte 作为源，然后可以通过重复调用 Scan 方法进行标记化。
 package scanner
 
 import (
@@ -18,37 +17,34 @@ import (
 	"unicode/utf8"
 )
 
-// 一个ErrorHandler 可能是 provided to [Scanner.Init]. If a syntax error is
-// encountered and a handler was installed, the handler is called with a
-// position and an error message. The position points to the beginning of
-// the offending token.
+// ErrorHandler 可以提供给 [Scanner.Init]。如果遇到语法错误且已安装处理器，
+// 则使用位置和错误消息调用处理器。位置指向违规标记的开始。
 type ErrorHandler func(pos token.Position, msg string)
 
-// 一个Scanner 保存 scanner's internal state while processing
-// a given text. It can be allocated as part of another data
-// structure but 必须是 initialized via [Scanner.Init] before use.
+// Scanner 在处理给定文本时保存扫描器的内部状态。
+// 它可以分配为另一个数据结构的一部分，但在使用前必须通过 [Scanner.Init] 初始化。
 type Scanner struct {
-	// immutable state
-	file *token.File  // source file handle
-	dir  string       // directory portion of file.Name()
-	src  []byte       // source
-	err  ErrorHandler // error reporting; or nil
-	mode Mode         // scanning mode
+	// 不可变状态
+	file *token.File  // 源文件句柄
+	dir  string       // file.Name() 的目录部分
+	src  []byte       // 源
+	err  ErrorHandler // 错误报告；或 nil
+	mode Mode         // 扫描模式
 
-	// scanning state
-	ch         rune      // current character
-	offset     int       // character offset
-	rdOffset   int       // reading offset (position after current character)
-	lineOffset int       // current line offset
-	insertSemi bool      // insert a semicolon before next newline
-	nlPos      token.Pos // position of newline in preceding comment
-	stringEnd  token.Pos // end position; defined only for STRING tokens
+	// 扫描状态
+	ch         rune      // 当前字符
+	offset     int       // 字符偏移
+	rdOffset   int       // 读取偏移（当前字符后的位置）
+	lineOffset int       // 当前行偏移
+	insertSemi bool      // 在下一个换行符前插入分号
+	nlPos      token.Pos // 前面注释中换行符的位置
+	stringEnd  token.Pos // 结束位置；仅针对 STRING 标记定义
 
-	// public state - ok to modify
-	ErrorCount int // number of errors encountered
+	// 公共状态 - 可修改
+	ErrorCount int // 遇到的错误数
 }
 
-// Provide go/parser with backdoor access to the StringEnd information.
+// 为 go/parser 提供对 StringEnd 信息的后门访问。
 func init() {
 	scannerhooks.StringEnd = func(scanner any) token.Pos {
 		return scanner.(*Scanner).stringEnd
@@ -56,15 +52,14 @@ func init() {
 }
 
 const (
-	bom = 0xFEFF // byte order mark, only permitted as very first character
-	eof = -1     // end of file
+	bom = 0xFEFF // 字节顺序标记，仅允许作为第一个字符
+	eof = -1     // 文件末尾
 )
 
-// Read the next Unicode char into s.ch.
-// s.ch < 0 means end-of-file.
+// 将下一个 Unicode 字符读入 s.ch。
+// s.ch < 0 表示文件末尾。
 //
-// For optimization, there is some overlap between this method and
-// s.scanIdentifier.
+// 为了优化，此方法与 s.scanIdentifier 之间存在一些重叠。
 func (s *Scanner) next() {
 	if s.rdOffset < len(s.src) {
 		s.offset = s.rdOffset

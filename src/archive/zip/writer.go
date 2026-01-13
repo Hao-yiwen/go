@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package zip
 
@@ -21,7 +21,7 @@ var (
 	errLongExtra = errors.New("zip: FileHeader.Extra too long")
 )
 
-// Writer implements a zip file writer.
+// Writer 实现了一个 zip 文件写入器。
 type Writer struct {
 	cw          *countWriter
 	dir         []*header
@@ -30,8 +30,8 @@ type Writer struct {
 	compressors map[uint16]Compressor
 	comment     string
 
-	// testHookCloseSizeOffset if non-nil is called with the size
-	// of offset of the central directory at Close.
+	// testHookCloseSizeOffset 如果非 nil，则在 Close 时调用
+	// 中央目录的大小和偏移量。
 	testHookCloseSizeOffset func(size, offset uint64)
 }
 
@@ -41,15 +41,14 @@ type header struct {
 	raw    bool
 }
 
-// NewWriter returns a new [Writer] writing a zip file to w.
+// NewWriter 返回一个新的 [Writer]，向 w 写入 zip 文件。
 func NewWriter(w io.Writer) *Writer {
 	return &Writer{cw: &countWriter{w: bufio.NewWriter(w)}}
 }
 
-// SetOffset sets the offset of the beginning of the zip data within the
-// underlying writer. It should be used when the zip data is appended to an
-// existing file, such as a binary executable.
-// It must be called before any data is written.
+// SetOffset 设置 zip 数据在基础写入器中的开始偏移量。
+// 它应在 zip 数据附加到现有文件（例如二进制可执行文件）时使用。
+// 它必须在写入任何数据之前调用。
 func (w *Writer) SetOffset(n int64) {
 	if w.cw.count != 0 {
 		panic("zip: SetOffset called after data was written")
@@ -57,14 +56,14 @@ func (w *Writer) SetOffset(n int64) {
 	w.cw.count = n
 }
 
-// Flush flushes any buffered data to the underlying writer.
-// Calling Flush is not normally necessary; calling Close is sufficient.
+// Flush 将任何缓冲的数据刷新到基础写入器。
+// 通常不需要调用 Flush；调用 Close 就足够了。
 func (w *Writer) Flush() error {
 	return w.cw.w.(*bufio.Writer).Flush()
 }
 
-// SetComment sets the end-of-central-directory comment field.
-// It can only be called before [Writer.Close].
+// SetComment 设置中央目录末尾的注释字段。
+// 它只能在 [Writer.Close] 之前调用。
 func (w *Writer) SetComment(comment string) error {
 	if len(comment) > uint16max {
 		return errors.New("zip: Writer.Comment too long")
@@ -73,8 +72,8 @@ func (w *Writer) SetComment(comment string) error {
 	return nil
 }
 
-// Close finishes writing the zip file by writing the central directory.
-// It does not close the underlying writer.
+// Close 通过写入中央目录完成 zip 文件的写入。
+// 它不关闭基础写入器。
 func (w *Writer) Close() error {
 	if w.last != nil && !w.last.closed {
 		if err := w.last.close(); err != nil {
@@ -87,7 +86,7 @@ func (w *Writer) Close() error {
 	}
 	w.closed = true
 
-	// write central directory
+	// 写入中央目录
 	start := w.cw.count
 	for _, h := range w.dir {
 		var buf [directoryHeaderLen]byte
@@ -101,13 +100,12 @@ func (w *Writer) Close() error {
 		b.uint16(h.ModifiedDate)
 		b.uint32(h.CRC32)
 		if h.isZip64() || h.offset >= uint32max {
-			// the file needs a zip64 header. store maxint in both
-			// 32 bit size fields (and offset later) to signal that the
-			// zip64 extra header should be used.
-			b.uint32(uint32max) // compressed size
-			b.uint32(uint32max) // uncompressed size
+			// 该文件需要 zip64 头部。在两个 32 位大小字段中存储 maxint
+			//（以及稍后的偏移量）来表示应使用 zip64 额外头部。
+			b.uint32(uint32max) // 压缩大小
+			b.uint32(uint32max) // 未压缩大小
 
-			// append a zip64 extra block to Extra
+			// 将 zip64 额外块附加到 Extra
 			var buf [28]byte // 2x uint16 + 3x uint64
 			eb := writeBuf(buf[:])
 			eb.uint16(zip64ExtraID)
@@ -124,7 +122,7 @@ func (w *Writer) Close() error {
 		b.uint16(uint16(len(h.Name)))
 		b.uint16(uint16(len(h.Extra)))
 		b.uint16(uint16(len(h.Comment)))
-		b = b[4:] // skip disk number start and internal file attr (2x uint16)
+		b = b[4:] // 跳过磁盘号开始和内部文件属性（2x uint16）
 		b.uint32(h.ExternalAttrs)
 		if h.offset > uint32max {
 			b.uint32(uint32max)

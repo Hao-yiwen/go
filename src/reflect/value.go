@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package reflect
 
@@ -16,63 +16,61 @@ import (
 	"unsafe"
 )
 
-// Value is the reflection interface to a Go value.
+// Value 是 Go 值的反射接口。
 //
-// Not all methods apply to all kinds of values. Restrictions,
-// if any, are noted in the documentation for each method.
-// Use the Kind method to find out the kind of value before
-// calling kind-specific methods. Calling a method
-// inappropriate to the kind of type causes a run time panic.
+// 并非所有方法都适用于所有类型的值。如有限制，
+// 会在每个方法的文档中注明。
+// 在调用特定类型的方法之前，使用 Kind 方法找出值的类型。
+// 调用与值的类型不匹配的方法会导致运行时恐慌。
 //
-// The zero Value represents no value.
-// Its [Value.IsValid] method returns false, its Kind method returns [Invalid],
-// its String method returns "<invalid Value>", and all other methods panic.
-// Most functions and methods never return an invalid value.
-// If one does, its documentation states the conditions explicitly.
+// 零值 Value 表示没有值。
+// 其 [Value.IsValid] 方法返回 false，Kind 方法返回 [Invalid]，
+// 其 String 方法返回 "<invalid Value>"，所有其他方法都会 panic。
+// 大多数函数和方法永远不会返回无效值。
+// 如果有一个这样做，其文档会明确说明条件。
 //
-// A Value can be used concurrently by multiple goroutines provided that
-// the underlying Go value can be used concurrently for the equivalent
-// direct operations.
+// 只要底层 Go 值可以并发使用于等效的直接操作，
+// Value 可以被多个 goroutines 并发使用。
 //
-// To compare two Values, compare the results of the Interface method.
-// Using == on two Values does not compare the underlying values
-// they represent.
+// 要比较两个 Values，请比较 Interface 方法的结果。
+// 在两个 Values 上使用 == 不会比较它们代表的
+// 底层值。
 type Value struct {
-	// typ_ holds the type of the value represented by a Value.
-	// Access using the typ method to avoid escape of v.
+	// typ_ 保存 Value 代表的值的类型。
+	// 使用 typ 方法访问以避免 v 逃逸。
 	typ_ *abi.Type
 
-	// Pointer-valued data or, if flagIndir is set, pointer to data.
-	// Valid when either flagIndir is set or typ.pointers() is true.
+	// 指针值数据，或如果设置了 flagIndir，指向数据的指针。
+	// 当设置了 flagIndir 或 typ.pointers() 为真时有效。
 	ptr unsafe.Pointer
 
-	// flag holds metadata about the value.
+	// flag 保存关于值的元数据。
 	//
-	// The lowest five bits give the Kind of the value, mirroring typ.Kind().
+	// 最低五位给出值的类型，镜像 typ.Kind()。
 	//
-	// The next set of bits are flag bits:
-	//	- flagStickyRO: obtained via unexported not embedded field, so read-only
-	//	- flagEmbedRO: obtained via unexported embedded field, so read-only
-	//	- flagIndir: val holds a pointer to the data
-	//	- flagAddr: v.CanAddr is true (implies flagIndir and ptr is non-nil)
-	//	- flagMethod: v is a method value.
-	// If !typ.IsDirectIface(), code can assume that flagIndir is set.
+	// 下一组位是标志位：
+	//	- flagStickyRO: 通过未导出的非嵌入字段获得，因此只读
+	//	- flagEmbedRO: 通过未导出的嵌入字段获得，因此只读
+	//	- flagIndir: val 持有指向数据的指针
+	//	- flagAddr: v.CanAddr 为真（隐含 flagIndir 且 ptr 非空）
+	//	- flagMethod: v 是一个方法值。
+	// 如果 !typ.IsDirectIface()，代码可以假设 flagIndir 已设置。
 	//
-	// The remaining 22+ bits give a method number for method values.
-	// If flag.kind() != Func, code can assume that flagMethod is unset.
+	// 剩余的 22+ 位为方法值的方法编号。
+	// 如果 flag.kind() != Func，代码可以假设 flagMethod 未设置。
 	flag
 
-	// A method value represents a curried method invocation
-	// like r.Read for some receiver r. The typ+val+flag bits describe
-	// the receiver r, but the flag's Kind bits say Func (methods are
-	// functions), and the top bits of the flag give the method number
-	// in r's type's method table.
+	// 方法值代表一个柯里化的方法调用
+	// 如某个接收者 r 的 r.Read。typ+val+flag 位描述
+	// 接收者 r，但 flag 的 Kind 位说 Func（方法是
+	// 函数），flag 的高位给出
+	// r 类型的方法表中的方法编号。
 }
 
 type flag uintptr
 
 const (
-	flagKindWidth        = 5 // there are 27 kinds
+	flagKindWidth        = 5 // 有 27 种类型
 	flagKindMask    flag = 1<<flagKindWidth - 1
 	flagStickyRO    flag = 1 << 5
 	flagEmbedRO     flag = 1 << 6
@@ -94,21 +92,21 @@ func (f flag) ro() flag {
 	return 0
 }
 
-// typ returns the *abi.Type stored in the Value. This method is fast,
-// but it doesn't always return the correct type for the Value.
-// See abiType and Type, which do return the correct type.
+// typ 返回存储在 Value 中的 *abi.Type。此方法很快，
+// 但它并不总是返回 Value 的正确类型。
+// 请参见 abiType 和 Type，它们确实返回正确的类型。
 func (v Value) typ() *abi.Type {
-	// Types are either static (for compiler-created types) or
-	// heap-allocated but always reachable (for reflection-created
-	// types, held in the central map). So there is no need to
-	// escape types. noescape here help avoid unnecessary escape
-	// of v.
+	// 类型要么是静态的（对于编译器创建的类型），要么
+	// 是堆分配但始终可到达的（对于反射创建的
+	// 类型，保存在中央映射中）。因此没有必要
+	// 逃逸类型。这里的 noescape 有助于避免不必要的逃逸
+	// v。
 	return (*abi.Type)(abi.NoEscape(unsafe.Pointer(v.typ_)))
 }
 
-// pointer returns the underlying pointer represented by v.
-// v.Kind() must be Pointer, Map, Chan, Func, or UnsafePointer
-// if v.Kind() == Pointer, the base type must not be not-in-heap.
+// pointer 返回 v 代表的底层指针。
+// v.Kind() 必须是 Pointer、Map、Chan、Func 或 UnsafePointer
+// 如果 v.Kind() == Pointer，基础类型不能是 not-in-heap。
 func (v Value) pointer() unsafe.Pointer {
 	if v.typ().Size() != goarch.PtrSize || !v.typ().Pointers() {
 		panic("can't call pointer on a non-pointer Value")
@@ -119,7 +117,7 @@ func (v Value) pointer() unsafe.Pointer {
 	return v.ptr
 }
 
-// packEface converts v to the empty interface.
+// packEface 将 v 转换为空接口。
 func packEface(v Value) any {
 	return *(*any)(unsafe.Pointer(&abi.EmptyInterface{
 		Type: v.typ(),
@@ -127,8 +125,8 @@ func packEface(v Value) any {
 	}))
 }
 
-// packEfaceData is a helper that packs the Data part of an interface,
-// if v were to be stored in an interface.
+// packEfaceData 是一个辅助函数，它打包接口的 Data 部分，
+// 如果 v 要被存储在接口中。
 func packEfaceData(v Value) unsafe.Pointer {
 	t := v.typ()
 	switch {
@@ -136,7 +134,7 @@ func packEfaceData(v Value) unsafe.Pointer {
 		if v.flag&flagIndir == 0 {
 			panic("bad indir")
 		}
-		// Value is indirect, and so is the interface we're making.
+		// Value 是间接的，我们创建的接口也是间接的。
 		ptr := v.ptr
 		if v.flag&flagAddr != 0 {
 			c := unsafe_New(t)
@@ -145,16 +143,16 @@ func packEfaceData(v Value) unsafe.Pointer {
 		}
 		return ptr
 	case v.flag&flagIndir != 0:
-		// Value is indirect, but interface is direct. We need
-		// to load the data at v.ptr into the interface data word.
+		// Value 是间接的，但接口是直接的。我们需要
+		// 将 v.ptr 处的数据加载到接口数据字中。
 		return *(*unsafe.Pointer)(v.ptr)
 	default:
-		// Value is direct, and so is the interface.
+		// Value 是直接的，接口也是直接的。
 		return v.ptr
 	}
 }
 
-// unpackEface converts the empty interface i to a Value.
+// unpackEface 将空接口 i 转换为 Value。
 func unpackEface(i any) Value {
 	e := (*abi.EmptyInterface)(unsafe.Pointer(&i))
 	t := e.Type
@@ -168,9 +166,9 @@ func unpackEface(i any) Value {
 	return Value{t, e.Data, f}
 }
 
-// A ValueError occurs when a Value method is invoked on
-// a [Value] that does not support it. Such cases are documented
-// in the description of each method.
+// ValueError 发生在 Value 方法在
+// 不支持它的 [Value] 上被调用时。这些情况记录在
+// 每个方法的描述中。
 type ValueError struct {
 	Method string
 	Kind   Kind
@@ -183,7 +181,7 @@ func (e *ValueError) Error() string {
 	return "reflect: call of " + e.Method + " on " + e.Kind.String() + " Value"
 }
 
-// valueMethodName returns the name of the exported calling method on Value.
+// valueMethodName 返回 Value 上导出的调用方法的名称。
 func valueMethodName() string {
 	var pc [5]uintptr
 	n := runtime.Callers(1, pc[:])
@@ -203,27 +201,27 @@ func valueMethodName() string {
 	return "unknown method"
 }
 
-// nonEmptyInterface is the header for an interface value with methods.
+// nonEmptyInterface 是具有方法的接口值的头。
 type nonEmptyInterface struct {
 	itab *abi.ITab
 	word unsafe.Pointer
 }
 
-// mustBe panics if f's kind is not expected.
-// Making this a method on flag instead of on Value
-// (and embedding flag in Value) means that we can write
-// the very clear v.mustBe(Bool) and have it compile into
-// v.flag.mustBe(Bool), which will only bother to copy the
-// single important word for the receiver.
+// mustBe 如果 f 的类型不符合预期则 panic。
+// 将其作为 flag 上的方法而不是 Value 上的方法
+// （并在 Value 中嵌入 flag）意味着我们可以编写
+// 非常清楚的 v.mustBe(Bool) 并让它编译为
+// v.flag.mustBe(Bool)，这只会费力复制
+// 接收者的单个重要字。
 func (f flag) mustBe(expected Kind) {
-	// TODO(mvdan): use f.kind() again once mid-stack inlining gets better
+	// TODO(mvdan): 一旦中栈内联得到改进，再次使用 f.kind()
 	if Kind(f&flagKindMask) != expected {
 		panic(&ValueError{valueMethodName(), f.kind()})
 	}
 }
 
-// mustBeExported panics if f records that the value was obtained using
-// an unexported field.
+// mustBeExported 如果 f 记录值是通过以下方式获得的，则 panic
+// 未导出字段。
 func (f flag) mustBeExported() {
 	if f == 0 || f&flagRO != 0 {
 		f.mustBeExportedSlow()
@@ -239,9 +237,9 @@ func (f flag) mustBeExportedSlow() {
 	}
 }
 
-// mustBeAssignable panics if f records that the value is not assignable,
-// which is to say that either it was obtained using an unexported field
-// or it is not addressable.
+// mustBeAssignable 如果 f 记录值不可分配，则 panic，
+// 即它是通过未导出字段获得的
+// 或它不可寻址。
 func (f flag) mustBeAssignable() {
 	if f&flagRO != 0 || f&flagAddr == 0 {
 		f.mustBeAssignableSlow()
@@ -252,7 +250,7 @@ func (f flag) mustBeAssignableSlow() {
 	if f == 0 {
 		panic(&ValueError{valueMethodName(), Invalid})
 	}
-	// Assignable if addressable and not read-only.
+	// 如果可寻址且不是只读，则可分配。
 	if f&flagRO != 0 {
 		panic("reflect: " + valueMethodName() + " using value obtained using unexported field")
 	}
@@ -261,11 +259,11 @@ func (f flag) mustBeAssignableSlow() {
 	}
 }
 
-// Addr returns a pointer value representing the address of v.
-// It panics if [Value.CanAddr] returns false.
-// Addr is typically used to obtain a pointer to a struct field
-// or slice element in order to call a method that requires a
-// pointer receiver.
+// Addr 返回表示 v 地址的指针值。
+// 如果 [Value.CanAddr] 返回 false，则 panic。
+// Addr 通常用于获取指向结构字段的指针
+// 或切片元素，以便调用需要
+// 指针接收者的方法。
 func (v Value) Addr() Value {
 	if v.flag&flagAddr == 0 {
 		panic("reflect.Value.Addr of unaddressable value")

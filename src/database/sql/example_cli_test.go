@@ -29,11 +29,11 @@ func Example_openDBCLI() {
 	}
 	var err error
 
-	// Opening a driver typically will not attempt to connect to the database.
+	// 打开驱动程序通常不会尝试连接到数据库。
 	pool, err = sql.Open("driver-name", *dsn)
 	if err != nil {
-		// This will not be a connection error, but a DSN parse error or
-		// another initialization error.
+		// 这不会是连接错误，而是 DSN 解析错误或
+		// 另一个初始化错误。
 		log.Fatal("unable to use data source name", err)
 	}
 	defer pool.Close()
@@ -58,8 +58,8 @@ func Example_openDBCLI() {
 	Query(ctx, *id)
 }
 
-// Ping the database to verify DSN provided by the user is valid and the
-// server accessible. If the ping fails exit the program with an error.
+// Ping 数据库以验证用户提供的 DSN 是否有效，
+// 并且服务器可访问。如果 ping 失败，以错误退出程序。
 func Ping(ctx context.Context) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -69,8 +69,8 @@ func Ping(ctx context.Context) {
 	}
 }
 
-// Query the database for the information requested and prints the results.
-// If the query fails exit the program with an error.
+// Query 数据库以获取所请求的信息并打印结果。
+// 如果查询失败，以错误退出程序。
 func Query(ctx context.Context, id int64) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()

@@ -1,9 +1,9 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package zstd provides a decompressor for zstd streams,
-// described in RFC 8878. It does not support dictionaries.
+// Package zstd 为 zstd 流提供解压器，
+// 在 RFC 8878 中描述。它不支持字典。
 package zstd
 
 import (
@@ -13,91 +13,90 @@ import (
 	"io"
 )
 
-// fuzzing is a fuzzer hook set to true when fuzzing.
-// This is used to reject cases where we don't match zstd.
+// fuzzing 是一个模糊测试器钩子，在模糊测试时设置为真。
+// 这用于拒绝与 zstd 不匹配的情况。
 var fuzzing = false
 
-// Reader implements [io.Reader] to read a zstd compressed stream.
+// Reader 实现 [io.Reader] 来读取 zstd 压缩流。
 type Reader struct {
-	// The underlying Reader.
+	// 基础 Reader。
 	r io.Reader
 
-	// Whether we have read the frame header.
-	// This is of interest when buffer is empty.
-	// If true we expect to see a new block.
+	// 我们是否已读取帧头。
+	// 当缓冲区为空时这很有意义。
+	// 如果为真，我们期望看到一个新块。
 	sawFrameHeader bool
 
-	// Whether the current frame expects a checksum.
+	// 当前帧是否需要校验和。
 	hasChecksum bool
 
-	// Whether we have read at least one frame.
+	// 我们是否至少读取了一帧。
 	readOneFrame bool
 
-	// True if the frame size is not known.
+	// 如果帧大小未知，则为真。
 	frameSizeUnknown bool
 
-	// The number of uncompressed bytes remaining in the current frame.
-	// If frameSizeUnknown is true, this is not valid.
+	// 当前帧中未压缩字节的数量。
+	// 如果 frameSizeUnknown 为真，则此值无效。
 	remainingFrameSize uint64
 
-	// The number of bytes read from r up to the start of the current
-	// block, for error reporting.
+	// 从 r 读取的字节数，到当前块的开始，用于错误报告。
 	blockOffset int64
 
-	// Buffered decompressed data.
+	// 缓冲的解压缩数据。
 	buffer []byte
-	// Current read offset in buffer.
+	// 缓冲区中的当前读取偏移量。
 	off int
 
-	// The current repeated offsets.
+	// 当前重复偏移量。
 	repeatedOffset1 uint32
 	repeatedOffset2 uint32
 	repeatedOffset3 uint32
 
-	// The current Huffman tree used for compressing literals.
+	// 用于压缩字面的当前哈夫曼树。
 	huffmanTable     []uint16
 	huffmanTableBits int
 
-	// The window for back references.
+	// 用于后向引用的窗口。
 	window window
 
-	// A buffer available to hold a compressed block.
+	// 用于保存压缩块的缓冲区。
 	compressedBuf []byte
 
-	// A buffer for literals.
+	// 字面的缓冲区。
 	literals []byte
 
-	// Sequence decode FSE tables.
+	// 序列解码 FSE 表。
 	seqTables    [3][]fseBaselineEntry
 	seqTableBits [3]uint8
 
-	// Buffers for sequence decode FSE tables.
+	// 序列解码 FSE 表的缓冲区。
 	seqTableBuffers [3][]fseBaselineEntry
 
-	// Scratch space used for small reads, to avoid allocation.
+	// 为小读取保留的临时空间，以避免分配。
 	scratch [16]byte
 
-	// A scratch table for reading an FSE. Only temporarily valid.
+	// 用于读取 FSE 的临时表。仅临时有效。
 	fseScratch []fseEntry
 
-	// For checksum computation.
+	// 用于校验和计算。
 	checksum xxhash64
 }
 
-// NewReader creates a new Reader that decompresses data from the given reader.
+// NewReader 创建一个新的 Reader，从给定的 Reader 解压数据。
 func NewReader(input io.Reader) *Reader {
 	r := new(Reader)
 	r.Reset(input)
 	return r
 }
 
-// Reset discards the current state and starts reading a new stream from r.
-// This permits reusing a Reader rather than allocating a new one.
+// Reset 丢弃当前状态并从 r 开始读取新流。
+// 这允许重用 Reader 而不是分配新的。
 func (r *Reader) Reset(input io.Reader) {
 	r.r = input
 
-	// Several fields are preserved to avoid allocation.
-	// Others are always set before they are used.
+	// 保留了几个字段以避免分配。
+	// 其他字段在使用前始终设置。
 	r.sawFrameHeader = false
 	r.hasChecksum = false
 	r.readOneFrame = false
@@ -121,7 +120,7 @@ func (r *Reader) Reset(input io.Reader) {
 	// fseScratch
 }
 
-// Read implements [io.Reader].
+// Read 实现 [io.Reader]。
 func (r *Reader) Read(p []byte) (int, error) {
 	if err := r.refillIfNeeded(); err != nil {
 		return 0, err
@@ -131,7 +130,7 @@ func (r *Reader) Read(p []byte) (int, error) {
 	return n, nil
 }
 
-// ReadByte implements [io.ByteReader].
+// ReadByte 实现 [io.ByteReader]。
 func (r *Reader) ReadByte() (byte, error) {
 	if err := r.refillIfNeeded(); err != nil {
 		return 0, err
@@ -141,7 +140,7 @@ func (r *Reader) ReadByte() (byte, error) {
 	return ret, nil
 }
 
-// refillIfNeeded reads the next block if necessary.
+// refillIfNeeded 在必要时读取下一个块。
 func (r *Reader) refillIfNeeded() error {
 	for r.off >= len(r.buffer) {
 		if err := r.refill(); err != nil {
@@ -152,7 +151,7 @@ func (r *Reader) refillIfNeeded() error {
 	return nil
 }
 
-// refill reads and decompresses the next block.
+// refill 读取并解压下一个块。
 func (r *Reader) refill() error {
 	if !r.sawFrameHeader {
 		if err := r.readFrameHeader(); err != nil {
@@ -162,14 +161,14 @@ func (r *Reader) refill() error {
 	return r.readBlock()
 }
 
-// readFrameHeader reads the frame header and prepares to read a block.
+// readFrameHeader 读取帧头并准备读取块。
 func (r *Reader) readFrameHeader() error {
 retry:
 	relativeOffset := 0
 
-	// Read magic number. RFC 3.1.1.
+	// 读取魔数。RFC 3.1.1。
 	if _, err := io.ReadFull(r.r, r.scratch[:4]); err != nil {
-		// We require that the stream contains at least one frame.
+		// 我们要求流至少包含一帧。
 		if err == io.EOF && !r.readOneFrame {
 			err = io.ErrUnexpectedEOF
 		}
@@ -178,7 +177,7 @@ retry:
 
 	if magic := binary.LittleEndian.Uint32(r.scratch[:4]); magic != 0xfd2fb528 {
 		if magic >= 0x184d2a50 && magic <= 0x184d2a5f {
-			// This is a skippable frame.
+			// 这是一个可跳过的帧。
 			r.blockOffset += int64(relativeOffset) + 4
 			if err := r.skipFrame(); err != nil {
 				return err
@@ -192,7 +191,7 @@ retry:
 
 	relativeOffset += 4
 
-	// Read Frame_Header_Descriptor. RFC 3.1.1.1.1.
+	// 读取 Frame_Header_Descriptor。RFC 3.1.1.1.1。
 	if _, err := io.ReadFull(r.r, r.scratch[:1]); err != nil {
 		return r.wrapNonEOFError(relativeOffset, err)
 	}
@@ -221,7 +220,7 @@ retry:
 		r.checksum.reset()
 	}
 
-	// Dictionary_ID_Flag. RFC 3.1.1.1.1.6.
+	// Dictionary_ID_Flag。RFC 3.1.1.1.1.6。
 	dictionaryIdSize := 0
 	if dictIdFlag := descriptor & 3; dictIdFlag != 0 {
 		dictionaryIdSize = 1 << (dictIdFlag - 1)
@@ -235,11 +234,10 @@ retry:
 		return r.wrapNonEOFError(relativeOffset, err)
 	}
 
-	// Figure out the maximum amount of data we need to retain
-	// for backreferences.
+	// 找出我们需要为后向引用保留的最大数据量。
 	var windowSize uint64
 	if !singleSegment {
-		// Window descriptor. RFC 3.1.1.1.2.
+		// 窗口描述符。RFC 3.1.1.1.2。
 		windowDescriptor := r.scratch[0]
 		exponent := uint64(windowDescriptor >> 3)
 		mantissa := uint64(windowDescriptor & 7)
@@ -248,16 +246,16 @@ retry:
 		windowAdd := (windowBase / 8) * mantissa
 		windowSize = windowBase + windowAdd
 
-		// Default zstd sets limits on the window size.
+		// 默认 zstd 对窗口大小设置限制。
 		if fuzzing && (windowLog > 31 || windowSize > 1<<27) {
 			return r.makeError(relativeOffset, "windowSize too large")
 		}
 	}
 
-	// Dictionary_ID. RFC 3.1.1.1.3.
+	// Dictionary_ID。RFC 3.1.1.1.3。
 	if dictionaryIdSize != 0 {
 		dictionaryId := r.scratch[windowDescriptorSize : windowDescriptorSize+dictionaryIdSize]
-		// Allow only zero Dictionary ID.
+		// 仅允许零 Dictionary ID。
 		for _, b := range dictionaryId {
 			if b != 0 {
 				return r.makeError(relativeOffset, "dictionaries are not supported")
@@ -265,7 +263,7 @@ retry:
 		}
 	}
 
-	// Frame_Content_Size. RFC 3.1.1.1.4.
+	// Frame_Content_Size。RFC 3.1.1.1.4。
 	r.frameSizeUnknown = false
 	r.remainingFrameSize = 0
 	fb := r.scratch[windowDescriptorSize+dictionaryIdSize:]
@@ -285,13 +283,13 @@ retry:
 	}
 
 	// RFC 3.1.1.1.2.
-	// When Single_Segment_Flag is set, Window_Descriptor is not present.
-	// In this case, Window_Size is Frame_Content_Size.
+	// 当设置 Single_Segment_Flag 时，Window_Descriptor 不存在。
+	// 在这种情况下，Window_Size 是 Frame_Content_Size。
 	if singleSegment {
 		windowSize = r.remainingFrameSize
 	}
 
-	// RFC 8878 3.1.1.1.1.2. permits us to set an 8M max on window size.
+	// RFC 8878 3.1.1.1.1.2. 允许我们在窗口大小上设置 8M 最大值。
 	const maxWindowSize = 8 << 20
 	if windowSize > maxWindowSize {
 		windowSize = maxWindowSize
@@ -303,7 +301,7 @@ retry:
 	r.readOneFrame = true
 	r.blockOffset += int64(relativeOffset)
 
-	// Prepare to read blocks from the frame.
+	// 准备从帧中读取块。
 	r.repeatedOffset1 = 1
 	r.repeatedOffset2 = 4
 	r.repeatedOffset3 = 8
@@ -316,7 +314,7 @@ retry:
 	return nil
 }
 
-// skipFrame skips a skippable frame. RFC 3.1.2.
+// skipFrame 跳过一个可跳过的帧。RFC 3.1.2。
 func (r *Reader) skipFrame() error {
 	relativeOffset := 0
 
@@ -334,8 +332,8 @@ func (r *Reader) skipFrame() error {
 
 	if seeker, ok := r.r.(io.Seeker); ok {
 		r.blockOffset += int64(relativeOffset)
-		// Implementations of Seeker do not always detect invalid offsets,
-		// so check that the new offset is valid by comparing to the end.
+		// Seeker 的实现并不总是检测无效偏移，
+		// 因此通过与末尾比较来检查新偏移是否有效。
 		prev, err := seeker.Seek(0, io.SeekCurrent)
 		if err != nil {
 			return r.wrapError(0, err)
@@ -349,7 +347,7 @@ func (r *Reader) skipFrame() error {
 			return r.makeEOFError(0)
 		}
 
-		// The new offset is valid, so seek to it.
+		// 新偏移有效，所以寻求到它。
 		_, err = seeker.Seek(prev+int64(size), io.SeekStart)
 		if err != nil {
 			return r.wrapError(0, err)
@@ -367,11 +365,11 @@ func (r *Reader) skipFrame() error {
 	return nil
 }
 
-// readBlock reads the next block from a frame.
+// readBlock 从一帧中读取下一个块。
 func (r *Reader) readBlock() error {
 	relativeOffset := 0
 
-	// Read Block_Header. RFC 3.1.1.2.
+	// 读取 Block_Header。RFC 3.1.1.2。
 	if _, err := io.ReadFull(r.r, r.scratch[:3]); err != nil {
 		return r.wrapNonEOFError(relativeOffset, err)
 	}
@@ -384,14 +382,14 @@ func (r *Reader) readBlock() error {
 	blockType := (header >> 1) & 3
 	blockSize := int(header >> 3)
 
-	// Maximum block size is smaller of window size and 128K.
-	// We don't record the window size for a single segment frame,
-	// so just use 128K. RFC 3.1.1.2.3, 3.1.1.2.4.
+	// 最大块大小是窗口大小和 128K 中的较小者。
+	// 我们不记录单段帧的窗口大小，
+	// 所以只使用 128K。RFC 3.1.1.2.3，3.1.1.2.4。
 	if blockSize > 128<<10 || (r.window.size > 0 && blockSize > r.window.size) {
 		return r.makeError(relativeOffset, "block size too large")
 	}
 
-	// Handle different block types. RFC 3.1.1.2.2.
+	// 处理不同的块类型。RFC 3.1.1.2.2。
 	switch blockType {
 	case 0:
 		r.setBufferSize(blockSize)
@@ -438,7 +436,7 @@ func (r *Reader) readBlock() error {
 		if !r.frameSizeUnknown && r.remainingFrameSize != 0 {
 			return r.makeError(relativeOffset, "not enough uncompressed bytes for frame")
 		}
-		// Check for checksum at end of frame. RFC 3.1.1.
+		// 检查帧末尾的校验和。RFC 3.1.1。
 		if r.hasChecksum {
 			if _, err := io.ReadFull(r.r, r.scratch[:4]); err != nil {
 				return r.wrapNonEOFError(0, err)

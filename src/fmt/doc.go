@@ -3,186 +3,183 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package fmt implements formatted I/O with functions analogous
-to C's printf and scanf.  The format 'verbs' are derived from C's but
-are simpler.
+Package fmt 实现了格式化输入输出，函数类似于 C 的 printf 和 scanf。格式"动词"源自 C 的语法但更简洁。
 
-# Printing
+# 打印
 
-There are four families of printing functions defined by their output destination.
-[Print], [Println] and [Printf] write to [os.Stdout];
-[Sprint], [Sprintln] and [Sprintf] return a string;
-[Fprint], [Fprintln] and [Fprintf] write to an [io.Writer]; and
-[Append], [Appendln] and [Appendf] append the output to a byte slice.
+有四类打印函数，根据输出目标定义。
+[Print]、[Println] 和 [Printf] 写入到 [os.Stdout]；
+[Sprint]、[Sprintln] 和 [Sprintf] 返回一个字符串；
+[Fprint]、[Fprintln] 和 [Fprintf] 写入到 [io.Writer]；以及
+[Append]、[Appendln] 和 [Appendf] 将输出追加到字节切片。
 
-The functions within each family do the formatting according to the end of the name.
-Print, Sprint, Fprint and Append use the default format for each argument,
-adding a space between operands when neither is a string.
-Println, Sprintln, Fprintln and Appendln always add spaces and append a newline.
-Printf, Sprintf, Fprintf and Appendf use a sequence of "verbs" to control the formatting.
+每个系列中的函数根据名称末尾进行格式化。
+Print、Sprint、Fprint 和 Append 为每个参数使用默认格式，
+当都不是字符串时在操作数之间添加空格。
+Println、Sprintln、Fprintln 和 Appendln 总是添加空格并追加换行符。
+Printf、Sprintf、Fprintf 和 Appendf 使用一系列"动词"来控制格式化。
 
-The verbs:
+动词：
 
-General:
+通用：
 
-	%v	the value in a default format
-		when printing structs, the plus flag (%+v) adds field names
-	%#v	a Go-syntax representation of the value
-		(floating-point infinities and NaNs print as ±Inf and NaN)
-	%T	a Go-syntax representation of the type of the value
-	%%	a literal percent sign; consumes no value
+	%v	默认格式的值
+		打印结构体时，加号标志 (%+v) 添加字段名
+	%#v	值的 Go 语法表示
+		（浮点无穷大和 NaN 打印为 ±Inf 和 NaN）
+	%T	值的类型的 Go 语法表示
+	%%	字面上的百分号；不消耗任何值
 
-Boolean:
+布尔值：
 
-	%t	the word true or false
+	%t	单词 true 或 false
 
-Integer:
+整数：
 
-	%b	base 2
-	%c	the character represented by the corresponding Unicode code point
-	%d	base 10
-	%o	base 8
-	%O	base 8 with 0o prefix
-	%q	a single-quoted character literal safely escaped with Go syntax.
-	%x	base 16, with lower-case letters for a-f
-	%X	base 16, with upper-case letters for A-F
-	%U	Unicode format: U+1234; same as "U+%04X"
+	%b	二进制
+	%c	由对应 Unicode 码点表示的字符
+	%d	十进制
+	%o	八进制
+	%O	八进制，带 0o 前缀
+	%q	单引号字符文字，用 Go 语法安全转义
+	%x	十六进制，a-f 使用小写字母
+	%X	十六进制，A-F 使用大写字母
+	%U	Unicode 格式：U+1234；与 "U+%04X" 相同
 
-Floating-point and complex constituents:
+浮点数和复数成分：
 
-	%b	decimalless scientific notation with exponent a power of two,
-		in the manner of strconv.FormatFloat with the 'b' format,
-		e.g. -123456p-78
-	%e	scientific notation, e.g. -1.234456e+78
-	%E	scientific notation, e.g. -1.234456E+78
-	%f	decimal point but no exponent, e.g. 123.456
-	%F	synonym for %f
-	%g	%e for large exponents, %f otherwise. Precision is discussed below.
-	%G	%E for large exponents, %F otherwise
-	%x	hexadecimal notation (with decimal power of two exponent), e.g. -0x1.23abcp+20
-	%X	upper-case hexadecimal notation, e.g. -0X1.23ABCP+20
+	%b	无小数的科学计数法，指数是 2 的幂，
+		采用 strconv.FormatFloat 的 'b' 格式方式，
+		例如 -123456p-78
+	%e	科学计数法，例如 -1.234456e+78
+	%E	科学计数法，例如 -1.234456E+78
+	%f	小数点但无指数，例如 123.456
+	%F	%f 的同义词
+	%g	大指数时用 %e，否则用 %f。精度详见下文。
+	%G	大指数时用 %E，否则用 %F
+	%x	十六进制表示法（带十进制 2 的幂指数），例如 -0x1.23abcp+20
+	%X	大写十六进制表示法，例如 -0X1.23ABCP+20
 
-	The exponent is always a decimal integer.
-	For formats other than %b the exponent is at least two digits.
+	指数总是十进制整数。
+	对于 %b 之外的格式，指数至少是两位数字。
 
-String and slice of bytes (treated equivalently with these verbs):
+字符串和字节切片（用这些动词等效处理）：
 
-	%s	the uninterpreted bytes of the string or slice
-	%q	a double-quoted string safely escaped with Go syntax
-	%x	base 16, lower-case, two characters per byte
-	%X	base 16, upper-case, two characters per byte
+	%s	字符串或切片的未解释字节
+	%q	双引号字符串，用 Go 语法安全转义
+	%x	十六进制，小写，每字节两个字符
+	%X	十六进制，大写，每字节两个字符
 
-Slice:
+切片：
 
-	%p	address of 0th element in base 16 notation, with leading 0x
+	%p	第 0 个元素的地址，十六进制表示法，带前导 0x
 
-Pointer:
+指针：
 
-	%p	base 16 notation, with leading 0x
-	The %b, %d, %o, %x and %X verbs also work with pointers,
-	formatting the value exactly as if it were an integer.
+	%p	十六进制表示法，带前导 0x
+	%b、%d、%o、%x 和 %X 动词也适用于指针，
+	格式化值就像它是整数一样。
 
-The default format for %v is:
+%v 的默认格式是：
 
 	bool:                    %t
-	int, int8 etc.:          %d
-	uint, uint8 etc.:        %d, %#x if printed with %#v
-	float32, complex64, etc: %g
+	int、int8 等：          %d
+	uint、uint8 等：        %d，%#v 打印时用 %#x
+	float32、complex64 等：%g
 	string:                  %s
 	chan:                    %p
 	pointer:                 %p
 
-For compound objects, the elements are printed using these rules, recursively,
-laid out like this:
+对于复合对象，元素使用这些规则递归打印，
+布局如下：
 
 	struct:             {field0 field1 ...}
-	array, slice:       [elem0 elem1 ...]
+	array、slice:       [elem0 elem1 ...]
 	maps:               map[key1:value1 key2:value2 ...]
-	pointer to above:   &{}, &[], &map[]
+	指向上述的指针：   &{}、&[]、&map[]
 
-Width is specified by an optional decimal number immediately preceding the verb.
-If absent, the width is whatever is necessary to represent the value.
-Precision is specified after the (optional) width by a period followed by a
-decimal number. If no period is present, a default precision is used.
-A period with no following number specifies a precision of zero.
-Examples:
+宽度由紧接在动词前的可选十进制数指定。
+如果不存在，宽度就是表示该值所需的任何值。
+精度在（可选的）宽度之后由句号后跟十进制数指定。
+如果没有句号，则使用默认精度。
+没有跟随数字的句号指定精度为零。
+示例：
 
-	%f     default width, default precision
-	%9f    width 9, default precision
-	%.2f   default width, precision 2
-	%9.2f  width 9, precision 2
-	%9.f   width 9, precision 0
+	%f     默认宽度，默认精度
+	%9f    宽度 9，默认精度
+	%.2f   默认宽度，精度 2
+	%9.2f  宽度 9，精度 2
+	%9.f   宽度 9，精度 0
 
-Width and precision are measured in units of Unicode code points,
-that is, runes. (This differs from C's printf where the
-units are always measured in bytes.) Either or both of the flags
-may be replaced with the character '*', causing their values to be
-obtained from the next operand (preceding the one to format),
-which must be of type int.
+宽度和精度以 Unicode 码点的单位测量，
+即符文。（这不同于 C 的 printf，其中
+单位总是以字节为单位。）标志中的任何一个或两个
+可以替换为字符 '*'，导致它们的值从
+下一个操作数（前面的那个要格式化的）获取，
+该操作数必须是 int 类型。
 
-For most values, width is the minimum number of runes to output,
-padding the formatted form with spaces if necessary.
+对于大多数值，宽度是输出的最小符文数，
+如果必要的话用空格填充格式化形式。
 
-For strings, byte slices and byte arrays, however, precision
-limits the length of the input to be formatted (not the size of
-the output), truncating if necessary. Normally it is measured in
-runes, but for these types when formatted with the %x or %X format
-it is measured in bytes.
+但对于字符串、字节切片和字节数组，精度
+限制了要格式化的输入的长度（不是输出的大小），
+如果必要的话截断。通常以符文为单位测量，
+但对于这些类型以 %x 或 %X 格式格式化时，
+以字节为单位。
 
-For floating-point values, width sets the minimum width of the field and
-precision sets the number of places after the decimal, if appropriate,
-except that for %g/%G precision sets the maximum number of significant
-digits (trailing zeros are removed). For example, given 12.345 the format
-%6.3f prints 12.345 while %.3g prints 12.3. The default precision for %e, %f
-and %#g is 6; for %g it is the smallest number of digits necessary to identify
-the value uniquely.
+对于浮点值，宽度设置字段的最小宽度，
+精度设置小数点后的位数（如果合适），
+除了对于 %g/%G 精度设置有效数字的最大数量（尾随零被移除）。
+例如，给定 12.345，格式 %6.3f 打印 12.345，
+而 %.3g 打印 12.3。%e、%f 和 %#g 的默认精度是 6；
+对于 %g，它是唯一标识该值所需的最小位数。
 
-For complex numbers, the width and precision apply to the two
-components independently and the result is parenthesized, so %f applied
-to 1.2+3.4i produces (1.200000+3.400000i).
+对于复数，宽度和精度独立地应用于两个
+分量，结果被括起，所以 %f 应用到
+1.2+3.4i 会产生 (1.200000+3.400000i)。
 
-When formatting a single integer code point or a rune string (type []rune)
-with %q, invalid Unicode code points are changed to the Unicode replacement
-character, U+FFFD, as in [strconv.QuoteRune].
+使用 %q 格式化单个整数码点或符文字符串（类型 []rune）时，
+无效的 Unicode 码点被更改为 Unicode 替换
+字符 U+FFFD，如 [strconv.QuoteRune] 中一样。
 
-Other flags:
+其他标志：
 
-	'+'	always print a sign for numeric values;
-		guarantee ASCII-only output for %q (%+q)
-	'-'	pad with spaces on the right rather than the left (left-justify the field)
-	'#'	alternate format: add leading 0b for binary (%#b), 0 for octal (%#o),
-		0x or 0X for hex (%#x or %#X); suppress 0x for %p (%#p);
-		for %q, print a raw (backquoted) string if [strconv.CanBackquote]
-		returns true;
-		always print a decimal point for %e, %E, %f, %F, %g and %G;
-		do not remove trailing zeros for %g and %G;
-		write e.g. U+0078 'x' if the character is printable for %U (%#U)
-	' '	(space) leave a space for elided sign in numbers (% d);
-		put spaces between bytes printing strings or slices in hex (% x, % X)
-	'0'	pad with leading zeros rather than spaces;
-		for numbers, this moves the padding after the sign
+	'+'	总是为数值打印符号；
+		保证 %q 的 ASCII 专用输出 (%+q)
+	'-'	在右边而不是左边用空格填充（左对齐字段）
+	'#'	备用格式：为二进制添加前导 0b (%#b)、为八进制添加 0 (%#o)、
+		为十六进制添加 0x 或 0X (%#x 或 %#X)；为 %p 抑制 0x (%#p)；
+		对于 %q，如果 [strconv.CanBackquote]
+		返回 true，打印原始（反引号）字符串；
+		总是为 %e、%E、%f、%F、%g 和 %G 打印小数点；
+		不要移除 %g 和 %G 的尾随零；
+		如果字符可打印，对于 %U 写 e.g. U+0078 'x'（%#U）
+	' '	（空格）为数字中省略的符号留一个空格（% d）；
+		在十六进制打印字符串或切片的字节之间放入空格（% x、% X）
+	'0'	用前导零而不是空格填充；
+		对于数字，这会在符号后移动填充
 
-Flags are ignored by verbs that do not expect them.
-For example there is no alternate decimal format, so %#d and %d
-behave identically.
+不期望标志的动词会忽略标志。
+例如，没有备用十进制格式，所以 %#d 和 %d
+的行为完全相同。
 
-For each Printf-like function, there is also a Print function
-that takes no format and is equivalent to saying %v for every
-operand.  Another variant Println inserts blanks between
-operands and appends a newline.
+对于每个类似 Printf 的函数，还有一个 Print 函数
+不取格式，相当于对每个
+操作数说 %v。另一个变体 Println 在
+操作数之间插入空格并追加换行符。
 
-Regardless of the verb, if an operand is an interface value,
-the internal concrete value is used, not the interface itself.
-Thus:
+无论动词如何，如果操作数是接口值，
+使用内部具体值，而不是接口本身。
+因此：
 
 	var i interface{} = 23
 	fmt.Printf("%v\n", i)
 
-will print 23.
+会打印 23。
 
-Except when printed using the verbs %T and %p, special
-formatting considerations apply for operands that implement
-certain interfaces. In order of application:
+除了使用动词 %T 和 %p 打印时外，特殊
+格式化考虑适用于实现
+某些接口的操作数。按应用顺序：
 
 1. If the operand is a [reflect.Value], the operand is replaced by the
 concrete value that it holds, and printing continues with the next rule.

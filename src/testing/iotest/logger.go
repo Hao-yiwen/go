@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package iotest
 
@@ -24,9 +24,9 @@ func (l *writeLogger) Write(p []byte) (n int, err error) {
 	return
 }
 
-// NewWriteLogger returns a writer that behaves like w except
-// that it logs (using [log.Printf]) each write to standard error,
-// printing the prefix and the hexadecimal data written.
+// NewWriteLogger 返回一个表现得像 w 的 writer，除了
+// 它记录（使用 [log.Printf]）每次写入到标准错误，
+// 打印前缀和写入的十六进制数据。
 func NewWriteLogger(prefix string, w io.Writer) io.Writer {
 	return &writeLogger{prefix, w}
 }
@@ -46,9 +46,9 @@ func (l *readLogger) Read(p []byte) (n int, err error) {
 	return
 }
 
-// NewReadLogger returns a reader that behaves like r except
-// that it logs (using [log.Printf]) each read to standard error,
-// printing the prefix and the hexadecimal data read.
+// NewReadLogger 返回一个表现得像 r 的 reader，除了
+// 它记录（使用 [log.Printf]）每次读取到标准错误，
+// 打印前缀和读取的十六进制数据。
 func NewReadLogger(prefix string, r io.Reader) io.Reader {
 	return &readLogger{prefix, r}
 }

@@ -1,10 +1,10 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package png implements a PNG image decoder and encoder.
+// png 包实现 PNG 图像解码器和编码器。
 //
-// The PNG specification is at https://www.w3.org/TR/PNG/.
+// PNG 规范位于 https://www.w3.org/TR/PNG/。
 package png
 
 import (
@@ -18,7 +18,7 @@ import (
 	"io"
 )
 
-// Color type, as per the PNG spec.
+// 颜色类型，根据 PNG 规范。
 const (
 	ctGrayscale      = 0
 	ctTrueColor      = 2
@@ -27,7 +27,7 @@ const (
 	ctTrueColorAlpha = 6
 )
 
-// A cb is a combination of color type and bit depth.
+// cb 是颜色类型和位深度的组合。
 const (
 	cbInvalid = iota
 	cbG1

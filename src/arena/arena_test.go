@@ -14,7 +14,7 @@ import (
 type T1 struct {
 	n int
 }
-type T2 [1 << 20]byte // 1MiB
+type T2 [1 << 20]byte // 1MiB（1兆字节）
 
 func TestSmoke(t *testing.T) {
 	a := arena.NewArena()

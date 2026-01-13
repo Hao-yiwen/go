@@ -1,15 +1,15 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2024 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package check implements the FIPS 140 load-time code+data verification.
-// Every FIPS package providing cryptographic functionality except hmac and sha256
-// must import crypto/internal/fips140/check, so that the verification happens
-// before initialization of package global variables.
-// The hmac and sha256 packages are used by this package, so they cannot import it.
-// Instead, those packages must be careful not to change global variables during init.
-// (If necessary, we could have check call a PostCheck function in those packages
-// after the check has completed.)
+// Package check 实现了 FIPS 140 加载时代码+数据验证。
+// 除了 hmac 和 sha256 外，提供密码功能的每个 FIPS 包
+// 必须导入 crypto/internal/fips140/check，以便验证发生
+// 在包全局变量初始化之前。
+// hmac 和 sha256 包由此包使用，因此它们无法导入它。
+// 相反，这些包必须小心不要在 init 期间更改全局变量。
+// （如有必要，我们可以让 check 在检查完成后
+// 在这些包中调用 PostCheck 函数。）
 package check
 
 import (
@@ -22,12 +22,12 @@ import (
 	"unsafe"
 )
 
-// Verified is set when verification succeeded. It can be expected to always be
-// true when [fips140.Enabled] is true, or init would have panicked.
+// Verified 在验证成功时设置。当 [fips140.Enabled] 为真时，
+// 总是可以期望为真，否则 init 会 panic。
 var Verified bool
 
-// Linkinfo holds the go:fipsinfo symbol prepared by the linker.
-// See cmd/link/internal/ld/fips.go for details.
+// Linkinfo 存储由链接器准备的 go:fipsinfo 符号。
+// 详见 cmd/link/internal/ld/fips.go。
 //
 //go:linkname Linkinfo go:fipsinfo
 var Linkinfo struct {
@@ -35,18 +35,17 @@ var Linkinfo struct {
 	Sum   [32]byte
 	Self  uintptr
 	Sects [4]struct {
-		// Note: These must be unsafe.Pointer, not uintptr,
-		// or else checkptr panics about turning uintptrs
-		// into pointers into the data segment during
-		// go test -race.
+		// 注意：这些必须是 unsafe.Pointer，而不是 uintptr，
+		// 否则 checkptr 会在 go test -race 期间关于
+		// 将 uintptr 转换为指向数据段的指针时 panic。
 		Start unsafe.Pointer
 		End   unsafe.Pointer
 	}
 }
 
-// "\xff"+fipsMagic is the expected linkinfo.Magic.
-// We avoid writing that explicitly so that the string does not appear
-// elsewhere in normal binaries, just as a precaution.
+// "\xff"+fipsMagic 是预期的 linkinfo.Magic。
+// 我们避免明确写出来，以便字符串不会
+// 在正常二进制文件中的其他地方出现，只是作为预防措施。
 const fipsMagic = " Go fipsinfo \xff\x00"
 
 var zeroSum [32]byte
@@ -68,9 +67,9 @@ func init() {
 	w := io.Writer(h)
 
 	/*
-		// Uncomment for debugging.
-		// Commented (as opposed to a const bool flag)
-		// to avoid import "os" in default builds.
+		// 取消注释以调试。
+		// 注释（相对于 const bool 标志）
+		// 以避免在默认构建中导入"os"。
 		f, err := os.Create("fipscheck.o")
 		if err != nil {
 			panic(err)
@@ -93,9 +92,8 @@ func init() {
 		panic("fips140: verification mismatch")
 	}
 
-	// "The temporary value(s) generated during the integrity test of the
-	// module’s software or firmware shall [05.10] be zeroised from the module
-	// upon completion of the integrity test"
+	// "在模块软件或固件完整性测试期间生成的临时值应 [05.10]
+	// 从模块中清零，完整性测试完成后"
 	clear(sum)
 	clear(nbuf[:])
 	h.Reset()

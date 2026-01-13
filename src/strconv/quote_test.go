@@ -11,7 +11,7 @@ import (
 	"unicode"
 )
 
-// Verify that our IsPrint agrees with unicode.IsPrint.
+// 验证我们的 IsPrint 与 unicode.IsPrint 一致。
 func TestIsPrint(t *testing.T) {
 	n := 0
 	for r := rune(0); r <= unicode.MaxRune; r++ {
@@ -25,7 +25,7 @@ func TestIsPrint(t *testing.T) {
 	}
 }
 
-// Verify that our IsGraphic agrees with unicode.IsGraphic.
+// 验证我们的 IsGraphic 与 unicode.IsGraphic 一致。
 func TestIsGraphic(t *testing.T) {
 	n := 0
 	for r := rune(0); r <= unicode.MaxRune; r++ {
@@ -53,7 +53,7 @@ var quotetests = []quoteTest{
 	{"\u263a", `"☺"`, `"\u263a"`, `"☺"`},
 	{"\U0010ffff", `"\U0010ffff"`, `"\U0010ffff"`, `"\U0010ffff"`},
 	{"\x04", `"\x04"`, `"\x04"`, `"\x04"`},
-	// Some non-printable but graphic runes. Final column is double-quoted.
+	// 一些不可打印但图形的 rune。最后一列使用双引号。
 	{"!\u00a0!\u2000!\u3000!", `"!\u00a0!\u2000!\u3000!"`, `"!\u00a0!\u2000!\u3000!"`, "\"!\u00a0!\u2000!\u3000!\""},
 	{"\x7f", `"\x7f"`, `"\x7f"`, `"\x7f"`},
 }
@@ -137,7 +137,7 @@ var quoterunetests = []quoteRuneTest{
 	{0x0010ffff, `'\U0010ffff'`, `'\U0010ffff'`, `'\U0010ffff'`},
 	{0x0010ffff + 1, `'�'`, `'\ufffd'`, `'�'`},
 	{0x04, `'\x04'`, `'\x04'`, `'\x04'`},
-	// Some differences between graphic and printable. Note the last column is double-quoted.
+	// 图形和可打印之间的一些区别。注意最后一列使用双引号。
 	{'\u00a0', `'\u00a0'`, `'\u00a0'`, "'\u00a0'"},
 	{'\u2000', `'\u2000'`, `'\u2000'`, "'\u2000'"},
 	{'\u3000', `'\u3000'`, `'\u3000'`, "'\u3000'"},
@@ -192,7 +192,7 @@ var canbackquotetests = []canBackquoteTest{
 	{string(rune(6)), false},
 	{string(rune(7)), false},
 	{string(rune(8)), false},
-	{string(rune(9)), true}, // \t
+	{string(rune(9)), true}, // 制表符
 	{string(rune(10)), false},
 	{string(rune(11)), false},
 	{string(rune(12)), false},
@@ -323,12 +323,12 @@ func TestUnquote(t *testing.T) {
 	}
 }
 
-// Issue 23685: invalid UTF-8 should not go through the fast path.
+// 问题 23685: 无效的 UTF-8 不应通过快速路径。
 func TestUnquoteInvalidUTF8(t *testing.T) {
 	tests := []struct {
 		in string
 
-		// one of:
+		// 其中之一:
 		want    string
 		wantErr error
 	}{
@@ -344,19 +344,19 @@ func TestUnquoteInvalidUTF8(t *testing.T) {
 }
 
 func testUnquote(t *testing.T, in, want string, wantErr error) {
-	// Test Unquote.
+	// 测试 Unquote。
 	got, gotErr := Unquote(in)
 	if got != want || gotErr != wantErr {
 		t.Errorf("Unquote(%q) = (%q, %v), want (%q, %v)", in, got, gotErr, want, wantErr)
 	}
 
-	// Test QuotedPrefix.
-	// Adding an arbitrary suffix should not change the result of QuotedPrefix
-	// assume that the suffix doesn't accidentally terminate a truncated input.
+	// 测试 QuotedPrefix。
+	// 添加任意后缀不应改变 QuotedPrefix 的结果
+	// 假设后缀不会意外终止截断的输入。
 	if gotErr == nil {
 		want = in
 	}
-	suffix := "\n\r\\\"`'" // special characters for quoted strings
+	suffix := "\n\r\\\"`'" // 引用字符串的特殊字符
 	if len(in) > 0 {
 		suffix = strings.ReplaceAll(suffix, in[:1], "")
 	}

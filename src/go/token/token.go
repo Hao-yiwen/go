@@ -2,8 +2,7 @@
 // 本源代码的使用受 BSD 风格许可证约束，
 // 该许可证可在 LICENSE 文件中找到。
 
-// token 包定义 constants representing the lexical tokens of the Go
-// programming language and basic operations on tokens (printing, predicates).
+// token 包定义了代表 Go 编程语言的词法标记的常量，以及对标记的基本操作（打印、谓词）。
 package token
 
 import (
@@ -12,19 +11,19 @@ import (
 	"unicode/utf8"
 )
 
-// Token 是 set of lexical tokens of the Go programming language.
+// Token 是 Go 编程语言的词法标记的集合。
 type Token int
 
-// The list of tokens.
+// 标记列表。
 const (
-	// Special tokens
+	// 特殊标记
 	ILLEGAL Token = iota
 	EOF
 	COMMENT
 
 	literal_beg
-	// Identifiers and basic type literals
-	// (these tokens stand for classes of literals)
+	// 标识符和基本类型字面值
+	// (这些标记代表字面值的类)
 	IDENT  // main
 	INT    // 12345
 	FLOAT  // 123.45
@@ -34,7 +33,7 @@ const (
 	literal_end
 
 	operator_beg
-	// Operators and delimiters
+	// 操作符和分隔符
 	ADD // +
 	SUB // -
 	MUL // *
@@ -93,7 +92,7 @@ const (
 	operator_end
 
 	keyword_beg
-	// Keywords
+	// 关键字
 	BREAK
 	CASE
 	CHAN
@@ -126,7 +125,7 @@ const (
 	keyword_end
 
 	additional_beg
-	// additional tokens, handled in an ad-hoc manner
+	// 附加标记，以临时方式处理
 	TILDE
 	additional_end
 )
@@ -233,11 +232,11 @@ var tokens = [...]string{
 	TILDE: "~",
 }
 
-// String 返回the string corresponding to the token tok.
-// For operators, delimiters, and keywords the string 是 actual
-// token character sequence (e.g., for the token [ADD], the string is
-// "+"). For all other tokens the string corresponds to the token
-// constant name (e.g. for the token [IDENT], the string is "IDENT").
+// String 返回对应于标记 tok 的字符串。
+// 对于操作符、分隔符和关键字，字符串是实际的
+// 标记字符序列（例如，对于标记 [ADD]，字符串是
+// "+"）。对于所有其他标记，字符串对应于标记的
+// 常量名称（例如，对于标记 [IDENT]，字符串是 "IDENT"）。
 func (tok Token) String() string {
 	s := ""
 	if 0 <= tok && tok < Token(len(tokens)) {
@@ -249,20 +248,17 @@ func (tok Token) String() string {
 	return s
 }
 
-// 一个set of constants for precedence-based expression parsing.
-// Non-operators have lowest precedence, followed by operators
-// starting with precedence 1 up to unary operators. The highest
-// precedence serves as "catch-all" precedence for selector,
-// indexing, and other operator and delimiter tokens.
+// 一组用于基于优先级的表达式解析的常量。
+// 非操作符具有最低优先级，然后是从优先级 1 开始到一元操作符的操作符。
+// 最高优先级用作选择器、索引和其他操作符及分隔符标记的"包罗万象"优先级。
 const (
-	LowestPrec  = 0 // non-operators
+	LowestPrec  = 0 // 非操作符
 	UnaryPrec   = 6
 	HighestPrec = 7
 )
 
-// Precedence 返回the operator precedence of the binary
-// operator op. If op is not a binary operator, the result
-// is LowestPrecedence.
+// Precedence 返回二元操作符 op 的操作符优先级。
+// 如果 op 不是二元操作符，结果是 LowestPrecedence。
 func (op Token) Precedence() int {
 	switch op {
 	case LOR:
@@ -288,7 +284,7 @@ func init() {
 	}
 }
 
-// Lookup 映射an identifier to its keyword token or [IDENT] (if not a keyword).
+// Lookup 将标识符映射到其关键字标记或 [IDENT]（如果不是关键字）。
 func Lookup(ident string) Token {
 	if tok, is_keyword := keywords[ident]; is_keyword {
 		return tok
@@ -296,38 +292,34 @@ func Lookup(ident string) Token {
 	return IDENT
 }
 
-// Predicates
+// 谓词
 
-// IsLiteral 返回true for tokens corresponding to identifiers
-// and basic type literals; it returns false otherwise.
+// IsLiteral 对于对应于标识符和基本类型字面值的标记返回真；否则返回假。
 func (tok Token) IsLiteral() bool { return literal_beg < tok && tok < literal_end }
 
-// IsOperator 返回true for tokens corresponding to operators and
-// delimiters; it returns false otherwise.
+// IsOperator 对于对应于操作符和分隔符的标记返回真；否则返回假。
 func (tok Token) IsOperator() bool {
 	return (operator_beg < tok && tok < operator_end) || tok == TILDE
 }
 
-// IsKeyword 返回true for tokens corresponding to keywords;
-// it 返回false otherwise.
+// IsKeyword 对于对应于关键字的标记返回真；否则返回假。
 func (tok Token) IsKeyword() bool { return keyword_beg < tok && tok < keyword_end }
 
-// IsExported 报告whether name starts with an upper-case letter.
+// IsExported 报告名称是否以大写字母开头。
 func IsExported(name string) bool {
 	ch, _ := utf8.DecodeRuneInString(name)
 	return unicode.IsUpper(ch)
 }
 
-// IsKeyword 报告whether name 是一个 Go keyword, such as "func" or "return".
+// IsKeyword 报告名称是否是 Go 关键字，例如 "func" 或 "return"。
 func IsKeyword(name string) bool {
-	// TODO: opt: use a perfect hash function instead of a global map.
+	// TODO: opt: 使用完美哈希函数而不是全局映射。
 	_, ok := keywords[name]
 	return ok
 }
 
-// IsIdentifier 报告whether name 是一个 Go identifier, that is, a non-empty
-// string made up of letters, digits, and underscores, where the first character
-// is not a digit. Keywords are not identifiers.
+// IsIdentifier 报告名称是否是 Go 标识符，即由字母、数字和下划线组成的非空字符串，
+// 其中第一个字符不是数字。关键字不是标识符。
 func IsIdentifier(name string) bool {
 	if name == "" || IsKeyword(name) {
 		return false

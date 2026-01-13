@@ -2,17 +2,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package suffixarray implements substring search in logarithmic time using
-// an in-memory suffix array.
+// Package suffixarray 实现了使用内存中的后缀数组在对数时间内的子串搜索。
 //
-// Example use:
+// 使用示例：
 //
-//	// create index for some data
+//	// 为某些数据创建索引
 //	index := suffixarray.New(data)
 //
-//	// lookup byte slice s
-//	offsets1 := index.Lookup(s, -1) // the list of all indices where s occurs in data
-//	offsets2 := index.Lookup(s, 3)  // the list of at most 3 indices where s occurs in data
+//	// 查找字节切片 s
+//	offsets1 := index.Lookup(s, -1) // s 在 data 中出现的所有索引列表
+//	offsets2 := index.Lookup(s, 3)  // s 在 data 中出现的最多 3 个索引列表
 package suffixarray
 
 import (
@@ -26,20 +25,20 @@ import (
 	"sort"
 )
 
-// Can change for testing
+// 可以为了测试而改变
 var maxData32 int = realMaxData32
 
 const realMaxData32 = math.MaxInt32
 
-// Index implements a suffix array for fast substring search.
+// Index 实现了用于快速子串搜索的后缀数组。
 type Index struct {
 	data []byte
-	sa   ints // suffix array for data; sa.len() == len(data)
+	sa   ints // data 的后缀数组；sa.len() == len(data)
 }
 
-// An ints is either an []int32 or an []int64.
-// That is, one of them is empty, and one is the real data.
-// The int64 form is used when len(data) > maxData32
+// An ints 要么是 []int32，要么是 []int64。
+// 即其中一个为空，另一个是真实的数据。
+// 当 len(data) > maxData32 时使用 int64 形式
 type ints struct {
 	int32 []int32
 	int64 []int64
@@ -71,8 +70,8 @@ func (a *ints) slice(i, j int) ints {
 	return ints{nil, a.int64[i:j]}
 }
 
-// New creates a new [Index] for data.
-// [Index] creation time is O(N) for N = len(data).
+// New 为数据创建一个新的 [Index]。
+// [Index] 创建时间是 O(N)，其中 N = len(data)。
 func New(data []byte) *Index {
 	ix := &Index{data: data}
 	if len(data) <= maxData32 {
@@ -85,61 +84,61 @@ func New(data []byte) *Index {
 	return ix
 }
 
-// writeInt writes an int x to w using buf to buffer the write.
+// writeInt 使用 buf 缓冲写入将整数 x 写入 w。
 func writeInt(w io.Writer, buf []byte, x int) error {
 	binary.PutVarint(buf, int64(x))
 	_, err := w.Write(buf[0:binary.MaxVarintLen64])
 	return err
 }
 
-// readInt reads an int x from r using buf to buffer the read and returns x.
+// readInt 使用 buf 缓冲读取从 r 读取整数 x 并返回 x。
 func readInt(r io.Reader, buf []byte) (int64, error) {
 	_, err := io.ReadFull(r, buf[0:binary.MaxVarintLen64]) // ok to continue with error
 	x, _ := binary.Varint(buf)
 	return x, err
 }
 
-// writeSlice writes data[:n] to w and returns n.
-// It uses buf to buffer the write.
+// writeSlice 将 data[:n] 写入 w 并返回 n。
+// 它使用 buf 缓冲写入。
 func writeSlice(w io.Writer, buf []byte, data ints) (n int, err error) {
-	// encode as many elements as fit into buf
+	// 编码尽可能多的元素以适应缓冲区
 	p := binary.MaxVarintLen64
 	m := data.len()
 	for ; n < m && p+binary.MaxVarintLen64 <= len(buf); n++ {
 		p += binary.PutUvarint(buf[p:], uint64(data.get(n)))
 	}
 
-	// update buffer size
+	// 更新缓冲区大小
 	binary.PutVarint(buf, int64(p))
 
-	// write buffer
+	// 写入缓冲区
 	_, err = w.Write(buf[0:p])
 	return
 }
 
 var errTooBig = errors.New("suffixarray: data too large")
 
-// readSlice reads data[:n] from r and returns n.
-// It uses buf to buffer the read.
+// readSlice 从 r 读取 data[:n] 并返回 n。
+// 它使用 buf 缓冲读取。
 func readSlice(r io.Reader, buf []byte, data ints) (n int, err error) {
-	// read buffer size
+	// 读取缓冲区大小
 	var size64 int64
 	size64, err = readInt(r, buf)
 	if err != nil {
 		return
 	}
 	if int64(int(size64)) != size64 || int(size64) < 0 {
-		// We never write chunks this big anyway.
+		// 我们无论如何都不会写这么大的块。
 		return 0, errTooBig
 	}
 	size := int(size64)
 
-	// read buffer w/o the size
+	// 读取缓冲区（不包括大小）
 	if _, err = io.ReadFull(r, buf[binary.MaxVarintLen64:size]); err != nil {
 		return
 	}
 
-	// decode as many elements as present in buf
+	// 解码缓冲区中存在的尽可能多的元素
 	for p := binary.MaxVarintLen64; p < size; n++ {
 		x, w := binary.Uvarint(buf[p:])
 		data.set(n, int64(x))
@@ -149,14 +148,14 @@ func readSlice(r io.Reader, buf []byte, data ints) (n int, err error) {
 	return
 }
 
-const bufSize = 16 << 10 // reasonable for BenchmarkSaveRestore
+const bufSize = 16 << 10 // 对于 BenchmarkSaveRestore 合理
 
-// Read reads the index from r into x; x must not be nil.
+// Read 从 r 读取索引到 x；x 不能为 nil。
 func (x *Index) Read(r io.Reader) error {
-	// buffer for all reads
+	// 所有读取的缓冲区
 	buf := make([]byte, bufSize)
 
-	// read length
+	// 读取长度
 	n64, err := readInt(r, buf)
 	if err != nil {
 		return err
@@ -166,10 +165,9 @@ func (x *Index) Read(r io.Reader) error {
 	}
 	n := int(n64)
 
-	// allocate space
+	// 分配空间
 	if 2*n < cap(x.data) || cap(x.data) < n || x.sa.int32 != nil && n > maxData32 || x.sa.int64 != nil && n <= maxData32 {
-		// new data is significantly smaller or larger than
-		// existing buffers - allocate new ones
+		// 新数据比现有缓冲区明显更小或更大 - 分配新的
 		x.data = make([]byte, n)
 		x.sa.int32 = nil
 		x.sa.int64 = nil
@@ -179,17 +177,17 @@ func (x *Index) Read(r io.Reader) error {
 			x.sa.int64 = make([]int64, n)
 		}
 	} else {
-		// re-use existing buffers
+		// 重用现有缓冲区
 		x.data = x.data[0:n]
 		x.sa = x.sa.slice(0, n)
 	}
 
-	// read data
+	// 读取数据
 	if _, err := io.ReadFull(r, x.data); err != nil {
 		return err
 	}
 
-	// read index
+	// 读取索引
 	sa := x.sa
 	for sa.len() > 0 {
 		n, err := readSlice(r, buf, sa)
@@ -201,22 +199,22 @@ func (x *Index) Read(r io.Reader) error {
 	return nil
 }
 
-// Write writes the index x to w.
+// Write 将索引 x 写入 w。
 func (x *Index) Write(w io.Writer) error {
-	// buffer for all writes
+	// 所有写入的缓冲区
 	buf := make([]byte, bufSize)
 
-	// write length
+	// 写入长度
 	if err := writeInt(w, buf, len(x.data)); err != nil {
 		return err
 	}
 
-	// write data
+	// 写入数据
 	if _, err := w.Write(x.data); err != nil {
 		return err
 	}
 
-	// write index
+	// 写入索引
 	sa := x.sa
 	for sa.len() > 0 {
 		n, err := writeSlice(w, buf, sa)
@@ -228,8 +226,8 @@ func (x *Index) Write(w io.Writer) error {
 	return nil
 }
 
-// Bytes returns the data over which the index was created.
-// It must not be modified.
+// Bytes 返回创建索引的数据。
+// 不得修改。
 func (x *Index) Bytes() []byte {
 	return x.data
 }

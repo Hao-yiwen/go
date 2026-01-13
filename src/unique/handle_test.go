@@ -21,8 +21,8 @@ import (
 	"unsafe"
 )
 
-// Set up special types. Because the internal maps are sharded by type,
-// this will ensure that we're not overlapping with other tests.
+// 设置特殊类型。因为内部映射按类型分片，
+// 这将确保我们不会与其他测试重叠。
 type testString string
 type testIntArray [4]int
 type testEface any
@@ -80,12 +80,12 @@ func testHandle[T comparable](t *testing.T, value T) {
 	})
 }
 
-// drainMaps ensures that the internal maps are drained.
+// drainMaps 确保内部映射被清空。
 func drainMaps[T comparable](t *testing.T) {
 	t.Helper()
 
 	if unsafe.Sizeof(*(new(T))) == 0 {
-		return // zero-size types are not inserted.
+		return // 零大小类型不被插入。
 	}
 	drainCleanupQueue(t)
 }
@@ -93,12 +93,12 @@ func drainMaps[T comparable](t *testing.T) {
 func drainCleanupQueue(t *testing.T) {
 	t.Helper()
 
-	runtime.GC() // Queue up the cleanups.
+	runtime.GC() // 排队清理。
 	runtime_blockUntilEmptyCleanupQueue(int64(5 * time.Second))
 }
 
 func checkMapsFor[T comparable](t *testing.T, value T) {
-	// Manually load the value out of the map.
+	// 手动从映射中加载值。
 	typ := abi.TypeFor[T]()
 	a, ok := uniqueMaps.Load(typ)
 	if !ok {
@@ -107,24 +107,24 @@ func checkMapsFor[T comparable](t *testing.T, value T) {
 	m := a.(*uniqueMap[T])
 	p := m.Load(value)
 	if p != nil {
-		t.Errorf("value %v still referenced by a handle (or tiny block?): internal pointer %p", value, p)
+		t.Errorf("value %v 仍然被句柄引用（或微块？）：内部指针 %p", value, p)
 	}
 }
 
 func TestMakeClonesStrings(t *testing.T) {
-	s := strings.Clone("abcdefghijklmnopqrstuvwxyz") // N.B. Must be big enough to not be tiny-allocated.
+	s := strings.Clone("abcdefghijklmnopqrstuvwxyz") // 注：必须足够大以避免微块分配。
 	ran := make(chan bool)
 	runtime.AddCleanup(unsafe.StringData(s), func(ch chan bool) {
 		ch <- true
 	}, ran)
 	h := Make(s)
 
-	// Clean up s (hopefully) and run the cleanup.
+	// 清理 s（希望如此）并运行清理。
 	runtime.GC()
 
 	select {
 	case <-time.After(1 * time.Second):
-		t.Fatal("string was improperly retained")
+		t.Fatal("字符串被不当保留")
 	case <-ran:
 	}
 	runtime.KeepAlive(h)
@@ -148,7 +148,7 @@ func TestHandleUnsafeString(t *testing.T) {
 	for i, s := range testData {
 		h := Make(s)
 		if handles[i].Value() != h.Value() {
-			t.Fatal("unsafe string improperly retained internally")
+			t.Fatal("不安全字符串在内部被不当保留")
 		}
 	}
 }
@@ -176,15 +176,15 @@ func TestNestedHandle(t *testing.T) {
 		t.Errorf("n1.Value != n0: %#v vs. %#v", v, n0)
 	}
 
-	// In a good implementation, the entire chain, down to the bottom-most
-	// value, should all be gone after we drain the maps.
+	// 在一个好的实现中，整个链，下至最底层的
+	// 值，在我们清空映射后都应该消失。
 	drainMaps[testNestedHandle](t)
 	checkMapsFor(t, n0)
 }
 
-// Implemented in runtime.
+// 在运行时实现。
 //
-// Used only by tests.
+// 仅在测试中使用。
 //
 //go:linkname runtime_blockUntilEmptyCleanupQueue
 func runtime_blockUntilEmptyCleanupQueue(timeout int64) bool

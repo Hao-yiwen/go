@@ -30,21 +30,21 @@ func ExampleDB_QueryContext() {
 	for rows.Next() {
 		var name string
 		if err := rows.Scan(&name); err != nil {
-			// Check for a scan error.
-			// Query rows will be closed with defer.
+			// 检查扫描错误。
+			// 查询行将使用 defer 关闭。
 			log.Fatal(err)
 		}
 		names = append(names, name)
 	}
-	// If the database is being written to ensure to check for Close
-	// errors that may be returned from the driver. The query may
-	// encounter an auto-commit error and be forced to rollback changes.
+	// 如果数据库被写入，请确保检查
+	// 驱动程序可能返回的 Close 错误。查询可能
+	// 遇到自动提交错误并被迫回滚更改。
 	rerr := rows.Close()
 	if rerr != nil {
 		log.Fatal(rerr)
 	}
 
-	// Rows.Err will report the last error encountered by Rows.Scan.
+	// Rows.Err 将报告 Rows.Scan 遇到的最后一个错误。
 	if err := rows.Err(); err != nil {
 		log.Fatal(err)
 	}
@@ -178,7 +178,7 @@ func ExampleDB_Prepare() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer stmt.Close() // Prepared statements take up server resources and should be closed after use.
+	defer stmt.Close() // 准备的语句占用服务器资源，使用后应关闭。
 
 	for id, project := range projects {
 		if _, err := stmt.Exec(id+1, project.mascot, project.release, "open source"); err != nil {
@@ -202,13 +202,13 @@ func ExampleTx_Prepare() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer tx.Rollback() // The rollback will be ignored if the tx has been committed later in the function.
+	defer tx.Rollback() // 如果 tx 稍后在函数中被提交，回滚将被忽略。
 
 	stmt, err := tx.Prepare("INSERT INTO projects(id, mascot, release, category) VALUES( ?, ?, ?, ? )")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer stmt.Close() // Prepared statements take up server resources and should be closed after use.
+	defer stmt.Close() // 准备的语句占用服务器资源，使用后应关闭。
 
 	for id, project := range projects {
 		if _, err := stmt.Exec(id+1, project.mascot, project.release, "open source"); err != nil {
@@ -302,14 +302,14 @@ func ExampleTx_Rollback() {
 }
 
 func ExampleStmt() {
-	// In normal use, create one Stmt when your process starts.
+	// 正常使用时，在进程启动时创建一个 Stmt。
 	stmt, err := db.PrepareContext(ctx, "SELECT username FROM users WHERE id = ?")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	// Then reuse it each time you need to issue the query.
+	// 然后每次需要发出查询时重新使用它。
 	id := 43
 	var username string
 	err = stmt.QueryRowContext(ctx, id).Scan(&username)
@@ -324,14 +324,14 @@ func ExampleStmt() {
 }
 
 func ExampleStmt_QueryRowContext() {
-	// In normal use, create one Stmt when your process starts.
+	// 正常使用时，在进程启动时创建一个 Stmt。
 	stmt, err := db.PrepareContext(ctx, "SELECT username FROM users WHERE id = ?")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	// Then reuse it each time you need to issue the query.
+	// 然后每次需要发出查询时重新使用它。
 	id := 43
 	var username string
 	err = stmt.QueryRowContext(ctx, id).Scan(&username)
@@ -361,7 +361,7 @@ func ExampleRows() {
 		}
 		names = append(names, name)
 	}
-	// Check for errors from iterating over rows.
+	// 检查从迭代行中出现的错误。
 	if err := rows.Err(); err != nil {
 		log.Fatal(err)
 	}

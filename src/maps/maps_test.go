@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2021 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package maps
 
@@ -30,25 +30,25 @@ func TestEqual(t *testing.T) {
 		t.Errorf("Equal(%v, %v) = true, want false", m1, ms)
 	}
 
-	// Comparing NaN for equality is expected to fail.
+	// 期望比较 NaN 的相等性会失败。
 	mf := map[int]float64{1: 0, 2: math.NaN()}
 	if Equal(mf, mf) {
 		t.Errorf("Equal(%v, %v) = true, want false", mf, mf)
 	}
 }
 
-// equal is simply ==.
+// equal 就是简单的 ==。
 func equal[T comparable](v1, v2 T) bool {
 	return v1 == v2
 }
 
-// equalNaN is like == except that all NaNs are equal.
+// equalNaN 像 == 一样，但所有 NaN 都相等。
 func equalNaN[T comparable](v1, v2 T) bool {
 	isNaN := func(f T) bool { return f != f }
 	return v1 == v2 || (isNaN(v1) && isNaN(v2))
 }
 
-// equalIntStr compares ints and strings.
+// equalIntStr 比较整数和字符串。
 func equalIntStr(v1 int, v2 string) bool {
 	return strconv.Itoa(v1) == v2
 }
@@ -70,12 +70,12 @@ func TestEqualFunc(t *testing.T) {
 		t.Errorf("EqualFunc(%v, %v, equal) = true, want false", m1, ms)
 	}
 
-	// Comparing NaN for equality is expected to fail.
+	// 期望比较 NaN 的相等性会失败。
 	mf := map[int]float64{1: 0, 2: math.NaN()}
 	if EqualFunc(mf, mf, equal[float64]) {
 		t.Errorf("EqualFunc(%v, %v, equal) = true, want false", mf, mf)
 	}
-	// But it should succeed using equalNaN.
+	// 但使用 equalNaN 时应该成功。
 	if !EqualFunc(mf, mf, equalNaN[float64]) {
 		t.Errorf("EqualFunc(%v, %v, equalNaN) = false, want true", mf, mf)
 	}
@@ -184,52 +184,52 @@ func TestCloneWithMapAssign(t *testing.T) {
 }
 
 func TestCloneLarge(t *testing.T) {
-	// See issue 64474.
-	type K [17]float64 // > 128 bytes
+	// 参见 issue 64474。
+	type K [17]float64 // > 128 字节
 	type V [17]float64
 
 	var zero float64
 	negZero := -zero
 
 	for tst := 0; tst < 3; tst++ {
-		// Initialize m with a key and value.
+		// 用一个键值对初始化 m。
 		m := map[K]V{}
 		var k1 K
 		var v1 V
 		m[k1] = v1
 
 		switch tst {
-		case 0: // nothing, just a 1-entry map
+		case 0: // 什么都不做，只是一个 1 项的映射
 		case 1:
-			// Add more entries to make it 2 buckets
-			// 1 entry already
-			// 7 more fill up 1 bucket
-			// 1 more to grow to 2 buckets
+			// 添加更多条目以构成 2 个桶
+			// 已有 1 项
+			// 再加 7 项填满 1 个桶
+			// 再加 1 项以增长到 2 个桶
 			for i := 0; i < 7+1; i++ {
 				m[K{float64(i) + 1}] = V{}
 			}
 		case 2:
-			// Capture the map mid-grow
-			// 1 entry already
-			// 7 more fill up 1 bucket
-			// 5 more (13 total) fill up 2 buckets
-			// 13 more (26 total) fill up 4 buckets
-			// 1 more to start the 4->8 bucket grow
+			// 在映射增长中途捕获
+			// 已有 1 项
+			// 再加 7 项填满 1 个桶
+			// 再加 5 项（共 13 项）填满 2 个桶
+			// 再加 13 项（共 26 项）填满 4 个桶
+			// 再加 1 项以启动 4->8 桶的增长
 			for i := 0; i < 7+5+13+1; i++ {
 				m[K{float64(i) + 1}] = V{}
 			}
 		}
 
-		// Clone m, which should freeze the map's contents.
+		// 克隆 m，这应该冻结映射的内容。
 		c := Clone(m)
 
-		// Update m with new key and value.
+		// 用新的键和值更新 m。
 		k2, v2 := k1, v1
 		k2[0] = negZero
 		v2[0] = 1.0
 		m[k2] = v2
 
-		// Make sure c still has its old key and value.
+		// 确保 c 仍然有旧的键和值。
 		for k, v := range c {
 			if math.Signbit(k[0]) {
 				t.Errorf("tst%d: sign bit of key changed; got %v want %v", tst, k, k1)

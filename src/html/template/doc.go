@@ -1,139 +1,135 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 /*
-Package template (html/template) implements data-driven templates for
-generating HTML output safe against code injection. It provides the
-same interface as [text/template] and should be used instead of
-[text/template] whenever the output is HTML.
+Package template (html/template) 实现了用于生成 HTML 输出的数据驱动模板，
+能防止代码注入。它提供与 [text/template] 相同的接口，在输出是 HTML 时应该
+用于替代 [text/template]。
 
-The documentation here focuses on the security features of the package.
-For information about how to program the templates themselves, see the
-documentation for [text/template].
+本文档重点介绍该包的安全功能。
+有关如何编程模板本身的信息，请参阅 [text/template] 的文档。
 
-# Introduction
+# 介绍
 
-This package wraps [text/template] so you can share its template API
-to parse and execute HTML templates safely.
+该包封装了 [text/template]，以便您可以共享其模板 API
+来安全地解析和执行 HTML 模板。
 
 	tmpl, err := template.New("name").Parse(...)
-	// Error checking elided
+	// 错误检查已省略
 	err = tmpl.Execute(out, data)
 
-If successful, tmpl will now be injection-safe. Otherwise, err is an error
-defined in the docs for ErrorCode.
+如果成功，tmpl 现在将是注入安全的。否则，err 是在
+ErrorCode 文档中定义的错误。
 
-HTML templates treat data values as plain text which should be encoded so they
-can be safely embedded in an HTML document. The escaping is contextual, so
-actions can appear within JavaScript, CSS, and URI contexts.
+HTML 模板将数据值视为纯文本，应该对其进行编码，以便
+它们可以安全地嵌入到 HTML 文档中。转义是上下文相关的，因此
+操作可以出现在 JavaScript、CSS 和 URI 上下文中。
 
-Comments are stripped from output, except for those passed in via the
-[HTML], [CSS], and [JS] types for their respective contexts.
+注释从输出中剥离，除了通过
+[HTML]、[CSS] 和 [JS] 类型传入的那些分别用于各自的上下文。
 
-The security model used by this package assumes that template authors are
-trusted, while Execute's data parameter is not. More details are
-provided below.
+该包使用的安全模型假设模板作者是可信的，而 Execute 的
+data 参数则不是。下面提供了更多详细信息。
 
-Example
+示例
 
 	import "text/template"
 	...
 	t, err := template.New("foo").Parse(`{{define "T"}}Hello, {{.}}!{{end}}`)
 	err = t.ExecuteTemplate(out, "T", "<script>alert('you have been pwned')</script>")
 
-produces
+产生
 
 	Hello, <script>alert('you have been pwned')</script>!
 
-but the contextual autoescaping in html/template
+但 html/template 中的上下文自动转义
 
 	import "html/template"
 	...
 	t, err := template.New("foo").Parse(`{{define "T"}}Hello, {{.}}!{{end}}`)
 	err = t.ExecuteTemplate(out, "T", "<script>alert('you have been pwned')</script>")
 
-produces safe, escaped HTML output
+产生安全的转义 HTML 输出
 
 	Hello, &lt;script&gt;alert(&#39;you have been pwned&#39;)&lt;/script&gt;!
 
-# Contexts
+# 上下文
 
-This package understands HTML, CSS, JavaScript, and URIs. It adds sanitizing
-functions to each simple action pipeline, so given the excerpt
+该包理解 HTML、CSS、JavaScript 和 URI。它在每个简单的
+操作管道中添加清理函数，给定摘录
 
 	<a href="/search?q={{.}}">{{.}}</a>
 
-At parse time each {{.}} is overwritten to add escaping functions as necessary.
-In this case it becomes
+在解析时，每个 {{.}} 都被覆盖以根据需要添加转义函数。
+在这种情况下，它变成
 
 	<a href="/search?q={{. | urlescaper | attrescaper}}">{{. | htmlescaper}}</a>
 
-where urlescaper, attrescaper, and htmlescaper are aliases for internal escaping
-functions.
+其中 urlescaper、attrescaper 和 htmlescaper 是内部转义
+函数的别名。
 
-For these internal escaping functions, if an action pipeline evaluates to
-a nil interface value, it is treated as though it were an empty string.
+对于这些内部转义函数，如果一个操作管道计算为
+nil 接口值，它被视为空字符串。
 
-# Namespaced and data- attributes
+# 命名空间和 data- 属性
 
-Attributes with a namespace are treated as if they had no namespace.
-Given the excerpt
+具有命名空间的属性被视为没有命名空间的属性。
+给定摘录
 
 	<a my:href="{{.}}"></a>
 
-At parse time the attribute will be treated as if it were just "href".
-So at parse time the template becomes:
+在解析时，属性将被视为就像 "href"。
+所以在解析时模板变成：
 
 	<a my:href="{{. | urlescaper | attrescaper}}"></a>
 
-Similarly to attributes with namespaces, attributes with a "data-" prefix are
-treated as if they had no "data-" prefix. So given
+类似地，具有 "data-" 前缀的属性被视为没有 "data-" 前缀。给定
 
 	<a data-href="{{.}}"></a>
 
-At parse time this becomes
+在解析时变成
 
 	<a data-href="{{. | urlescaper | attrescaper}}"></a>
 
-If an attribute has both a namespace and a "data-" prefix, only the namespace
-will be removed when determining the context. For example
+如果属性同时具有命名空间和 "data-" 前缀，仅命名空间
+在确定上下文时将被删除。例如
 
 	<a my:data-href="{{.}}"></a>
 
-This is handled as if "my:data-href" was just "data-href" and not "href" as
-it would be if the "data-" prefix were to be ignored too. Thus at parse
-time this becomes just
+这被处理为 "my:data-href" 就像 "data-href"，而不是 "href"
+如果 "data-" 前缀也被忽略的话。因此在解析
+时这只是变成
 
 	<a my:data-href="{{. | attrescaper}}"></a>
 
-As a special case, attributes with the namespace "xmlns" are always treated
-as containing URLs. Given the excerpts
+作为特殊情况，具有命名空间 "xmlns" 的属性始终被视为
+包含 URL。给定摘录
 
 	<a xmlns:title="{{.}}"></a>
 	<a xmlns:href="{{.}}"></a>
 	<a xmlns:onclick="{{.}}"></a>
 
-At parse time they become:
+在解析时它们变成：
 
 	<a xmlns:title="{{. | urlescaper | attrescaper}}"></a>
 	<a xmlns:href="{{. | urlescaper | attrescaper}}"></a>
 	<a xmlns:onclick="{{. | urlescaper | attrescaper}}"></a>
 
-# Errors
+# 错误
 
-See the documentation of ErrorCode for details.
+有关详细信息，请参阅 ErrorCode 的文档。
 
-# A fuller picture
+# 更完整的图景
 
-The rest of this package comment may be skipped on first reading; it includes
-details necessary to understand escaping contexts and error messages. Most users
-will not need to understand these details.
+该包注释的其余部分可在首次阅读时跳过；它包括
+理解转义上下文和错误消息所需的详细信息。大多数用户
+将不需要理解这些细节。
 
-# Contexts
+# 上下文
 
-Assuming {{.}} is `O'Reilly: How are <i>you</i>?`, the table below shows
-how {{.}} appears when used in the context to the left.
+假设 {{.}} 是 `O'Reilly: How are <i>you</i>?`，下表显示
+当在左侧上下文中使用时 {{.}} 是如何出现的。
 
 	Context                          {{.}} After
 	{{.}}                            O'Reilly: How are &lt;i&gt;you&lt;/i&gt;?
@@ -144,14 +140,14 @@ how {{.}} appears when used in the context to the left.
 	<a onx='f({{.}})'>               "O\x27Reilly: How are \x3ci\x3eyou...?"
 	<a onx='pattern = /{{.}}/;'>     O\x27Reilly: How are \x3ci\x3eyou...\x3f
 
-If used in an unsafe context, then the value might be filtered out:
+如果在不安全的上下文中使用，则值可能被过滤掉：
 
 	Context                          {{.}} After
 	<a href="{{.}}">                 #ZgotmplZ
 
-since "O'Reilly:" is not an allowed protocol like "http:".
+因为 "O'Reilly:" 不是允许的协议（如 "http:"）。
 
-If {{.}} is the innocuous word, `left`, then it can appear more widely,
+如果 {{.}} 是无害的单词 `left`，那么它可以更广泛地出现，
 
 	Context                              {{.}} After
 	{{.}}                                left
@@ -165,79 +161,79 @@ If {{.}} is the innocuous word, `left`, then it can appear more widely,
 	<a style="background: url('{{.}}')>  left
 	<style>p.{{.}} {color:red}</style>   left
 
-Non-string values can be used in JavaScript contexts.
-If {{.}} is
+非字符串值可以在 JavaScript 上下文中使用。
+如果 {{.}} 是
 
 	struct{A,B string}{ "foo", "bar" }
 
-in the escaped template
+在转义的模板中
 
 	<script>var pair = {{.}};</script>
 
-then the template output is
+那么模板输出是
 
 	<script>var pair = {"A": "foo", "B": "bar"};</script>
 
-See package json to understand how non-string content is marshaled for
-embedding in JavaScript contexts.
+请参阅 json 包来了解如何编组非字符串内容以供
+在 JavaScript 上下文中嵌入。
 
-# Typed Strings
+# 类型化字符串
 
-By default, this package assumes that all pipelines produce a plain text string.
-It adds escaping pipeline stages necessary to correctly and safely embed that
-plain text string in the appropriate context.
+默认情况下，该包假设所有管道都产生纯文本字符串。
+它添加必要的转义管道阶段，以正确安全地嵌入
+纯文本字符串到适当的上下文中。
 
-When a data value is not plain text, you can make sure it is not over-escaped
-by marking it with its type.
+当数据值不是纯文本时，您可以通过
+用其类型标记来确保它不被过度转义。
 
-Types HTML, JS, URL, and others from content.go can carry safe content that is
-exempted from escaping.
+来自 content.go 的类型 HTML、JS、URL 和其他类型可以
+包含免于转义的安全内容。
 
-The template
+模板
 
 	Hello, {{.}}!
 
-can be invoked with
+可以通过以下方式调用
 
 	tmpl.Execute(out, template.HTML(`<b>World</b>`))
 
-to produce
+产生
 
 	Hello, <b>World</b>!
 
-instead of the
+而不是
 
 	Hello, &lt;b&gt;World&lt;b&gt;!
 
-that would have been produced if {{.}} was a regular string.
+如果 {{.}} 是常规字符串，则会产生的结果。
 
-# Security Model
+# 安全模型
 
-https://web.archive.org/web/20160501113828/http://js-quasis-libraries-and-repl.googlecode.com/svn/trunk/safetemplate.html#problem_definition defines "safe" as used by this package.
+https://web.archive.org/web/20160501113828/http://js-quasis-libraries-and-repl.googlecode.com/svn/trunk/safetemplate.html#problem_definition 定义了该包中使用的 "safe"。
 
-This package assumes that template authors are trusted, that Execute's data
-parameter is not, and seeks to preserve the properties below in the face
-of untrusted data:
+该包假设模板作者是可信的，Execute 的 data
+参数则不是，并寻求在面对
+不受信任的数据时保护以下属性：
 
-Structure Preservation Property:
-"... when a template author writes an HTML tag in a safe templating language,
-the browser will interpret the corresponding portion of the output as a tag
-regardless of the values of untrusted data, and similarly for other structures
-such as attribute boundaries and JS and CSS string boundaries."
+结构保留属性：
+"...当模板作者在安全模板语言中编写 HTML 标签时，
+浏览器将解释输出的相应部分作为标签，
+而不管不可信数据的值，
+以及其他结构如属性边界和 JS 和 CSS 字符串边界也是如此。"
 
-Code Effect Property:
-"... only code specified by the template author should run as a result of
-injecting the template output into a page and all code specified by the
-template author should run as a result of the same."
+代码效果属性：
+"...仅由模板作者指定的代码应在以下情况下运行
+将模板输出注入页面，并且模板作者指定的所有代码应在
+相同结果的情况下运行。"
 
-Least Surprise Property:
-"A developer (or code reviewer) familiar with HTML, CSS, and JavaScript, who
-knows that contextual autoescaping happens should be able to look at a {{.}}
-and correctly infer what sanitization happens."
+最少惊讶属性：
+"熟悉 HTML、CSS 和 JavaScript 的开发人员（或代码审查者），
+知道发生上下文自动转义应该能够查看 {{.}}
+并正确推断发生什么清理。"
 
-Previously, ECMAScript 6 template literal were disabled by default, and could be
-enabled with the GODEBUG=jstmpllitinterp=1 environment variable. Template
-literals are now supported by default, and setting jstmpllitinterp has no
-effect.
+之前，ECMAScript 6 模板文字默认被禁用，并且可以
+通过 GODEBUG=jstmpllitinterp=1 环境变量启用。模板
+文字现在默认受支持，设置 jstmpllitinterp 没有
+效果。
 */
 package template

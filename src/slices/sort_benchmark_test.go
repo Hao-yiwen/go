@@ -68,11 +68,11 @@ func BenchmarkSortFuncStruct(b *testing.B) {
 				}
 				return cmp.Compare(a.n, b.n)
 			}
-			// Presort the slice so all benchmark iterations are identical.
+			// 预先排序切片，使所有基准测试迭代相同。
 			slices.SortFunc(structs, cmpFunc)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				// Sort the slice twice because slices.SortFunc modifies the slice in place.
+				// 排序切片两次，因为 slices.SortFunc 就地修改切片。
 				slices.SortFunc(structs, func(a, b *myStruct) int { return cmpFunc(b, a) })
 				slices.SortFunc(structs, cmpFunc)
 			}

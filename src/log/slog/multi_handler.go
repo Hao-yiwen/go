@@ -1,6 +1,6 @@
-// Copyright 2025 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2025 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package slog
 
@@ -9,16 +9,16 @@ import (
 	"errors"
 )
 
-// NewMultiHandler creates a [MultiHandler] with the given Handlers.
+// NewMultiHandler 使用给定的 Handler 创建一个 [MultiHandler]。
 func NewMultiHandler(handlers ...Handler) *MultiHandler {
 	h := make([]Handler, len(handlers))
 	copy(h, handlers)
 	return &MultiHandler{multi: h}
 }
 
-// MultiHandler is a [Handler] that invokes all the given Handlers.
-// Its Enable method reports whether any of the handlers' Enabled methods return true.
-// Its Handle, WithAttr and WithGroup methods call the corresponding method on each of the enabled handlers.
+// MultiHandler 是一个 [Handler]，它调用所有给定的 Handler。
+// 其 Enable 方法报告任何处理程序的 Enabled 方法是否返回 true。
+// 其 Handle、WithAttr 和 WithGroup 方法在每个启用的处理程序上调用相应的方法。
 type MultiHandler struct {
 	multi []Handler
 }

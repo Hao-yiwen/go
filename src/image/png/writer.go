@@ -1,6 +1,6 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package png
 
@@ -15,24 +15,23 @@ import (
 	"strconv"
 )
 
-// Encoder configures encoding PNG images.
+// Encoder 配置编码 PNG 图像。
 type Encoder struct {
 	CompressionLevel CompressionLevel
 
-	// BufferPool optionally specifies a buffer pool to get temporary
-	// EncoderBuffers when encoding an image.
+	// BufferPool 可选择指定一个缓冲池以在编码图像时获取临时的
+	// EncoderBuffers。
 	BufferPool EncoderBufferPool
 }
 
-// EncoderBufferPool is an interface for getting and returning temporary
-// instances of the [EncoderBuffer] struct. This can be used to reuse buffers
-// when encoding multiple images.
+// EncoderBufferPool 是一个用于获取和返回 [EncoderBuffer] 结构体的临时
+// 实例的接口。这可以用于在编码多个图像时重用缓冲区。
 type EncoderBufferPool interface {
 	Get() *EncoderBuffer
 	Put(*EncoderBuffer)
 }
 
-// EncoderBuffer holds the buffers used for encoding PNG images.
+// EncoderBuffer 保存用于编码 PNG 图像的缓冲区。
 type EncoderBuffer encoder
 
 type encoder struct {
@@ -51,7 +50,7 @@ type encoder struct {
 	bw      *bufio.Writer
 }
 
-// CompressionLevel indicates the compression level.
+// CompressionLevel 指示压缩级别。
 type CompressionLevel int
 
 const (
@@ -60,15 +59,15 @@ const (
 	BestSpeed          CompressionLevel = -2
 	BestCompression    CompressionLevel = -3
 
-	// Positive CompressionLevel values are reserved to mean a numeric zlib
-	// compression level, although that is not implemented yet.
+	// 正的 CompressionLevel 值保留用于表示数字 zlib
+	// 压缩级别，尽管目前尚未实现。
 )
 
 type opaquer interface {
 	Opaque() bool
 }
 
-// Returns whether or not the image is fully opaque.
+// 返回图像是否完全不透明。
 func opaque(m image.Image) bool {
 	if o, ok := m.(opaquer); ok {
 		return o.Opaque()
@@ -85,7 +84,7 @@ func opaque(m image.Image) bool {
 	return true
 }
 
-// The absolute value of a byte interpreted as a signed int8.
+// 将字节解释为有符号 int8 的绝对值。
 func abs8(d uint8) int {
 	if d < 128 {
 		return int(d)
@@ -127,7 +126,7 @@ func (e *encoder) writeIHDR() {
 	b := e.m.Bounds()
 	binary.BigEndian.PutUint32(e.tmp[0:4], uint32(b.Dx()))
 	binary.BigEndian.PutUint32(e.tmp[4:8], uint32(b.Dy()))
-	// Set bit depth and color type.
+	// 设置位深度和颜色类型。
 	switch e.cb {
 	case cbG8:
 		e.tmp[8] = 8
@@ -160,9 +159,9 @@ func (e *encoder) writeIHDR() {
 		e.tmp[8] = 16
 		e.tmp[9] = ctTrueColorAlpha
 	}
-	e.tmp[10] = 0 // default compression method
-	e.tmp[11] = 0 // default filter method
-	e.tmp[12] = 0 // non-interlaced
+	e.tmp[10] = 0 // 默认压缩方法
+	e.tmp[11] = 0 // 默认过滤方法
+	e.tmp[12] = 0 // 非交错
 	e.writeChunk(e.tmp[:13], "IHDR")
 }
 
@@ -188,12 +187,12 @@ func (e *encoder) writePLTEAndTRNS(p color.Palette) {
 	}
 }
 
-// An encoder is an io.Writer that satisfies writes by writing PNG IDAT chunks,
-// including an 8-byte header and 4-byte CRC checksum per Write call. Such calls
-// should be relatively infrequent, since writeIDATs uses a [bufio.Writer].
+// encoder 是一个 io.Writer，通过写入 PNG IDAT 块来满足写入，
+// 包括每个 Write 调用的 8 字节头和 4 字节 CRC 校验和。这样的调用
+// 应该相对不频繁，因为 writeIDATs 使用了 [bufio.Writer]。
 //
-// This method should only be called from writeIDATs (via writeImage).
-// No other code should treat an encoder as an io.Writer.
+// 这个方法应该只从 writeIDATs（通过 writeImage）调用。
+// 其他代码不应该将 encoder 视为 io.Writer。
 func (e *encoder) Write(b []byte) (int, error) {
 	e.writeChunk(b, "IDAT")
 	if e.err != nil {
@@ -202,13 +201,13 @@ func (e *encoder) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-// Chooses the filter to use for encoding the current row, and applies it.
-// The return value is the index of the filter and also of the row in cr that has had it applied.
+// 选择用于编码当前行的过滤器，并应用它。
+// 返回值是过滤器的索引，也是 cr 中已应用过滤器的行的索引。
 func filter(cr *[nFilter][]byte, pr []byte, bpp int) int {
-	// We try all five filter types, and pick the one that minimizes the sum of absolute differences.
-	// This is the same heuristic that libpng uses, although the filters are attempted in order of
-	// estimated most likely to be minimal (ftUp, ftPaeth, ftNone, ftSub, ftAverage), rather than
-	// in their enumeration order (ftNone, ftSub, ftUp, ftAverage, ftPaeth).
+	// 我们尝试所有五种过滤器类型，并选择能最小化绝对差值之和的类型。
+	// 这与 libpng 使用的启发式方法相同，尽管尝试过滤器的顺序是
+	// 根据估计最有可能最小化（ftUp、ftPaeth、ftNone、ftSub、ftAverage）
+	// 的顺序，而不是按它们的枚举顺序（ftNone、ftSub、ftUp、ftAverage、ftPaeth）。
 	cdat0 := cr[0][1:]
 	cdat1 := cr[1][1:]
 	cdat2 := cr[2][1:]
@@ -217,7 +216,7 @@ func filter(cr *[nFilter][]byte, pr []byte, bpp int) int {
 	pdat := pr[1:]
 	n := len(cdat0)
 
-	// The up filter.
+	// 向上过滤器。
 	sum := 0
 	for i := 0; i < n; i++ {
 		cdat2[i] = cdat0[i] - pdat[i]
@@ -226,7 +225,7 @@ func filter(cr *[nFilter][]byte, pr []byte, bpp int) int {
 	best := sum
 	filter := ftUp
 
-	// The Paeth filter.
+	// Paeth 过滤器。
 	sum = 0
 	for i := 0; i < bpp; i++ {
 		cdat4[i] = cdat0[i] - pdat[i]
@@ -244,7 +243,7 @@ func filter(cr *[nFilter][]byte, pr []byte, bpp int) int {
 		filter = ftPaeth
 	}
 
-	// The none filter.
+	// 无过滤器。
 	sum = 0
 	for i := 0; i < n; i++ {
 		sum += abs8(cdat0[i])
@@ -257,7 +256,7 @@ func filter(cr *[nFilter][]byte, pr []byte, bpp int) int {
 		filter = ftNone
 	}
 
-	// The sub filter.
+	// 子过滤器。
 	sum = 0
 	for i := 0; i < bpp; i++ {
 		cdat1[i] = cdat0[i]
@@ -275,7 +274,7 @@ func filter(cr *[nFilter][]byte, pr []byte, bpp int) int {
 		filter = ftSub
 	}
 
-	// The average filter.
+	// 平均过滤器。
 	sum = 0
 	for i := 0; i < bpp; i++ {
 		cdat3[i] = cdat0[i] - pdat[i]/2
@@ -333,11 +332,11 @@ func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) erro
 		bitsPerPixel = 16
 	}
 
-	// cr[*] and pr are the bytes for the current and previous row.
-	// cr[0] is unfiltered (or equivalently, filtered with the ftNone filter).
-	// cr[ft], for non-zero filter types ft, are buffers for transforming cr[0] under the
-	// other PNG filter types. These buffers are allocated once and re-used for each row.
-	// The +1 is for the per-row filter type, which is at cr[*][0].
+	// cr[*] 和 pr 是当前和前一行的字节。
+	// cr[0] 是未过滤的（或等效地，用 ftNone 过滤器过滤）。
+	// cr[ft]，对于非零过滤器类型 ft，是用于在其他 PNG 过滤器类型下转换 cr[0] 的缓冲区。
+	// 这些缓冲区分配一次并为每一行重新使用。
+	// +1 是为了每行过滤器类型，它在 cr[*][0]。
 	b := m.Bounds()
 	sz := 1 + (bitsPerPixel*b.Dx()+7)/8
 	for i := range e.cr {
@@ -363,7 +362,7 @@ func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) erro
 	nrgba, _ := m.(*image.NRGBA)
 
 	for y := b.Min.Y; y < b.Max.Y; y++ {
-		// Convert from colors to bytes.
+		// 从颜色转换为字节。
 		i := 1
 		switch cb {
 		case cbG8:
@@ -378,7 +377,7 @@ func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) erro
 				}
 			}
 		case cbTC8:
-			// We have previously verified that the alpha value is fully opaque.
+			// 我们之前已验证 alpha 值完全不透明。
 			cr0 := cr[0]
 			stride, pix := 0, []byte(nil)
 			if rgba != nil {
@@ -458,14 +457,13 @@ func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) erro
 					} else if s[3] == 0xff {
 						copy(d[:], s[:])
 					} else {
-						// This code does the same as color.NRGBAModel.Convert(
-						// rgba.At(x, y)).(color.NRGBA) but with no extra memory
-						// allocations or interface/function call overhead.
+						// 这段代码做的事情与 color.NRGBAModel.Convert(
+						// rgba.At(x, y)).(color.NRGBA) 相同，但没有额外的内存
+						// 分配或接口/函数调用开销。
 						//
-						// The multiplier m combines 0x101 (which converts
-						// 8-bit color to 16-bit color) and 0xffff (which, when
-						// combined with the division-by-a, converts from
-						// alpha-premultiplied to non-alpha-premultiplied).
+						// 乘数 m 结合了 0x101（将 8 位颜色转换为 16 位颜色）
+						// 和 0xffff（当与除以 a 结合时，从 alpha 预乘
+						// 转换为非 alpha 预乘）。
 						const m = 0x101 * 0xffff
 						a := uint32(s[3]) * 0x101
 						d[0] = uint8((uint32(s[0]) * m / a) >> 8)
@@ -475,7 +473,7 @@ func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) erro
 					}
 				}
 			} else {
-				// Convert from image.Image (which is alpha-premultiplied) to PNG's non-alpha-premultiplied.
+				// 从 image.Image（alpha 预乘）转换为 PNG 的非 alpha 预乘。
 				for x := b.Min.X; x < b.Max.X; x++ {
 					c := color.NRGBAModel.Convert(m.At(x, y)).(color.NRGBA)
 					cr[0][i+0] = c.R
@@ -493,7 +491,7 @@ func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) erro
 				i += 2
 			}
 		case cbTC16:
-			// We have previously verified that the alpha value is fully opaque.
+			// 我们之前已验证 alpha 值完全不透明。
 			for x := b.Min.X; x < b.Max.X; x++ {
 				r, g, b, _ := m.At(x, y).RGBA()
 				cr[0][i+0] = uint8(r >> 8)
@@ -505,7 +503,7 @@ func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) erro
 				i += 6
 			}
 		case cbTCA16:
-			// Convert from image.Image (which is alpha-premultiplied) to PNG's non-alpha-premultiplied.
+			// 从 image.Image（alpha 预乘）转换为 PNG 的非 alpha 预乘。
 			for x := b.Min.X; x < b.Max.X; x++ {
 				c := color.NRGBA64Model.Convert(m.At(x, y)).(color.NRGBA64)
 				cr[0][i+0] = uint8(c.R >> 8)
@@ -520,30 +518,30 @@ func (e *encoder) writeImage(w io.Writer, m image.Image, cb int, level int) erro
 			}
 		}
 
-		// Apply the filter.
-		// Skip filter for NoCompression and paletted images (cbP8) as
-		// "filters are rarely useful on palette images" and will result
-		// in larger files (see http://www.libpng.org/pub/png/book/chapter09.html).
+		// 应用过滤器。
+		// 跳过 NoCompression 和调色板图像（cbP8）的过滤，因为
+		// "过滤器很少对调色板图像有用"，并且会导致
+		// 文件变大（见 http://www.libpng.org/pub/png/book/chapter09.html）。
 		f := ftNone
 		if level != zlib.NoCompression && cb != cbP8 && cb != cbP4 && cb != cbP2 && cb != cbP1 {
-			// Since we skip paletted images we don't have to worry about
-			// bitsPerPixel not being a multiple of 8
+			// 由于我们跳过调色板图像，我们不必担心
+			// bitsPerPixel 不是 8 的倍数
 			bpp := bitsPerPixel / 8
 			f = filter(&cr, pr, bpp)
 		}
 
-		// Write the compressed bytes.
+		// 写入压缩字节。
 		if _, err := e.zw.Write(cr[f]); err != nil {
 			return err
 		}
 
-		// The current row for y is the previous row for y+1.
+		// y 的当前行是 y+1 的前一行。
 		pr, cr[0] = cr[0], pr
 	}
 	return nil
 }
 
-// Write the actual image data to one or more IDAT chunks.
+// 将实际的图像数据写入一个或多个 IDAT 块。
 func (e *encoder) writeIDATs() {
 	if e.err != nil {
 		return
@@ -560,8 +558,8 @@ func (e *encoder) writeIDATs() {
 	e.err = e.bw.Flush()
 }
 
-// This function is required because we want the zero value of
-// Encoder.CompressionLevel to map to zlib.DefaultCompression.
+// 需要此函数是因为我们希望
+// Encoder.CompressionLevel 的零值映射到 zlib.DefaultCompression。
 func levelToZlib(l CompressionLevel) int {
 	switch l {
 	case DefaultCompression:
@@ -579,18 +577,18 @@ func levelToZlib(l CompressionLevel) int {
 
 func (e *encoder) writeIEND() { e.writeChunk(nil, "IEND") }
 
-// Encode writes the Image m to w in PNG format. Any Image may be
-// encoded, but images that are not [image.NRGBA] might be encoded lossily.
+// Encode 将图像 m 以 PNG 格式写入 w。任何图像都可以
+// 编码，但不是 [image.NRGBA] 的图像可能会有损编码。
 func Encode(w io.Writer, m image.Image) error {
 	var e Encoder
 	return e.Encode(w, m)
 }
 
-// Encode writes the Image m to w in PNG format.
+// Encode 将图像 m 以 PNG 格式写入 w。
 func (enc *Encoder) Encode(w io.Writer, m image.Image) error {
-	// Obviously, negative widths and heights are invalid. Furthermore, the PNG
-	// spec section 11.2.2 says that zero is invalid. Excessively large images are
-	// also rejected.
+	// 显然，负的宽度和高度是无效的。此外，PNG
+	// 规范第 11.2.2 节说零是无效的。过大的图像也会被
+	// 拒绝。
 	mw, mh := int64(m.Bounds().Dx()), int64(m.Bounds().Dy())
 	if mw <= 0 || mh <= 0 || mw >= 1<<32 || mh >= 1<<32 {
 		return FormatError("invalid image size: " + strconv.FormatInt(mw, 10) + "x" + strconv.FormatInt(mh, 10))
@@ -614,7 +612,7 @@ func (enc *Encoder) Encode(w io.Writer, m image.Image) error {
 	e.m = m
 
 	var pal color.Palette
-	// cbP8 encoding needs PalettedImage's ColorIndexAt method.
+	// cbP8 编码需要 PalettedImage 的 ColorIndexAt 方法。
 	if _, ok := m.(image.PalettedImage); ok {
 		pal, _ = m.ColorModel().(color.Palette)
 	}

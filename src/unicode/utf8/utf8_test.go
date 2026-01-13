@@ -12,7 +12,7 @@ import (
 	. "unicode/utf8"
 )
 
-// Validate the constants redefined from unicode.
+// 验证从 unicode 重新定义的常数。
 func TestConstants(t *testing.T) {
 	if MaxRune != unicode.MaxRune {
 		t.Errorf("utf8.MaxRune is wrong: %x should be %x", MaxRune, unicode.MaxRune)
@@ -50,8 +50,8 @@ var utf8map = []Utf8Map{
 	{0x0801, "\xe0\xa0\x81"},
 	{0x1000, "\xe1\x80\x80"},
 	{0xd000, "\xed\x80\x80"},
-	{0xd7ff, "\xed\x9f\xbf"}, // last code point before surrogate half.
-	{0xe000, "\xee\x80\x80"}, // first code point after surrogate half.
+	{0xd7ff, "\xed\x9f\xbf"}, // 代理对之前的最后一个码点。
+	{0xe000, "\xee\x80\x80"}, // 代理对之后的第一个码点。
 	{0xfffe, "\xef\xbf\xbe"},
 	{0xffff, "\xef\xbf\xbf"},
 	{0x10000, "\xf0\x90\x80\x80"},
@@ -63,8 +63,8 @@ var utf8map = []Utf8Map{
 }
 
 var surrogateMap = []Utf8Map{
-	{0xd800, "\xed\xa0\x80"}, // surrogate min decodes to (RuneError, 1)
-	{0xdfff, "\xed\xbf\xbf"}, // surrogate max decodes to (RuneError, 1)
+	{0xd800, "\xed\xa0\x80"}, // 代理对最小值解码为 (RuneError, 1)
+	{0xdfff, "\xed\xbf\xbf"}, // 代理对最大值解码为 (RuneError, 1)
 }
 
 var testStrings = []string{
@@ -142,7 +142,7 @@ func TestDecodeRune(t *testing.T) {
 			t.Errorf("DecodeRuneInString(%q) = %#04x, %d want %#04x, %d", s, r, size, m.r, len(b))
 		}
 
-		// there's an extra byte that bytes left behind - make sure trailing byte works
+		// 有一个额外的字节被留下 - 确保尾随字节有效
 		r, size = DecodeRune(b[0:cap(b)])
 		if r != m.r || size != len(b) {
 			t.Errorf("DecodeRune(%q) = %#04x, %d want %#04x, %d", b, r, size, m.r, len(b))
@@ -153,7 +153,7 @@ func TestDecodeRune(t *testing.T) {
 			t.Errorf("DecodeRuneInString(%q) = %#04x, %d want %#04x, %d", s, r, size, m.r, len(b))
 		}
 
-		// make sure missing bytes fail
+		// 确保缺失的字节失败
 		wantsize := 1
 		if wantsize >= len(b) {
 			wantsize = 0
@@ -168,7 +168,7 @@ func TestDecodeRune(t *testing.T) {
 			t.Errorf("DecodeRuneInString(%q) = %#04x, %d want %#04x, %d", s, r, size, RuneError, wantsize)
 		}
 
-		// make sure bad sequences fail
+		// 确保不良序列失败
 		if len(b) == 1 {
 			b[0] = 0x80
 		} else {
@@ -202,8 +202,7 @@ func TestDecodeSurrogateRune(t *testing.T) {
 	}
 }
 
-// Check that DecodeRune and DecodeLastRune correspond to
-// the equivalent range loop.
+// 检查 DecodeRune 和 DecodeLastRune 是否对应等效的范围循环。
 func TestSequencing(t *testing.T) {
 	for _, ts := range testStrings {
 		for _, m := range utf8map {
@@ -215,13 +214,11 @@ func TestSequencing(t *testing.T) {
 }
 
 func runtimeRuneCount(s string) int {
-	return len([]rune(s)) // Replaced by gc with call to runtime.countrunes(s).
+	return len([]rune(s)) // 由 gc 替换为调用 runtime.countrunes(s)。
 }
 
-// Check that a range loop, len([]rune(string)) optimization and
-// []rune conversions visit the same runes.
-// Not really a test of this package, but the assumption is used here and
-// it's good to verify.
+// 检查范围循环、len([]rune(string)) 优化和 []rune 转换是否访问相同的 rune。
+// 这不是这个包的真正测试，但假设在这里使用，验证它很好。
 func TestRuntimeConversion(t *testing.T) {
 	for _, ts := range testStrings {
 		count := RuneCountInString(ts)
@@ -246,8 +243,8 @@ func TestRuntimeConversion(t *testing.T) {
 }
 
 var invalidSequenceTests = []string{
-	"\xed\xa0\x80\x80", // surrogate min
-	"\xed\xbf\xbf\x80", // surrogate max
+	"\xed\xa0\x80\x80", // 代理对最小值
+	"\xed\xbf\xbf\x80", // 代理对最大值
 
 	// xx
 	"\x91\x80\x80\x80",

@@ -4,7 +4,7 @@
 
 package bufio
 
-// Exported for testing only.
+// 仅为测试导出。
 import (
 	"unicode/utf8"
 )
@@ -23,7 +23,7 @@ func (s *Scanner) MaxTokenSize(n int) {
 	s.maxTokenSize = n
 }
 
-// ErrOrEOF is like Err, but returns EOF. Used to test a corner case.
+// ErrOrEOF 类似于 Err，但返回 EOF。用于测试边界情况。
 func (s *Scanner) ErrOrEOF() error {
 	return s.err
 }

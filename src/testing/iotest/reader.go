@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
-// Package iotest implements Readers and Writers useful mainly for testing.
+// Package iotest 实现了主要用于测试的 Readers 和 Writers。
 package iotest
 
 import (
@@ -12,8 +12,8 @@ import (
 	"io"
 )
 
-// OneByteReader returns a Reader that implements
-// each non-empty Read by reading one byte from r.
+// OneByteReader 返回一个 Reader，每次非空 Read 调用时
+// 从 r 中读取一个字节。
 func OneByteReader(r io.Reader) io.Reader { return &oneByteReader{r} }
 
 type oneByteReader struct {
@@ -27,8 +27,8 @@ func (r *oneByteReader) Read(p []byte) (int, error) {
 	return r.r.Read(p[0:1])
 }
 
-// HalfReader returns a Reader that implements Read
-// by reading half as many requested bytes from r.
+// HalfReader 返回一个 Reader，它通过从 r 中
+// 读取一半的请求字节来实现 Read。
 func HalfReader(r io.Reader) io.Reader { return &halfReader{r} }
 
 type halfReader struct {
@@ -39,11 +39,10 @@ func (r *halfReader) Read(p []byte) (int, error) {
 	return r.r.Read(p[0 : (len(p)+1)/2])
 }
 
-// DataErrReader changes the way errors are handled by a Reader. Normally, a
-// Reader returns an error (typically EOF) from the first Read call after the
-// last piece of data is read. DataErrReader wraps a Reader and changes its
-// behavior so the final error is returned along with the final data, instead
-// of in the first call after the final data.
+// DataErrReader 改变了 Reader 处理错误的方式。通常，
+// Reader 从读取最后一块数据之后的第一次 Read 调用中返回错误（通常是 EOF）。
+// DataErrReader 包装一个 Reader 并改变其行为，以便
+// 最终错误与最终数据一起返回，而不是在最终数据之后的第一次调用中返回。
 func DataErrReader(r io.Reader) io.Reader { return &dataErrReader{r, nil, make([]byte, 1024)} }
 
 type dataErrReader struct {
@@ -53,8 +52,8 @@ type dataErrReader struct {
 }
 
 func (r *dataErrReader) Read(p []byte) (n int, err error) {
-	// loop because first call needs two reads:
-	// one to get data and a second to look for an error.
+	// 循环，因为第一次调用需要两次读取：
+	// 一次获取数据，第二次查找错误。
 	for {
 		if len(r.unread) == 0 {
 			n1, err1 := r.r.Read(r.data)
@@ -70,11 +69,11 @@ func (r *dataErrReader) Read(p []byte) (n int, err error) {
 	return
 }
 
-// ErrTimeout is a fake timeout error.
+// ErrTimeout 是一个假的超时错误。
 var ErrTimeout = errors.New("timeout")
 
-// TimeoutReader returns [ErrTimeout] on the second read
-// with no data. Subsequent calls to read succeed.
+// TimeoutReader 在第二次读取时返回 [ErrTimeout]
+// 且没有数据。随后的读取调用会成功。
 func TimeoutReader(r io.Reader) io.Reader { return &timeoutReader{r, 0} }
 
 type timeoutReader struct {
@@ -90,7 +89,7 @@ func (r *timeoutReader) Read(p []byte) (int, error) {
 	return r.r.Read(p)
 }
 
-// ErrReader returns an [io.Reader] that returns 0, err from all Read calls.
+// ErrReader 返回一个 [io.Reader]，它从所有 Read 调用中返回 0, err。
 func ErrReader(err error) io.Reader {
 	return &errReader{err: err}
 }
@@ -126,13 +125,13 @@ func (r *smallByteReader) Read(p []byte) (int, error) {
 	return n, err
 }
 
-// TestReader tests that reading from r returns the expected file content.
-// It does reads of different sizes, until EOF.
-// If r implements [io.ReaderAt] or [io.Seeker], TestReader also checks
-// that those operations behave as they should.
+// TestReader 测试从 r 读取是否返回预期的文件内容。
+// 它执行不同大小的读取，直到 EOF。
+// 如果 r 实现了 [io.ReaderAt] 或 [io.Seeker]，TestReader 也会检查
+// 这些操作是否表现正确。
 //
-// If TestReader finds any misbehaviors, it returns an error reporting them.
-// The error text may span multiple lines.
+// 如果 TestReader 发现任何不当行为，它会返回报告它们的错误。
+// 错误文本可能跨越多行。
 func TestReader(r io.Reader, content []byte) error {
 	if len(content) > 0 {
 		n, err := r.Read(nil)
@@ -154,13 +153,13 @@ func TestReader(r io.Reader, content []byte) error {
 	}
 
 	if r, ok := r.(io.ReadSeeker); ok {
-		// Seek(0, 1) should report the current file position (EOF).
+		// Seek(0, 1) 应该报告当前文件位置 (EOF)。
 		if off, err := r.Seek(0, 1); off != int64(len(content)) || err != nil {
 			return fmt.Errorf("Seek(0, 1) from EOF = %d, %v, want %d, nil", off, err, len(content))
 		}
 
-		// Seek backward partway through file, in two steps.
-		// If middle == 0, len(content) == 0, can't use the -1 and +1 seeks.
+		// 分两步向后寻找文件。
+		// 如果 middle == 0，len(content) == 0，不能使用 -1 和 +1 寻找。
 		middle := len(content) - len(content)/3
 		if middle > 0 {
 			if off, err := r.Seek(-1, 1); off != int64(len(content)-1) || err != nil {
@@ -174,12 +173,12 @@ func TestReader(r io.Reader, content []byte) error {
 			}
 		}
 
-		// Seek(0, 1) should report the current file position (middle).
+		// Seek(0, 1) 应该报告当前文件位置 (middle)。
 		if off, err := r.Seek(0, 1); off != int64(middle) || err != nil {
 			return fmt.Errorf("Seek(0, 1) from %d = %d, %v, want %d, nil", middle, off, err, middle)
 		}
 
-		// Reading forward should return the last part of the file.
+		// 向前读取应该返回文件的最后一部分。
 		data, err := io.ReadAll(&smallByteReader{r: r})
 		if err != nil {
 			return fmt.Errorf("ReadAll from offset %d: %v", middle, err)
@@ -188,7 +187,7 @@ func TestReader(r io.Reader, content []byte) error {
 			return fmt.Errorf("ReadAll from offset %d = %q\n\twant %q", middle, data, content[middle:])
 		}
 
-		// Seek relative to end of file, but start elsewhere.
+		// 相对于文件末尾寻找，但从其他位置开始。
 		if off, err := r.Seek(int64(middle/2), 0); off != int64(middle/2) || err != nil {
 			return fmt.Errorf("Seek(%d, 0) from EOF = %d, %v, want %d, nil", middle/2, off, err, middle/2)
 		}
@@ -196,7 +195,7 @@ func TestReader(r io.Reader, content []byte) error {
 			return fmt.Errorf("Seek(%d, 2) from %d = %d, %v, want %d, nil", -len(content)/3, middle/2, off, err, middle)
 		}
 
-		// Reading forward should return the last part of the file (again).
+		// 向前读取应该返回文件的最后一部分（再次）。
 		data, err = io.ReadAll(&smallByteReader{r: r})
 		if err != nil {
 			return fmt.Errorf("ReadAll from offset %d: %v", middle, err)
@@ -205,7 +204,7 @@ func TestReader(r io.Reader, content []byte) error {
 			return fmt.Errorf("ReadAll from offset %d = %q\n\twant %q", middle, data, content[middle:])
 		}
 
-		// Absolute seek & read forward.
+		// 绝对寻找和向前读取。
 		if off, err := r.Seek(int64(middle/2), 0); off != int64(middle/2) || err != nil {
 			return fmt.Errorf("Seek(%d, 0) from EOF = %d, %v, want %d, nil", middle/2, off, err, middle/2)
 		}

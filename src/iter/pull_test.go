@@ -1,6 +1,6 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2023 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package iter_test
 
@@ -115,18 +115,15 @@ func TestPull2(t *testing.T) {
 	}
 }
 
-// stableNumGoroutine is like NumGoroutine but tries to ensure stability of
-// the value by letting any exiting goroutines finish exiting.
+// stableNumGoroutine 类似于 NumGoroutine，但通过让任何退出的 goroutine 完成退出来尝试确保值的稳定性。
 func stableNumGoroutine() int {
-	// The idea behind stablizing the value of NumGoroutine is to
-	// see the same value enough times in a row in between calls to
-	// runtime.Gosched. With GOMAXPROCS=1, we're trying to make sure
-	// that other goroutines run, so that they reach a stable point.
-	// It's not guaranteed, because it is still possible for a goroutine
-	// to Gosched back into itself, so we require NumGoroutine to be
-	// the same 100 times in a row. This should be more than enough to
-	// ensure all goroutines get a chance to run to completion (or to
-	// some block point) for a small group of test goroutines.
+	// 稳定化 NumGoroutine 值的想法是在调用 runtime.Gosched 之间
+	// 连续多次看到相同的值。使用 GOMAXPROCS=1，我们试图确保
+	// 其他 goroutine 运行，以便它们达到稳定点。
+	// 这不能保证，因为 goroutine 仍然可能 Gosched 回到自己，
+	// 所以我们要求 NumGoroutine 连续 100 次相同。
+	// 这应该足以确保所有 goroutine 有机会运行到完成（或到达
+	// 某个阻塞点），对于一小组测试 goroutine。
 	defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(1))
 
 	c := 0
@@ -140,7 +137,7 @@ func stableNumGoroutine() int {
 			ng = nng
 		}
 		if c >= 100 {
-			// The same value 100 times in a row is good enough.
+			// 连续 100 次相同的值就足够好了。
 			return ng
 		}
 		runtime.Gosched()
@@ -256,11 +253,11 @@ func TestPullPanic(t *testing.T) {
 		if !panicsWith("boom", func() { next() }) {
 			t.Fatal("failed to propagate panic on first next")
 		}
-		// Make sure we don't panic again if we try to call next or stop.
+		// 确保如果我们尝试调用 next 或 stop，我们不会再次 panic。
 		if _, ok := next(); ok {
 			t.Fatal("next returned true after iterator panicked")
 		}
-		// Calling stop again should be a no-op.
+		// 再次调用 stop 应该是无操作。
 		stop()
 	})
 	t.Run("stop", func(t *testing.T) {
@@ -272,11 +269,11 @@ func TestPullPanic(t *testing.T) {
 		if !panicsWith("boom", func() { stop() }) {
 			t.Fatal("failed to propagate panic on stop")
 		}
-		// Make sure we don't panic again if we try to call next or stop.
+		// 确保如果我们尝试调用 next 或 stop，我们不会再次 panic。
 		if _, ok := next(); ok {
 			t.Fatal("next returned true after iterator panicked")
 		}
-		// Calling stop again should be a no-op.
+		// 再次调用 stop 应该是无操作。
 		stop()
 	})
 }
@@ -303,11 +300,11 @@ func TestPull2Panic(t *testing.T) {
 		if !panicsWith("boom", func() { next() }) {
 			t.Fatal("failed to propagate panic on first next")
 		}
-		// Make sure we don't panic again if we try to call next or stop.
+		// 确保如果我们尝试调用 next 或 stop，我们不会再次 panic。
 		if _, _, ok := next(); ok {
 			t.Fatal("next returned true after iterator panicked")
 		}
-		// Calling stop again should be a no-op.
+		// 再次调用 stop 应该是无操作。
 		stop()
 	})
 	t.Run("stop", func(t *testing.T) {
@@ -319,11 +316,11 @@ func TestPull2Panic(t *testing.T) {
 		if !panicsWith("boom", func() { stop() }) {
 			t.Fatal("failed to propagate panic on stop")
 		}
-		// Make sure we don't panic again if we try to call next or stop.
+		// 确保如果我们尝试调用 next 或 stop，我们不会再次 panic。
 		if _, _, ok := next(); ok {
 			t.Fatal("next returned true after iterator panicked")
 		}
-		// Calling stop again should be a no-op.
+		// 再次调用 stop 应该是无操作。
 		stop()
 	})
 }
@@ -383,11 +380,11 @@ func TestPullGoexit(t *testing.T) {
 		}) {
 			t.Fatal("failed to Goexit from stop")
 		}
-		// Make sure we don't panic again if we try to call next or stop.
+		// 确保如果我们尝试调用 next 或 stop，我们不会再次 panic。
 		if x, ok := next(); x != 0 || ok {
 			t.Fatal("next returned true or non-zero value after iterator Goexited")
 		}
-		// Calling stop again should be a no-op.
+		// 再次调用 stop 应该是无操作。
 		stop()
 	})
 }
@@ -434,11 +431,11 @@ func TestPull2Goexit(t *testing.T) {
 		}) {
 			t.Fatal("failed to Goexit from stop")
 		}
-		// Make sure we don't panic again if we try to call next or stop.
+		// 确保如果我们尝试调用 next 或 stop，我们不会再次 panic。
 		if x, y, ok := next(); x != 0 || y != 0 || ok {
 			t.Fatal("next returned true or non-zero after iterator Goexited")
 		}
-		// Calling stop again should be a no-op.
+		// 再次调用 stop 应该是无操作。
 		stop()
 	})
 }
@@ -477,7 +474,7 @@ func goexits(t *testing.T, f func()) bool {
 func TestPullImmediateStop(t *testing.T) {
 	next, stop := Pull(panicSeq())
 	stop()
-	// Make sure we don't panic if we try to call next or stop.
+	// 确保如果我们尝试调用 next 或 stop，我们不会 panic。
 	if _, ok := next(); ok {
 		t.Fatal("next returned true after iterator was stopped")
 	}
@@ -486,7 +483,7 @@ func TestPullImmediateStop(t *testing.T) {
 func TestPull2ImmediateStop(t *testing.T) {
 	next, stop := Pull2(panicSeq2())
 	stop()
-	// Make sure we don't panic if we try to call next or stop.
+	// 确保如果我们尝试调用 next 或 stop，我们不会 panic。
 	if _, _, ok := next(); ok {
 		t.Fatal("next returned true after iterator was stopped")
 	}

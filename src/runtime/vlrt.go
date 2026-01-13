@@ -66,8 +66,8 @@ func int64tofloat32(y int64) float32 {
 }
 
 func uint64tofloat32(y uint64) float32 {
-	// divide into top 18, mid 23, and bottom 23 bits.
-	// (23-bit integers fit into a float32 without loss.)
+	// 分成顶部 18、中间 23 和底部 23 位。
+	// （23 位整数适合 float32 而不会丢失。）
 	top := uint32(y >> 46)
 	mid := uint32(y >> 23 & (1<<23 - 1))
 	bot := uint32(y & (1<<23 - 1))
@@ -75,14 +75,14 @@ func uint64tofloat32(y uint64) float32 {
 		return float32(mid)*(1<<23) + float32(bot)
 	}
 	if bot != 0 {
-		// Top is not zero, so the bits in bot
-		// won't make it into the final mantissa.
-		// In fact, the bottom bit of mid won't
-		// make it into the mantissa either.
-		// We only need to make sure that if top+mid
-		// is about to round down in a round-to-even
-		// scenario, and bot is not zero, we make it
-		// round up instead.
+		// 顶部不为零，所以机器人中的位
+		// 不会进入最终的尾数。
+		// 实际上，中间的最低位也不会
+		// 进入尾数。
+		// 我们只需要确保如果 top+mid
+		// 即将在舍入到偶数的情况下向下舍入
+		// 场景，并且 bot 不为零，我们让它
+		// 向上舍入。
 		mid |= 1
 	}
 	return float32(top)*(1<<46) + float32(mid)*(1<<23)
@@ -99,6 +99,7 @@ func _d2v(y *uint64, d float64) {
 	if sh >= 0 {
 		sh := uint32(sh)
 		/* v = (hi||lo) >> sh */
+		// v = (hi||lo) >> sh
 		if sh < 32 {
 			if sh == 0 {
 				ylo = xlo
@@ -116,13 +117,15 @@ func _d2v(y *uint64, d float64) {
 		}
 	} else {
 		/* v = (hi||lo) << -sh */
+		// v = (hi||lo) << -sh
 		sh := uint32(-sh)
 		if sh <= 11 {
 			ylo = xlo << sh
 			yhi = xhi<<sh | xlo>>(32-sh)
 		} else {
 			/* overflow */
-			yhi = uint32(d) /* causes something awful */
+			// 溢出
+			yhi = uint32(d) /* 导致某些可怕的情况 */
 		}
 	}
 	if x&sign64 != 0 {
@@ -137,7 +140,7 @@ func _d2v(y *uint64, d float64) {
 	*y = uint64(yhi)<<32 | uint64(ylo)
 }
 func uint64div(n, d uint64) uint64 {
-	// Check for 32 bit operands
+	// 检查 32 位操作数
 	if uint32(n>>32) == 0 && uint32(d>>32) == 0 {
 		if uint32(d) == 0 {
 			panicdivide()
@@ -149,7 +152,7 @@ func uint64div(n, d uint64) uint64 {
 }
 
 func uint64mod(n, d uint64) uint64 {
-	// Check for 32 bit operands
+	// 检查 32 位操作数
 	if uint32(n>>32) == 0 && uint32(d>>32) == 0 {
 		if uint32(d) == 0 {
 			panicdivide()
@@ -161,11 +164,11 @@ func uint64mod(n, d uint64) uint64 {
 }
 
 func int64div(n, d int64) int64 {
-	// Check for 32 bit operands
+	// 检查 32 位操作数
 	if int64(int32(n)) == n && int64(int32(d)) == d {
 		if int32(n) == -0x80000000 && int32(d) == -1 {
-			// special case: 32-bit -0x80000000 / -1 = -0x80000000,
-			// but 64-bit -0x80000000 / -1 = 0x80000000.
+			// 特殊情况：32 位 -0x80000000 / -1 = -0x80000000，
+			// 但 64 位 -0x80000000 / -1 = 0x80000000。
 			return 0x80000000
 		}
 		if int32(d) == 0 {
@@ -192,7 +195,7 @@ func int64div(n, d int64) int64 {
 
 //go:nosplit
 func int64mod(n, d int64) int64 {
-	// Check for 32 bit operands
+	// 检查 32 位操作数
 	if int64(int32(n)) == n && int64(int32(d)) == d {
 		if int32(d) == 0 {
 			panicdivide()

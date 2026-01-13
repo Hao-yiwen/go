@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package errors_test
 
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// MyError is an error implementation that includes a time and message.
+// MyError 是一个包含时间和消息的错误实现。
 type MyError struct {
 	When time.Time
 	What string
@@ -54,9 +54,9 @@ func OopsSentinel() error {
 	return ErrSentinel
 }
 
-// Each call to [errors.New] returns an unique instance of the error,
-// even if the arguments are the same. To match against errors
-// created by [errors.New], declare a sentinel error and reuse it.
+// 每次调用 [errors.New] 都会返回一个唯一的错误实例，
+// 即使参数相同也是如此。要匹配由 [errors.New] 创建的错误，
+// 请声明一个哨兵错误并重新使用它。
 func ExampleNew_unique() {
 	err1 := OopsNew()
 	err2 := OopsNew()
@@ -77,8 +77,7 @@ func ExampleNew_unique() {
 	// Is("an error", "an error") = true
 }
 
-// The fmt package's Errorf function lets us use the package's formatting
-// features to create descriptive error messages.
+// fmt 包的 Errorf 函数允许我们使用该包的格式化功能来创建描述性的错误消息。
 func ExampleNew_errorf() {
 	const name, id = "bimmler", 17
 	err := fmt.Errorf("user %q (id %d) not found", name, id)
@@ -132,8 +131,8 @@ func (e MyIsError) Is(err error) bool {
 	return err == fs.ErrPermission
 }
 
-// Custom errors can implement a method "Is(error) bool" to match other error values,
-// overriding the default matching of [errors.Is].
+// 自定义错误可以实现 "Is(error) bool" 方法来匹配其他错误值，
+// 这会覆盖 [errors.Is] 的默认匹配行为。
 func ExampleIs_custom_match() {
 	var err error = MyIsError{"an error"}
 	fmt.Println("Error equals fs.ErrPermission:", err == fs.ErrPermission)
@@ -190,8 +189,8 @@ func (e MyAsError) As(target any) bool {
 	return true
 }
 
-// Custom errors can implement a method "As(any) bool" to match against other error types,
-// overriding the default matching of [errors.As].
+// 自定义错误可以实现 "As(any) bool" 方法来匹配其他错误类型，
+// 这会覆盖 [errors.As] 的默认匹配行为。
 func ExampleAs_custom_match() {
 	var err error = MyAsError{"an error"}
 	fmt.Println("Error:", err)
@@ -209,8 +208,8 @@ func ExampleAs_custom_match() {
 	// fs.PathError: custom /: an error
 }
 
-// Custom errors can implement a method "As(any) bool" to match against other error types,
-// overriding the default matching of [errors.AsType].
+// 自定义错误可以实现 "As(any) bool" 方法来匹配其他错误类型，
+// 这会覆盖 [errors.AsType] 的默认匹配行为。
 func ExampleAsType_custom_match() {
 	var err error = MyAsError{"an error"}
 	fmt.Println("Error:", err)

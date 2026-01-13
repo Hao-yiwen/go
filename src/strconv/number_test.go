@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Note: These tests are focused mainly on generating the right errors.
-// The extensive numerical tests are in ../internal/strconv.
-// Add new tests there instead of here whenever possible.
+// 注: 这些测试主要关注生成正确的错误。
+// 广泛的数值测试在 ../internal/strconv 中。
+// 尽可能在那里添加新测试，而不是这里。
 
 package strconv_test
 
@@ -36,11 +36,11 @@ func TestParseBool(t *testing.T) {
 	for _, test := range atobtests {
 		b, e := ParseBool(test.in)
 		if test.err != nil {
-			// expect an error
+			// 期望一个错误
 			if e == nil {
 				t.Errorf("ParseBool(%s) = nil; want %s", test.in, test.err)
 			} else {
-				// NumError assertion must succeed; it's the only thing we return.
+				// NumError 断言必须成功; 这是我们返回的唯一东西。
 				if e.(*NumError).Err != test.err {
 					t.Errorf("ParseBool(%s) = %s; want %s", test.in, e, test.err)
 				}
@@ -109,7 +109,7 @@ type atocTest struct {
 
 func TestParseComplex(t *testing.T) {
 	tests := []atocTest{
-		// Clearly invalid
+		// 明显无效
 		{"", 0, ErrSyntax},
 		{" ", 0, ErrSyntax},
 		{"(", 0, ErrSyntax},
@@ -123,7 +123,7 @@ func TestParseComplex(t *testing.T) {
 		{"3+5", 0, ErrSyntax},
 		{"3+5+5i", 0, ErrSyntax},
 
-		// Parentheses
+		// 括号
 		{"()", 0, ErrSyntax},
 		{"(i)", 0, ErrSyntax},
 		{"(0)", 0, nil},
@@ -133,7 +133,7 @@ func TestParseComplex(t *testing.T) {
 		{"(3.0+5.5i", 0, ErrSyntax},
 		{"3.0+5.5i)", 0, ErrSyntax},
 
-		// NaNs
+		// NaN
 		{"NaN", complex(math.NaN(), 0), nil},
 		{"NANi", complex(0, math.NaN()), nil},
 		{"nan+nAni", complex(math.NaN(), math.NaN()), nil},
@@ -141,7 +141,7 @@ func TestParseComplex(t *testing.T) {
 		{"-NaN", 0, ErrSyntax},
 		{"NaN-NaNi", 0, ErrSyntax},
 
-		// Infs
+		// 无穷大
 		{"Inf", infp0, nil},
 		{"+inf", infp0, nil},
 		{"-inf", infm0, nil},
@@ -155,7 +155,7 @@ func TestParseComplex(t *testing.T) {
 		{"-Infinity+Infi", infmp, nil},
 		{"inf-inf", 0, ErrSyntax},
 
-		// Zeros
+		// 零
 		{"0", 0, nil},
 		{"0i", 0, nil},
 		{"-0.0i", 0, nil},
@@ -170,7 +170,7 @@ func TestParseComplex(t *testing.T) {
 		{"0e+0+0e+0i", 0, nil},
 		{"-0e+0-0e+0i", 0, nil},
 
-		// Regular non-zeroes
+		// 常规非零值
 		{"0.1", 0.1, nil},
 		{"0.1i", 0 + 0.1i, nil},
 		{"0.123", 0.123, nil},
@@ -187,7 +187,7 @@ func TestParseComplex(t *testing.T) {
 		{"+3e+3+3e+3i", 3e+3 + 3e+3i, nil},
 		{"+3e+3+3e+3i+", 0, ErrSyntax},
 
-		// Separators
+		// 分隔符
 		{"0.1", 0.1, nil},
 		{"0.1i", 0 + 0.1i, nil},
 		{"0.1_2_3", 0.123, nil},
@@ -197,7 +197,7 @@ func TestParseComplex(t *testing.T) {
 		{"+0x_1_0.3p-8+0x_3_0p3i", 0x10.3p-8 + 0x30p3i, nil},
 		{"0x1_0.3p+8-0x_3p3i", 0x10.3p+8 - 0x3p3i, nil},
 
-		// Hexadecimals
+		// 十六进制
 		{"0x10.3p-8+0x3p3i", 0x10.3p-8 + 0x3p3i, nil},
 		{"+0x10.3p-8+0x3p3i", 0x10.3p-8 + 0x3p3i, nil},
 		{"0x10.3p+8-0x3p3i", 0x10.3p+8 - 0x3p3i, nil},
@@ -212,7 +212,7 @@ func TestParseComplex(t *testing.T) {
 		{"0x1e2i", 0, ErrSyntax},
 
 		// ErrRange
-		// next float64 - too large
+		// 下一个 float64 - 太大
 		{"+0x1p1024", infp0, ErrRange},
 		{"-0x1p1024", infm0, ErrRange},
 		{"+0x1p1024i", inf0p, ErrRange},
@@ -221,13 +221,13 @@ func TestParseComplex(t *testing.T) {
 		{"+0x1p1024-0x1p1024i", infpm, ErrRange},
 		{"-0x1p1024+0x1p1024i", infmp, ErrRange},
 		{"-0x1p1024-0x1p1024i", infmm, ErrRange},
-		// the border is ...158079
-		// borderline - okay
+		// 边界是 ...158079
+		// 边界线 - 可以
 		{"+0x1.fffffffffffff7fffp1023+0x1.fffffffffffff7fffp1023i", 1.7976931348623157e+308 + 1.7976931348623157e+308i, nil},
 		{"+0x1.fffffffffffff7fffp1023-0x1.fffffffffffff7fffp1023i", 1.7976931348623157e+308 - 1.7976931348623157e+308i, nil},
 		{"-0x1.fffffffffffff7fffp1023+0x1.fffffffffffff7fffp1023i", -1.7976931348623157e+308 + 1.7976931348623157e+308i, nil},
 		{"-0x1.fffffffffffff7fffp1023-0x1.fffffffffffff7fffp1023i", -1.7976931348623157e+308 - 1.7976931348623157e+308i, nil},
-		// borderline - too large
+		// 边界线 - 太大
 		{"+0x1.fffffffffffff8p1023", infp0, ErrRange},
 		{"-0x1fffffffffffff.8p+971", infm0, ErrRange},
 		{"+0x1.fffffffffffff8p1023i", inf0p, ErrRange},
@@ -236,7 +236,7 @@ func TestParseComplex(t *testing.T) {
 		{"+0x1.fffffffffffff8p1023-0x1.fffffffffffff8p1023i", infpm, ErrRange},
 		{"-0x1fffffffffffff.8p+971+0x1fffffffffffff.8p+971i", infmp, ErrRange},
 		{"-0x1fffffffffffff8p+967-0x1fffffffffffff8p+967i", infmm, ErrRange},
-		// a little too large
+		// 稍微太大
 		{"1e308+1e308i", 1e+308 + 1e+308i, nil},
 		{"2e308+2e308i", infpp, ErrRange},
 		{"1e309+1e309i", infpp, ErrRange},
@@ -247,12 +247,12 @@ func TestParseComplex(t *testing.T) {
 		{"2e308i", inf0p, ErrRange},
 		{"1e309i", inf0p, ErrRange},
 		{"0x1p1025i", inf0p, ErrRange},
-		// way too large
+		// 远远太大
 		{"+1e310+1e310i", infpp, ErrRange},
 		{"+1e310-1e310i", infpm, ErrRange},
 		{"-1e310+1e310i", infmp, ErrRange},
 		{"-1e310-1e310i", infmm, ErrRange},
-		// under/overflow exponent
+		// 下溢/溢出指数
 		{"1e-4294967296", 0, nil},
 		{"1e-4294967296i", 0, nil},
 		{"1e-4294967296+1i", 1i, nil},
@@ -289,7 +289,7 @@ func TestParseComplex(t *testing.T) {
 	}
 }
 
-// Issue 42297: allow ParseComplex(s, not_32_or_64) for legacy reasons
+// 问题 42297: 出于遗留原因允许 ParseComplex(s, not_32_or_64)
 func TestParseComplexIncorrectBitSize(t *testing.T) {
 	const s = "1.5e308+1.0e307i"
 	const want = 1.5e308 + 1.0e307i
@@ -335,8 +335,8 @@ var atoftests = []atofTest{
 }
 
 func init() {
-	// The atof routines return NumErrors wrapping
-	// the error and the string. Convert the table above.
+	// atof 例程返回包装的 NumErrors
+	// 错误和字符串。转换上面的表。
 	for i := range atoftests {
 		test := &atoftests[i]
 		if test.err != nil {
@@ -458,7 +458,7 @@ var parseUint32Tests = []parseUint32Test{
 	{"12345x", 0, ErrSyntax},
 	{"987654321", 987654321, nil},
 	{"4294967296", 1<<32 - 1, ErrRange},
-	{"1_2_3_4_5", 0, ErrSyntax}, // base=10 so no underscores allowed
+	{"1_2_3_4_5", 0, ErrSyntax}, // base=10 所以不允许下划线
 	{"12345_", 0, ErrSyntax},
 }
 
@@ -491,8 +491,8 @@ var numErrorTests = []numErrorTest{
 }
 
 func init() {
-	// The parse routines return NumErrors wrapping
-	// the error and the string. Convert the tables above.
+	// parse 例程返回包装的 NumErrors
+	// 错误和字符串。转换上面的表。
 	for i := range parseUint64Tests {
 		test := &parseUint64Tests[i]
 		if test.err != nil {

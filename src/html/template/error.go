@@ -1,6 +1,6 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2011 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package template
 
@@ -9,40 +9,40 @@ import (
 	"text/template/parse"
 )
 
-// Error describes a problem encountered during template Escaping.
+// Error 描述了在模板转义过程中遇到的问题。
 type Error struct {
-	// ErrorCode describes the kind of error.
+	// ErrorCode 描述错误的种类。
 	ErrorCode ErrorCode
-	// Node is the node that caused the problem, if known.
-	// If not nil, it overrides Name and Line.
+	// Node 是导致问题的节点（如果已知）。
+	// 如果不为 nil，则覆盖 Name 和 Line。
 	Node parse.Node
-	// Name is the name of the template in which the error was encountered.
+	// Name 是遇到错误的模板的名称。
 	Name string
-	// Line is the line number of the error in the template source or 0.
+	// Line 是模板源中错误的行号或 0。
 	Line int
-	// Description is a human-readable description of the problem.
+	// Description 是对问题的人类可读的描述。
 	Description string
 }
 
-// ErrorCode is a code for a kind of error.
+// ErrorCode 是一种错误的代码。
 type ErrorCode int
 
-// We define codes for each error that manifests while escaping templates, but
-// escaped templates may also fail at runtime.
+// 我们为在转义模板时出现的每个错误定义代码，但
+// 转义的模板也可能在运行时失败。
 //
-// Output: "ZgotmplZ"
-// Example:
+// 输出："ZgotmplZ"
+// 示例：
 //
 //	<img src="{{.X}}">
-//	where {{.X}} evaluates to `javascript:...`
+//	其中 {{.X}} 计算为 `javascript:...`
 //
-// Discussion:
+// 讨论：
 //
-//	"ZgotmplZ" is a special value that indicates that unsafe content reached a
-//	CSS or URL context at runtime. The output of the example will be
+//	"ZgotmplZ" 是一个特殊值，表示不安全的内容在运行时到达了
+//	CSS 或 URL 上下文。示例的输出将是
 //	  <img src="#ZgotmplZ">
-//	If the data comes from a trusted source, use content types to exempt it
-//	from filtering: URL(`javascript:...`).
+//	如果数据来自可信源，使用内容类型将其免除
+//	过滤：URL(`javascript:...`)。
 const (
 	// OK indicates the lack of an error.
 	OK ErrorCode = iota

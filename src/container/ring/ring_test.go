@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-// For debugging - keep around.
+// 用于调试 - 保留。
 func dump(r *Ring) {
 	if r == nil {
 		fmt.Println("empty")
@@ -24,13 +24,13 @@ func dump(r *Ring) {
 }
 
 func verify(t *testing.T, r *Ring, N int, sum int) {
-	// Len
+	// 长度
 	n := r.Len()
 	if n != N {
 		t.Errorf("r.Len() == %d; expected %d", n, N)
 	}
 
-	// iteration
+	// 迭代
 	n = 0
 	s := 0
 	r.Do(func(p any) {
@@ -50,9 +50,9 @@ func verify(t *testing.T, r *Ring, N int, sum int) {
 		return
 	}
 
-	// connections
+	// 连接
 	if r.next != nil {
-		var p *Ring // previous element
+		var p *Ring // 前一个元素
 		for q := r; p == nil || q != r; q = q.next {
 			if p != nil && p != q.prev {
 				t.Errorf("prev = %p, expected q.prev = %p\n", p, q.prev)
@@ -64,7 +64,7 @@ func verify(t *testing.T, r *Ring, N int, sum int) {
 		}
 	}
 
-	// Next, Prev
+	// Next、Prev
 	if r.Next() != r.next {
 		t.Errorf("r.Next() != r.next")
 	}
@@ -99,18 +99,18 @@ func TestCornerCases(t *testing.T) {
 		r0 *Ring
 		r1 Ring
 	)
-	// Basics
+	// 基础
 	verify(t, r0, 0, 0)
 	verify(t, &r1, 1, 0)
-	// Insert
+	// 插入
 	r1.Link(r0)
 	verify(t, r0, 0, 0)
 	verify(t, &r1, 1, 0)
-	// Insert
+	// 插入
 	r1.Link(r0)
 	verify(t, r0, 0, 0)
 	verify(t, &r1, 1, 0)
-	// Unlink
+	// 取消链接
 	r1.Unlink(0)
 	verify(t, &r1, 1, 0)
 }
@@ -219,7 +219,7 @@ func TestLinkUnlink(t *testing.T) {
 	}
 }
 
-// Test that calling Move() on an empty Ring initializes it.
+// 测试在空 Ring 上调用 Move() 会初始化它。
 func TestMoveEmptyRing(t *testing.T) {
 	var r Ring
 

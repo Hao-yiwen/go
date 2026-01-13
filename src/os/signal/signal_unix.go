@@ -1,6 +1,6 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2012 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build unix || (js && wasm) || wasip1 || windows
 
@@ -11,7 +11,7 @@ import (
 	"syscall"
 )
 
-// Defined by the runtime package.
+// 由运行时包定义。
 func signal_disable(uint32)
 func signal_enable(uint32)
 func signal_ignore(uint32)
@@ -29,7 +29,7 @@ func init() {
 }
 
 const (
-	numSig = 65 // max across all systems
+	numSig = 65 // 所有系统中的最大值
 )
 
 func signum(sig os.Signal) int {

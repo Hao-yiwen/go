@@ -16,8 +16,8 @@ func TestTBHelper(t *testing.T) {
 	if os.Getenv("GO_WANT_HELPER_PROCESS") == "1" {
 		testTestHelper(t)
 
-		// Check that calling Helper from inside a top-level test function
-		// has no effect.
+		// 检查从顶级测试函数内部调用 Helper
+		// 没有任何效果。
 		t.Helper()
 		t.Error("8")
 		return
@@ -71,9 +71,9 @@ func TestTBHelperParallel(t *testing.T) {
 
 	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
 
-	// We expect to see one "--- FAIL" line at the start
-	// of the log, five lines of "parallel" logging,
-	// and a final "FAIL" line at the end of the test.
+	// 我们期望在日志的开始看到一条 "--- FAIL" 行,
+	// 五行 "parallel" 日志,
+	// 以及测试结束时的最后一条 "FAIL" 行。
 	const wantLines = 7
 
 	if len(lines) != wantLines {

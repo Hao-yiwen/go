@@ -1,6 +1,6 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2010 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package zip
 
@@ -32,49 +32,49 @@ var (
 	ErrInsecurePath = errors.New("zip: insecure file path")
 )
 
-// A Reader serves content from a ZIP archive.
+// Reader 从 ZIP 归档提供内容。
 type Reader struct {
 	r             io.ReaderAt
 	File          []*File
 	Comment       string
 	decompressors map[uint16]Decompressor
 
-	// Some JAR files are zip files with a prefix that is a bash script.
-	// The baseOffset field is the start of the zip file proper.
+	// 一些 JAR 文件是带有前缀的 zip 文件，该前缀是 bash 脚本。
+	// baseOffset 字段是 zip 文件本身的开始。
 	baseOffset int64
 
-	// fileList is a list of files sorted by ename,
-	// for use by the Open method.
+	// fileList 是按 ename 排序的文件列表，
+	// 用于 Open 方法。
 	fileListOnce sync.Once
 	fileList     []fileListEntry
 }
 
-// A ReadCloser is a [Reader] that must be closed when no longer needed.
+// ReadCloser 是必须在不再需要时关闭的 [Reader]。
 type ReadCloser struct {
 	f *os.File
 	Reader
 }
 
-// A File is a single file in a ZIP archive.
-// The file information is in the embedded [FileHeader].
-// The file content can be accessed by calling [File.Open].
+// File 是 ZIP 归档中的单个文件。
+// 文件信息在嵌入的 [FileHeader] 中。
+// 可通过调用 [File.Open] 访问文件内容。
 type File struct {
 	FileHeader
 	zip          *Reader
 	zipr         io.ReaderAt
-	headerOffset int64 // includes overall ZIP archive baseOffset
-	zip64        bool  // zip64 extended information extra field presence
+	headerOffset int64 // 包括整体 ZIP 归档 baseOffset
+	zip64        bool  // zip64 扩展信息额外字段是否存在
 }
 
-// OpenReader will open the Zip file specified by name and return a ReadCloser.
+// OpenReader 将打开由 name 指定的 Zip 文件并返回 ReadCloser。
 //
-// If any file inside the archive uses a non-local name
-// (as defined by [filepath.IsLocal]) or a name containing backslashes
-// and the GODEBUG environment variable contains `zipinsecurepath=0`,
-// OpenReader returns the reader with an ErrInsecurePath error.
-// A future version of Go may introduce this behavior by default.
-// Programs that want to accept non-local names can ignore
-// the ErrInsecurePath error and use the returned reader.
+// 如果归档内的任何文件使用非本地名称
+//（由 [filepath.IsLocal] 定义）或包含反斜杠的名称
+// 且 GODEBUG 环境变量包含 `zipinsecurepath=0`，
+// OpenReader 返回带有 ErrInsecurePath 错误的读取器。
+// Go 的未来版本可能会默认引入此行为。
+// 想要接受非本地名称的程序可以忽略
+// ErrInsecurePath 错误并使用返回的读取器。
 func OpenReader(name string) (*ReadCloser, error) {
 	f, err := os.Open(name)
 	if err != nil {
@@ -94,16 +94,15 @@ func OpenReader(name string) (*ReadCloser, error) {
 	return r, err
 }
 
-// NewReader returns a new [Reader] reading from r, which is assumed to
-// have the given size in bytes.
+// NewReader 返回一个从 r 读取的新 [Reader]，假设其具有给定大小（以字节为单位）。
 //
-// If any file inside the archive uses a non-local name
-// (as defined by [filepath.IsLocal]) or a name containing backslashes
-// and the GODEBUG environment variable contains `zipinsecurepath=0`,
-// NewReader returns the reader with an [ErrInsecurePath] error.
-// A future version of Go may introduce this behavior by default.
-// Programs that want to accept non-local names can ignore
-// the [ErrInsecurePath] error and use the returned reader.
+// 如果归档内的任何文件使用非本地名称
+//（由 [filepath.IsLocal] 定义）或包含反斜杠的名称
+// 且 GODEBUG 环境变量包含 `zipinsecurepath=0`，
+// NewReader 返回带有 [ErrInsecurePath] 错误的读取器。
+// Go 的未来版本可能会默认引入此行为。
+// 想要接受非本地名称的程序可以忽略
+// [ErrInsecurePath] 错误并使用返回的读取器。
 func NewReader(r io.ReaderAt, size int64) (*Reader, error) {
 	if size < 0 {
 		return nil, errors.New("zip: size cannot be negative")
@@ -123,12 +122,12 @@ func (r *Reader) init(rdr io.ReaderAt, size int64) error {
 	}
 	r.r = rdr
 	r.baseOffset = baseOffset
-	// Since the number of directory records is not validated, it is not
-	// safe to preallocate r.File without first checking that the specified
-	// number of files is reasonable, since a malformed archive may
-	// indicate it contains up to 1 << 128 - 1 files. Since each file has a
-	// header which will be _at least_ 30 bytes we can safely preallocate
-	// if (data size / 30) >= end.directoryRecords.
+	// 由于目录记录数未被验证，在首先检查指定的
+	// 文件数是否合理之前，直接预分配 r.File 是不安全的，
+	// 因为格式不正确的归档可能
+	// 表示它包含最多 1 << 128 - 1 个文件。由于每个文件都有一个
+	// 头部，其长度至少为 30 字节，我们可以在
+	//（数据大小 / 30）>= end.directoryRecords 时安全地预分配。
 	if end.directorySize < uint64(size) && (uint64(size)-end.directorySize)/30 >= end.directoryRecords {
 		r.File = make([]*File, 0, end.directoryRecords)
 	}
@@ -139,10 +138,10 @@ func (r *Reader) init(rdr io.ReaderAt, size int64) error {
 	}
 	buf := bufio.NewReader(rs)
 
-	// The count of files inside a zip is truncated to fit in a uint16.
-	// Gloss over this by reading headers until we encounter
-	// a bad one, and then only report an ErrFormat or UnexpectedEOF if
-	// the file count modulo 65536 is incorrect.
+	// zip 内的文件数被截断以适应 uint16。
+	// 通过读取头部直到我们遇到一个坏的，
+	// 然后仅在文件数模 65536 不正确时
+	// 报告 ErrFormat 或 UnexpectedEOF 来解决这个问题。
 	for {
 		f := &File{zip: r, zipr: rdr}
 		err = readDirectoryHeader(f, buf)
@@ -155,19 +154,19 @@ func (r *Reader) init(rdr io.ReaderAt, size int64) error {
 		f.headerOffset += r.baseOffset
 		r.File = append(r.File, f)
 	}
-	if uint16(len(r.File)) != uint16(end.directoryRecords) { // only compare 16 bits here
-		// Return the readDirectoryHeader error if we read
-		// the wrong number of directory entries.
+	if uint16(len(r.File)) != uint16(end.directoryRecords) { // 仅比较 16 位
+		// 如果我们读取了错误的目录条目数，
+		// 返回 readDirectoryHeader 错误。
 		return err
 	}
 	if zipinsecurepath.Value() == "0" {
 		for _, f := range r.File {
 			if f.Name == "" {
-				// Zip permits an empty file name field.
+				// Zip 允许空文件名字段。
 				continue
 			}
-			// The zip specification states that names must use forward slashes,
-			// so consider any backslashes in the name insecure.
+			// zip 规范指出名称必须使用正斜杠，
+			// 因此将名称中的任何反斜杠视为不安全。
 			if !filepath.IsLocal(f.Name) || strings.Contains(f.Name, `\`) {
 				zipinsecurepath.IncNonDefault()
 				return ErrInsecurePath
@@ -177,9 +176,9 @@ func (r *Reader) init(rdr io.ReaderAt, size int64) error {
 	return nil
 }
 
-// RegisterDecompressor registers or overrides a custom decompressor for a
-// specific method ID. If a decompressor for a given method is not found,
-// [Reader] will default to looking up the decompressor at the package level.
+// RegisterDecompressor 为特定的方法 ID 注册或覆盖自定义解压器。
+// 如果未找到给定方法的解压器，
+// [Reader] 将默认在包级别查找解压器。
 func (r *Reader) RegisterDecompressor(method uint16, dcomp Decompressor) {
 	if r.decompressors == nil {
 		r.decompressors = make(map[uint16]Decompressor)
@@ -195,16 +194,16 @@ func (r *Reader) decompressor(method uint16) Decompressor {
 	return dcomp
 }
 
-// Close closes the Zip file, rendering it unusable for I/O.
+// Close 关闭 Zip 文件，使其不可用于 I/O。
 func (rc *ReadCloser) Close() error {
 	return rc.f.Close()
 }
 
-// DataOffset returns the offset of the file's possibly-compressed
-// data, relative to the beginning of the zip file.
+// DataOffset 返回文件可能压缩的数据的偏移量，
+// 相对于 zip 文件的开头。
 //
-// Most callers should instead use [File.Open], which transparently
-// decompresses data and verifies checksums.
+// 大多数调用者应改用 [File.Open]，它透明地
+// 解压缩数据并验证校验和。
 func (f *File) DataOffset() (offset int64, err error) {
 	bodyOffset, err := f.findBodyOffset()
 	if err != nil {
@@ -213,23 +212,23 @@ func (f *File) DataOffset() (offset int64, err error) {
 	return f.headerOffset + bodyOffset, nil
 }
 
-// Open returns a [ReadCloser] that provides access to the [File]'s contents.
-// Multiple files may be read concurrently.
+// Open 返回一个 [ReadCloser]，提供对 [File] 内容的访问。
+// 可以并发读取多个文件。
 func (f *File) Open() (io.ReadCloser, error) {
 	bodyOffset, err := f.findBodyOffset()
 	if err != nil {
 		return nil, err
 	}
 	if strings.HasSuffix(f.Name, "/") {
-		// The ZIP specification (APPNOTE.TXT) specifies that directories, which
-		// are technically zero-byte files, must not have any associated file
-		// data. We previously tried failing here if f.CompressedSize64 != 0,
-		// but it turns out that a number of implementations (namely, the Java
-		// jar tool) don't properly set the storage method on directories
-		// resulting in a file with compressed size > 0 but uncompressed size ==
-		// 0. We still want to fail when a directory has associated uncompressed
-		// data, but we are tolerant of cases where the uncompressed size is
-		// zero but compressed size is not.
+		// ZIP 规范（APPNOTE.TXT）指定目录（技术上是零字节文件）
+		// 必须没有任何关联的文件数据。我们之前在此尝试
+		// 如果 f.CompressedSize64 != 0 则失败，
+		// 但事实证明许多实现（即 Java
+		// jar 工具）没有正确设置目录上的存储方法
+		// 导致一个文件的压缩大小 > 0 但未压缩大小 ==
+		// 0。我们仍然希望在目录有关联的未压缩时失败
+		// 数据，但我们对未压缩大小为
+		// 零但压缩大小不为零的情况容忍。
 		if f.UncompressedSize64 != 0 {
 			return &dirReader{ErrFormat}, nil
 		} else {
@@ -256,8 +255,7 @@ func (f *File) Open() (io.ReadCloser, error) {
 	return rc, nil
 }
 
-// OpenRaw returns a [Reader] that provides access to the [File]'s contents without
-// decompression.
+// OpenRaw 返回一个 [Reader]，提供对 [File] 内容的访问而不进行解压缩。
 func (f *File) OpenRaw() (io.Reader, error) {
 	bodyOffset, err := f.findBodyOffset()
 	if err != nil {
@@ -282,10 +280,10 @@ func (r *dirReader) Close() error {
 type checksumReader struct {
 	rc    io.ReadCloser
 	hash  hash.Hash32
-	nread uint64 // number of bytes read so far
+	nread uint64 // 到目前为止读取的字节数
 	f     *File
-	desr  io.Reader // if non-nil, where to read the data descriptor
-	err   error     // sticky error
+	desr  io.Reader // 如果非 nil，其中读取数据描述符
+	err   error     // 粘性错误
 }
 
 func (r *checksumReader) Stat() (fs.FileInfo, error) {
@@ -320,9 +318,9 @@ func (r *checksumReader) Read(b []byte) (n int, err error) {
 				err = ErrChecksum
 			}
 		} else {
-			// If there's not a data descriptor, we still compare
-			// the CRC32 of what we've read against the file header
-			// or TOC's CRC32, if it seems like it was set.
+			// 如果没有数据描述符，我们仍然比较
+			// 我们读取的内容的 CRC32 与文件头部的 CRC32
+			// 或 TOC 的 CRC32，如果它似乎已设置。
 			if r.f.CRC32 != 0 && r.hash.Sum32() != r.f.CRC32 {
 				err = ErrChecksum
 			}
@@ -334,8 +332,8 @@ func (r *checksumReader) Read(b []byte) (n int, err error) {
 
 func (r *checksumReader) Close() error { return r.rc.Close() }
 
-// findBodyOffset does the minimum work to verify the file has a header
-// and returns the file body offset.
+// findBodyOffset 执行最小的工作来验证文件是否有头部
+// 并返回文件体偏移量。
 func (f *File) findBodyOffset() (int64, error) {
 	var buf [fileHeaderLen]byte
 	if _, err := f.zipr.ReadAt(buf[:], f.headerOffset); err != nil {
@@ -345,15 +343,15 @@ func (f *File) findBodyOffset() (int64, error) {
 	if sig := b.uint32(); sig != fileHeaderSignature {
 		return 0, ErrFormat
 	}
-	b = b[22:] // skip over most of the header
+	b = b[22:] // 跳过大部分头部
 	filenameLen := int(b.uint16())
 	extraLen := int(b.uint16())
 	return int64(fileHeaderLen + filenameLen + extraLen), nil
 }
 
-// readDirectoryHeader attempts to read a directory header from r.
-// It returns io.ErrUnexpectedEOF if it cannot read a complete header,
-// and ErrFormat if it doesn't find a valid header signature.
+// readDirectoryHeader 尝试从 r 读取目录头部。
+// 如果无法读取完整的头部，则返回 io.ErrUnexpectedEOF，
+// 如果找不到有效的头部签名，则返回 ErrFormat。
 func readDirectoryHeader(f *File, r io.Reader) error {
 	var buf [directoryHeaderLen]byte
 	if _, err := io.ReadFull(r, buf[:]); err != nil {
@@ -377,7 +375,7 @@ func readDirectoryHeader(f *File, r io.Reader) error {
 	filenameLen := int(b.uint16())
 	extraLen := int(b.uint16())
 	commentLen := int(b.uint16())
-	b = b[4:] // skipped start disk number and internal attributes (2x uint16)
+	b = b[4:] // 跳过起始磁盘号和内部属性（2x uint16）
 	f.ExternalAttrs = b.uint32()
 	f.headerOffset = int64(b.uint32())
 	d := make([]byte, filenameLen+extraLen+commentLen)
@@ -388,21 +386,21 @@ func readDirectoryHeader(f *File, r io.Reader) error {
 	f.Extra = d[filenameLen : filenameLen+extraLen]
 	f.Comment = string(d[filenameLen+extraLen:])
 
-	// Determine the character encoding.
+	// 确定字符编码。
 	utf8Valid1, utf8Require1 := detectUTF8(f.Name)
 	utf8Valid2, utf8Require2 := detectUTF8(f.Comment)
 	switch {
 	case !utf8Valid1 || !utf8Valid2:
-		// Name and Comment definitely not UTF-8.
+		// Name 和 Comment 肯定不是 UTF-8。
 		f.NonUTF8 = true
 	case !utf8Require1 && !utf8Require2:
-		// Name and Comment use only single-byte runes that overlap with UTF-8.
+		// Name 和 Comment 仅使用与 UTF-8 重叠的单字节符文。
 		f.NonUTF8 = false
 	default:
-		// Might be UTF-8, might be some other encoding; preserve existing flag.
-		// Some ZIP writers use UTF-8 encoding without setting the UTF-8 flag.
-		// Since it is impossible to always distinguish valid UTF-8 from some
-		// other encoding (e.g., GBK or Shift-JIS), we trust the flag.
+		// 可能是 UTF-8，可能是其他编码；保留现有标志。
+		// 一些 ZIP 编写器使用 UTF-8 编码而不设置 UTF-8 标志。
+		// 由于无法始终将有效的 UTF-8 与某些区分开来
+		// 其他编码（例如 GBK 或 Shift-JIS），我们信任该标志。
 		f.NonUTF8 = f.Flags&0x800 == 0
 	}
 
@@ -410,12 +408,12 @@ func readDirectoryHeader(f *File, r io.Reader) error {
 	needCSize := f.CompressedSize == ^uint32(0)
 	needHeaderOffset := f.headerOffset == int64(^uint32(0))
 
-	// Best effort to find what we need.
-	// Other zip authors might not even follow the basic format,
-	// and we'll just ignore the Extra content in that case.
+	// 尽力找到我们需要的。
+	// 其他 zip 作者可能甚至不遵循基本格式，
+	// 在这种情况下我们将忽略 Extra 内容。
 	var modified time.Time
 parseExtras:
-	for extra := readBuf(f.Extra); len(extra) >= 4; { // need at least tag and size
+	for extra := readBuf(f.Extra); len(extra) >= 4; { // 至少需要标签和大小
 		fieldTag := extra.uint16()
 		fieldSize := int(extra.uint16())
 		if len(extra) < fieldSize {
@@ -427,10 +425,10 @@ parseExtras:
 		case zip64ExtraID:
 			f.zip64 = true
 
-			// update directory values from the zip64 extra block.
-			// They should only be consulted if the sizes read earlier
-			// are maxed out.
-			// See golang.org/issue/13367.
+			// 从 zip64 额外块更新目录值。
+			// 仅当之前读取的大小
+			// 已达到最大值时，才应查阅它们。
+			// 详见 golang.org/issue/13367。
 			if needUSize {
 				needUSize = false
 				if len(fieldBuf) < 8 {
@@ -456,8 +454,8 @@ parseExtras:
 			if len(fieldBuf) < 4 {
 				continue parseExtras
 			}
-			fieldBuf.uint32()        // reserved (ignored)
-			for len(fieldBuf) >= 4 { // need at least tag and size
+			fieldBuf.uint32()        // 保留（忽略）
+			for len(fieldBuf) >= 4 { // 至少需要标签和大小
 				attrTag := fieldBuf.uint16()
 				attrSize := int(fieldBuf.uint16())
 				if len(fieldBuf) < attrSize {
@@ -465,10 +463,10 @@ parseExtras:
 				}
 				attrBuf := fieldBuf.sub(attrSize)
 				if attrTag != 1 || attrSize != 24 {
-					continue // Ignore irrelevant attributes
+					continue // 忽略无关的属性
 				}
 
-				const ticksPerSecond = 1e7    // Windows timestamp resolution
+				const ticksPerSecond = 1e7    // Windows 时间戳分辨率
 				ts := int64(attrBuf.uint64()) // ModTime since Windows epoch
 				secs := ts / ticksPerSecond
 				nsecs := (1e9 / ticksPerSecond) * (ts % ticksPerSecond)
@@ -479,7 +477,7 @@ parseExtras:
 			if len(fieldBuf) < 8 {
 				continue parseExtras
 			}
-			fieldBuf.uint32()              // AcTime (ignored)
+			fieldBuf.uint32()              // AcTime（忽略）
 			ts := int64(fieldBuf.uint32()) // ModTime since Unix epoch
 			modified = time.Unix(ts, 0)
 		case extTimeExtraID:
@@ -496,8 +494,8 @@ parseExtras:
 	if !modified.IsZero() {
 		f.Modified = modified.UTC()
 
-		// If legacy MS-DOS timestamps are set, we can use the delta between
-		// the legacy and extended versions to estimate timezone offset.
+		// 如果设置了旧版 MS-DOS 时间戳，我们可以使用
+		// 旧版和扩展版本之间的增量来估算时区偏移。
 		//
 		// A non-UTC timezone is always used (even if offset is zero).
 		// Thus, FileHeader.Modified.Location() == time.UTC is useful for
@@ -744,8 +742,8 @@ func (b *readBuf) sub(n int) readBuf {
 	return b2
 }
 
-// A fileListEntry is a File and its ename.
-// If file == nil, the fileListEntry describes a directory without metadata.
+// fileListEntry 是一个文件及其 ename。
+// 如果 file == nil，fileListEntry 描述一个没有元数据的目录。
 type fileListEntry struct {
 	name  string
 	file  *File

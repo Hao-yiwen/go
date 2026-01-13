@@ -1,6 +1,6 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2022 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package slog
 
@@ -15,36 +15,34 @@ import (
 	"unsafe"
 )
 
-// A Value can represent any Go value, but unlike type any,
-// it can represent most small values without an allocation.
-// The zero Value corresponds to nil.
+// Value 可以表示任何 Go 值，但与类型 any 不同，
+// 它可以在没有分配的情况下表示大多数小值。
+// 零 Value 对应于 nil。
 type Value struct {
-	_ [0]func() // disallow ==
-	// num holds the value for Kinds Int64, Uint64, Float64, Bool and Duration,
-	// the string length for KindString, and nanoseconds since the epoch for KindTime.
+	_ [0]func() // 禁止 ==
+	// num 保存 Kinds Int64、Uint64、Float64、Bool 和 Duration 的值，
+	// KindString 的字符串长度，以及 KindTime 的自纪元以来的纳秒。
 	num uint64
-	// If any is of type Kind, then the value is in num as described above.
-	// If any is of type *time.Location, then the Kind is Time and time.Time value
-	// can be constructed from the Unix nanos in num and the location (monotonic time
-	// is not preserved).
-	// If any is of type stringptr, then the Kind is String and the string value
-	// consists of the length in num and the pointer in any.
-	// Otherwise, the Kind is Any and any is the value.
-	// (This implies that Attrs cannot store values of type Kind, *time.Location
-	// or stringptr.)
+	// 如果 any 是 Kind 类型，则该值在上述 num 中。
+	// 如果 any 是 *time.Location 类型，则 Kind 是 Time，time.Time 值
+	// 可以由 num 中的 Unix 纳秒和位置构造 (不保留单调时间)。
+	// 如果 any 是 stringptr 类型，则 Kind 是 String，字符串值
+	// 由 num 中的长度和 any 中的指针组成。
+	// 否则，Kind 是 Any，any 是该值。
+	// (这意味着 Attr 不能存储 Kind、*time.Location 或 stringptr 类型的值。)
 	any any
 }
 
 type (
-	stringptr *byte // used in Value.any when the Value is a string
-	groupptr  *Attr // used in Value.any when the Value is a []Attr
+	stringptr *byte // 当 Value 是字符串时在 Value.any 中使用
+	groupptr  *Attr // 当 Value 是 []Attr 时在 Value.any 中使用
 )
 
-// Kind is the kind of a [Value].
+// Kind 是 [Value] 的种类。
 type Kind int
 
-// The following list is sorted alphabetically, but it's also important that
-// KindAny is 0 so that a zero Value represents nil.
+// 以下列表按字母顺序排序，但同样重要的是
+// KindAny 为 0，因此零 Value 表示 nil。
 
 const (
 	KindAny Kind = iota
@@ -79,11 +77,11 @@ func (k Kind) String() string {
 	return "<unknown slog.Kind>"
 }
 
-// Unexported version of Kind, just so we can store Kinds in Values.
-// (No user-provided value has this type.)
+// Kind 的未导出版本，只是为了我们可以在 Values 中存储 Kind。
+// (没有用户提供的值具有此类型。)
 type kind Kind
 
-// Kind returns v's Kind.
+// Kind 返回 v 的 Kind。
 func (v Value) Kind() Kind {
 	switch x := v.any.(type) {
 	case Kind:
@@ -96,41 +94,41 @@ func (v Value) Kind() Kind {
 		return KindGroup
 	case LogValuer:
 		return KindLogValuer
-	case kind: // a kind is just a wrapper for a Kind
+	case kind: // kind 只是 Kind 的包装器
 		return KindAny
 	default:
 		return KindAny
 	}
 }
 
-//////////////// Constructors
+//////////////// 构造函数
 
-// StringValue returns a new [Value] for a string.
+// StringValue 返回字符串的新 [Value]。
 func StringValue(value string) Value {
 	return Value{num: uint64(len(value)), any: stringptr(unsafe.StringData(value))}
 }
 
-// IntValue returns a [Value] for an int.
+// IntValue 返回 int 的 [Value]。
 func IntValue(v int) Value {
 	return Int64Value(int64(v))
 }
 
-// Int64Value returns a [Value] for an int64.
+// Int64Value 返回 int64 的 [Value]。
 func Int64Value(v int64) Value {
 	return Value{num: uint64(v), any: KindInt64}
 }
 
-// Uint64Value returns a [Value] for a uint64.
+// Uint64Value 返回 uint64 的 [Value]。
 func Uint64Value(v uint64) Value {
 	return Value{num: v, any: KindUint64}
 }
 
-// Float64Value returns a [Value] for a floating-point number.
+// Float64Value 返回浮点数的 [Value]。
 func Float64Value(v float64) Value {
 	return Value{num: math.Float64bits(v), any: KindFloat64}
 }
 
-// BoolValue returns a [Value] for a bool.
+// BoolValue 返回 bool 的 [Value]。
 func BoolValue(v bool) Value {
 	u := uint64(0)
 	if v {
@@ -140,46 +138,44 @@ func BoolValue(v bool) Value {
 }
 
 type (
-	// Unexported version of *time.Location, just so we can store *time.Locations in
-	// Values. (No user-provided value has this type.)
+	// *time.Location 的未导出版本，只是为了我们可以在 Values 中存储 *time.Location。
+	// (没有用户提供的值具有此类型。)
 	timeLocation *time.Location
 
-	// timeTime is for times where UnixNano is undefined.
+	// timeTime 用于 UnixNano 未定义的时间。
 	timeTime time.Time
 )
 
-// TimeValue returns a [Value] for a [time.Time].
-// It discards the monotonic portion.
+// TimeValue 返回 [time.Time] 的 [Value]。
+// 它丢弃单调部分。
 func TimeValue(v time.Time) Value {
 	if v.IsZero() {
-		// UnixNano on the zero time is undefined, so represent the zero time
-		// with a nil *time.Location instead. time.Time.Location method never
-		// returns nil, so a Value with any == timeLocation(nil) cannot be
-		// mistaken for any other Value, time.Time or otherwise.
+		// 零时间的 UnixNano 未定义，因此用 nil *time.Location 表示零时间。
+		// time.Time.Location 方法永远不返回 nil，所以具有 any == timeLocation(nil)
+		// 的 Value 不能被误认为是任何其他 Value、time.Time 或其他。
 		return Value{any: timeLocation(nil)}
 	}
 	nsec := v.UnixNano()
 	t := time.Unix(0, nsec)
 	if v.Equal(t) {
-		// UnixNano correctly represents the time, so use a zero-alloc representation.
+		// UnixNano 正确表示时间，所以使用零分配表示。
 		return Value{num: uint64(nsec), any: timeLocation(v.Location())}
 	}
-	// Fall back to the general form.
-	// Strip the monotonic portion to match the other representation.
+	// 回退到一般形式。
+	// 删除单调部分以匹配其他表示。
 	return Value{any: timeTime(v.Round(0))}
 }
 
-// DurationValue returns a [Value] for a [time.Duration].
+// DurationValue 返回 [time.Duration] 的 [Value]。
 func DurationValue(v time.Duration) Value {
 	return Value{num: uint64(v.Nanoseconds()), any: KindDuration}
 }
 
-// GroupValue returns a new [Value] for a list of Attrs.
-// The caller must not subsequently mutate the argument slice.
+// GroupValue 返回一个 Attr 列表的新 [Value]。
+// 调用者之后不得修改参数切片。
 func GroupValue(as ...Attr) Value {
-	// Remove empty groups.
-	// It is simpler overall to do this at construction than
-	// to check each Group recursively for emptiness.
+	// 删除空组。
+	// 在构造时执行此操作比递归检查每个组是否为空要简单得多。
 	if n := countEmptyGroups(as); n > 0 {
 		as2 := make([]Attr, 0, len(as)-n)
 		for _, a := range as {
@@ -192,7 +188,7 @@ func GroupValue(as ...Attr) Value {
 	return Value{num: uint64(len(as)), any: groupptr(unsafe.SliceData(as))}
 }
 
-// countEmptyGroups returns the number of empty group values in its argument.
+// countEmptyGroups 返回其参数中空组值的数量。
 func countEmptyGroups(as []Attr) int {
 	n := 0
 	for _, a := range as {

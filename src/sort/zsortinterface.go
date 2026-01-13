@@ -6,7 +6,7 @@
 
 package sort
 
-// insertionSort sorts data[a:b] using insertion sort.
+// insertionSort 使用插入排序对 data[a:b] 进行排序。
 func insertionSort(data Interface, a, b int) {
 	for i := a + 1; i < b; i++ {
 		for j := i; j > a && data.Less(j, j-1); j-- {
@@ -15,8 +15,8 @@ func insertionSort(data Interface, a, b int) {
 	}
 }
 
-// siftDown implements the heap property on data[lo:hi].
-// first is an offset into the array where the root of the heap lies.
+// siftDown 在 data[lo:hi] 上实现堆属性。
+// first 是数组中堆根所在位置的偏移量。
 func siftDown(data Interface, lo, hi, first int) {
 	root := lo
 	for {
@@ -40,12 +40,12 @@ func heapSort(data Interface, a, b int) {
 	lo := 0
 	hi := b - a
 
-	// Build heap with greatest element at top.
+	// 构建堆，最大的元素在顶部。
 	for i := (hi - 1) / 2; i >= 0; i-- {
 		siftDown(data, i, hi, first)
 	}
 
-	// Pop elements, largest first, into end of data.
+	// 弹出元素，最大的优先，进入数据末尾。
 	for i := hi - 1; i >= 0; i-- {
 		data.Swap(first, first+i)
 		siftDown(data, lo, i, first)

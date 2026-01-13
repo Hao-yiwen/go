@@ -1,6 +1,6 @@
-// Copyright 2020 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2020 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 package fs
 
@@ -9,29 +9,28 @@ import (
 	"path"
 )
 
-// A SubFS is a file system with a Sub method.
+// SubFS 是具有 Sub 方法的文件系统。
 type SubFS interface {
 	FS
 
-	// Sub returns an FS corresponding to the subtree rooted at dir.
+	// Sub 返回一个 FS，对应于以 dir 为根的子树。
 	Sub(dir string) (FS, error)
 }
 
-// Sub returns an [FS] corresponding to the subtree rooted at fsys's dir.
+// Sub 返回一个 [FS]，对应于 fsys 的 dir 为根的子树。
 //
-// If dir is ".", Sub returns fsys unchanged.
-// Otherwise, if fs implements [SubFS], Sub returns fsys.Sub(dir).
-// Otherwise, Sub returns a new [FS] implementation sub that,
-// in effect, implements sub.Open(name) as fsys.Open(path.Join(dir, name)).
-// The implementation also translates calls to ReadDir, ReadFile,
-// ReadLink, Lstat, and Glob appropriately.
+// 如果 dir 是 "."，Sub 返回未改变的 fsys。
+// 否则，如果 fs 实现了 [SubFS]，Sub 返回 fsys.Sub(dir)。
+// 否则，Sub 返回一个新的 [FS] 实现 sub，
+// 该实现在实际上将 sub.Open(name) 实现为 fsys.Open(path.Join(dir, name))。
+// 该实现还适当地转换对 ReadDir、ReadFile、
+// ReadLink、Lstat 和 Glob 的调用。
 //
-// Note that Sub(os.DirFS("/"), "prefix") is equivalent to os.DirFS("/prefix")
-// and that neither of them guarantees to avoid operating system
-// accesses outside "/prefix", because the implementation of [os.DirFS]
-// does not check for symbolic links inside "/prefix" that point to
-// other directories. That is, [os.DirFS] is not a general substitute for a
-// chroot-style security mechanism, and Sub does not change that fact.
+// 请注意，Sub(os.DirFS("/"), "prefix") 等同于 os.DirFS("/prefix")，
+// 并且两者都不保证避免对 "/prefix" 之外的操作系统进行访问，
+// 因为 [os.DirFS] 的实现不会检查 "/prefix" 内指向
+// 其他目录的符号链接。也就是说，[os.DirFS] 不是
+// chroot 风格安全机制的一般替代品，Sub 不改变这一事实。
 func Sub(fsys FS, dir string) (FS, error) {
 	if !ValidPath(dir) {
 		return nil, &PathError{Op: "sub", Path: dir, Err: ErrInvalid}
@@ -56,7 +55,7 @@ type subFS struct {
 	dir  string
 }
 
-// fullName maps name to the fully-qualified name dir/name.
+// fullName 将 name 映射到完全限定的名称 dir/name。
 func (f *subFS) fullName(op string, name string) (string, error) {
 	if !ValidPath(name) {
 		return "", &PathError{Op: op, Path: name, Err: ErrInvalid}
@@ -64,7 +63,7 @@ func (f *subFS) fullName(op string, name string) (string, error) {
 	return path.Join(f.dir, name), nil
 }
 
-// shorten maps name, which should start with f.dir, back to the suffix after f.dir.
+// shorten 将应该以 f.dir 开头的 name 映射回 f.dir 之后的后缀。
 func (f *subFS) shorten(name string) (rel string, ok bool) {
 	if name == f.dir {
 		return ".", true
@@ -75,7 +74,7 @@ func (f *subFS) shorten(name string) (rel string, ok bool) {
 	return "", false
 }
 
-// fixErr shortens any reported names in PathErrors by stripping f.dir.
+// fixErr 通过去掉 f.dir 来缩短 PathErrors 中报告的任何名称。
 func (f *subFS) fixErr(err error) error {
 	if e, ok := err.(*PathError); ok {
 		if short, ok := f.shorten(e.Path); ok {
@@ -137,7 +136,7 @@ func (f *subFS) Lstat(name string) (FileInfo, error) {
 }
 
 func (f *subFS) Glob(pattern string) ([]string, error) {
-	// Check pattern is well-formed.
+	// 检查模式格式是否正确。
 	if _, err := path.Match(pattern, ""); err != nil {
 		return nil, err
 	}
@@ -150,7 +149,7 @@ func (f *subFS) Glob(pattern string) ([]string, error) {
 	for i, name := range list {
 		name, ok := f.shorten(name)
 		if !ok {
-			return nil, errors.New("invalid result from inner fsys Glob: " + name + " not in " + f.dir) // can't use fmt in this package
+			return nil, errors.New("invalid result from inner fsys Glob: " + name + " not in " + f.dir) // 无法在此包中使用 fmt
 		}
 		list[i] = name
 	}

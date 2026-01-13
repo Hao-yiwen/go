@@ -5,7 +5,9 @@
       "Bash(git -C /Users/yw.hao/Documents/go/go diff --name-only)",
       "Bash(git -C /Users/yw.hao/Documents/go/go diff --name-only M)",
       "Bash(git -C /Users/yw.hao/Documents/go/go status:*)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\n继续将标准库代码注释翻译成中文\n\n涵盖 archive、bufio、bytes、compress、container、context、crypto、database、debug、embed、encoding、errors、expvar、flag、fmt、go、html、image、index、io、iter、log、maps、math、mime、net、os、plugin、reflect、regexp、runtime、simd、slices、sort、strconv、strings、sync、syscall、testing、text、time、unicode、unique、weak 等包\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

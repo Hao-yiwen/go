@@ -42,164 +42,164 @@ import (
 	"unsafe"
 )
 
-// BUG(rsc): On 386, the 64-bit functions use instructions unavailable before the Pentium MMX.
+// BUG(rsc): 在 386 上，64 位函数使用 Pentium MMX 之前不可用的指令。
 //
-// On non-Linux ARM, the 64-bit functions use instructions unavailable before the ARMv6k core.
+// 在非 Linux ARM 上，64 位函数使用 ARMv6k 核心之前不可用的指令。
 //
-// On ARM, 386, and 32-bit MIPS, it is the caller's responsibility to arrange
-// for 64-bit alignment of 64-bit words accessed atomically via the primitive
-// atomic functions (types [Int64] and [Uint64] are automatically aligned).
-// The first word in an allocated struct, array, or slice; in a global
-// variable; or in a local variable (because on 32-bit architectures, the
-// subject of 64-bit atomic operations will escape to the heap) can be
-// relied upon to be 64-bit aligned.
+// 在 ARM、386 和 32 位 MIPS 上，调用者有责任安排
+// 通过原始原子函数原子访问的 64 位字的 64 位对齐
+// （[Int64] 和 [Uint64] 类型自动对齐）。
+// 已分配结构体、数组或切片中的第一个字；在全局
+// 变量中；或在局部变量中（因为在 32 位架构上，
+// 64 位原子操作的主体会溢出到堆）可以
+// 被确保是 64 位对齐的。
 
-// SwapInt32 atomically stores new into *addr and returns the previous *addr value.
-// Consider using the more ergonomic and less error-prone [Int32.Swap] instead.
+// SwapInt32 原子地将 new 存储到 *addr 中并返回之前的 *addr 值。
+// 改用更符合人体工学且不易出错的 [Int32.Swap]。
 //
 //go:noescape
 func SwapInt32(addr *int32, new int32) (old int32)
 
-// SwapUint32 atomically stores new into *addr and returns the previous *addr value.
-// Consider using the more ergonomic and less error-prone [Uint32.Swap] instead.
+// SwapUint32 原子地将 new 存储到 *addr 中并返回之前的 *addr 值。
+// 改用更符合人体工学且不易出错的 [Uint32.Swap]。
 //
 //go:noescape
 func SwapUint32(addr *uint32, new uint32) (old uint32)
 
-// SwapUintptr atomically stores new into *addr and returns the previous *addr value.
-// Consider using the more ergonomic and less error-prone [Uintptr.Swap] instead.
+// SwapUintptr 原子地将 new 存储到 *addr 中并返回之前的 *addr 值。
+// 改用更符合人体工学且不易出错的 [Uintptr.Swap]。
 //
 //go:noescape
 func SwapUintptr(addr *uintptr, new uintptr) (old uintptr)
 
-// SwapPointer atomically stores new into *addr and returns the previous *addr value.
-// Consider using the more ergonomic and less error-prone [Pointer.Swap] instead.
+// SwapPointer 原子地将 new 存储到 *addr 中并返回之前的 *addr 值。
+// 改用更符合人体工学且不易出错的 [Pointer.Swap]。
 func SwapPointer(addr *unsafe.Pointer, new unsafe.Pointer) (old unsafe.Pointer)
 
-// CompareAndSwapInt32 executes the compare-and-swap operation for an int32 value.
-// Consider using the more ergonomic and less error-prone [Int32.CompareAndSwap] instead.
+// CompareAndSwapInt32 对 int32 值执行比较并交换操作。
+// 改用更符合人体工学且不易出错的 [Int32.CompareAndSwap]。
 //
 //go:noescape
 func CompareAndSwapInt32(addr *int32, old, new int32) (swapped bool)
 
-// CompareAndSwapUint32 executes the compare-and-swap operation for a uint32 value.
-// Consider using the more ergonomic and less error-prone [Uint32.CompareAndSwap] instead.
+// CompareAndSwapUint32 对 uint32 值执行比较并交换操作。
+// 改用更符合人体工学且不易出错的 [Uint32.CompareAndSwap]。
 //
 //go:noescape
 func CompareAndSwapUint32(addr *uint32, old, new uint32) (swapped bool)
 
-// CompareAndSwapUintptr executes the compare-and-swap operation for a uintptr value.
-// Consider using the more ergonomic and less error-prone [Uintptr.CompareAndSwap] instead.
+// CompareAndSwapUintptr 对 uintptr 值执行比较并交换操作。
+// 改用更符合人体工学且不易出错的 [Uintptr.CompareAndSwap]。
 //
 //go:noescape
 func CompareAndSwapUintptr(addr *uintptr, old, new uintptr) (swapped bool)
 
-// CompareAndSwapPointer executes the compare-and-swap operation for a unsafe.Pointer value.
-// Consider using the more ergonomic and less error-prone [Pointer.CompareAndSwap] instead.
+// CompareAndSwapPointer 对 unsafe.Pointer 值执行比较并交换操作。
+// 改用更符合人体工学且不易出错的 [Pointer.CompareAndSwap]。
 func CompareAndSwapPointer(addr *unsafe.Pointer, old, new unsafe.Pointer) (swapped bool)
 
-// AddInt32 atomically adds delta to *addr and returns the new value.
-// Consider using the more ergonomic and less error-prone [Int32.Add] instead.
+// AddInt32 原子地将 delta 加到 *addr 中并返回新值。
+// 改用更符合人体工学且不易出错的 [Int32.Add]。
 //
 //go:noescape
 func AddInt32(addr *int32, delta int32) (new int32)
 
-// AddUint32 atomically adds delta to *addr and returns the new value.
-// To subtract a signed positive constant value c from x, do AddUint32(&x, ^uint32(c-1)).
-// In particular, to decrement x, do AddUint32(&x, ^uint32(0)).
-// Consider using the more ergonomic and less error-prone [Uint32.Add] instead.
+// AddUint32 原子地将 delta 加到 *addr 中并返回新值。
+// 要从 x 减去有符号正常量值 c，请执行 AddUint32(&x, ^uint32(c-1))。
+// 特别是，要递减 x，请执行 AddUint32(&x, ^uint32(0))。
+// 改用更符合人体工学且不易出错的 [Uint32.Add]。
 //
 //go:noescape
 func AddUint32(addr *uint32, delta uint32) (new uint32)
 
-// AddUintptr atomically adds delta to *addr and returns the new value.
-// Consider using the more ergonomic and less error-prone [Uintptr.Add] instead.
+// AddUintptr 原子地将 delta 加到 *addr 中并返回新值。
+// 改用更符合人体工学且不易出错的 [Uintptr.Add]。
 //
 //go:noescape
 func AddUintptr(addr *uintptr, delta uintptr) (new uintptr)
 
-// AndInt32 atomically performs a bitwise AND operation on *addr using the bitmask provided as mask
-// and returns the old value.
-// Consider using the more ergonomic and less error-prone [Int32.And] instead.
+// AndInt32 使用提供的位掩码对 *addr 执行原子按位 AND 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Int32.And]。
 //
 //go:noescape
 func AndInt32(addr *int32, mask int32) (old int32)
 
-// AndUint32 atomically performs a bitwise AND operation on *addr using the bitmask provided as mask
-// and returns the old value.
-// Consider using the more ergonomic and less error-prone [Uint32.And] instead.
+// AndUint32 使用提供的位掩码对 *addr 执行原子按位 AND 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Uint32.And]。
 //
 //go:noescape
 func AndUint32(addr *uint32, mask uint32) (old uint32)
 
-// AndUintptr atomically performs a bitwise AND operation on *addr using the bitmask provided as mask
-// and returns the old value.
-// Consider using the more ergonomic and less error-prone [Uintptr.And] instead.
+// AndUintptr 使用提供的位掩码对 *addr 执行原子按位 AND 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Uintptr.And]。
 //
 //go:noescape
 func AndUintptr(addr *uintptr, mask uintptr) (old uintptr)
 
-// OrInt32 atomically performs a bitwise OR operation on *addr using the bitmask provided as mask
-// and returns the old value.
-// Consider using the more ergonomic and less error-prone [Int32.Or] instead.
+// OrInt32 使用提供的位掩码对 *addr 执行原子按位 OR 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Int32.Or]。
 //
 //go:noescape
 func OrInt32(addr *int32, mask int32) (old int32)
 
-// OrUint32 atomically performs a bitwise OR operation on *addr using the bitmask provided as mask
-// and returns the old value.
-// Consider using the more ergonomic and less error-prone [Uint32.Or] instead.
+// OrUint32 使用提供的位掩码对 *addr 执行原子按位 OR 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Uint32.Or]。
 //
 //go:noescape
 func OrUint32(addr *uint32, mask uint32) (old uint32)
 
-// OrUintptr atomically performs a bitwise OR operation on *addr using the bitmask provided as mask
-// and returns the old value.
-// Consider using the more ergonomic and less error-prone [Uintptr.Or] instead.
+// OrUintptr 使用提供的位掩码对 *addr 执行原子按位 OR 操作
+// 并返回旧值。
+// 改用更符合人体工学且不易出错的 [Uintptr.Or]。
 //
 //go:noescape
 func OrUintptr(addr *uintptr, mask uintptr) (old uintptr)
 
-// LoadInt32 atomically loads *addr.
-// Consider using the more ergonomic and less error-prone [Int32.Load] instead.
+// LoadInt32 原子地加载 *addr。
+// 改用更符合人体工学且不易出错的 [Int32.Load]。
 //
 //go:noescape
 func LoadInt32(addr *int32) (val int32)
 
-// LoadUint32 atomically loads *addr.
-// Consider using the more ergonomic and less error-prone [Uint32.Load] instead.
+// LoadUint32 原子地加载 *addr。
+// 改用更符合人体工学且不易出错的 [Uint32.Load]。
 //
 //go:noescape
 func LoadUint32(addr *uint32) (val uint32)
 
-// LoadUintptr atomically loads *addr.
-// Consider using the more ergonomic and less error-prone [Uintptr.Load] instead.
+// LoadUintptr 原子地加载 *addr。
+// 改用更符合人体工学且不易出错的 [Uintptr.Load]。
 //
 //go:noescape
 func LoadUintptr(addr *uintptr) (val uintptr)
 
-// LoadPointer atomically loads *addr.
-// Consider using the more ergonomic and less error-prone [Pointer.Load] instead.
+// LoadPointer 原子地加载 *addr。
+// 改用更符合人体工学且不易出错的 [Pointer.Load]。
 func LoadPointer(addr *unsafe.Pointer) (val unsafe.Pointer)
 
-// StoreInt32 atomically stores val into *addr.
-// Consider using the more ergonomic and less error-prone [Int32.Store] instead.
+// StoreInt32 原子地将 val 存储到 *addr 中。
+// 改用更符合人体工学且不易出错的 [Int32.Store]。
 //
 //go:noescape
 func StoreInt32(addr *int32, val int32)
 
-// StoreUint32 atomically stores val into *addr.
-// Consider using the more ergonomic and less error-prone [Uint32.Store] instead.
+// StoreUint32 原子地将 val 存储到 *addr 中。
+// 改用更符合人体工学且不易出错的 [Uint32.Store]。
 //
 //go:noescape
 func StoreUint32(addr *uint32, val uint32)
 
-// StoreUintptr atomically stores val into *addr.
-// Consider using the more ergonomic and less error-prone [Uintptr.Store] instead.
+// StoreUintptr 原子地将 val 存储到 *addr 中。
+// 改用更符合人体工学且不易出错的 [Uintptr.Store]。
 //
 //go:noescape
 func StoreUintptr(addr *uintptr, val uintptr)
 
-// StorePointer atomically stores val into *addr.
-// Consider using the more ergonomic and less error-prone [Pointer.Store] instead.
+// StorePointer 原子地将 val 存储到 *addr 中。
+// 改用更符合人体工学且不易出错的 [Pointer.Store]。
 func StorePointer(addr *unsafe.Pointer, val unsafe.Pointer)

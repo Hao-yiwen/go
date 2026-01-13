@@ -16,11 +16,11 @@ import (
 )
 
 func Example_openDBService() {
-	// Opening a driver typically will not attempt to connect to the database.
+	// 打开驱动程序通常不会尝试连接到数据库。
 	db, err := sql.Open("driver-name", "database=test1")
 	if err != nil {
-		// This will not be a connection error, but a DSN parse error or
-		// another initialization error.
+		// 这不会是连接错误，而是 DSN 解析错误或
+		// 另一个初始化错误。
 		log.Fatal(err)
 	}
 	db.SetConnMaxLifetime(0)
@@ -54,8 +54,8 @@ func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	case "/quick-action":
-		// This is a short SELECT. Use the request context as the base of
-		// the context timeout.
+		// 这是一个简短的 SELECT。使用请求上下文作为
+		// 上下文超时的基础。
 		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 		defer cancel()
 
@@ -86,10 +86,9 @@ where
 		io.WriteString(w, name)
 		return
 	case "/long-action":
-		// This is a long SELECT. Use the request context as the base of
-		// the context timeout, but give it some time to finish. If
-		// the client cancels before the query is done the query will also
-		// be canceled.
+		// 这是一个长 SELECT。使用请求上下文作为
+		// 上下文超时的基础，但给它一些时间完成。如果
+		// 客户端在查询完成前取消，查询也将被取消。
 		ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 		defer cancel()
 
@@ -108,21 +107,21 @@ where
 			}
 			names = append(names, name)
 		}
-		// Check for errors during rows "Close".
-		// This may be more important if multiple statements are executed
-		// in a single batch and rows were written as well as read.
+		// 检查行 "Close" 期间的错误。
+		// 如果多个语句在单个批处理中执行且
+		// 行被写入和读取，这可能更重要。
 		if closeErr := rows.Close(); closeErr != nil {
 			http.Error(w, closeErr.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Check for row scan error.
+		// 检查行扫描错误。
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Check for errors during row iteration.
+		// 检查行迭代期间的错误。
 		if err = rows.Err(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -131,10 +130,10 @@ where
 		json.NewEncoder(w).Encode(names)
 		return
 	case "/async-action":
-		// This action has side effects that we want to preserve
-		// even if the client cancels the HTTP request part way through.
-		// For this we do not use the http request context as a base for
-		// the timeout.
+		// 此操作具有我们想要保留的副作用，
+		// 即使客户端中途取消 HTTP 请求。
+		// 为此，我们不使用 http 请求上下文作为
+		// 超时的基础。
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 

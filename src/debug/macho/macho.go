@@ -2,19 +2,19 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Mach-O header data structures
-// Originally at:
-// http://developer.apple.com/mac/library/documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html (since deleted by Apple)
-// Archived copy at:
+// Mach-O 头数据结构
+// 原始位置：
+// http://developer.apple.com/mac/library/documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html (已被 Apple 删除)
+// 存档副本在：
 // https://web.archive.org/web/20090819232456/http://developer.apple.com/documentation/DeveloperTools/Conceptual/MachORuntime/index.html
-// For cloned PDF see:
+// 克隆的 PDF 见：
 // https://github.com/aidansteele/osx-abi-macho-file-format-reference
 
 package macho
 
 import "strconv"
 
-// A FileHeader represents a Mach-O file header.
+// FileHeader 表示 Mach-O 文件头。
 type FileHeader struct {
 	Magic  uint32
 	Cpu    Cpu
@@ -36,7 +36,7 @@ const (
 	MagicFat uint32 = 0xcafebabe
 )
 
-// A Type is the Mach-O file type, e.g. an object file, executable, or dynamic library.
+// Type 是 Mach-O 文件类型，例如对象文件、可执行文件或动态库。
 type Type uint32
 
 const (
@@ -56,7 +56,7 @@ var typeStrings = []intName{
 func (t Type) String() string   { return stringName(uint32(t), typeStrings, false) }
 func (t Type) GoString() string { return stringName(uint32(t), typeStrings, true) }
 
-// A Cpu is a Mach-O cpu type.
+// Cpu 是 Mach-O CPU 类型。
 type Cpu uint32
 
 const cpuArch64 = 0x01000000
@@ -82,17 +82,17 @@ var cpuStrings = []intName{
 func (i Cpu) String() string   { return stringName(uint32(i), cpuStrings, false) }
 func (i Cpu) GoString() string { return stringName(uint32(i), cpuStrings, true) }
 
-// A LoadCmd is a Mach-O load command.
+// LoadCmd 是 Mach-O 加载命令。
 type LoadCmd uint32
 
 const (
 	LoadCmdSegment    LoadCmd = 0x1
 	LoadCmdSymtab     LoadCmd = 0x2
 	LoadCmdThread     LoadCmd = 0x4
-	LoadCmdUnixThread LoadCmd = 0x5 // thread+stack
+	LoadCmdUnixThread LoadCmd = 0x5 // 线程+栈
 	LoadCmdDysymtab   LoadCmd = 0xb
-	LoadCmdDylib      LoadCmd = 0xc // load dylib command
-	LoadCmdDylinker   LoadCmd = 0xf // id dylinker command (not load dylinker command)
+	LoadCmdDylib      LoadCmd = 0xc // 加载 dylib 命令
+	LoadCmdDylinker   LoadCmd = 0xf // id dylinker 命令（不是加载 dylinker 命令）
 	LoadCmdSegment64  LoadCmd = 0x19
 	LoadCmdRpath      LoadCmd = 0x8000001c
 )
@@ -110,7 +110,7 @@ func (i LoadCmd) String() string   { return stringName(uint32(i), cmdStrings, fa
 func (i LoadCmd) GoString() string { return stringName(uint32(i), cmdStrings, true) }
 
 type (
-	// A Segment32 is a 32-bit Mach-O segment load command.
+	// Segment32 是 32 位 Mach-O 段加载命令。
 	Segment32 struct {
 		Cmd     LoadCmd
 		Len     uint32
@@ -125,7 +125,7 @@ type (
 		Flag    uint32
 	}
 
-	// A Segment64 is a 64-bit Mach-O segment load command.
+	// Segment64 是 64 位 Mach-O 段加载命令。
 	Segment64 struct {
 		Cmd     LoadCmd
 		Len     uint32
@@ -140,7 +140,7 @@ type (
 		Flag    uint32
 	}
 
-	// A SymtabCmd is a Mach-O symbol table command.
+	// SymtabCmd 是 Mach-O 符号表命令。
 	SymtabCmd struct {
 		Cmd     LoadCmd
 		Len     uint32
@@ -150,7 +150,7 @@ type (
 		Strsize uint32
 	}
 
-	// A DysymtabCmd is a Mach-O dynamic symbol table command.
+	// DysymtabCmd 是 Mach-O 动态符号表命令。
 	DysymtabCmd struct {
 		Cmd            LoadCmd
 		Len            uint32
@@ -174,7 +174,7 @@ type (
 		Nlocrel        uint32
 	}
 
-	// A DylibCmd is a Mach-O load dynamic library command.
+	// DylibCmd 是 Mach-O 加载动态库命令。
 	DylibCmd struct {
 		Cmd            LoadCmd
 		Len            uint32
@@ -184,14 +184,14 @@ type (
 		CompatVersion  uint32
 	}
 
-	// A RpathCmd is a Mach-O rpath command.
+	// RpathCmd 是 Mach-O rpath 命令。
 	RpathCmd struct {
 		Cmd  LoadCmd
 		Len  uint32
 		Path uint32
 	}
 
-	// A Thread is a Mach-O thread state command.
+	// Thread 是 Mach-O 线程状态命令。
 	Thread struct {
 		Cmd  LoadCmd
 		Len  uint32

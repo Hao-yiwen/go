@@ -1,14 +1,14 @@
-// Copyright 2018 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2018 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:build js && wasm
 
-// Package js gives access to the WebAssembly host environment when using the js/wasm architecture.
-// Its API is based on JavaScript semantics.
+// js 包在使用 js/wasm 架构时提供对 WebAssembly 主机环境的访问。
+// 其 API 基于 JavaScript 语义。
 //
-// This package is EXPERIMENTAL. Its current scope is only to allow tests to run, but not yet to provide a
-// comprehensive API for users. It is exempt from the Go compatibility promise.
+// 此包是实验性的。其当前范围仅允许测试运行，但尚未提供
+// 用户的全面 API。它不受 Go 兼容性承诺的约束。
 package js
 
 import (
@@ -16,27 +16,27 @@ import (
 	"unsafe"
 )
 
-// ref is used to identify a JavaScript value, since the value itself can not be passed to WebAssembly.
+// ref 用于标识 JavaScript 值，因为该值本身无法传递到 WebAssembly。
 //
-// The JavaScript value "undefined" is represented by the value 0.
-// A JavaScript number (64-bit float, except 0 and NaN) is represented by its IEEE 754 binary representation.
-// All other values are represented as an IEEE 754 binary representation of NaN with bits 0-31 used as
-// an ID and bits 32-34 used to differentiate between string, symbol, function and object.
+// JavaScript 值 "undefined" 由值 0 表示。
+// JavaScript 数字（64 位浮点数，除 0 和 NaN）由其 IEEE 754 二进制表示形式表示。
+// 所有其他值都表示为 NaN 的 IEEE 754 二进制表示形式，其中位 0-31 用作
+// ID，位 32-34 用于区分字符串、符号、函数和对象。
 type ref uint64
 
-// nanHead are the upper 32 bits of a ref which are set if the value is not encoded as an IEEE 754 number (see above).
+// nanHead 是 ref 的上 32 位，如果值未编码为 IEEE 754 数字（见上文），则设置这些位。
 const nanHead = 0x7FF80000
 
-// Value represents a JavaScript value. The zero value is the JavaScript value "undefined".
-// Values can be checked for equality with the Equal method.
+// Value 表示 JavaScript 值。零值是 JavaScript 值 "undefined"。
+// 可以使用 Equal 方法检查值是否相等。
 type Value struct {
-	_     [0]func() // uncomparable; to make == not compile
-	ref   ref       // identifies a JavaScript value, see ref type
-	gcPtr *ref      // used to trigger the finalizer when the Value is not referenced any more
+	_     [0]func() // 不可比较；使 == 无法编译
+	ref   ref       // 标识 JavaScript 值，参见 ref 类型
+	gcPtr *ref      // 用于在不再引用 Value 时触发终结器
 }
 
 const (
-	// the type flags need to be in sync with wasm_exec.js
+	// 类型标志需要与 wasm_exec.js 同步
 	typeFlagNone = iota
 	typeFlagObject
 	typeFlagString
@@ -75,9 +75,9 @@ func floatValue(f float64) Value {
 	return Value{ref: *(*ref)(unsafe.Pointer(&f))}
 }
 
-// Error wraps a JavaScript error.
+// Error 包装 JavaScript 错误。
 type Error struct {
-	// Value is the underlying JavaScript error value.
+	// Value 是底层 JavaScript 错误值。
 	Value
 }
 
@@ -94,61 +94,61 @@ var (
 	valueTrue      = predefValue(3, typeFlagNone)
 	valueFalse     = predefValue(4, typeFlagNone)
 	valueGlobal    = predefValue(5, typeFlagObject)
-	jsGo           = predefValue(6, typeFlagObject) // instance of the Go class in JavaScript
+	jsGo           = predefValue(6, typeFlagObject) // JavaScript 中 Go 类的实例
 
 	objectConstructor = valueGlobal.Get("Object")
 	arrayConstructor  = valueGlobal.Get("Array")
 )
 
-// Equal reports whether v and w are equal according to JavaScript's === operator.
+// Equal 报告根据 JavaScript 的 === 运算符 v 和 w 是否相等。
 func (v Value) Equal(w Value) bool {
 	return v.ref == w.ref && v.ref != valueNaN.ref
 }
 
-// Undefined returns the JavaScript value "undefined".
+// Undefined 返回 JavaScript 值 "undefined"。
 func Undefined() Value {
 	return valueUndefined
 }
 
-// IsUndefined reports whether v is the JavaScript value "undefined".
+// IsUndefined 报告 v 是否是 JavaScript 值 "undefined"。
 func (v Value) IsUndefined() bool {
 	return v.ref == valueUndefined.ref
 }
 
-// Null returns the JavaScript value "null".
+// Null 返回 JavaScript 值 "null"。
 func Null() Value {
 	return valueNull
 }
 
-// IsNull reports whether v is the JavaScript value "null".
+// IsNull 报告 v 是否是 JavaScript 值 "null"。
 func (v Value) IsNull() bool {
 	return v.ref == valueNull.ref
 }
 
-// IsNaN reports whether v is the JavaScript value "NaN".
+// IsNaN 报告 v 是否是 JavaScript 值 "NaN"。
 func (v Value) IsNaN() bool {
 	return v.ref == valueNaN.ref
 }
 
-// Global returns the JavaScript global object, usually "window" or "global".
+// Global 返回 JavaScript 全局对象，通常是 "window" 或 "global"。
 func Global() Value {
 	return valueGlobal
 }
 
-// ValueOf returns x as a JavaScript value:
+// ValueOf 返回 x 作为 JavaScript 值：
 //
 //	| Go                     | JavaScript             |
 //	| ---------------------- | ---------------------- |
-//	| js.Value               | [its value]            |
-//	| js.Func                | function               |
+//	| js.Value               | [其值]                 |
+//	| js.Func                | 函数                   |
 //	| nil                    | null                   |
-//	| bool                   | boolean                |
-//	| integers and floats    | number                 |
-//	| string                 | string                 |
-//	| []interface{}          | new array              |
-//	| map[string]interface{} | new object             |
+//	| bool                   | 布尔值                 |
+//	| 整数和浮点数           | 数字                   |
+//	| string                 | 字符串                 |
+//	| []interface{}          | 新数组                 |
+//	| map[string]interface{} | 新对象                 |
 //
-// Panics if x is not one of the expected types.
+// 如果 x 不是预期的类型之一，则触发 panic。
 func ValueOf(x any) Value {
 	switch x := x.(type) {
 	case Value:
@@ -210,16 +210,16 @@ func ValueOf(x any) Value {
 	}
 }
 
-// stringVal copies string x to Javascript and returns a ref.
+// stringVal 将字符串 x 复制到 Javascript 并返回一个 ref。
 //
-// Using go:noescape is safe because no references are maintained to the
-// Go string x after the syscall returns.
+// 使用 go:noescape 是安全的，因为在系统调用返回后，
+// 不会维护对 Go 字符串 x 的引用。
 //
 //go:wasmimport gojs syscall/js.stringVal
 //go:noescape
 func stringVal(x string) ref
 
-// Type represents the JavaScript type of a Value.
+// Type 表示 Value 的 JavaScript 类型。
 type Type int
 
 const (
@@ -260,8 +260,8 @@ func (t Type) isObject() bool {
 	return t == TypeObject || t == TypeFunction
 }
 
-// Type returns the JavaScript type of the value v. It is similar to JavaScript's typeof operator,
-// except that it returns TypeNull instead of TypeObject for null.
+// Type 返回值 v 的 JavaScript 类型。它类似于 JavaScript 的 typeof 运算符，
+// 但对于 null，它返回 TypeNull 而不是 TypeObject。
 func (v Value) Type() Type {
 	switch v.ref {
 	case valueUndefined.ref:
@@ -289,8 +289,8 @@ func (v Value) Type() Type {
 	}
 }
 
-// Get returns the JavaScript property p of value v.
-// It panics if v is not a JavaScript object.
+// Get 返回值 v 的 JavaScript 属性 p。
+// 如果 v 不是 JavaScript 对象，则触发 panic。
 func (v Value) Get(p string) Value {
 	if vType := v.Type(); !vType.isObject() {
 		panic(&ValueError{"Value.Get", vType})
@@ -300,17 +300,17 @@ func (v Value) Get(p string) Value {
 	return r
 }
 
-// valueGet returns a ref to JavaScript property p of ref v.
+// valueGet 返回对 ref v 的 JavaScript 属性 p 的引用。
 //
-// Using go:noescape is safe because no references are maintained to the
-// Go string p after the syscall returns.
+// 使用 go:noescape 是安全的，因为在系统调用返回后，
+// 不会维护对 Go 字符串 p 的引用。
 //
 //go:wasmimport gojs syscall/js.valueGet
 //go:noescape
 func valueGet(v ref, p string) ref
 
-// Set sets the JavaScript property p of value v to ValueOf(x).
-// It panics if v is not a JavaScript object.
+// Set 将值 v 的 JavaScript 属性 p 设置为 ValueOf(x)。
+// 如果 v 不是 JavaScript 对象，则触发 panic。
 func (v Value) Set(p string, x any) {
 	if vType := v.Type(); !vType.isObject() {
 		panic(&ValueError{"Value.Set", vType})
@@ -321,17 +321,17 @@ func (v Value) Set(p string, x any) {
 	runtime.KeepAlive(xv)
 }
 
-// valueSet sets property p of ref v to ref x.
+// valueSet 将 ref v 的属性 p 设置为 ref x。
 //
-// Using go:noescape is safe because no references are maintained to the
-// Go string p after the syscall returns.
+// 使用 go:noescape 是安全的，因为在系统调用返回后，
+// 不会维护对 Go 字符串 p 的引用。
 //
 //go:wasmimport gojs syscall/js.valueSet
 //go:noescape
 func valueSet(v ref, p string, x ref)
 
-// Delete deletes the JavaScript property p of value v.
-// It panics if v is not a JavaScript object.
+// Delete 删除值 v 的 JavaScript 属性 p。
+// 如果 v 不是 JavaScript 对象，则触发 panic。
 func (v Value) Delete(p string) {
 	if vType := v.Type(); !vType.isObject() {
 		panic(&ValueError{"Value.Delete", vType})
@@ -340,17 +340,17 @@ func (v Value) Delete(p string) {
 	runtime.KeepAlive(v)
 }
 
-// valueDelete deletes the JavaScript property p of ref v.
+// valueDelete 删除 ref v 的 JavaScript 属性 p。
 //
-// Using go:noescape is safe because no references are maintained to the
-// Go string p after the syscall returns.
+// 使用 go:noescape 是安全的，因为在系统调用返回后，
+// 不会维护对 Go 字符串 p 的引用。
 //
 //go:wasmimport gojs syscall/js.valueDelete
 //go:noescape
 func valueDelete(v ref, p string)
 
-// Index returns JavaScript index i of value v.
-// It panics if v is not a JavaScript object.
+// Index 返回值 v 的 JavaScript 索引 i。
+// 如果 v 不是 JavaScript 对象，则触发 panic。
 func (v Value) Index(i int) Value {
 	if vType := v.Type(); !vType.isObject() {
 		panic(&ValueError{"Value.Index", vType})
@@ -363,8 +363,8 @@ func (v Value) Index(i int) Value {
 //go:wasmimport gojs syscall/js.valueIndex
 func valueIndex(v ref, i int) ref
 
-// SetIndex sets the JavaScript index i of value v to ValueOf(x).
-// It panics if v is not a JavaScript object.
+// SetIndex 将值 v 的 JavaScript 索引 i 设置为 ValueOf(x)。
+// 如果 v 不是 JavaScript 对象，则触发 panic。
 func (v Value) SetIndex(i int, x any) {
 	if vType := v.Type(); !vType.isObject() {
 		panic(&ValueError{"Value.SetIndex", vType})
@@ -378,31 +378,30 @@ func (v Value) SetIndex(i int, x any) {
 //go:wasmimport gojs syscall/js.valueSetIndex
 func valueSetIndex(v ref, i int, x ref)
 
-// makeArgSlices makes two slices to hold JavaScript arg data.
-// It can be paired with storeArgs to make-and-store JavaScript arg slices.
-// However, the two functions are separated to ensure makeArgSlices is inlined
-// which will prevent the slices from being heap allocated for small (<=16)
-// numbers of args.
+// makeArgSlices 创建两个切片来保存 JavaScript arg 数据。
+// 可以与 storeArgs 配对以制作和存储 JavaScript arg 切片。
+// 但是，这两个函数被分开以确保 makeArgSlices 被内联，
+// 这将防止为少量（<=16）个 arg 在堆上分配切片。
 func makeArgSlices(size int) (argVals []Value, argRefs []ref) {
-	// value chosen for being power of two, and enough to handle all web APIs
-	// in particular, note that WebGL2's texImage2D takes up to 10 arguments
+	// 选择的值是 2 的幂，足以处理所有 web API
+	// 特别是，请注意 WebGL2 的 texImage2D 最多需要 10 个参数
 	const maxStackArgs = 16
 	if size <= maxStackArgs {
-		// as long as makeArgs is inlined, these will be stack-allocated
+		// 只要 makeArgs 被内联，这些就会被栈分配
 		argVals = make([]Value, size, maxStackArgs)
 		argRefs = make([]ref, size, maxStackArgs)
 	} else {
-		// allocates on the heap, but exceeding maxStackArgs should be rare
+		// 在堆上分配，但超过 maxStackArgs 应该很少见
 		argVals = make([]Value, size)
 		argRefs = make([]ref, size)
 	}
 	return
 }
 
-// storeArgs maps input args onto respective Value and ref slices.
-// It can be paired with makeArgSlices to make-and-store JavaScript arg slices.
+// storeArgs 将输入 args 映射到各自的 Value 和 ref 切片。
+// 可以与 makeArgSlices 配对以制作和存储 JavaScript arg 切片。
 func storeArgs(args []any, argValsDst []Value, argRefsDst []ref) {
-	// would go in makeArgs if the combined func was simple enough to inline
+	// 如果组合后的函数足够简单，可以内联，则会在 makeArgs 中处理
 	for i, arg := range args {
 		v := ValueOf(arg)
 		argValsDst[i] = v
@@ -410,8 +409,8 @@ func storeArgs(args []any, argValsDst []Value, argRefsDst []ref) {
 	}
 }
 
-// Length returns the JavaScript property "length" of v.
-// It panics if v is not a JavaScript object.
+// Length 返回 v 的 JavaScript 属性 "length"。
+// 如果 v 不是 JavaScript 对象，则触发 panic。
 func (v Value) Length() int {
 	if vType := v.Type(); !vType.isObject() {
 		panic(&ValueError{"Value.SetIndex", vType})
@@ -424,9 +423,9 @@ func (v Value) Length() int {
 //go:wasmimport gojs syscall/js.valueLength
 func valueLength(v ref) int
 
-// Call does a JavaScript call to the method m of value v with the given arguments.
-// It panics if v has no method m.
-// The arguments get mapped to JavaScript values according to the ValueOf function.
+// Call 使用给定的参数对值 v 的方法 m 进行 JavaScript 调用。
+// 如果 v 没有方法 m，则触发 panic。
+// 根据 ValueOf 函数将参数映射到 JavaScript 值。
 func (v Value) Call(m string, args ...any) Value {
 	argVals, argRefs := makeArgSlices(len(args))
 	storeArgs(args, argVals, argRefs)
@@ -434,7 +433,7 @@ func (v Value) Call(m string, args ...any) Value {
 	runtime.KeepAlive(v)
 	runtime.KeepAlive(argVals)
 	if !ok {
-		if vType := v.Type(); !vType.isObject() { // check here to avoid overhead in success case
+		if vType := v.Type(); !vType.isObject() { // 在此检查以避免成功情况下的开销
 			panic(&ValueError{"Value.Call", vType})
 		}
 		if propType := v.Get(m).Type(); propType != TypeFunction {
@@ -445,21 +444,21 @@ func (v Value) Call(m string, args ...any) Value {
 	return makeValue(res)
 }
 
-// valueCall does a JavaScript call to the method name m of ref v with the given arguments.
+// valueCall 使用给定的参数对 ref v 的方法名 m 进行 JavaScript 调用。
 //
-// Using go:noescape is safe because no references are maintained to the
-// Go string m after the syscall returns. Additionally, the args slice
-// is only used temporarily to collect the JavaScript objects for
-// the JavaScript method invocation.
+// 使用 go:noescape 是安全的，因为在系统调用返回后，
+// 不会维护对 Go 字符串 m 的引用。此外，args 切片
+// 仅临时用于收集 JavaScript 对象以进行
+// JavaScript 方法调用。
 //
 //go:wasmimport gojs syscall/js.valueCall
 //go:nosplit
 //go:noescape
 func valueCall(v ref, m string, args []ref) (ref, bool)
 
-// Invoke does a JavaScript call of the value v with the given arguments.
-// It panics if v is not a JavaScript function.
-// The arguments get mapped to JavaScript values according to the ValueOf function.
+// Invoke 使用给定的参数对值 v 进行 JavaScript 调用。
+// 如果 v 不是 JavaScript 函数，则触发 panic。
+// 根据 ValueOf 函数将参数映射到 JavaScript 值。
 func (v Value) Invoke(args ...any) Value {
 	argVals, argRefs := makeArgSlices(len(args))
 	storeArgs(args, argVals, argRefs)
@@ -467,7 +466,7 @@ func (v Value) Invoke(args ...any) Value {
 	runtime.KeepAlive(v)
 	runtime.KeepAlive(argVals)
 	if !ok {
-		if vType := v.Type(); vType != TypeFunction { // check here to avoid overhead in success case
+		if vType := v.Type(); vType != TypeFunction { // 在此检查以避免成功情况下的开销
 			panic(&ValueError{"Value.Invoke", vType})
 		}
 		panic(Error{makeValue(res)})
@@ -475,19 +474,19 @@ func (v Value) Invoke(args ...any) Value {
 	return makeValue(res)
 }
 
-// valueInvoke does a JavaScript call to value v with the given arguments.
+// valueInvoke 使用给定的参数对值 v 进行 JavaScript 调用。
 //
-// Using go:noescape is safe because the args slice is only used temporarily
-// to collect the JavaScript objects for the JavaScript method
-// invocation.
+// 使用 go:noescape 是安全的，因为 args 切片仅临时用于
+// 收集 JavaScript 对象以进行 JavaScript 方法
+// 调用。
 //
 //go:wasmimport gojs syscall/js.valueInvoke
 //go:noescape
 func valueInvoke(v ref, args []ref) (ref, bool)
 
-// New uses JavaScript's "new" operator with value v as constructor and the given arguments.
-// It panics if v is not a JavaScript function.
-// The arguments get mapped to JavaScript values according to the ValueOf function.
+// New 使用 JavaScript 的 "new" 运算符，以值 v 作为构造函数和给定的参数。
+// 如果 v 不是 JavaScript 函数，则触发 panic。
+// 根据 ValueOf 函数将参数映射到 JavaScript 值。
 func (v Value) New(args ...any) Value {
 	argVals, argRefs := makeArgSlices(len(args))
 	storeArgs(args, argVals, argRefs)
@@ -495,7 +494,7 @@ func (v Value) New(args ...any) Value {
 	runtime.KeepAlive(v)
 	runtime.KeepAlive(argVals)
 	if !ok {
-		if vType := v.Type(); vType != TypeFunction { // check here to avoid overhead in success case
+		if vType := v.Type(); vType != TypeFunction { // 在此检查以避免成功情况下的开销
 			panic(&ValueError{"Value.Invoke", vType})
 		}
 		panic(Error{makeValue(res)})
@@ -503,10 +502,10 @@ func (v Value) New(args ...any) Value {
 	return makeValue(res)
 }
 
-// valueNew uses JavaScript's "new" operator with value v as a constructor and the given arguments.
+// valueNew 使用 JavaScript 的 "new" 运算符，以值 v 作为构造函数和给定的参数。
 //
-// Using go:noescape is safe because the args slice is only used temporarily
-// to collect the JavaScript objects for the constructor execution.
+// 使用 go:noescape 是安全的，因为 args 切片仅临时用于
+// 收集 JavaScript 对象以进行构造函数执行。
 //
 //go:wasmimport gojs syscall/js.valueNew
 //go:noescape
@@ -528,20 +527,20 @@ func (v Value) float(method string) float64 {
 	return *(*float64)(unsafe.Pointer(&v.ref))
 }
 
-// Float returns the value v as a float64.
-// It panics if v is not a JavaScript number.
+// Float 返回值 v 作为 float64。
+// 如果 v 不是 JavaScript 数字，则触发 panic。
 func (v Value) Float() float64 {
 	return v.float("Value.Float")
 }
 
-// Int returns the value v truncated to an int.
-// It panics if v is not a JavaScript number.
+// Int 返回值 v 截断到 int。
+// 如果 v 不是 JavaScript 数字，则触发 panic。
 func (v Value) Int() int {
 	return int(v.float("Value.Int"))
 }
 
-// Bool returns the value v as a bool.
-// It panics if v is not a JavaScript boolean.
+// Bool 返回值 v 作为 bool。
+// 如果 v 不是 JavaScript 布尔值，则触发 panic。
 func (v Value) Bool() bool {
 	switch v.ref {
 	case valueTrue.ref:
@@ -553,9 +552,9 @@ func (v Value) Bool() bool {
 	}
 }
 
-// Truthy returns the JavaScript "truthiness" of the value v. In JavaScript,
-// false, 0, "", null, undefined, and NaN are "falsy", and everything else is
-// "truthy". See https://developer.mozilla.org/en-US/docs/Glossary/Truthy.
+// Truthy 返回值 v 的 JavaScript "truthiness"。在 JavaScript 中，
+// false、0、""、null、undefined 和 NaN 是 "falsy"，其他一切都是
+// "truthy"。参见 https://developer.mozilla.org/en-US/docs/Glossary/Truthy。
 func (v Value) Truthy() bool {
 	switch v.Type() {
 	case TypeUndefined, TypeNull:
@@ -573,10 +572,10 @@ func (v Value) Truthy() bool {
 	}
 }
 
-// String returns the value v as a string.
-// String is a special case because of Go's String method convention. Unlike the other getters,
-// it does not panic if v's Type is not TypeString. Instead, it returns a string of the form "<T>"
-// or "<T: V>" where T is v's type and V is a string representation of v's value.
+// String 返回值 v 作为字符串。
+// String 是特殊的，因为 Go 的 String 方法约定。与其他 getter 不同，
+// 如果 v 的 Type 不是 TypeString，它不会触发 panic。反而，它返回形如 "<T>"
+// 或 "<T: V>" 的字符串，其中 T 是 v 的类型，V 是 v 值的字符串表示。
 func (v Value) String() string {
 	switch v.Type() {
 	case TypeString:
@@ -612,16 +611,16 @@ func jsString(v Value) string {
 //go:wasmimport gojs syscall/js.valuePrepareString
 func valuePrepareString(v ref) (ref, int)
 
-// valueLoadString loads string data located at ref v into byte slice b.
+// valueLoadString 将位于 ref v 的字符串数据加载到字节切片 b 中。
 //
-// Using go:noescape is safe because the byte slice is only used as a destination
-// for storing the string data and references to it are not maintained.
+// 使用 go:noescape 是安全的，因为字节切片仅用作存储
+// 字符串数据的目标，并且不维护对其的引用。
 //
 //go:wasmimport gojs syscall/js.valueLoadString
 //go:noescape
 func valueLoadString(v ref, b []byte)
 
-// InstanceOf reports whether v is an instance of type t according to JavaScript's instanceof operator.
+// InstanceOf 报告根据 JavaScript 的 instanceof 运算符 v 是否是类型 t 的实例。
 func (v Value) InstanceOf(t Value) bool {
 	r := valueInstanceOf(v.ref, t.ref)
 	runtime.KeepAlive(v)
@@ -632,9 +631,8 @@ func (v Value) InstanceOf(t Value) bool {
 //go:wasmimport gojs syscall/js.valueInstanceOf
 func valueInstanceOf(v ref, t ref) bool
 
-// A ValueError occurs when a Value method is invoked on
-// a Value that does not support it. Such cases are documented
-// in the description of each method.
+// ValueError 发生在对不支持它的 Value 调用 Value 方法时。
+// 这些情况在每个方法的描述中有文档记载。
 type ValueError struct {
 	Method string
 	Type   Type
@@ -644,9 +642,9 @@ func (e *ValueError) Error() string {
 	return "syscall/js: call of " + e.Method + " on " + e.Type.String()
 }
 
-// CopyBytesToGo copies bytes from src to dst.
-// It panics if src is not a Uint8Array or Uint8ClampedArray.
-// It returns the number of bytes copied, which will be the minimum of the lengths of src and dst.
+// CopyBytesToGo 将字节从 src 复制到 dst。
+// 如果 src 不是 Uint8Array 或 Uint8ClampedArray，则触发 panic。
+// 返回复制的字节数，这将是 src 和 dst 长度的最小值。
 func CopyBytesToGo(dst []byte, src Value) int {
 	n, ok := copyBytesToGo(dst, src.ref)
 	runtime.KeepAlive(src)
@@ -656,18 +654,18 @@ func CopyBytesToGo(dst []byte, src Value) int {
 	return n
 }
 
-// copyBytesToGo copies bytes from src to dst.
+// copyBytesToGo 将字节从 src 复制到 dst。
 //
-// Using go:noescape is safe because the dst byte slice is only used as a dst
-// copy buffer and no references to it are maintained.
+// 使用 go:noescape 是安全的，因为 dst 字节切片仅用作 dst
+// 复制缓冲区，并且不维护对其的引用。
 //
 //go:wasmimport gojs syscall/js.copyBytesToGo
 //go:noescape
 func copyBytesToGo(dst []byte, src ref) (int, bool)
 
-// CopyBytesToJS copies bytes from src to dst.
-// It panics if dst is not a Uint8Array or Uint8ClampedArray.
-// It returns the number of bytes copied, which will be the minimum of the lengths of src and dst.
+// CopyBytesToJS 将字节从 src 复制到 dst。
+// 如果 dst 不是 Uint8Array 或 Uint8ClampedArray，则触发 panic。
+// 返回复制的字节数，这将是 src 和 dst 长度的最小值。
 func CopyBytesToJS(dst Value, src []byte) int {
 	n, ok := copyBytesToJS(dst.ref, src)
 	runtime.KeepAlive(dst)
@@ -677,10 +675,10 @@ func CopyBytesToJS(dst Value, src []byte) int {
 	return n
 }
 
-// copyBytesToJS copies bytes from src to dst.
+// copyBytesToJS 将字节从 src 复制到 dst。
 //
-// Using go:noescape is safe because the src byte slice is only used as a src
-// copy buffer and no references to it are maintained.
+// 使用 go:noescape 是安全的，因为 src 字节切片仅用作 src
+// 复制缓冲区，并且不维护对其的引用。
 //
 //go:wasmimport gojs syscall/js.copyBytesToJS
 //go:noescape

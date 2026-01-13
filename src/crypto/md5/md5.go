@@ -1,13 +1,13 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// 版权所有 2009 The Go Authors。保留所有权利。
+// 本源代码的使用受 BSD 风格许可证约束，
+// 该许可证可在 LICENSE 文件中找到。
 
 //go:generate go run gen.go -output md5block.go
 
-// Package md5 implements the MD5 hash algorithm as defined in RFC 1321.
+// Package md5 实现了 RFC 1321 中定义的 MD5 哈希算法。
 //
-// MD5 is cryptographically broken and should not be used for secure
-// applications.
+// MD5 在密码学上已损坏，不应用于安全
+// 应用程序。
 package md5
 
 import (
@@ -22,14 +22,14 @@ func init() {
 	crypto.RegisterHash(crypto.MD5, New)
 }
 
-// The size of an MD5 checksum in bytes.
+// MD5 校验和的大小（以字节为单位）。
 const Size = 16
 
-// The blocksize of MD5 in bytes.
+// MD5 的块大小（以字节为单位）。
 const BlockSize = 64
 
-// The maximum number of bytes that can be passed to block(). The limit exists
-// because implementations that rely on assembly routines are not preemptible.
+// 可以传递给 block() 的最大字节数。限制存在
+// 因为依赖汇编例程的实现是不可抢占的。
 const maxAsmIters = 1024
 const maxAsmSize = BlockSize * maxAsmIters // 64KiB
 
@@ -40,7 +40,7 @@ const (
 	init3 = 0x10325476
 )
 
-// digest represents the partial evaluation of a checksum.
+// digest 表示校验和的部分计算。
 type digest struct {
 	s   [4]uint32
 	x   [BlockSize]byte
@@ -109,10 +109,10 @@ func (d *digest) Clone() (hash.Cloner, error) {
 	return &r, nil
 }
 
-// New returns a new [hash.Hash] computing the MD5 checksum. The Hash
-// also implements [encoding.BinaryMarshaler], [encoding.BinaryAppender] and
-// [encoding.BinaryUnmarshaler] to marshal and unmarshal the internal
-// state of the hash.
+// New 返回一个计算 MD5 校验和的新 [hash.Hash]。Hash
+// 还实现了 [encoding.BinaryMarshaler]、[encoding.BinaryAppender] 和
+// [encoding.BinaryUnmarshaler] 来编组和解组内部
+// 的哈希状态。
 func New() hash.Hash {
 	d := new(digest)
 	d.Reset()
@@ -127,9 +127,9 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 	if fips140only.Enforced() {
 		return 0, errors.New("crypto/md5: use of MD5 is not allowed in FIPS 140-only mode")
 	}
-	// Note that we currently call block or blockGeneric
-	// directly (guarded using haveAsm) because this allows
-	// escape analysis to see that p and d don't escape.
+	// 注意，我们当前调用 block 或 blockGeneric
+	// 直接（使用 haveAsm 防护），因为这允许
+	// 逃逸分析来查看 p 和 d 不逃逸。
 	nn = len(p)
 	d.len += uint64(nn)
 	if d.nx > 0 {
@@ -166,7 +166,7 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 }
 
 func (d *digest) Sum(in []byte) []byte {
-	// Make a copy of d so that caller can keep writing and summing.
+	// 制作 d 的副本，以便调用者可以继续写入和求和。
 	d0 := *d
 	hash := d0.checkSum()
 	return append(in, hash[:]...)
@@ -177,18 +177,18 @@ func (d *digest) checkSum() [Size]byte {
 		panic("crypto/md5: use of MD5 is not allowed in FIPS 140-only mode")
 	}
 
-	// Append 0x80 to the end of the message and then append zeros
-	// until the length is a multiple of 56 bytes. Finally append
-	// 8 bytes representing the message length in bits.
+	// 将 0x80 追加到消息末尾，然后追加零
+	// 直到长度是 56 字节的倍数。最后追加
+	// 8 个字节代表消息长度（以位为单位）。
 	//
-	// 1 byte end marker :: 0-63 padding bytes :: 8 byte length
+	// 1 字节结束标记 :: 0-63 字节填充 :: 8 字节长度
 	tmp := [1 + 63 + 8]byte{0x80}
-	pad := (55 - d.len) % 64                     // calculate number of padding bytes
-	byteorder.LEPutUint64(tmp[1+pad:], d.len<<3) // append length in bits
+	pad := (55 - d.len) % 64                     // 计算填充字节数
+	byteorder.LEPutUint64(tmp[1+pad:], d.len<<3) // 追加长度（以位为单位）
 	d.Write(tmp[:1+pad+8])
 
-	// The previous write ensures that a whole number of
-	// blocks (i.e. a multiple of 64 bytes) have been hashed.
+	// 之前的写入确保整数个
+	// 块（即 64 字节的倍数）已被哈希。
 	if d.nx != 0 {
 		panic("d.nx != 0")
 	}
@@ -201,7 +201,7 @@ func (d *digest) checkSum() [Size]byte {
 	return digest
 }
 
-// Sum returns the MD5 checksum of the data.
+// Sum 返回数据的 MD5 校验和。
 func Sum(data []byte) [Size]byte {
 	var d digest
 	d.Reset()

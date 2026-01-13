@@ -62,7 +62,7 @@ func testDir(t *testing.T, f embed.FS, name string, expect ...string) {
 	}
 }
 
-// Tests for issue 49514.
+// 测试问题 49514。
 var _ = '"'
 var _ = '\''
 var _ = '🦆'
@@ -119,7 +119,7 @@ func TestHidden(t *testing.T) {
 		"-not-hidden/", ".hidden/", "_hidden/", "ascii.txt", "glass.txt", "hello.txt", "i/", "ken.txt")
 
 	testDir(t, star, "testdata/.hidden",
-		"fortune.txt", "more/") // but not .more or _more
+		"fortune.txt", "more/") // 但不是 .more 或 _more
 }
 
 func TestUninitialized(t *testing.T) {
@@ -187,7 +187,7 @@ func TestOffset(t *testing.T) {
 
 	want := "hello, world\n"
 
-	// Read the entire file.
+	// 读取整个文件。
 	got := make([]byte, len(want))
 	n, err := file.Read(got)
 	if err != nil {
@@ -200,7 +200,7 @@ func TestOffset(t *testing.T) {
 		t.Fatalf("Read: %q", got)
 	}
 
-	// Try to read one byte; confirm we're at the EOF.
+	// 尝试读取一个字节；确认我们在 EOF。
 	var buf [1]byte
 	n, err = file.Read(buf[:])
 	if err != io.EOF {
@@ -210,7 +210,7 @@ func TestOffset(t *testing.T) {
 		t.Fatal("Read:", n)
 	}
 
-	// Use seek to get the offset at the EOF.
+	// 使用 seek 获取 EOF 处的偏移。
 	seeker := file.(io.Seeker)
 	off, err := seeker.Seek(0, io.SeekCurrent)
 	if err != nil {
@@ -220,7 +220,7 @@ func TestOffset(t *testing.T) {
 		t.Fatal("Seek:", off)
 	}
 
-	// Use ReadAt to read the entire file, ignoring the offset.
+	// 使用 ReadAt 读取整个文件，忽略偏移。
 	at := file.(io.ReaderAt)
 	got = make([]byte, len(want))
 	n, err = at.ReadAt(got, 0)
@@ -234,7 +234,7 @@ func TestOffset(t *testing.T) {
 		t.Fatalf("ReadAt: got %q, want %q", got, want)
 	}
 
-	// Use ReadAt with non-zero offset.
+	// 使用带非零偏移的 ReadAt。
 	off = int64(7)
 	want = want[off:]
 	got = make([]byte, len(want))

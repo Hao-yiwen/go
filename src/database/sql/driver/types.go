@@ -11,51 +11,50 @@ import (
 	"time"
 )
 
-// ValueConverter is the interface providing the ConvertValue method.
+// ValueConverter 是提供 ConvertValue 方法的接口。
 //
-// Various implementations of ValueConverter are provided by the
-// driver package to provide consistent implementations of conversions
-// between drivers. The ValueConverters have several uses:
+// driver 包提供了 ValueConverter 的各种实现，以提供
+// 驱动程序之间转换的一致实现。ValueConverters 有多种用途：
 //
-//   - converting from the [Value] types as provided by the sql package
-//     into a database table's specific column type and making sure it
-//     fits, such as making sure a particular int64 fits in a
-//     table's uint16 column.
+//   - 从 sql 包提供的 [Value] 类型转换
+//     为数据库表的特定列类型，并确保
+//     适配，例如确保特定 int64 适配于
+//     表的 uint16 列。
 //
-//   - converting a value as given from the database into one of the
-//     driver [Value] types.
+//   - 将从数据库给定的值转换为
+//     驱动程序 [Value] 类型之一。
 //
-//   - by the [database/sql] package, for converting from a driver's [Value] type
-//     to a user's type in a scan.
+//   - 由 [database/sql] 包，用于从驱动程序的 [Value] 类型
+//     转换为用户在扫描中的类型。
 type ValueConverter interface {
-	// ConvertValue converts a value to a driver Value.
+	// ConvertValue 将值转换为驱动程序值。
 	ConvertValue(v any) (Value, error)
 }
 
-// Valuer is the interface providing the Value method.
+// Valuer 是提供 Value 方法的接口。
 //
-// Errors returned by the [Value] method are wrapped by the database/sql package.
-// This allows callers to use [errors.Is] for precise error handling after operations
-// like [database/sql.Query], [database/sql.Exec], or [database/sql.QueryRow].
+// [Value] 方法返回的错误由 database/sql 包包装。
+// 这允许调用者在执行操作后使用 [errors.Is] 进行精确错误处理，
+// 如 [database/sql.Query]、[database/sql.Exec] 或 [database/sql.QueryRow]。
 //
-// Types implementing Valuer interface are able to convert
-// themselves to a driver [Value].
+// 实现 Valuer 接口的类型能够将自己
+// 转换为驱动程序 [Value]。
 type Valuer interface {
-	// Value returns a driver Value.
-	// Value must not panic.
+	// Value 返回驱动程序值。
+	// Value 不能恐慌。
 	Value() (Value, error)
 }
 
-// Bool is a [ValueConverter] that converts input values to bool.
+// Bool 是 [ValueConverter]，将输入值转换为 bool。
 //
-// The conversion rules are:
-//   - booleans are returned unchanged
-//   - for integer types,
-//     1 is true
-//     0 is false,
-//     other integers are an error
-//   - for strings and []byte, same rules as [strconv.ParseBool]
-//   - all other types are an error
+// 转换规则是：
+//   - 布尔值未更改地返回
+//   - 对于整数类型，
+//     1 是真
+//     0 是假，
+//     其他整数是错误
+//   - 对于字符串和 []byte，与 [strconv.ParseBool] 相同的规则
+//   - 所有其他类型都是错误
 var Bool boolType
 
 type boolType struct{}
@@ -101,8 +100,8 @@ func (boolType) ConvertValue(src any) (Value, error) {
 	return nil, fmt.Errorf("sql/driver: couldn't convert %v (%T) into type bool", src, src)
 }
 
-// Int32 is a [ValueConverter] that converts input values to int64,
-// respecting the limits of an int32 value.
+// Int32 是 [ValueConverter]，将输入值转换为 int64，
+// 尊重 int32 值的限制。
 var Int32 int32Type
 
 type int32Type struct{}
@@ -134,10 +133,10 @@ func (int32Type) ConvertValue(v any) (Value, error) {
 	return nil, fmt.Errorf("sql/driver: unsupported value %v (type %T) converting to int32", v, v)
 }
 
-// String is a [ValueConverter] that converts its input to a string.
-// If the value is already a string or []byte, it's unchanged.
-// If the value is of another type, conversion to string is done
-// with fmt.Sprintf("%v", v).
+// String 是 [ValueConverter]，将其输入转换为字符串。
+// 如果值已经是字符串或 []byte，则未更改。
+// 如果值是另一种类型，则进行字符串转换
+// 使用 fmt.Sprintf("%v", v)。
 var String stringType
 
 type stringType struct{}
@@ -150,8 +149,8 @@ func (stringType) ConvertValue(v any) (Value, error) {
 	return fmt.Sprintf("%v", v), nil
 }
 
-// Null is a type that implements [ValueConverter] by allowing nil
-// values but otherwise delegating to another [ValueConverter].
+// Null 是实现 [ValueConverter] 的类型，通过允许 nil
+// 值但将其他情况委托给另一个 [ValueConverter]。
 type Null struct {
 	Converter ValueConverter
 }
@@ -163,8 +162,8 @@ func (n Null) ConvertValue(v any) (Value, error) {
 	return n.Converter.ConvertValue(v)
 }
 
-// NotNull is a type that implements [ValueConverter] by disallowing nil
-// values but otherwise delegating to another [ValueConverter].
+// NotNull 是实现 [ValueConverter] 的类型，通过禁止 nil
+// 值但将其他情况委托给另一个 [ValueConverter]。
 type NotNull struct {
 	Converter ValueConverter
 }
@@ -176,7 +175,7 @@ func (n NotNull) ConvertValue(v any) (Value, error) {
 	return n.Converter.ConvertValue(v)
 }
 
-// IsValue reports whether v is a valid [Value] parameter type.
+// IsValue 报告 v 是否是有效的 [Value] 参数类型。
 func IsValue(v any) bool {
 	if v == nil {
 		return true
@@ -190,26 +189,25 @@ func IsValue(v any) bool {
 	return false
 }
 
-// IsScanValue is equivalent to [IsValue].
-// It exists for compatibility.
+// IsScanValue 等价于 [IsValue]。
+// 它存在是为了兼容性。
 func IsScanValue(v any) bool {
 	return IsValue(v)
 }
 
-// DefaultParameterConverter is the default implementation of
-// [ValueConverter] that's used when a [Stmt] doesn't implement
-// [ColumnConverter].
+// DefaultParameterConverter 是默认的 [ValueConverter] 实现，
+// 在 [Stmt] 没有实现 [ColumnConverter] 时使用。
 //
-// DefaultParameterConverter returns its argument directly if
-// IsValue(arg). Otherwise, if the argument implements [Valuer], its
-// Value method is used to return a [Value]. As a fallback, the provided
-// argument's underlying type is used to convert it to a [Value]:
-// underlying integer types are converted to int64, floats to float64,
-// bool, string, and []byte to themselves. If the argument is a nil
-// pointer, defaultConverter.ConvertValue returns a nil [Value].
-// If the argument is a non-nil pointer, it is dereferenced and
-// defaultConverter.ConvertValue is called recursively. Other types
-// are an error.
+// DefaultParameterConverter 在 IsValue(arg) 时直接返回其参数。
+// 否则，如果参数实现 [Valuer]，则使用其
+// Value 方法返回 [Value]。作为后备，提供的
+// 参数的底层类型用于将其转换为 [Value]：
+// 底层整数类型转换为 int64，浮点数转换为 float64，
+// bool、string 和 []byte 转换为它们自己。如果参数是 nil
+// 指针，defaultConverter.ConvertValue 返回 nil [Value]。
+// 如果参数是非 nil 指针，它被取消引用并且
+// 递归调用 defaultConverter.ConvertValue。其他类型
+// 是错误。
 var DefaultParameterConverter defaultConverter
 
 type defaultConverter struct{}
@@ -218,17 +216,17 @@ var _ ValueConverter = defaultConverter{}
 
 var valuerReflectType = reflect.TypeFor[Valuer]()
 
-// callValuerValue returns vr.Value(), with one exception:
-// If vr.Value is an auto-generated method on a pointer type and the
-// pointer is nil, it would panic at runtime in the panicwrap
-// method. Treat it like nil instead.
-// Issue 8415.
+// callValuerValue 返回 vr.Value()，有一个例外：
+// 如果 vr.Value 是指针类型上的自动生成的方法，并且
+// 指针为 nil，它会在 panicwrap 方法中在运行时出现恐慌。
+// 像对待 nil 一样对待它。
+// 问题 8415。
 //
-// This is so people can implement driver.Value on value types and
-// still use nil pointers to those types to mean nil/NULL, just like
-// string/*string.
+// 这是为了让人们可以在值类型上实现 driver.Value，
+// 并且仍然使用 nil 指针来表示这些类型意味着 nil/NULL，就像
+// string/*string。
 //
-// This function is mirrored in the database/sql package.
+// 此函数在 database/sql 包中镜像。
 func callValuerValue(vr Valuer) (v Value, err error) {
 	if rv := reflect.ValueOf(vr); rv.Kind() == reflect.Pointer &&
 		rv.IsNil() &&
@@ -254,7 +252,7 @@ func (defaultConverter) ConvertValue(v any) (Value, error) {
 		}
 		return sv, nil
 
-	// For now, continue to prefer the Valuer interface over the decimal decompose interface.
+	// 现在，继续优先使用 Valuer 接口而不是十进制分解接口。
 	case decimalDecompose:
 		return vr, nil
 	}
@@ -262,7 +260,7 @@ func (defaultConverter) ConvertValue(v any) (Value, error) {
 	rv := reflect.ValueOf(v)
 	switch rv.Kind() {
 	case reflect.Pointer:
-		// indirect pointers
+		// 间接指针
 		if rv.IsNil() {
 			return nil, nil
 		} else {
@@ -295,8 +293,8 @@ func (defaultConverter) ConvertValue(v any) (Value, error) {
 }
 
 type decimalDecompose interface {
-	// Decompose returns the internal decimal state into parts.
-	// If the provided buf has sufficient capacity, buf may be returned as the coefficient with
-	// the value set and length set as appropriate.
+	// Decompose 以部分的方式返回内部十进制状态。
+	// 如果提供的 buf 有足够的容量，buf 可能作为系数返回，
+	// 值设置和长度设置为适当。
 	Decompose(buf []byte) (form byte, negative bool, coefficient []byte, exponent int32)
 }
